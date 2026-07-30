@@ -42,10 +42,6 @@ function FormPage() {
         setAnswers({ ...answers, [question.id]: index })
     }
 
-    const goTo = (index: number) => {
-        setCurrent(index)
-    }
-
     const next = () => {
         if (current < total - 1) setCurrent(current + 1)
     }

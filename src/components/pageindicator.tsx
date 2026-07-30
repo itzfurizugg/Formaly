@@ -9,7 +9,7 @@ interface PageIndicatorProps {
     onListClick: () => void
 }
 
-function PageIndicator({ total, current, answers, onPrev, onNext, onListClick }: PageIndicatorProps) {
+function PageIndicator({ total, current, onPrev, onNext, onListClick }: PageIndicatorProps) {
     const isLast = current >= total - 1
 
     return (
