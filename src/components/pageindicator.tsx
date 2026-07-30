@@ -1,7 +1,4 @@
-import { Link } from "react-router-dom"
 import { ChevronLeft, ChevronRight } from "lucide-react"
-
-import { useNavigate } from "react-router-dom"
 
 interface PageIndicatorProps {
     total: number
@@ -13,7 +10,6 @@ interface PageIndicatorProps {
 }
 
 function PageIndicator({ total, current, answers, onPrev, onNext, onListClick }: PageIndicatorProps) {
-    const navigate = useNavigate()
     const isLast = current >= total - 1
 
     return (

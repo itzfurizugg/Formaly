@@ -56,10 +56,10 @@ function FormList() {
                 <div className="h-20 bg-gradient-to-t from-base-200 to-transparent" />
                 <div className="bg-base-200 px-4 pb-4 pointer-events-auto">
                     <div className="w-full max-w-3xl mx-auto">
-                        <button
-                            onClick={() => navigate(-1, { state: { current } })}
-                            className="btn w-full h-12 lg:h-20 min-h-0 lg:mb-5 bg-darks lg:text-2xl text-white rounded-none hover:opacity-90"
-                        >
+                            <button
+                                onClick={() => navigate('/form', { state: { current } })}
+                                className="btn w-full h-12 lg:h-20 min-h-0 lg:mb-5 bg-darks lg:text-2xl text-white rounded-none hover:opacity-90"
+                            >
                             Kembali ke soal
                         </button>
                     </div>

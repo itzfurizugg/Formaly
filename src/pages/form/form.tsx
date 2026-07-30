@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react"
-import { Link, useNavigate, useLocation } from "react-router-dom"
-import { Check, Clock, FileText, LayoutList } from "lucide-react"
+import { useNavigate, useLocation } from "react-router-dom"
+import { Check, Clock } from "lucide-react"
 import PageIndicator from "../../components/pageindicator"
 import { dummyQuestions } from "../../lib/dummy"
 import type { Answer } from "../../lib/dummy"
@@ -57,7 +57,7 @@ function FormPage() {
     const navigate = useNavigate()
 
     const goToList = () => {
-        navigate('/form/list', { state: { current, answers } })
+        navigate('/form/formlist', { state: { current, answers } })
     }
 
     return (
