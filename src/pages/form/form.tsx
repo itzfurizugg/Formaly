@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react"
-import { useNavigate, useLocation } from "react-router-dom"
+import { useNavigate } from "react-router-dom"
 import { Check, Clock } from "lucide-react"
 import PageIndicator from "../../components/pageindicator"
 import { dummyQuestions } from "../../lib/dummy"
