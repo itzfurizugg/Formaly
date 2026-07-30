@@ -1,7 +1,7 @@
-import { useState } from "react"
+import { useState, useRef, useEffect } from "react"
 import { Link, useLocation } from "react-router-dom"
 import logo from "../assets/logo.svg"
-import { House, RotateCcwClock, UserRound, Menu, X } from "lucide-react"
+import { House, RotateCcwClock, UserRound, X } from "lucide-react"
 
 const navLinks = [
     { to: "/", label: "Beranda", icon: House },
@@ -11,61 +11,172 @@ const navLinks = [
 
 function Navbar() {
     const { pathname } = useLocation()
-    const [mobileOpen, setMobileOpen] = useState(false)
+    const [open, setOpen] = useState(false)
+    const [closing, setClosing] = useState(false)
+    const navRef = useRef<HTMLDivElement>(null)
+    const [navHeight, setNavHeight] = useState(0)
 
-    const linkClass = (to: string) =>
-        `btn ${pathname === to ? "bg-darks text-base border-none hover:bg-darks" : "btn-ghost text-darks"}`
+    const isVisible = open || closing
+    const showContent = open || closing
+
+    useEffect(() => {
+        if (navRef.current) {
+            setNavHeight(navRef.current.offsetHeight)
+        }
+    }, [open, closing])
+
+    const closeNav = () => {
+        if (closing) return
+        setClosing(true)
+        setOpen(false)
+        setTimeout(() => setClosing(false), 300)
+    }
+
+    const toggle = () => {
+        if (open) {
+            closeNav()
+        } else {
+            setOpen(true)
+        }
+    }
+
+    const linkClass = (to: string, mobile = false) => {
+        const isActive = pathname === to
+        if (mobile) {
+            return `flex items-center gap-2 w-full h-11 px-3 rounded-lg text-sm font-medium transition-colors ${
+                isActive
+                    ? "bg-darks text-base"
+                    : "bg-base-200 text-darks hover:bg-base-300"
+            }`
+        }
+        return `btn ${isActive ? "bg-darks text-base border-none hover:bg-darks" : "btn-ghost text-darks"}`
+    }
 
     return (
-        <div className="navbar shadow-sm bg-base px-4 lg:px-6 relative">
-            <div className="flex-1 flex items-center">
-                <Link to="/" onClick={() => setMobileOpen(false)}>
-                    <img src={logo} alt="Formaly" className="h-6 w-auto ml-3 xl:ml-10" />
-                </Link>
-            </div>
-
-            <div className="hidden lg:flex flex-1 justify-center gap-1">
-                {navLinks.map(({ to, label, icon: Icon }) => (
-                    <Link key={to} to={to} className={linkClass(to)}>
-                        <Icon className="h-4 w-auto" />
-                        {label}
-                    </Link>
-                ))}
-            </div>
-
-            <div className="flex-1 flex justify-end lg:hidden">
-                <button
-                    className="btn btn-square btn-ghost text-darks"
-                    onClick={() => setMobileOpen(!mobileOpen)}
-                >
-                    {mobileOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
-                </button>
-            </div>
-
-            <div className="hidden lg:flex flex-1 justify-end">
-                <button className="btn btn-square btn-ghost text-darks">
-                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" className="inline-block h-5 w-5 stroke-current">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 12h.01M12 12h.01M19 12h.01M6 12a1 1 0 11-2 0 1 1 0 012 0zm7 0a1 1 0 11-2 0 1 1 0 012 0zm7 0a1 1 0 11-2 0 1 1 0 012 0z"></path>
-                    </svg>
-                </button>
-            </div>
-
-            {mobileOpen && (
-                <div className="absolute top-full left-0 w-full bg-base border-t border-second shadow-md flex items-center px-4 py-3 gap-2 lg:hidden z-50">
-                    {navLinks.map(({ to, label, icon: Icon }) => (
-                        <Link
-                            key={to}
-                            to={to}
-                            className={`btn btn-sm ${pathname === to ? "bg-darks text-base border-none hover:bg-darks" : "btn-ghost text-darks"}`}
-                            onClick={() => setMobileOpen(false)}
+        <>
+            <div
+                ref={navRef}
+                className="navbar shadow-sm bg-base px-4 lg:px-6 relative z-50 flex-col items-stretch !py-0"
+            >
+                <div className="flex items-center justify-between w-full py-2 gap-2 relative min-h-[44px]">
+                    {/* --- LEFT SLOT: logo (closed) / Beranda (open) --- */}
+                    <div className="flex-1 relative min-h-[44px] flex items-center">
+                        {/* Logo — closed state */}
+                        <div
+                            className={`absolute inset-0 flex items-center transition-all duration-300 ease-out ${
+                                open ? "opacity-0 pointer-events-none" : "opacity-100"
+                            }`}
                         >
-                            <Icon className="h-4 w-auto" />
-                            {label}
-                        </Link>
-                    ))}
+                            <Link to="/" onClick={() => open && closeNav()}>
+                                <img src={logo} alt="Formaly" className="h-6 w-auto ml-3 mt-2 lg:ml-10 lg:mt-2" />
+                            </Link>
+                        </div>
+
+                        {/* Beranda — open state */}
+                        <div
+                            className={`absolute inset-0 flex items-center transition-all duration-300 ease-out lg:hidden ${
+                                open
+                                    ? "opacity-100 translate-y-0"
+                                    : "opacity-0 translate-y-1 pointer-events-none"
+                            }`}
+                        >
+                            <Link
+                                to={navLinks[0].to}
+                                className={linkClass(navLinks[0].to, true)}
+                                onClick={closeNav}
+                            >
+                                {(() => {
+                                    const Icon = navLinks[0].icon
+                                    return <Icon className="h-4 w-4" />
+                                })()}
+                                {navLinks[0].label}
+                            </Link>
+                        </div>
+                    </div>
+
+                    {/* --- CENTER: desktop nav links --- */}
+                    <div
+                        className={`hidden lg:flex flex-1 justify-center transition-all duration-300 ease-out mt-1 ${
+                            open ? "opacity-0" : "opacity-100"
+                        }`}
+                    >
+                        {navLinks.map(({ to, label, icon: Icon }) => (
+                            <Link key={to} to={to} className={linkClass(to)}>
+                                <Icon className="h-4 w-auto" />
+                                {label}
+                            </Link>
+                        ))}
+                    </div>
+
+                    {/* --- RIGHT: toggle button (hamburger / X) --- */}
+                    <button
+                        onClick={toggle}
+                        className="btn btn-square btn-ghost mt-1 text-darks relative overflow-hidden shrink-0 lg:hidden ml-auto"
+                        aria-label={open ? "Tutup menu" : "Buka menu"}
+                    >
+                        <div className={`transition-all duration-300 ease-out ${open ? "opacity-0 rotate-90 scale-75" : "opacity-100"}`}>
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="2" stroke="currentColor" className="h-5 w-5">
+                                <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5M3.75 17.25h16.5" />
+                            </svg>
+                        </div>
+                        <div className={`absolute inset-0 flex items-center justify-center transition-all duration-300 ease-out ${!open ? "opacity-0 -rotate-90 scale-75" : "opacity-100"}`}>
+                            <X className="h-5 w-5" />
+                        </div>
+                    </button>
+
+                    {/* --- RIGHT: desktop dots menu --- */}
+                    <div
+                        className={`hidden lg:flex flex-1 mt-1 justify-end transition-all duration-300 ease-out ${
+                            open ? "opacity-0" : "opacity-100"
+                        }`}
+                    >
+                        <button className="btn btn-square btn-ghost text-darks">
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" className="inline-block h-5 w-5 stroke-current">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 12h.01M12 12h.01M19 12h.01M6 12a1 1 0 11-2 0 1 1 0 012 0zm7 0a1 1 0 11-2 0 1 1 0 012 0zm7 0a1 1 0 11-2 0 1 1 0 012 0z"></path>
+                            </svg>
+                        </button>
+                    </div>
                 </div>
+
+                {/* --- DROPDOWN LINKS (Histori & Profil) --- */}
+                <div
+                    className={`overflow-hidden transition-all duration-300 ease-out lg:hidden ${
+                        open ? "max-h-32" : "max-h-0"
+                    }`}
+                >
+                    <div className={`transition-all duration-300 ease-out ${
+                        open
+                            ? "translate-y-0 opacity-100"
+                            : "translate-y-3 opacity-0"
+                    }`}>
+                        <div className="flex flex-col gap-1.5 pb-2">
+                            {navLinks.slice(1).map(({ to, label, icon: Icon }) => (
+                                <Link
+                                    key={to}
+                                    to={to}
+                                    className={linkClass(to, true)}
+                                    onClick={closeNav}
+                                >
+                                    <Icon className="h-4 w-4" />
+                                    {label}
+                                </Link>
+                            ))}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            {/* --- OVERLAY --- */}
+            {showContent && (
+                <div
+                    className={`fixed inset-x-0 bottom-0 z-40 lg:hidden transition-all duration-300 ease-out ${
+                        open ? "opacity-100" : "opacity-0"
+                    }`}
+                    style={{ top: navHeight, backgroundColor: "rgba(0,0,0,0.4)" }}
+                    onClick={closeNav}
+                />
             )}
-        </div>
+        </>
     )
 }
 
