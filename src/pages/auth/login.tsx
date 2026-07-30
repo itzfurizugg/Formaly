@@ -1,9 +1,12 @@
 import { useState } from "react"
-import { Link } from "react-router-dom"
+import { Link, useNavigate } from "react-router-dom"
 import { LogIn } from "lucide-react"
 import logo from "../../assets/logo.svg"
+import { useAuth } from "../../lib/auth"
 
 function Login() {
+    const navigate = useNavigate()
+    const { login } = useAuth()
     const [email, setEmail] = useState("")
     const [password, setPassword] = useState("")
     const [loading, setLoading] = useState(false)
@@ -14,9 +17,8 @@ function Login() {
         setError(null)
         setLoading(true)
         try {
-            // TODO: hubungkan ke Supabase auth
-            // const { error } = await supabase.auth.signInWithPassword({ email, password })
-            // if (error) throw error
+            await login(email, password)
+            navigate("/")
         } catch (err) {
             setError(err instanceof Error ? err.message : "Gagal masuk, coba lagi.")
         } finally {

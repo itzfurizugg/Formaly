@@ -1,29 +1,41 @@
-import { useState } from "react";
-import { supabase } from "../lib/supabase";
+import { useState } from "react"
+import { useNavigate } from "react-router-dom"
+import { supabase } from "../lib/supabase"
+
+interface FormResult {
+    id: string
+    title: string
+    description: string
+    author_name: string
+    duration: number
+    question_count: number
+}
 
 function Search() {
-    const [token, setToken] = useState("");
-    const [error, setError] = useState("");
-    const [loading, setLoading] = useState(false);
+    const navigate = useNavigate()
+    const [token, setToken] = useState("")
+    const [error, setError] = useState("")
+    const [loading, setLoading] = useState(false)
 
     const handleJoin = async () => {
-        if (!token.trim()) return;
-        setLoading(true);
-        setError("");
+        if (!token.trim()) return
+        setLoading(true)
+        setError("")
 
         const { data, error: rpcError } = await supabase.rpc("get_form_by_token", {
             p_token: token.trim(),
-        });
+        })
 
-        setLoading(false);
+        setLoading(false)
 
         if (rpcError || !data || data.length === 0) {
-            setError("Token tidak valid!");
-            return;
+            setError("Token tidak valid!")
+            return
         }
 
-        alert("Form ditemukan: " + data[0].title);
-    };
+        const form = data[0] as FormResult
+        navigate("/form/description", { state: { form } })
+    }
 
     return (
         <div className="join">
@@ -48,7 +60,7 @@ function Search() {
                 {loading ? <span className="loading loading-spinner loading-xs"></span> : "Join"}
             </button>
         </div>
-    );
+    )
 }
 
-export default Search;
+export default Search

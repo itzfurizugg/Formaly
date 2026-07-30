@@ -1,6 +1,25 @@
+import { useEffect, useState } from "react"
+import { useNavigate } from "react-router-dom"
 import { UserRound, Mail, LogOut } from "lucide-react"
+import { useAuth } from "../lib/auth"
 
 function Profile() {
+    const navigate = useNavigate()
+    const { user, profile, logout } = useAuth()
+    const [loggingOut, setLoggingOut] = useState(false)
+
+    useEffect(() => {
+        if (!user) navigate("/login")
+    }, [user, navigate])
+
+    const handleLogout = async () => {
+        setLoggingOut(true)
+        await logout()
+        navigate("/login")
+    }
+
+    if (!user) return null
+
     return (
         <div className="flex flex-col items-center px-6 py-10">
             <div className="max-w-4xl w-full">
@@ -17,7 +36,7 @@ function Profile() {
                         <div className="w-16 h-16 rounded-full bg-darks flex items-center justify-center mb-3">
                             <UserRound className="h-7 w-7 text-base" />
                         </div>
-                        <h2 className="text-lg font-bold text-darks">Mujahid Robbani</h2>
+                        <h2 className="text-lg font-bold text-darks">{profile?.name || "User"}</h2>
                         <p className="text-sm text-tinted">murid</p>
                     </div>
 
@@ -29,7 +48,7 @@ function Profile() {
                                 <input
                                     type="text"
                                     className="input w-full pl-10 bg-base border-second focus:border-done focus:outline-none transition-colors"
-                                    value="Mujahid Robbani"
+                                    value={profile?.name || "User"}
                                     readOnly
                                 />
                             </div>
@@ -42,16 +61,24 @@ function Profile() {
                                 <input
                                     type="email"
                                     className="input w-full pl-10 bg-base border-second focus:border-done focus:outline-none transition-colors"
-                                    value="mujahid@email.com"
+                                    value={profile?.email || user.email || ""}
                                     readOnly
                                 />
                             </div>
                         </div>
                     </div>
 
-                    <button className="btn bg-wrong text-base border-none w-full mt-6 hover:opacity-90 transition-opacity">
-                        <LogOut className="h-4 w-4" />
-                        Keluar
+                    <button
+                        onClick={handleLogout}
+                        disabled={loggingOut}
+                        className="btn bg-wrong text-base border-none w-full mt-6 hover:opacity-90 transition-opacity"
+                    >
+                        {loggingOut ? (
+                            <span className="loading loading-spinner loading-sm" />
+                        ) : (
+                            <LogOut className="h-4 w-4" />
+                        )}
+                        {loggingOut ? "Keluar..." : "Keluar"}
                     </button>
                 </div>
             </div>

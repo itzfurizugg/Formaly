@@ -1,11 +1,17 @@
 import { useState, useRef, type KeyboardEvent } from "react"
-import { Link } from "react-router-dom"
+import { Link, useLocation, useNavigate } from "react-router-dom"
 import { ShieldCheck, ArrowLeft, RotateCcw } from "lucide-react"
 import logo from "../../assets/logo.svg"
+import { useAuth } from "../../lib/auth"
 
 const OTP_LENGTH = 6
 
 function Otp() {
+    const location = useLocation()
+    const navigate = useNavigate()
+    const { verifyOtp } = useAuth()
+    const email = (location.state as { email?: string })?.email || ""
+
     const [otp, setOtp] = useState<string[]>(Array(OTP_LENGTH).fill(""))
     const [loading, setLoading] = useState(false)
     const [error, setError] = useState<string | null>(null)
@@ -49,9 +55,8 @@ function Otp() {
         }
         setLoading(true)
         try {
-            // TODO: verifikasi OTP via Supabase
-            // const { error } = await supabase.auth.verifyOtp({ email, token: code, type: "signup" })
-            // if (error) throw error
+            await verifyOtp(email, code)
+            navigate("/")
         } catch (err) {
             setError(err instanceof Error ? err.message : "Verifikasi gagal, coba lagi.")
         } finally {
@@ -99,7 +104,7 @@ function Otp() {
                             <h2 className="text-3xl font-bold text-darks">Verifikasi</h2>
                         </div>
                         <p className="text-sm text-tinted mt-2 mb-6">
-                            Masukkan kode OTP yang dikirim ke email kamu
+                            Masukkan kode OTP yang dikirim ke {email || "email kamu"}
                         </p>
 
                         {error && (

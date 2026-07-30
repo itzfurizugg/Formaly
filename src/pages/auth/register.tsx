@@ -2,9 +2,11 @@ import { useState } from "react"
 import { Link, useNavigate } from "react-router-dom"
 import { UserPlus } from "lucide-react"
 import logo from "../../assets/logo.svg"
+import { useAuth } from "../../lib/auth"
 
 function Register() {
     const navigate = useNavigate()
+    const { register } = useAuth()
     const [name, setName] = useState("")
     const [email, setEmail] = useState("")
     const [password, setPassword] = useState("")
@@ -23,10 +25,8 @@ function Register() {
 
         setLoading(true)
         try {
-            // TODO: hubungkan ke Supabase auth
-            // const { error } = await supabase.auth.signUp({ email, password })
-            // if (error) throw error
-            navigate("/auth")
+            await register(name, email, password)
+            navigate("/auth", { state: { email } })
         } catch (err) {
             setError(err instanceof Error ? err.message : "Gagal daftar, coba lagi.")
         } finally {
@@ -71,7 +71,6 @@ function Register() {
                         )}
 
                         <form onSubmit={handleSubmit} className="space-y-4">
-                            {/* NAMA */}
                             <div>
                                 <label htmlFor="name" className="block text-sm font-medium text-darks mb-1.5">
                                     Nama
@@ -87,7 +86,6 @@ function Register() {
                                     onChange={(e) => setName(e.target.value)}
                                 />
                             </div>
-                            {/* EMAIL */}
                             <div>
                                 <label htmlFor="email" className="block text-sm font-medium text-darks mb-1.5">
                                     Email
@@ -103,7 +101,6 @@ function Register() {
                                     onChange={(e) => setEmail(e.target.value)}
                                 />
                             </div>
-                            {/* PASSWORD */}
                             <div>
                                 <label htmlFor="password" className="block text-sm font-medium text-darks mb-1.5">
                                     Password
@@ -119,7 +116,6 @@ function Register() {
                                     onChange={(e) => setPassword(e.target.value)}
                                 />
                             </div>
-                            {/* CONFIRM PASSWORD */}
                             <div>
                                 <label htmlFor="confirmPassword" className="block text-sm font-medium text-darks mb-1.5">
                                     Konfirmasi Password

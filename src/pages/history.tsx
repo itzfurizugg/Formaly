@@ -1,20 +1,56 @@
-import { useState } from "react"
+import { useEffect, useState } from "react"
+import { useNavigate } from "react-router-dom"
 import { Search, RotateCcwClock, FileText } from "lucide-react"
 import Card from "../components/card"
+import { supabase } from "../lib/supabase"
+import { useAuth } from "../lib/auth"
 
-const dummyHistory = [
-    { title: "AAT Konsentrasi Keahlian Kelas 11 RPL", author: "Mujahid Robbani Sholahudin", duration: "30 menit", questions: 40 },
-    { title: "Ujian Tengah Semester Ganjil 2024", author: "Tim Akademik", duration: "60 menit", questions: 50 },
-    { title: "Survey Kepuasan Pembelajaran", author: "BAAK", duration: "15 menit", questions: 10 },
-]
+interface HistoryItem {
+    id: string
+    form_id: string
+    forms: {
+        title: string
+        author_name: string
+        duration: number
+        question_count: number
+    }
+}
 
 function History() {
+    const navigate = useNavigate()
+    const { user } = useAuth()
     const [search, setSearch] = useState("")
+    const [items, setItems] = useState<HistoryItem[]>([])
+    const [loading, setLoading] = useState(true)
 
-    const filtered = dummyHistory.filter(
+    useEffect(() => {
+        if (!user) {
+            navigate("/login")
+            return
+        }
+        loadHistory()
+    }, [user])
+
+    async function loadHistory() {
+        if (!user) return
+        setLoading(true)
+        const { data } = await supabase
+            .from("submissions")
+            .select(`
+                id, form_id,
+                forms ( title, author_name, duration, question_count )
+            `)
+            .eq("user_id", user.id)
+            .order("submitted_at", { ascending: false })
+
+        if (data) setItems(data as unknown as HistoryItem[])
+        setLoading(false)
+    }
+
+    const filtered = items.filter(
         (item) =>
-            item.title.toLowerCase().includes(search.toLowerCase()) ||
-            item.author.toLowerCase().includes(search.toLowerCase())
+            item.forms?.title?.toLowerCase().includes(search.toLowerCase()) ||
+            item.forms?.author_name?.toLowerCase().includes(search.toLowerCase())
     )
 
     return (
@@ -41,7 +77,11 @@ function History() {
                     </div>
                 </div>
 
-                {filtered.length === 0 ? (
+                {loading ? (
+                    <div className="flex justify-center py-20">
+                        <span className="loading loading-spinner loading-lg" />
+                    </div>
+                ) : filtered.length === 0 ? (
                     <div className="text-center py-20">
                         <FileText className="h-12 w-12 text-tinted/40 mx-auto mb-3" />
                         <p className="text-tinted">
@@ -50,13 +90,13 @@ function History() {
                     </div>
                 ) : (
                     <div className="space-y-3">
-                        {filtered.map((item, i) => (
+                        {filtered.map((item) => (
                             <Card
-                                key={i}
-                                title={item.title}
-                                author={item.author}
-                                duration={item.duration}
-                                questions={item.questions}
+                                key={item.id}
+                                title={item.forms?.title || "Form"}
+                                author={item.forms?.author_name || "-"}
+                                duration={item.forms?.duration ? `${item.forms.duration} menit` : "-"}
+                                questions={item.forms?.question_count || 0}
                                 to="/form/description"
                                 buttonLabel="Lihat"
                             />

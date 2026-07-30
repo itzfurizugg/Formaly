@@ -2,6 +2,7 @@ import { useState, useRef, useEffect } from "react"
 import { Link, useLocation } from "react-router-dom"
 import logo from "../assets/logo.svg"
 import { House, RotateCcwClock, UserRound, X } from "lucide-react"
+import { useAuth } from "../lib/auth"
 
 const navLinks = [
     { to: "/", label: "Beranda", icon: House },
@@ -11,12 +12,12 @@ const navLinks = [
 
 function Navbar() {
     const { pathname } = useLocation()
+    const { user } = useAuth()
     const [open, setOpen] = useState(false)
     const [closing, setClosing] = useState(false)
     const navRef = useRef<HTMLDivElement>(null)
     const [navHeight, setNavHeight] = useState(0)
 
-    const isVisible = open || closing
     const showContent = open || closing
 
     useEffect(() => {
@@ -52,6 +53,8 @@ function Navbar() {
         return `btn ${isActive ? "bg-darks text-base border-none hover:bg-darks" : "btn-ghost text-darks"}`
     }
 
+    if (!user) return null
+
     return (
         <>
             <div
@@ -59,9 +62,7 @@ function Navbar() {
                 className="navbar shadow-sm bg-base px-4 lg:px-6 relative z-50 flex-col items-stretch !py-0"
             >
                 <div className="flex items-center justify-between w-full py-2 gap-2 relative min-h-[44px]">
-                    {/* --- LEFT SLOT: logo (closed) / Beranda (open) --- */}
                     <div className="flex-1 relative min-h-[44px] flex items-center">
-                        {/* Logo — closed state */}
                         <div
                             className={`absolute inset-0 flex items-center transition-all duration-300 ease-out ${
                                 open ? "opacity-0 pointer-events-none" : "opacity-100"
@@ -72,7 +73,6 @@ function Navbar() {
                             </Link>
                         </div>
 
-                        {/* Beranda — open state */}
                         <div
                             className={`absolute inset-0 flex items-center transition-all duration-300 ease-out lg:hidden ${
                                 open
@@ -94,7 +94,6 @@ function Navbar() {
                         </div>
                     </div>
 
-                    {/* --- CENTER: desktop nav links --- */}
                     <div
                         className={`hidden lg:flex flex-1 justify-center transition-all duration-300 ease-out mt-1 ${
                             open ? "opacity-0" : "opacity-100"
@@ -108,7 +107,6 @@ function Navbar() {
                         ))}
                     </div>
 
-                    {/* --- RIGHT: toggle button (hamburger / X) --- */}
                     <button
                         onClick={toggle}
                         className="btn btn-square btn-ghost mt-1 text-darks relative overflow-hidden shrink-0 lg:hidden ml-auto"
@@ -124,7 +122,6 @@ function Navbar() {
                         </div>
                     </button>
 
-                    {/* --- RIGHT: desktop dots menu --- */}
                     <div
                         className={`hidden lg:flex flex-1 mt-1 justify-end transition-all duration-300 ease-out ${
                             open ? "opacity-0" : "opacity-100"
@@ -138,7 +135,6 @@ function Navbar() {
                     </div>
                 </div>
 
-                {/* --- DROPDOWN LINKS (Histori & Profil) --- */}
                 <div
                     className={`overflow-hidden transition-all duration-300 ease-out lg:hidden ${
                         open ? "max-h-32" : "max-h-0"
@@ -166,7 +162,6 @@ function Navbar() {
                 </div>
             </div>
 
-            {/* --- OVERLAY --- */}
             {showContent && (
                 <div
                     className={`fixed inset-x-0 bottom-0 z-40 lg:hidden transition-all duration-300 ease-out ${

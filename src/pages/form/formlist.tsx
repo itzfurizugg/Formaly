@@ -1,31 +1,54 @@
 import { useNavigate, useLocation } from "react-router-dom"
-import { dummyQuestions } from "../../lib/dummy"
-import type { Answer } from "../../lib/dummy"
+
+interface Question {
+    id: number
+    text: string
+    options: string[]
+}
+
+interface Answer {
+    [key: number]: number
+}
 
 interface LocationState {
     current?: number
     answers?: Answer
+    formId?: string
+    questions?: Question[]
 }
 
-function FormList(props) {
+function FormList() {
     const navigate = useNavigate()
     const location = useLocation()
     const locationState = location.state as LocationState | null
     const current = locationState?.current || 0
     const answers = locationState?.answers || {}
+    const formId = locationState?.formId
+    const questions = locationState?.questions || []
+
+    if (questions.length === 0) {
+        return (
+            <div className="flex flex-col items-center justify-center min-h-screen px-4">
+                <p className="text-tinted mb-4">Tidak ada data soal.</p>
+                <button onClick={() => navigate("/")} className="btn bg-darks text-base border-none">
+                    Kembali
+                </button>
+            </div>
+        )
+    }
 
     return (
         <div className="flex flex-col items-center px-4 py-6 pb-28 min-h-screen bg-base-300">
             <div className="w-full max-w-3xl bg-base-300">
                 <div className="p-2 mb-3 lg:mt-1">
-                    <h1 className="text-2xl lg:text-4xl font-bold text-darks">AAT Konsentrasi Keahlian Kelas 11 RPL</h1>
+                    <h1 className="text-2xl lg:text-4xl font-bold text-darks">Daftar Soal</h1>
                     <p className="text-xs lg:text-xl text-tinted mt-1">
                         Daftar soal ujian
                     </p>
                 </div>
 
                 <div className="grid grid-cols-5 lg:grid-cols-10 gap-2 mb-6">
-                    {dummyQuestions.map((q, index) => {
+                    {questions.map((q, index) => {
                         const isCurrent = current === index
                         const isAnsweredQuestion = answers[q.id] !== undefined
 
@@ -33,7 +56,7 @@ function FormList(props) {
                             <button
                                 key={q.id}
                                 onClick={() => {
-                                    navigate('/form', { state: { current: index, answers } })
+                                    navigate('/form', { state: { current: index, answers, formId, questions } })
                                 }}
                                 className={`aspect-square p-3 rounded-sm transition-all flex items-center justify-center text-xl lg:text-xl font-medium
                                     ${isCurrent
@@ -44,19 +67,18 @@ function FormList(props) {
                                     }
                                 `}
                             >
-                                {q.id}
+                                {index + 1}
                             </button>
                         )
                     })}
                 </div>
             </div>
 
-            {/* Fixed dock di bawah + gradient fade */}
             <div className="fixed bottom-0 left-0 right-0 pointer-events-none">
                 <div className="bg-base-300 px-4 pb-4 pointer-events-auto">
                     <div className="w-full max-w-3xl mx-auto">
                         <button
-                            onClick={() => navigate('/form', { state: { current } })}
+                            onClick={() => navigate('/form', { state: { current, answers, formId, questions } })}
                             className="btn w-full h-12 lg:h-20 min-h-0 lg:mb-5 bg-darks lg:text-2xl text-white rounded-none hover:opacity-90"
                         >
                             Kembali ke soal
@@ -65,7 +87,6 @@ function FormList(props) {
                 </div>
             </div>
         </div>
-
     )
 }
 
