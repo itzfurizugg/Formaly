@@ -1,5 +1,4 @@
-import { Link, useNavigate, useLocation } from "react-router-dom"
-import { FileText } from "lucide-react"
+import { useNavigate, useLocation } from "react-router-dom"
 import { dummyQuestions } from "../../lib/dummy"
 import type { Answer } from "../../lib/dummy"
 
@@ -18,7 +17,7 @@ function FormList() {
     return (
         <div className="flex flex-col items-center px-4 py-6 pb-28 min-h-screen bg-base-200">
             <div className="w-full max-w-3xl">
-                <div className="p-2 mb-3 lg:mt-10">
+                <div className="p-2 mb-3 lg:mt-1">
                     <h1 className="text-2xl lg:text-4xl font-bold text-darks">AAT Konsentrasi Keahlian Kelas 11 RPL</h1>
                     <p className="text-xs lg:text-xl text-tinted mt-1">
                         Daftar soal ujian
