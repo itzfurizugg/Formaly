@@ -2,10 +2,11 @@
 @plugin "daisyui";
 
 @theme {
+  --font-sans: "Montserrat", sans-serif;
   --color-base: #F7F7F7;
-  --color-secondary: #EEEEEE;
-  --color-accentOne: #929AAB;
-  --color-accentTwo: #393E46;
+  --color-second: #EEEEEE;
+  --color-tinted: #929AAB;
+  --color-darks: #393E46;
   --color-done: #007DCC;
   --color-pass: #2FA084;
   --color-wrong: #D90000;
