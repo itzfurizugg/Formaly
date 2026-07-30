@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react"
-import { useNavigate } from "react-router-dom"
+import { useNavigate, useLocation } from "react-router-dom"
 import { Check, Clock } from "lucide-react"
 import PageIndicator from "../../components/pageindicator"
 import { dummyQuestions } from "../../lib/dummy"
@@ -10,7 +10,7 @@ interface LocationState {
     answers?: Answer
 }
 
-function FormPage() {
+function FormPage(props) {
     const location = useLocation()
     const locationState = location.state as LocationState | null
 
@@ -53,7 +53,7 @@ function FormPage() {
     const navigate = useNavigate()
 
     const goToList = () => {
-        navigate('/form/formlist', { state: { current, answers } })
+        navigate('/form/list', { state: { current, answers } })
     }
 
     return (
@@ -103,14 +103,14 @@ function FormPage() {
                         {question.options.map((option, i) => {
                             const selected = answers[question.id] === i
                             return (
-                                <button
-                                    key={i}
-                                    onClick={() => selectOption(i)}
-                                    className={`w-full text-left px-4 py-3 rounded-lg border text-sm transition-colors ${selected
-                                        ? "bg-base border-darks text-darks font-medium"
-                                        : "bg-base border-second text-tinted hover:border-darks/50"
-                                        }`}
-                                >
+<button
+                                        key={i}
+                                        onClick={() => selectOption(i)}
+                                        className={`w-full text-left px-4 py-3 rounded-lg border text-sm transition-colors ${selected
+                                            ? "bg-darks border-darks text-white font-medium"
+                                            : "bg-white border-second text-darks hover:border-darks/50"
+                                            }`}
+                                    >
                                     <span className="flex items-center gap-3">
                                         <span className={`shrink-0 w-5 h-5 rounded-full border-2 flex items-center justify-center ${selected ? "border-darks bg-darks" : "border-tinted"
                                             }`}>

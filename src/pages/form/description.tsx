@@ -1,7 +1,7 @@
 import { useNavigate } from "react-router-dom"
 import { ArrowLeft, Play, FileText, Clock, User } from "lucide-react"
 
-function FormDescription() {
+function FormDescription(props) {
     const navigate = useNavigate()
 
     return (
