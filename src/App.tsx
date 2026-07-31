@@ -6,6 +6,7 @@ import Otp from "./pages/auth/otp"
 import Home from "./pages/home"
 import History from "./pages/history"
 import Profile from "./pages/profile"
+import AdminForms from "./pages/admin/forms"
 import FormDescription from "./pages/form/description"
 import FormPage from "./pages/form/form"
 import FormList from "./pages/form/formlist"
@@ -25,6 +26,7 @@ function App() {
           <Route path="/" element={<Home />} />
           <Route path="/history" element={<History />} />
           <Route path="/profile" element={<Profile />} />
+          <Route path="/admin/forms" element={<AdminForms />} />
           <Route path="/form/description" element={<FormDescription />} />
           <Route path="/form" element={<FormPage />} />
           <Route path="/form/list" element={<FormList />} />

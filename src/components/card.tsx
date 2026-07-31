@@ -8,9 +8,10 @@ interface CardProps {
     questions: number
     to: string
     buttonLabel?: string
+    state?: Record<string, unknown>
 }
 
-function Card({ title, author, duration, questions, to, buttonLabel = "Mulai" }: CardProps) {
+function Card({ title, author, duration, questions, to, buttonLabel = "Mulai", state }: CardProps) {
     return (
         <div className="card bg-base border border-second rounded-none">
             <div className="card-body">
@@ -29,6 +30,7 @@ function Card({ title, author, duration, questions, to, buttonLabel = "Mulai" }:
                 <div className="card-actions justify-end mt-3">
                     <Link
                         to={to}
+                        state={state}
                         className="btn rounded-none bg-darks text-base border-none h-9 min-h-0"
                     >
                         <Play className="h-3 w-auto" fill="currentColor" strokeWidth={0} />
