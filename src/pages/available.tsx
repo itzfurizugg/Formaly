@@ -16,18 +16,19 @@ interface FormItem {
 
 function Available() {
     const navigate = useNavigate()
-    const { user } = useAuth()
+    const { user, loading: authLoading } = useAuth()
     const [search, setSearch] = useState("")
     const [forms, setForms] = useState<FormItem[]>([])
     const [loading, setLoading] = useState(true)
 
     useEffect(() => {
+        if (authLoading) return
         if (!user) {
             navigate("/login")
             return
         }
         loadForms()
-    }, [user])
+    }, [user, authLoading, navigate])
 
     async function loadForms() {
         setLoading(true)

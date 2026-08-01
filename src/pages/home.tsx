@@ -17,27 +17,61 @@ interface FormItem {
 
 function Home() {
     const navigate = useNavigate()
-    const { user } = useAuth()
+    const { user, loading: authLoading } = useAuth()
     const [search, setSearch] = useState("")
     const [forms, setForms] = useState<FormItem[]>([])
     const [loading, setLoading] = useState(true)
 
     useEffect(() => {
+        if (authLoading) return
         if (!user) {
             navigate("/login")
             return
         }
         loadForms()
-    }, [user])
+    }, [user, authLoading, navigate])
 
     async function loadForms() {
         setLoading(true)
-        const { data } = await supabase
+        const { data, error } = await supabase
             .from("forms")
-            .select("id, title, description, author_name, duration, question_count")
+            .select(`
+                id,
+                title,
+                description,
+                duration,
+                created_at,
+                users:creator_id (
+                    name,
+                    role
+                ),
+                questions (
+                    id
+                )
+            `)
             .order("created_at", { ascending: false })
 
-        if (data) setForms(data)
+        if (data) {
+            const formatted = data
+                .filter((f: any) => {
+                    const role = f.users?.role ? String(f.users.role).toLowerCase() : ""
+                    return role === "creator" || role === "admin"
+                })
+                .map((f: any) => ({
+                    id: f.id,
+                    title: f.title,
+                    description: f.description,
+                    author_name: f.users?.name || "Admin",
+                    duration: f.duration || 0,
+                    question_count: f.questions ? f.questions.length : 0
+                }))
+            setForms(formatted)
+        }
+
+        if (error) {
+            console.error("Gagal memuat form:", error)
+        }
+
         setLoading(false)
     }
 

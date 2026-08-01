@@ -18,18 +18,19 @@ interface HistoryItem {
 
 function History() {
     const navigate = useNavigate()
-    const { user } = useAuth()
+    const { user, loading: authLoading } = useAuth()
     const [search, setSearch] = useState("")
     const [items, setItems] = useState<HistoryItem[]>([])
     const [loading, setLoading] = useState(true)
 
     useEffect(() => {
+        if (authLoading) return
         if (!user) {
             navigate("/login")
             return
         }
         loadHistory()
-    }, [user])
+    }, [user, authLoading, navigate])
 
     async function loadHistory() {
         if (!user) return
