@@ -35,10 +35,23 @@ function Available() {
         setLoading(true)
         const { data } = await supabase
             .from("forms")
-            .select("id, title, description, author_name, duration, question_count")
+            .select(`
+                id, title, description, duration,
+                users:creator_id ( name ),
+                questions ( id )
+            `)
             .order("created_at", { ascending: false })
 
-        if (data) setForms(data)
+        if (data) {
+            setForms(data.map((f: any) => ({
+                id: f.id,
+                title: f.title,
+                description: f.description,
+                author_name: f.users?.name || "Creator",
+                duration: f.duration || 0,
+                question_count: f.questions ? f.questions.length : 0
+            })))
+        }
         setLoading(false)
     }
 

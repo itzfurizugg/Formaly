@@ -11,7 +11,6 @@ interface FormRow {
     status: string
     duration: number
     passing_score: number
-    exam_mode: boolean
     created_at: string
     questions: { id: string }[]
     submissions: { id: string }[]
@@ -36,7 +35,7 @@ function CreatorForms() {
         const { data, error: err } = await supabase
             .from("forms")
             .select(`
-                id, title, description, status, duration, passing_score, exam_mode, created_at,
+                id, title, description, status, duration, passing_score, created_at,
                 questions ( id ),
                 submissions ( id )
             `)
@@ -107,7 +106,6 @@ function CreatorForms() {
                                         </div>
                                         <div className="flex items-center gap-2 shrink-0">
                                             {statusBadge(form.status)}
-                                            {form.exam_mode && <span className="badge badge-warning text-white rounded-full">Exam</span>}
                                         </div>
                                     </div>
 

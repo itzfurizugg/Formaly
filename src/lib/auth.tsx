@@ -75,7 +75,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const { data: { user: u } } = await supabase.auth.getUser()
     if (u) {
       const name = u.user_metadata?.name as string || "User"
-      await supabase.from("users").upsert({ id: u.id, name, email: u.email })
+      await supabase.from("users").upsert({ id: u.id, name, email: u.email, role: "user" })
       setProfile({ name, email: u.email || "" })
     }
   }

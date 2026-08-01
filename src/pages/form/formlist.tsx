@@ -47,7 +47,7 @@ function FormList() {
                     </p>
                 </div>
 
-                <div className="grid grid-cols-3 gap-2 mb-6 lg:grid-cols-5 lg:gap-2 lg:mb-6 lg:mt-4">
+                <div className="grid grid-cols-4 gap-2 mb-6 lg:grid-cols-5 lg:gap-2 lg:mb-6 lg:mt-4">
                     {questions.map((q, index) => {
                         const isCurrent = current === index
                         const isAnsweredQuestion = answers[q.id] !== undefined

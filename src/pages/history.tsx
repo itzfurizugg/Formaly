@@ -17,6 +17,12 @@ interface HistoryItem {
     }
 }
 
+interface HistoryRow {
+    id: string
+    form_id: string
+    forms: unknown
+}
+
 function History() {
     const navigate = useNavigate()
     const { user, loading: authLoading } = useAuth()
@@ -40,12 +46,30 @@ function History() {
             .from("submissions")
             .select(`
                 id, form_id,
-                forms ( title, author_name, duration, question_count )
+                forms (
+                    id, title, duration,
+                    users:creator_id ( name ),
+                    questions ( id )
+                )
             `)
             .eq("user_id", user.id)
             .order("submitted_at", { ascending: false })
 
-        if (data) setItems(data as unknown as HistoryItem[])
+        if (data) {
+            setItems((data as unknown as HistoryRow[]).map((item) => {
+                const f = item.forms as unknown as { title: string; duration: number; users?: { name: string } | null; questions?: { id: string }[] | null }
+                return {
+                    id: item.id,
+                    form_id: item.form_id,
+                    forms: {
+                        title: f?.title || "Form",
+                        author_name: f?.users?.name || "Creator",
+                        duration: f?.duration || 0,
+                        question_count: f?.questions?.length || 0,
+                    },
+                }
+            }))
+        }
         setLoading(false)
     }
 

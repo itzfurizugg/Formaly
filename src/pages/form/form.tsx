@@ -8,17 +8,20 @@ import { useAuth } from "../../lib/auth"
 interface Option {
     id: string
     option_text: string
+    is_correct?: boolean
 }
 
 interface Question {
     id: string
     question_text: string
+    question_type: string
+    score_value: number
     image_question?: string | null
     question_options: Option[]
 }
 
 interface Answer {
-    [key: string]: string
+    [key: string]: string | string[]
 }
 
 interface LocationState {
@@ -41,6 +44,7 @@ function FormPage() {
     const [timeLeft, setTimeLeft] = useState(300)
     const [loading, setLoading] = useState(true)
     const [submitting, setSubmitting] = useState(false)
+    const [error, setError] = useState<string | null>(null)
     const [modalImage, setModalImage] = useState<string | null>(null)
 
     useEffect(() => {
@@ -74,10 +78,13 @@ function FormPage() {
             .select(`
                 id,
                 question_text,
+                question_type,
+                score_value,
                 image_question,
                 question_options (
                     id,
-                    option_text
+                    option_text,
+                    is_correct
                 )
             `)
             .eq("form_id", formId)
@@ -131,7 +138,16 @@ function FormPage() {
     }
 
     const selectOption = (optionId: string) => {
-        setAnswers({ ...answers, [question.id]: optionId })
+        if (question.question_type === "multiple_choice") {
+            const current = answers[question.id]
+            const selected = Array.isArray(current) ? current : []
+            const next = selected.includes(optionId)
+                ? selected.filter((id) => id !== optionId)
+                : [...selected, optionId]
+            setAnswers({ ...answers, [question.id]: next })
+        } else {
+            setAnswers({ ...answers, [question.id]: optionId })
+        }
     }
 
     const next = () => {
@@ -149,15 +165,71 @@ function FormPage() {
     const handleSubmit = async () => {
         if (!user || !formId) return
         setSubmitting(true)
-        
-        const totalScore = 0
+        setError(null)
 
-        await supabase.from("submissions").insert({
+        let totalScore = 0
+        for (const q of questions) {
+            const ans = answers[q.id]
+            if (ans === undefined) continue
+            if (q.question_type === "text") continue
+
+            const selected = Array.isArray(ans) ? ans : [ans]
+            const correct = q.question_options.filter((o) => o.is_correct).map((o) => o.id)
+
+            if (selected.length === correct.length && selected.every((id) => correct.includes(id))) {
+                totalScore += Number(q.score_value) || 0
+            }
+        }
+
+        const { data: subData, error: subErr } = await supabase.from("submissions").insert({
             user_id: user.id,
             form_id: formId,
             total_score: totalScore,
             status: 'SUBMITTED'
-        })
+        }).select("id").single()
+
+        if (subErr) {
+            setSubmitting(false)
+            if (subErr.code === "23505") {
+                setError("Kamu sudah pernah mengerjakan form ini.")
+            } else {
+                setError(subErr.message || "Gagal mengirim jawaban. Coba lagi.")
+            }
+            return
+        }
+        const submissionId = subData.id
+
+        for (const q of questions) {
+            const ans = answers[q.id]
+            if (ans === undefined) continue
+
+            let insertError = null
+            if (q.question_type === "text") {
+                ;({ error: insertError } = await supabase.from("answers").insert({
+                    submission_id: submissionId,
+                    question_id: q.id,
+                    answer_text: String(ans),
+                }))
+            } else if (Array.isArray(ans)) {
+                ;({ error: insertError } = await supabase.from("answers").insert({
+                    submission_id: submissionId,
+                    question_id: q.id,
+                    selected_options: ans,
+                }))
+            } else {
+                ;({ error: insertError } = await supabase.from("answers").insert({
+                    submission_id: submissionId,
+                    question_id: q.id,
+                    selected_option_id: ans,
+                }))
+            }
+
+            if (insertError) {
+                setSubmitting(false)
+                setError(insertError.message || "Gagal menyimpan jawaban. Coba lagi.")
+                return
+            }
+        }
 
         setSubmitting(false)
         navigate("/history")
@@ -212,7 +284,10 @@ function FormPage() {
 
                     <div className="mt-6 space-y-3">
                         {question.question_options?.map((option) => {
-                            const selected = answers[question.id] === option.id
+                            const isMulti = question.question_type === "multiple_choice"
+                            const selected = isMulti
+                                ? Array.isArray(answers[question.id]) && (answers[question.id] as string[]).includes(option.id)
+                                : answers[question.id] === option.id
                             return (
                                 <button
                                     key={option.id}
@@ -224,9 +299,11 @@ function FormPage() {
                                     }`}
                                 >
                                     <span className="flex items-center gap-3">
-                                        <span className={`shrink-0 w-5 h-5 rounded-full border-2 flex items-center justify-center ${
-                                            selected ? "border-darks bg-darks" : "border-tinted"
-                                        }`}>
+                                        <span
+                                            className={`shrink-0 w-5 h-5 rounded-full border-2 flex items-center justify-center ${
+                                                isMulti ? "rounded-md" : "rounded-full"
+                                            } ${selected ? "border-darks bg-darks" : "border-tinted"}`}
+                                        >
                                             {selected && <Check className="h-3 w-3 text-white" strokeWidth={3} />}
                                         </span>
                                         {option.option_text}
@@ -240,42 +317,66 @@ function FormPage() {
                 {/* NOTE: LAYOUT DESKTOP (>= md) — PageIndicator & tombol Kirim inline di bawah konten */}
                 <div className="hidden md:flex items-center justify-between mt-4">
                     <PageIndicator total={total} current={current} answers={answers} onPrev={prev} onNext={next} onListClick={goToList} />
-                    {current >= total - 1 && (
-                        <button
-                            onClick={handleSubmit}
-                            disabled={submitting || answers[questions[total - 1].id] === undefined}
-                            className="btn text-white h-12 min-h-0 px-4 bg-done border-none rounded-none hover:opacity-90 disabled:opacity-25"
-                        >
-                            {submitting ? (
-                                <span className="loading loading-spinner loading-sm" />
-                            ) : (
-                                <Check className="h-4 w-4" />
-                            )}
-                            {submitting ? "Mengirim..." : "Kirim"}
-                        </button>
-                    )}
+                    <button
+                        onClick={handleSubmit}
+                        disabled={submitting}
+                        className="btn text-white h-12 min-h-0 px-4 bg-done border-none rounded-none hover:opacity-90 disabled:opacity-25"
+                    >
+                        {submitting ? (
+                            <span className="loading loading-spinner loading-sm" />
+                        ) : (
+                            <Check className="h-4 w-4" />
+                        )}
+                        {submitting ? "Mengirim..." : "Kirim"}
+                    </button>
                 </div>
+
+                {error && (
+                    <div className="mt-4 flex flex-col md:flex-row items-start gap-3 bg-red-500/10 border border-red-500/20 rounded-lg px-4 py-3">
+                        <p className="text-sm text-red-600 font-medium">{error}</p>
+                        {error.includes("sudah pernah") && (
+                            <button
+                                onClick={() => navigate("/history")}
+                                className="btn btn-sm text-white bg-darks border-none rounded-none hover:opacity-90"
+                            >
+                                Lihat Riwayat
+                            </button>
+                        )}
+                    </div>
+                )}
             </div>
 
             {/* NOTE: LAYOUT MOBILE (< md) — Dock fixed di bawah, latar bg-second */}
             <div className="fixed bottom-0 left-0 right-0 z-40 bg-second border-t border-base px-4 py-3 md:hidden mb-5">
                 <div className="w-full max-w-3xl mx-auto flex items-center justify-between">
                     <PageIndicator total={total} current={current} answers={answers} onPrev={prev} onNext={next} onListClick={goToList} />
-                    {current >= total - 1 && (
-                        <button
-                            onClick={handleSubmit}
-                            disabled={submitting || answers[questions[total - 1].id] === undefined}
-                            className="btn text-white h-12 min-h-0 px-4 bg-done border-none rounded-none hover:opacity-90 disabled:opacity-25"
-                        >
-                            {submitting ? (
-                                <span className="loading loading-spinner loading-sm" />
-                            ) : (
-                                <Check className="h-4 w-4" />
-                            )}
-                            {submitting ? "Mengirim..." : "Kirim"}
-                        </button>
-                    )}
+                    <button
+                        onClick={handleSubmit}
+                        disabled={submitting}
+                        className="btn text-white h-12 min-h-0 px-4 bg-done border-none rounded-none hover:opacity-90 disabled:opacity-25"
+                    >
+                        {submitting ? (
+                            <span className="loading loading-spinner loading-sm" />
+                        ) : (
+                            <Check className="h-4 w-4" />
+                        )}
+                        {submitting ? "Mengirim..." : "Kirim"}
+                    </button>
                 </div>
+
+                {error && (
+                    <div className="mt-3 flex flex-col items-stretch gap-2 bg-red-500/10 border border-red-500/20 rounded-lg px-4 py-3">
+                        <p className="text-sm text-red-600 font-medium">{error}</p>
+                        {error.includes("sudah pernah") && (
+                            <button
+                                onClick={() => navigate("/history")}
+                                className="btn btn-sm text-white bg-darks border-none rounded-none hover:opacity-90"
+                            >
+                                Lihat Riwayat
+                            </button>
+                        )}
+                    </div>
+                )}
             </div>
 
             {/* Modal Zoom Gambar */}

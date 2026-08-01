@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react"
 import { useNavigate, useParams } from "react-router-dom"
-import { ArrowLeft, Save, Loader2, ClipboardList, KeyRound } from "lucide-react"
+import { ArrowLeft, Save, Loader2, ClipboardList, KeyRound, Share2, Copy, Check, QrCode } from "lucide-react"
 import { supabase } from "../../lib/supabase"
 import { useAuth } from "../../lib/auth"
 
@@ -11,7 +11,6 @@ interface FormDetail {
     status: string
     duration: number
     passing_score: number
-    exam_mode: boolean
     created_at: string
 }
 
@@ -25,12 +24,12 @@ function FormEdit() {
     const [description, setDescription] = useState("")
     const [duration, setDuration] = useState(0)
     const [passingScore, setPassingScore] = useState(70)
-    const [examMode, setExamMode] = useState(false)
     const [status, setStatus] = useState("draft")
     const [loading, setLoading] = useState(true)
     const [saving, setSaving] = useState(false)
     const [error, setError] = useState<string | null>(null)
     const [saved, setSaved] = useState(false)
+    const [copied, setCopied] = useState(false)
 
     useEffect(() => {
         if (!user || !id) return
@@ -55,7 +54,6 @@ function FormEdit() {
         setDescription(data.description || "")
         setDuration(data.duration || 0)
         setPassingScore(data.passing_score || 0)
-        setExamMode(data.exam_mode || false)
         setStatus(String(data.status))
         setLoading(false)
     }
@@ -74,7 +72,6 @@ function FormEdit() {
                 description: description || null,
                 duration: duration || null,
                 passing_score: passingScore,
-                exam_mode: examMode,
                 status,
             })
             .eq("id", id)
@@ -137,6 +134,56 @@ function FormEdit() {
                     </button>
                 </div>
 
+                {status === "published" && (
+                    <div className="bg-white border border-second p-6 shadow-sm rounded-2xl mb-6">
+                        <div className="flex items-center gap-2 mb-1">
+                            <Share2 className="h-4 w-4 text-done" />
+                            <h2 className="font-semibold text-darks">Bagikan Form</h2>
+                        </div>
+                        <p className="text-sm text-tinted mb-4">
+                            Form ini sudah public. Bagikan link atau QR code agar orang lain bisa mengerjakannya.
+                        </p>
+
+                        <div className="flex gap-2">
+                            <input
+                                type="text"
+                                readOnly
+                                className="input flex-1 bg-base border-second focus:border-done focus:outline-none text-sm"
+                                value={`${window.location.origin}/form/description?formId=${id}`}
+                                onFocus={(e) => e.currentTarget.select()}
+                            />
+                            <button
+                                onClick={() => {
+                                    navigator.clipboard.writeText(`${window.location.origin}/form/description?formId=${id}`)
+                                    setCopied(true)
+                                    setTimeout(() => setCopied(false), 1500)
+                                }}
+                                className="btn bg-darks text-base border-none"
+                                title="Salin link"
+                            >
+                                {copied ? <Check className="h-4 w-4 text-done" /> : <Copy className="h-4 w-4" />}
+                                Salin
+                            </button>
+                        </div>
+
+                        <div className="mt-4 flex items-center gap-4">
+                            <div className="bg-base border border-second rounded-lg p-3 w-fit">
+                                <img
+                                    src={`https://api.qrserver.com/v1/create-qr-code/?size=140x140&data=${encodeURIComponent(
+                                        `${window.location.origin}/form/description?formId=${id}`
+                                    )}`}
+                                    alt="QR Code"
+                                    className="w-28 h-28"
+                                />
+                            </div>
+                            <p className="text-xs text-tinted leading-relaxed">
+                                <QrCode className="h-3.5 w-3.5 inline mr-1" />
+                                Scan QR code untuk membuka form langsung di perangkat lain.
+                            </p>
+                        </div>
+                    </div>
+                )}
+
                 {error && (
                     <div role="alert" className="text-sm text-wrong bg-wrong/5 border border-wrong/20 rounded-lg px-4 py-3 mb-4">
                         {error}
@@ -170,9 +217,11 @@ function FormEdit() {
                             <input
                                 type="number"
                                 min={0}
+                                step={1}
                                 className={inputCls}
                                 value={duration}
                                 onChange={(e) => setDuration(Number(e.target.value))}
+                                placeholder="0"
                             />
                         </div>
                         <div>
@@ -180,9 +229,12 @@ function FormEdit() {
                             <input
                                 type="number"
                                 min={0}
+                                max={100}
+                                step={1}
                                 className={inputCls}
                                 value={passingScore}
                                 onChange={(e) => setPassingScore(Number(e.target.value))}
+                                placeholder="0"
                             />
                         </div>
                     </div>
@@ -194,16 +246,6 @@ function FormEdit() {
                             <option value="published">Published</option>
                         </select>
                     </div>
-
-                    <label className="flex items-center gap-2 cursor-pointer">
-                        <input
-                            type="checkbox"
-                            className="checkbox checkbox-sm border-second"
-                            checked={examMode}
-                            onChange={(e) => setExamMode(e.target.checked)}
-                        />
-                        <span className="text-sm text-darks">Mode Ujian (Exam Mode)</span>
-                    </label>
 
                     <button
                         type="submit"

@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react"
 import { useNavigate, useLocation } from "react-router-dom"
 import { Clock, FileText, ArrowLeft, AlertCircle } from "lucide-react"
+import { supabase } from "../../lib/supabase"
 import { useAuth } from "../../lib/auth"
 
 interface FormItem {
@@ -21,7 +22,9 @@ function FormDescriptionPage() {
     const navigate = useNavigate()
     const { user, loading: authLoading } = useAuth()
     const locationState = location.state as LocationState | null
-    const form = locationState?.form
+    const params = new URLSearchParams(location.search)
+    const formIdParam = params.get("formId")
+    const [form, setForm] = useState<FormItem | null>(locationState?.form || null)
 
     const [loading, setLoading] = useState(false)
 
@@ -33,14 +36,50 @@ function FormDescriptionPage() {
             return
         }
 
+        if (!form && formIdParam) {
+            setLoading(true)
+            supabase
+                .from("forms")
+                .select(`
+                    id,
+                    title,
+                    description,
+                    duration,
+                    users:creator_id ( name ),
+                    questions ( id )
+                `)
+                .eq("id", formIdParam)
+                .single()
+                .then(({ data }) => {
+                    if (data) {
+                        setForm({
+                            id: data.id,
+                            title: data.title,
+                            description: data.description || "",
+                            author_name: data.users?.name || "Creator",
+                            duration: data.duration || 0,
+                            question_count: data.questions ? data.questions.length : 0,
+                        })
+                    } else {
+                        navigate("/")
+                    }
+                    setLoading(false)
+                })
+            return
+        }
+
         // Jika user mengakses halaman ini langsung via URL tanpa lewat Home (state kosong)
         if (!form) {
             navigate("/")
         }
-    }, [form, user, authLoading, navigate])
+    }, [form, formIdParam, user, authLoading, navigate])
 
     if (!form) {
-        return null
+        return loading ? (
+            <div className="flex items-center justify-center min-h-screen">
+                <span className="loading loading-spinner loading-lg" />
+            </div>
+        ) : null
     }
 
     const handleStartExam = () => {

@@ -258,9 +258,12 @@ function Questions() {
                                 <input
                                     type="number"
                                     min={0}
+                                    max={100}
+                                    step={1}
                                     className="input w-full bg-base border-second focus:border-done focus:outline-none"
                                     value={scoreValue}
                                     onChange={(e) => setScoreValue(Number(e.target.value))}
+                                    placeholder="0"
                                 />
                             </div>
                         </div>

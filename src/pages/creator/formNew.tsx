@@ -12,7 +12,6 @@ function FormNew() {
     const [description, setDescription] = useState("")
     const [duration, setDuration] = useState(0)
     const [passingScore, setPassingScore] = useState(70)
-    const [examMode, setExamMode] = useState(false)
     const [loading, setLoading] = useState(false)
     const [error, setError] = useState<string | null>(null)
 
@@ -30,7 +29,6 @@ function FormNew() {
                 description: description || null,
                 duration: duration || null,
                 passing_score: passingScore,
-                exam_mode: examMode,
                 status: "draft",
             })
             .select("id")
@@ -95,9 +93,11 @@ function FormNew() {
                             <input
                                 type="number"
                                 min={0}
+                                step={1}
                                 className={inputCls}
                                 value={duration}
                                 onChange={(e) => setDuration(Number(e.target.value))}
+                                placeholder="0"
                             />
                         </div>
                         <div>
@@ -105,22 +105,15 @@ function FormNew() {
                             <input
                                 type="number"
                                 min={0}
+                                max={100}
+                                step={1}
                                 className={inputCls}
                                 value={passingScore}
                                 onChange={(e) => setPassingScore(Number(e.target.value))}
+                                placeholder="0"
                             />
                         </div>
                     </div>
-
-                    <label className="flex items-center gap-2 cursor-pointer">
-                        <input
-                            type="checkbox"
-                            className="checkbox checkbox-sm border-second"
-                            checked={examMode}
-                            onChange={(e) => setExamMode(e.target.checked)}
-                        />
-                        <span className="text-sm text-darks">Mode Ujian (Exam Mode)</span>
-                    </label>
 
                     <button
                         type="submit"

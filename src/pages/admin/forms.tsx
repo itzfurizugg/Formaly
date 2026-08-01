@@ -10,7 +10,6 @@ interface Form {
     creator_id: string
     title: string
     description: string
-    exam_mode: boolean
     passing_score: number
     status: FormStatus
     created_at: string
@@ -92,9 +91,6 @@ function AdminForms() {
                                             >
                                                 {form.status === "published" ? "published" : "draft"}
                                             </span>
-                                            {form.exam_mode && (
-                                                <span className="badge badge-warning text-white">Exam Mode</span>
-                                            )}
                                         </div>
                                     </div>
 
