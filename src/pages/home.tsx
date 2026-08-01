@@ -5,6 +5,7 @@ import Search from "../components/search"
 import Card from "../components/card"
 import { supabase } from "../lib/supabase"
 import { useAuth } from "../lib/auth"
+import Loading from "../components/loading"
 
 interface FormItem {
     id: string
@@ -17,18 +18,19 @@ interface FormItem {
 
 function Home() {
     const navigate = useNavigate()
-    const { user } = useAuth()
+    const { user, loading: authLoading } = useAuth()
     const [search, setSearch] = useState("")
     const [forms, setForms] = useState<FormItem[]>([])
     const [loading, setLoading] = useState(true)
 
     useEffect(() => {
+        if (authLoading) return
         if (!user) {
             navigate("/login")
             return
         }
         loadForms()
-    }, [user])
+    }, [user, authLoading])
 
     async function loadForms() {
         setLoading(true)
@@ -46,6 +48,8 @@ function Home() {
             f.title.toLowerCase().includes(search.toLowerCase()) ||
             f.author_name.toLowerCase().includes(search.toLowerCase())
     )
+
+    if (authLoading || !user) return <Loading />
 
     return (
         <div>

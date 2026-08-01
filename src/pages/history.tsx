@@ -4,6 +4,7 @@ import { Search, RotateCcwClock, FileText } from "lucide-react"
 import Card from "../components/card"
 import { supabase } from "../lib/supabase"
 import { useAuth } from "../lib/auth"
+import Loading from "../components/loading"
 
 interface HistoryItem {
     id: string
@@ -18,18 +19,19 @@ interface HistoryItem {
 
 function History() {
     const navigate = useNavigate()
-    const { user } = useAuth()
+    const { user, loading: authLoading } = useAuth()
     const [search, setSearch] = useState("")
     const [items, setItems] = useState<HistoryItem[]>([])
     const [loading, setLoading] = useState(true)
 
     useEffect(() => {
+        if (authLoading) return
         if (!user) {
             navigate("/login")
             return
         }
         loadHistory()
-    }, [user])
+    }, [user, authLoading])
 
     async function loadHistory() {
         if (!user) return
@@ -52,6 +54,8 @@ function History() {
             item.forms?.title?.toLowerCase().includes(search.toLowerCase()) ||
             item.forms?.author_name?.toLowerCase().includes(search.toLowerCase())
     )
+
+    if (authLoading || !user) return <Loading />
 
     return (
         <div className="flex flex-col items-center px-6 py-10">

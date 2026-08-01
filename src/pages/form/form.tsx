@@ -21,7 +21,7 @@ interface LocationState {
 function FormPage() {
     const location = useLocation()
     const navigate = useNavigate()
-    const { user } = useAuth()
+    const { user, loading: authLoading } = useAuth()
     const locationState = location.state as LocationState | null
     const formId = locationState?.formId
 
@@ -34,6 +34,7 @@ function FormPage() {
     const [submitting, setSubmitting] = useState(false)
 
     useEffect(() => {
+        if (authLoading) return
         if (!user) {
             navigate("/login")
             return
@@ -43,7 +44,7 @@ function FormPage() {
             return
         }
         loadForm()
-    }, [formId, user])
+    }, [formId, user, authLoading])
 
     async function loadForm() {
         setLoading(true)
@@ -89,7 +90,7 @@ function FormPage() {
     const seconds = timeLeft % 60
     const formattedTime = `${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`
 
-    if (loading) {
+    if (authLoading || loading) {
         return (
             <div className="flex items-center justify-center min-h-screen">
                 <span className="loading loading-spinner loading-lg" />

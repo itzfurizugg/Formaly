@@ -59,7 +59,7 @@ function Navbar() {
         <>
             <div
                 ref={navRef}
-                className="navbar shadow-sm bg-base px-4 lg:px-6 relative z-50 flex-col items-stretch !py-0"
+                className="navbar shadow-sm bg-base px-4 lg:px-6 sticky top-0 z-50 flex-col items-stretch !py-0"
             >
                 <div className="flex items-center justify-between w-full py-2 gap-2 relative min-h-[44px]">
                     <div className="flex-1 relative min-h-[44px] flex items-center">
