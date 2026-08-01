@@ -42,8 +42,7 @@ function Home() {
                 duration,
                 created_at,
                 users:creator_id (
-                    name,
-                    role
+                    name
                 ),
                 questions (
                     id
@@ -52,19 +51,14 @@ function Home() {
             .order("created_at", { ascending: false })
 
         if (data) {
-            const formatted = data
-                .filter((f: any) => {
-                    const role = f.users?.role ? String(f.users.role).toLowerCase() : ""
-                    return role === "creator" || role === "admin" || role === "user"
-                })
-                .map((f: any) => ({
-                    id: f.id,
-                    title: f.title,
-                    description: f.description,
-                    author_name: f.users?.name || "Admin",
-                    duration: f.duration || 0,
-                    question_count: f.questions ? f.questions.length : 0
-                }))
+            const formatted = data.map((f: any) => ({
+                id: f.id,
+                title: f.title,
+                description: f.description,
+                author_name: f.users?.name || "Creator",
+                duration: f.duration || 0,
+                question_count: f.questions ? f.questions.length : 0
+            }))
             setForms(formatted)
         }
 
