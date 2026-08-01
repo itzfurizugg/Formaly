@@ -42,7 +42,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   async function fetchProfile(u: User) {
     const { data } = await supabase
-      .from("profiles")
+      .from("users")
       .select("name, email")
       .eq("id", u.id)
       .single()
@@ -75,7 +75,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const { data: { user: u } } = await supabase.auth.getUser()
     if (u) {
       const name = u.user_metadata?.name as string || "User"
-      await supabase.from("profiles").upsert({ id: u.id, name, email: u.email })
+      await supabase.from("users").upsert({ id: u.id, name, email: u.email })
       setProfile({ name, email: u.email || "" })
     }
   }

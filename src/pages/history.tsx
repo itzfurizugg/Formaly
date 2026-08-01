@@ -31,7 +31,7 @@ function History() {
             return
         }
         loadHistory()
-    }, [user, authLoading])
+    }, [user, authLoading, navigate])
 
     async function loadHistory() {
         if (!user) return

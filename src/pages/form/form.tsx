@@ -1,15 +1,24 @@
 import { useState, useEffect } from "react"
 import { useNavigate, useLocation } from "react-router-dom"
-import { Check, Clock } from "lucide-react"
+import { Check, Clock, ZoomIn, X } from "lucide-react"
 import PageIndicator from "../../components/pageindicator"
 import { supabase } from "../../lib/supabase"
 import { useAuth } from "../../lib/auth"
-import type { Answer } from "../../lib/dummy"
+
+interface Option {
+    id: string
+    option_text: string
+}
 
 interface Question {
-    id: number
-    text: string
-    options: string[]
+    id: string
+    question_text: string
+    image_question?: string | null
+    question_options: Option[]
+}
+
+interface Answer {
+    [key: string]: string
 }
 
 interface LocationState {
@@ -32,6 +41,7 @@ function FormPage() {
     const [timeLeft, setTimeLeft] = useState(300)
     const [loading, setLoading] = useState(true)
     const [submitting, setSubmitting] = useState(false)
+    const [modalImage, setModalImage] = useState<string | null>(null)
 
     useEffect(() => {
         if (authLoading) return
@@ -44,13 +54,13 @@ function FormPage() {
             return
         }
         loadForm()
-    }, [formId, user, authLoading])
+    }, [user, authLoading, formId, navigate])
 
     async function loadForm() {
         setLoading(true)
         const { data: formData } = await supabase
             .from("forms")
-            .select("title, duration, question_count")
+            .select("title, duration")
             .eq("id", formId)
             .single()
 
@@ -61,9 +71,17 @@ function FormPage() {
 
         const { data: qData } = await supabase
             .from("questions")
-            .select("id, text, options")
+            .select(`
+                id,
+                question_text,
+                image_question,
+                question_options (
+                    id,
+                    option_text
+                )
+            `)
             .eq("form_id", formId)
-            .order("order", { ascending: true })
+            .order("order_index", { ascending: true })
 
         if (qData && qData.length > 0) {
             setQuestions(qData as Question[])
@@ -105,15 +123,15 @@ function FormPage() {
         return (
             <div className="flex flex-col items-center justify-center min-h-screen px-4">
                 <p className="text-tinted mb-4">Form tidak memiliki soal.</p>
-                <button onClick={() => navigate("/")} className="btn bg-darks text-base border-none">
+                <button onClick={() => navigate("/")} className="btn bg-darks text-white border-none">
                     Kembali
                 </button>
             </div>
         )
     }
 
-    const selectOption = (index: number) => {
-        setAnswers({ ...answers, [question.id]: index })
+    const selectOption = (optionId: string) => {
+        setAnswers({ ...answers, [question.id]: optionId })
     }
 
     const next = () => {
@@ -131,16 +149,14 @@ function FormPage() {
     const handleSubmit = async () => {
         if (!user || !formId) return
         setSubmitting(true)
-        const score = questions.reduce((acc, q) => {
-            return answers[q.id] !== undefined ? acc + 1 : acc
-        }, 0)
+        
+        const totalScore = 0
 
         await supabase.from("submissions").insert({
             user_id: user.id,
             form_id: formId,
-            answers,
-            score,
-            total: questions.length,
+            total_score: totalScore,
+            status: 'SUBMITTED'
         })
 
         setSubmitting(false)
@@ -148,50 +164,72 @@ function FormPage() {
     }
 
     return (
-        <div className="flex flex-col items-center px-4 py-6">
+        <div className="flex flex-col items-center px-4 pt-6 pb-28 md:pb-6">
             <div className="w-full max-w-3xl xl:mt-15">
                 <div className="p-2 mb-3 hidden sm:block">
-                    <h1 className="text-l xl:text-4xl font-bold text-darks">{formMeta?.title || "Form"}</h1>
+                    <h1 className="text-xl xl:text-4xl font-bold text-darks">{formMeta?.title || "Form"}</h1>
                     <p className="text-xs text-tinted mt-1">
                         {current + 1} dari {total} soal
                     </p>
                 </div>
 
-                <div className="bg-white rounded-2xl border border-second p-6 shadow-sm rounded-none">
+                <div className="bg-white border border-second p-6 shadow-sm rounded-none">
                     <div className="flex items-center justify-between mb-3">
-                        <p className="text-s text-tinted font-semibold">Soal {current + 1}</p>
+                        <p className="text-sm text-tinted font-semibold">Soal {current + 1}</p>
                         <span
-                            className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-semibold tabular-nums transition-colors ${timeLeft <= 60
-                                ? "bg-red-500/10 text-red-600"
-                                : "bg-done/10 text-done"
+                            className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-semibold tabular-nums transition-colors ${
+                                timeLeft <= 60
+                                    ? "bg-red-500/10 text-red-600"
+                                    : "bg-done/10 text-done"
                             }`}
                         >
                             <Clock className="h-3.5 w-3.5" />
                             {formattedTime}
                         </span>
                     </div>
+
                     <p className="text-base font-medium text-darks leading-relaxed">
-                        {question.text}
+                        {question.question_text}
                     </p>
 
+                    {/* Menampilkan Gambar Soal menggunakan field image_question */}
+                    {question.image_question && (
+                        <div className="mt-4 relative group rounded-lg overflow-hidden border border-second bg-base w-fit">
+                            <img
+                                src={question.image_question}
+                                alt="Ilustrasi Soal"
+                                className="max-h-60 object-contain cursor-pointer"
+                                onClick={() => setModalImage(question.image_question ?? null)}
+                            />
+                            <button
+                                onClick={() => setModalImage(question.image_question ?? null)}
+                                className="absolute bottom-2 right-2 bg-darks/70 hover:bg-darks text-white p-1.5 rounded-md opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-1 text-xs"
+                            >
+                                <ZoomIn className="h-4 w-4" /> Perbesar
+                            </button>
+                        </div>
+                    )}
+
                     <div className="mt-6 space-y-3">
-                        {question.options.map((option, i) => {
-                            const selected = answers[question.id] === i
+                        {question.question_options?.map((option) => {
+                            const selected = answers[question.id] === option.id
                             return (
                                 <button
-                                    key={i}
-                                    onClick={() => selectOption(i)}
-                                    className={`w-full text-left px-4 py-3 rounded-lg border text-sm transition-colors ${selected
-                                        ? "bg-darks border-darks text-white font-medium"
-                                        : "bg-white border-second text-darks hover:border-darks/50"
+                                    key={option.id}
+                                    onClick={() => selectOption(option.id)}
+                                    className={`w-full text-left px-4 py-3 rounded-lg border text-sm transition-colors ${
+                                        selected
+                                            ? "bg-darks border-darks text-white font-medium"
+                                            : "bg-white border-second text-darks hover:border-darks/50"
                                     }`}
                                 >
                                     <span className="flex items-center gap-3">
-                                        <span className={`shrink-0 w-5 h-5 rounded-full border-2 flex items-center justify-center ${selected ? "border-darks bg-darks" : "border-tinted"
+                                        <span className={`shrink-0 w-5 h-5 rounded-full border-2 flex items-center justify-center ${
+                                            selected ? "border-darks bg-darks" : "border-tinted"
                                         }`}>
-                                            {selected && <Check className="h-3 w-3 text-base" strokeWidth={3} />}
+                                            {selected && <Check className="h-3 w-3 text-white" strokeWidth={3} />}
                                         </span>
-                                        {option}
+                                        {option.option_text}
                                     </span>
                                 </button>
                             )
@@ -199,7 +237,8 @@ function FormPage() {
                     </div>
                 </div>
 
-                <div className="flex items-center justify-between mt-4">
+                {/* NOTE: LAYOUT DESKTOP (>= md) — PageIndicator & tombol Kirim inline di bawah konten */}
+                <div className="hidden md:flex items-center justify-between mt-4">
                     <PageIndicator total={total} current={current} answers={answers} onPrev={prev} onNext={next} onListClick={goToList} />
                     {current >= total - 1 && (
                         <button
@@ -217,6 +256,46 @@ function FormPage() {
                     )}
                 </div>
             </div>
+
+            {/* NOTE: LAYOUT MOBILE (< md) — Dock fixed di bawah, latar bg-second */}
+            <div className="fixed bottom-0 left-0 right-0 z-40 bg-second border-t border-base px-4 py-3 md:hidden mb-5">
+                <div className="w-full max-w-3xl mx-auto flex items-center justify-between">
+                    <PageIndicator total={total} current={current} answers={answers} onPrev={prev} onNext={next} onListClick={goToList} />
+                    {current >= total - 1 && (
+                        <button
+                            onClick={handleSubmit}
+                            disabled={submitting || answers[questions[total - 1].id] === undefined}
+                            className="btn text-white h-12 min-h-0 px-4 bg-done border-none rounded-none hover:opacity-90 disabled:opacity-25"
+                        >
+                            {submitting ? (
+                                <span className="loading loading-spinner loading-sm" />
+                            ) : (
+                                <Check className="h-4 w-4" />
+                            )}
+                            {submitting ? "Mengirim..." : "Kirim"}
+                        </button>
+                    )}
+                </div>
+            </div>
+
+            {/* Modal Zoom Gambar */}
+            {modalImage && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4">
+                    <div className="relative max-w-4xl max-h-[90vh] w-full flex items-center justify-center">
+                        <button
+                            onClick={() => setModalImage(null)}
+                            className="absolute -top-10 right-0 text-white hover:text-gray-300 bg-darks/50 p-2 rounded-full"
+                        >
+                            <X className="h-6 w-6" />
+                        </button>
+                        <img
+                            src={modalImage}
+                            alt="Zoom Preview"
+                            className="max-w-full max-h-[85vh] object-contain rounded-lg shadow-2xl bg-white"
+                        />
+                    </div>
+                </div>
+            )}
         </div>
     )
 }

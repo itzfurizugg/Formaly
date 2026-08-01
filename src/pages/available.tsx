@@ -29,7 +29,7 @@ function Available() {
             return
         }
         loadForms()
-    }, [user, authLoading])
+    }, [user, authLoading, navigate])
 
     async function loadForms() {
         setLoading(true)

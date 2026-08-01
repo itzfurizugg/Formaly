@@ -30,16 +30,43 @@ function Home() {
             return
         }
         loadForms()
-    }, [user, authLoading])
+    }, [user, authLoading, navigate])
 
     async function loadForms() {
         setLoading(true)
-        const { data } = await supabase
+        const { data, error } = await supabase
             .from("forms")
-            .select("id, title, description, author_name, duration, question_count")
+            .select(`
+                id,
+                title,
+                description,
+                duration,
+                created_at,
+                users:creator_id (
+                    name
+                ),
+                questions (
+                    id
+                )
+            `)
             .order("created_at", { ascending: false })
 
-        if (data) setForms(data)
+        if (data) {
+            const formatted = data.map((f: any) => ({
+                id: f.id,
+                title: f.title,
+                description: f.description,
+                author_name: f.users?.name || "Creator",
+                duration: f.duration || 0,
+                question_count: f.questions ? f.questions.length : 0
+            }))
+            setForms(formatted)
+        }
+
+        if (error) {
+            console.error("Gagal memuat form:", error)
+        }
+
         setLoading(false)
     }
 
