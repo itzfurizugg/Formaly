@@ -1,10 +1,11 @@
 import { useState, useRef, useEffect } from "react"
 import { Link, useLocation } from "react-router-dom"
 import logo from "../assets/logo.svg"
-import { House, RotateCcwClock, UserRound, X } from "lucide-react"
+import { House, RotateCcwClock, UserRound, LayoutDashboard, X } from "lucide-react"
 import { useAuth } from "../lib/auth"
+import { supabase } from "../lib/supabase"
 
-const navLinks = [
+const baseLinks = [
     { to: "/", label: "Beranda", icon: House },
     { to: "/history", label: "Histori", icon: RotateCcwClock },
     { to: "/profile", label: "Profil", icon: UserRound },
@@ -13,10 +14,31 @@ const navLinks = [
 function Navbar() {
     const { pathname } = useLocation()
     const { user } = useAuth()
+    const [role, setRole] = useState("")
     const [open, setOpen] = useState(false)
     const [closing, setClosing] = useState(false)
     const navRef = useRef<HTMLDivElement>(null)
     const [navHeight, setNavHeight] = useState(0)
+
+    useEffect(() => {
+        if (!user) {
+            setRole("")
+            return
+        }
+        supabase
+            .from("users")
+            .select("role")
+            .eq("id", user.id)
+            .single()
+            .then(({ data }) => {
+                if (data) setRole(String(data.role).toLowerCase())
+            })
+    }, [user])
+
+    const navLinks = [...baseLinks]
+    if (role === "creator" || role === "admin") {
+        navLinks.push({ to: "/creator", label: "Creator", icon: LayoutDashboard })
+    }
 
     const showContent = open || closing
 
@@ -137,7 +159,7 @@ function Navbar() {
 
                 <div
                     className={`overflow-hidden transition-all duration-300 ease-out lg:hidden ${
-                        open ? "max-h-32" : "max-h-0"
+                        open ? "max-h-64" : "max-h-0"
                     }`}
                 >
                     <div className={`transition-all duration-300 ease-out ${
