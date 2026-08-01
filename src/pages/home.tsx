@@ -55,7 +55,7 @@ function Home() {
             const formatted = data
                 .filter((f: any) => {
                     const role = f.users?.role ? String(f.users.role).toLowerCase() : ""
-                    return role === "creator" || role === "admin"
+                    return role === "creator" || role === "admin" || role === "user"
                 })
                 .map((f: any) => ({
                     id: f.id,
