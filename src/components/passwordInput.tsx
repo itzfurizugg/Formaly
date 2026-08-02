@@ -17,7 +17,7 @@ function PasswordInput({ value, onChange, className = "", ...rest }: PasswordInp
                 value={value}
                 onChange={(e) => onChange(e.target.value)}
                 {...rest}
-                className={`input w-full bg-base border-second focus:border-done focus:outline-none transition-colors font-mono text-sm pr-11 placeholder:[-webkit-text-fill-color:var(--color-base-content)] ${
+                className={`input w-full bg-base border-second focus:border-done focus:outline-none transition-colors font-sans text-sm pr-11 placeholder:[-webkit-text-fill-color:color-mix(in_oklab,var(--color-base-content)_50%,transparent)] ${
                     visible
                         ? "text-darks"
                         : "text-transparent [-webkit-text-fill-color:transparent] caret-darks select-none selection:bg-transparent [&::selection]:text-transparent [&::selection]:[-webkit-text-fill-color:transparent]"
@@ -25,7 +25,7 @@ function PasswordInput({ value, onChange, className = "", ...rest }: PasswordInp
             />
             {!visible && (
                 <div
-                    className="pointer-events-none absolute inset-y-0 left-3 right-11 flex items-center font-mono text-sm text-darks"
+                    className="pointer-events-none absolute inset-y-0 left-3 right-11 flex items-center font-sans text-sm text-darks"
                     aria-hidden="true"
                 >
                     {Array.from({ length: value.length }).map((_, i) => (

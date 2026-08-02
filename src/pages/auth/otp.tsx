@@ -67,14 +67,14 @@ function Otp() {
     const isComplete = otp.every((d) => d !== "")
 
     return (
-        <div className="min-h-screen flex bg-base">
+        <div className="min-h-screen flex bg-base overflow-x-hidden">
             <div className="hidden lg:flex flex-1 flex-col justify-center px-16 bg-gradient-to-br from-darks/5 via-base to-darks/5">
                 <div className="max-w-lg ml-20">
                     <img src={logo} alt="Formaly" className="h-10 w-auto mb-8" />
                     <h1 className="text-4xl font-bold text-darks leading-tight">
                         Buat lebih mudah.
                     </h1>
-                    <p className="text-2xl text-tinted mt-2">
+                    <p className="text-2xl text-tinted">
                         Kerjakan dengan gampang.
                     </p>
                     <p className="text-base text-tinted mt-6 leading-relaxed max-w-md">
@@ -90,7 +90,7 @@ function Otp() {
                         <img src={logo} alt="Formaly" className="h-10 w-auto" />
                     </div>
 
-                    <div className="bg-white rounded-2xl border border-second p-8 shadow-sm">
+                    <div className="bg-white rounded-2xl border border-second p-4 lg:p-8 shadow-sm">
                         <Link
                             to="/register"
                             className="inline-flex items-center gap-1 text-xs text-tinted hover:text-darks transition-colors mb-4"
@@ -100,8 +100,7 @@ function Otp() {
                         </Link>
 
                         <div className="flex items-center gap-2 mb-1">
-                            <ShieldCheck className="h-8 w-auto text-done" />
-                            <h2 className="text-3xl font-bold text-darks">Verifikasi</h2>
+                            <h2 className="text-2xl font-bold text-darks">Verifikasi</h2>
                         </div>
                         <p className="text-sm text-tinted mt-2 mb-6">
                             Masukkan kode OTP yang dikirim ke {email || "email kamu"}
@@ -114,7 +113,7 @@ function Otp() {
                         )}
 
                         <form onSubmit={handleSubmit}>
-                            <div className="flex gap-3 justify-center" onPaste={handlePaste}>
+                            <div className="flex w-full max-w-xs gap-2 sm:gap-3 justify-center mx-auto" onPaste={handlePaste}>
                                 {otp.map((digit, i) => (
                                     <input
                                         key={i}
@@ -123,7 +122,7 @@ function Otp() {
                                         inputMode="numeric"
                                         maxLength={1}
                                         required
-                                        className="input w-10 h-12 text-center text-lg font-semibold bg-base border-second focus:border-done focus:outline-none transition-colors"
+                                        className="input flex-1 min-w-0 h-12 w-full text-center text-lg font-semibold bg-base border-second focus:border-done focus:outline-none transition-colors"
                                         value={digit}
                                         onChange={(e) => handleChange(i, e.target.value)}
                                         onKeyDown={(e) => handleKeyDown(i, e)}

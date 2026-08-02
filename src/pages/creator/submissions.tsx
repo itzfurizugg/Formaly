@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react"
 import { useNavigate, useParams } from "react-router-dom"
-import { ArrowLeft, Eye } from "lucide-react"
+import { ArrowLeft, Eye, Trash2, Loader2 } from "lucide-react"
 import { supabase } from "../../lib/supabase"
 import { useAuth } from "../../lib/auth"
 
@@ -23,6 +23,7 @@ function Submissions() {
     const [submissions, setSubmissions] = useState<Submission[]>([])
     const [loading, setLoading] = useState(true)
     const [error, setError] = useState<string | null>(null)
+    const [deletingId, setDeletingId] = useState<string | null>(null)
 
     useEffect(() => {
         if (!user || !id) return
@@ -60,6 +61,29 @@ function Submissions() {
     }
 
     const fmtDate = (d: string | null) => (d ? new Date(d).toLocaleString("id-ID") : "-")
+
+    const handleDelete = async (s: Submission) => {
+        if (!window.confirm(`Hapus submission dari ${s.user?.name || "Pengguna"}? Tindakan ini tidak dapat dibatalkan.`)) return
+        setDeletingId(s.id)
+        setError(null)
+
+        const { error: ansErr } = await supabase.from("answers").delete().eq("submission_id", s.id)
+        if (ansErr) {
+            setError(ansErr.message || "Gagal menghapus jawaban.")
+            setDeletingId(null)
+            return
+        }
+
+        const { error: subErr } = await supabase.from("submissions").delete().eq("id", s.id)
+        if (subErr) {
+            setError(subErr.message || "Gagal menghapus submission.")
+            setDeletingId(null)
+            return
+        }
+
+        setDeletingId(null)
+        loadAll()
+    }
 
     if (loading) {
         return (
@@ -114,12 +138,26 @@ function Submissions() {
                                         >
                                             {statusLabel(s.status)}
                                         </span>
-                                        <button
-                                            onClick={() => navigate(`/creator/forms/${id}/submissions/${s.id}`)}
-                                            className="btn btn-sm bg-base text-darks border border-second hover:bg-second"
-                                        >
-                                            <Eye className="h-3.5 w-3.5" /> Lihat
-                                        </button>
+                                        <div className="flex items-center gap-1">
+                                            <button
+                                                onClick={() => navigate(`/creator/forms/${id}/submissions/${s.id}`)}
+                                                className="btn btn-sm bg-base text-darks border border-second hover:bg-second"
+                                            >
+                                                <Eye className="h-3.5 w-3.5" /> Lihat
+                                            </button>
+                                            <button
+                                                onClick={() => handleDelete(s)}
+                                                disabled={deletingId === s.id}
+                                                className="btn btn-sm bg-wrong/10 text-wrong border-none hover:opacity-90 disabled:opacity-60"
+                                            >
+                                                {deletingId === s.id ? (
+                                                    <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                                                ) : (
+                                                    <Trash2 className="h-3.5 w-3.5" />
+                                                )}
+                                                Hapus
+                                            </button>
+                                        </div>
                                     </div>
                                 </div>
                             </div>

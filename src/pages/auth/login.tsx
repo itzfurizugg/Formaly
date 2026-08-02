@@ -35,7 +35,7 @@ function Login() {
                     <h1 className="text-4xl font-bold text-darks leading-tight">
                         Buat lebih mudah.
                     </h1>
-                    <p className="text-2xl text-tinted mt-2">
+                    <p className="text-2xl text-tinted">
                         Kerjakan dengan gampang.
                     </p>
                     <p className="text-base text-tinted mt-6 leading-relaxed max-w-md">
@@ -51,7 +51,7 @@ function Login() {
                         <img src={logo} alt="Formaly" className="h-10 w-auto" />
                     </div>
 
-                    <div className="bg-white rounded-2xl border border-second p-8 shadow-sm">
+                    <div className="bg-white rounded-2xl border border-second p-4 lg:p-8 shadow-sm">
                         <h2 className="text-2xl font-bold text-darks">Masuk</h2>
                         <p className="text-sm text-tinted mt-1 mb-6">
                             Masuk untuk melanjutkan ke akun kamu
