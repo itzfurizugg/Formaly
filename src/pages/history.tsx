@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react"
 import { useNavigate } from "react-router-dom"
-import { Search, RotateCcwClock, FileText } from "lucide-react"
+import { Search, FileText } from "lucide-react"
 import HistoryCard from "../components/historyCard"
 import { supabase } from "../lib/supabase"
 import { useAuth } from "../lib/auth"
