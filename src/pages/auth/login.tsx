@@ -3,6 +3,7 @@ import { Link, useNavigate } from "react-router-dom"
 import { LogIn } from "lucide-react"
 import logo from "../../assets/logo.svg"
 import { useAuth } from "../../lib/auth"
+import PasswordInput from "../../components/passwordInput"
 
 function Login() {
     const navigate = useNavigate()
@@ -83,15 +84,13 @@ function Login() {
                                 <label htmlFor="password" className="block text-sm font-medium text-darks mb-1.5">
                                     Password
                                 </label>
-                                <input
+                                <PasswordInput
                                     id="password"
-                                    type="password"
                                     required
                                     autoComplete="current-password"
-                                    className="input w-full bg-base border-second focus:border-done focus:outline-none transition-colors"
-                                    placeholder="••••••••"
+                                    placeholder="Masukkan password"
                                     value={password}
-                                    onChange={(e) => setPassword(e.target.value)}
+                                    onChange={setPassword}
                                 />
                                 <a href="/forgot-password" className="text-xs text-done hover:underline mt-1.5 inline-block">
                                     Lupa password?

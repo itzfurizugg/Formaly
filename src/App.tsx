@@ -5,6 +5,7 @@ import Login from "./pages/auth/login"
 import Register from "./pages/auth/register"
 import Otp from "./pages/auth/otp"
 import ForgotPassword from "./pages/auth/forgotPassword"
+import ResetPassword from "./pages/auth/resetPassword"
 import Home from "./pages/home"
 import History from "./pages/history"
 import Profile from "./pages/profile"
@@ -24,7 +25,7 @@ import CreatorSubmissions from "./pages/creator/submissions"
 import CreatorSubmissionDetail from "./pages/creator/submissionDetail"
 import Navbar from "./components/navbar"
 
-const hideNavPaths = ["/login", "/register", "/auth", "/forgot-password", "/form/description", "/form", "/form/list", "/form/result"]
+const hideNavPaths = ["/login", "/register", "/auth", "/forgot-password", "/reset-password", "/form/description", "/form", "/form/list", "/form/result"]
 
 function useIsMobile() {
   const [isMobile, setIsMobile] = useState(() =>
@@ -127,6 +128,7 @@ function App() {
           <Route path="/register" element={<Register />} />
           <Route path="/auth" element={<Otp />} />
           <Route path="/forgot-password" element={<ForgotPassword />} />
+          <Route path="/reset-password" element={<ResetPassword />} />
         </Routes>
       </div>
     </AuthProvider>

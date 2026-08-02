@@ -3,6 +3,7 @@ import { Link, useNavigate } from "react-router-dom"
 import { UserPlus } from "lucide-react"
 import logo from "../../assets/logo.svg"
 import { useAuth } from "../../lib/auth"
+import PasswordInput from "../../components/passwordInput"
 
 function Register() {
     const navigate = useNavigate()
@@ -17,6 +18,11 @@ function Register() {
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault()
         setError(null)
+
+        if (password.length < 8) {
+            setError("Password minimal 8 karakter.")
+            return
+        }
 
         if (password !== confirmPassword) {
             setError("Konfirmasi password tidak cocok.")
@@ -105,30 +111,27 @@ function Register() {
                                 <label htmlFor="password" className="block text-sm font-medium text-darks mb-1.5">
                                     Password
                                 </label>
-                                <input
+                                <PasswordInput
                                     id="password"
-                                    type="password"
                                     required
+                                    minLength={8}
                                     autoComplete="new-password"
-                                    className="input w-full bg-base border-second focus:border-done focus:outline-none transition-colors"
-                                    placeholder="••••••••"
+                                    placeholder="Minimal 8 karakter"
                                     value={password}
-                                    onChange={(e) => setPassword(e.target.value)}
+                                    onChange={setPassword}
                                 />
                             </div>
                             <div>
                                 <label htmlFor="confirmPassword" className="block text-sm font-medium text-darks mb-1.5">
                                     Konfirmasi Password
                                 </label>
-                                <input
+                                <PasswordInput
                                     id="confirmPassword"
-                                    type="password"
                                     required
                                     autoComplete="new-password"
-                                    className="input w-full bg-base border-second focus:border-done focus:outline-none transition-colors"
-                                    placeholder="••••••••"
+                                    placeholder="Ulangi password baru"
                                     value={confirmPassword}
-                                    onChange={(e) => setConfirmPassword(e.target.value)}
+                                    onChange={setConfirmPassword}
                                 />
                             </div>
 

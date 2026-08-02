@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react"
+import { useState, useEffect, useRef, useCallback } from "react"
 import { useNavigate, useParams, useLocation } from "react-router-dom"
 import { Check, Clock, ZoomIn, X } from "lucide-react"
 import PageIndicator from "../../components/pageindicator"
@@ -45,123 +45,10 @@ function FormPage() {
     const [submitting, setSubmitting] = useState(false)
     const [error, setError] = useState<string | null>(null)
     const [modalImage, setModalImage] = useState<string | null>(null)
+    const [hasTimer, setHasTimer] = useState(false)
+    const autoSubmitted = useRef(false)
 
-    useEffect(() => {
-        if (authLoading) return
-        if (!user) {
-            navigate("/login")
-            return
-        }
-        if (!formId) {
-            navigate("/")
-            return
-        }
-        loadForm()
-    }, [user, authLoading, formId, navigate])
-
-    async function loadForm() {
-        setLoading(true)
-        const { data: formData } = await supabase
-            .from("forms")
-            .select("title, duration")
-            .eq("id", formId)
-            .single()
-
-        if (formData) {
-            setFormMeta(formData)
-            setTimeLeft(formData.duration * 60)
-        }
-
-        const { data: qData } = await supabase
-            .from("questions")
-            .select(`
-                id,
-                question_text,
-                question_type,
-                score_value,
-                image_question,
-                question_options (
-                    id,
-                    option_text,
-                    is_correct
-                )
-            `)
-            .eq("form_id", formId)
-            .order("order_index", { ascending: true })
-
-        if (qData && qData.length > 0) {
-            setQuestions(qData as Question[])
-        }
-
-        setLoading(false)
-    }
-
-    useEffect(() => {
-        if (timeLeft <= 0 || loading) return
-        const timer = setInterval(() => {
-            setTimeLeft(prev => {
-                if (prev <= 1) {
-                    clearInterval(timer)
-                    return 0
-                }
-                return prev - 1
-            })
-        }, 1000)
-        return () => clearInterval(timer)
-    }, [loading])
-
-    const minutes = Math.floor(timeLeft / 60)
-    const seconds = timeLeft % 60
-    const formattedTime = `${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`
-
-    if (authLoading || loading) {
-        return (
-            <div className="flex items-center justify-center min-h-screen">
-                <span className="loading loading-spinner loading-lg" />
-            </div>
-        )
-    }
-
-    const question = questions[current]
-    const total = questions.length
-
-    if (!question || total === 0) {
-        return (
-            <div className="flex flex-col items-center justify-center min-h-screen px-4">
-                <p className="text-tinted mb-4">Form tidak memiliki soal.</p>
-                <button onClick={() => navigate("/")} className="btn bg-darks text-white border-none">
-                    Kembali
-                </button>
-            </div>
-        )
-    }
-
-    const selectOption = (optionId: string) => {
-        if (question.question_type === "multiple_choice") {
-            const current = answers[question.id]
-            const selected = Array.isArray(current) ? current : []
-            const next = selected.includes(optionId)
-                ? selected.filter((id) => id !== optionId)
-                : [...selected, optionId]
-            setAnswers({ ...answers, [question.id]: next })
-        } else {
-            setAnswers({ ...answers, [question.id]: optionId })
-        }
-    }
-
-    const next = () => {
-        if (current < total - 1) setCurrent(current + 1)
-    }
-
-    const prev = () => {
-        if (current > 0) setCurrent(current - 1)
-    }
-
-    const goToList = () => {
-        navigate('/form/list', { state: { current, answers, formId, questions } })
-    }
-
-    const handleSubmit = async () => {
+    const handleSubmit = useCallback(async () => {
         if (!user || !formId) return
         setSubmitting(true)
         setError(null)
@@ -241,6 +128,132 @@ function FormPage() {
 
         setSubmitting(false)
         navigate("/history")
+    }, [user, formId, questions, answers, navigate])
+
+    useEffect(() => {
+        if (authLoading) return
+        if (!user) {
+            navigate("/login")
+            return
+        }
+        if (!formId) {
+            navigate("/")
+            return
+        }
+        loadForm()
+    }, [user, authLoading, formId, navigate])
+
+    async function loadForm() {
+        setLoading(true)
+        const { data: formData } = await supabase
+            .from("forms")
+            .select("title, duration")
+            .eq("id", formId)
+            .single()
+
+        if (formData) {
+            setFormMeta(formData)
+            const dur = Number(formData.duration) || 0
+            setHasTimer(dur > 0)
+            setTimeLeft(dur > 0 ? dur * 60 : 300)
+        }
+
+        const { data: qData } = await supabase
+            .from("questions")
+            .select(`
+                id,
+                question_text,
+                question_type,
+                score_value,
+                image_question,
+                question_options (
+                    id,
+                    option_text,
+                    is_correct
+                )
+            `)
+            .eq("form_id", formId)
+            .order("order_index", { ascending: true })
+
+        if (qData && qData.length > 0) {
+            setQuestions(qData as Question[])
+        }
+
+        setLoading(false)
+    }
+
+    useEffect(() => {
+        if (!hasTimer || timeLeft <= 0 || loading) return
+        const timer = setInterval(() => {
+            setTimeLeft(prev => {
+                if (prev <= 1) {
+                    clearInterval(timer)
+                    return 0
+                }
+                return prev - 1
+            })
+        }, 1000)
+        return () => clearInterval(timer)
+    }, [loading, hasTimer])
+
+    useEffect(() => {
+        if (autoSubmitted.current) return
+        if (hasTimer && timeLeft === 0 && !submitting && questions.length > 0 && user && formId) {
+            autoSubmitted.current = true
+            const id = window.setTimeout(() => handleSubmit(), 0)
+            return () => window.clearTimeout(id)
+        }
+    }, [timeLeft, submitting, questions, user, formId, handleSubmit, hasTimer])
+
+    const minutes = Math.floor(timeLeft / 60)
+    const seconds = timeLeft % 60
+    const formattedTime = `${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`
+
+    if (authLoading || loading) {
+        return (
+            <div className="flex items-center justify-center min-h-screen">
+                <span className="loading loading-spinner loading-lg" />
+            </div>
+        )
+    }
+
+    const question = questions[current]
+    const total = questions.length
+
+    if (!question || total === 0) {
+        return (
+            <div className="flex flex-col items-center justify-center min-h-screen px-4">
+                <p className="text-tinted mb-4">Form tidak memiliki soal.</p>
+                <button onClick={() => navigate("/")} className="btn bg-darks text-white border-none">
+                    Kembali
+                </button>
+            </div>
+        )
+    }
+
+    const selectOption = (optionId: string) => {
+        if (question.question_type === "multiple_choice") {
+            const current = answers[question.id]
+            const selected = Array.isArray(current) ? current : []
+            const next = selected.includes(optionId)
+                ? selected.filter((id) => id !== optionId)
+                : [...selected, optionId]
+            setAnswers({ ...answers, [question.id]: next })
+        } else {
+            setAnswers({ ...answers, [question.id]: optionId })
+        }
+    }
+
+    const next = () => {
+        if (current < total - 1) setCurrent(current + 1)
+    }
+
+    const prev = () => {
+        if (current > 0) setCurrent(current - 1)
+    }
+
+    const goToList = () => {
+        navigate('/form/list', { state: { current, answers, formId, questions } })
     }
 
     return (
@@ -258,13 +271,15 @@ function FormPage() {
                         <p className="text-sm text-tinted font-semibold">Soal {current + 1}</p>
                         <span
                             className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-semibold tabular-nums transition-colors ${
-                                timeLeft <= 60
-                                    ? "bg-red-500/10 text-red-600"
-                                    : "bg-done/10 text-done"
+                                !hasTimer
+                                    ? "bg-second text-tinted"
+                                    : timeLeft <= 60
+                                        ? "bg-red-500/10 text-red-600"
+                                        : "bg-done/10 text-done"
                             }`}
                         >
                             <Clock className="h-3.5 w-3.5" />
-                            {formattedTime}
+                            {hasTimer ? formattedTime : "Tanpa Waktu Pengerjaan"}
                         </span>
                     </div>
 

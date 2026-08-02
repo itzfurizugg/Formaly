@@ -39,15 +39,15 @@ function FormList() {
 
     return (
         <div className="flex flex-col items-center px-4 py-6 pb-28 min-h-screen bg-base-300 lg:justify-center lg:pb-6">
-            <div className="w-full max-w-3xl bg-base-300 lg:max-w-sm lg:bg-base-200 lg:rounded-md lg:p-6 lg:shadow-sm">
-                <div className="p-2 mb-3 lg:p-0 lg:mt-0">
-                    <h1 className="text-2xl lg:text-2xl font-bold text-darks">Daftar Soal</h1>
-                    <p className="text-xs lg:text-sm text-tinted mt-1">
+            <div className="w-full max-w-4xl lg:bg-base-200 lg:rounded-md lg:p-6 lg:shadow-sm">
+                <div className="mb-5 lg:p-0 lg:mt-0">
+                    <h1 className="text-2xl lg:text-4xl font-bold text-darks">Daftar Soal</h1>
+                    <p className="hidden sm:block text-xs lg:text-sm text-tinted mt-1">
                         Daftar soal ujian
                     </p>
                 </div>
 
-                <div className="grid grid-cols-4 gap-2 mb-6 lg:grid-cols-5 lg:gap-2 lg:mb-6 lg:mt-4">
+                <div className="grid grid-cols-5 gap-2 mb-6 lg:grid-cols-8 lg:gap-3 lg:mb-6 lg:mt-4">
                     {questions.map((q, index) => {
                         const isCurrent = current === index
                         const isAnsweredQuestion = answers[q.id] !== undefined
@@ -86,7 +86,7 @@ function FormList() {
                     <div className="w-full max-w-3xl mx-auto">
                         <button
                     onClick={() => navigate(`/form/${formId}`, { state: { current, answers, questions } })}
-                            className="btn w-full h-12 min-h-0 bg-darks text-white rounded-none hover:opacity-90"
+                            className="btn w-full h-12 mb-3 min-h-0 bg-darks text-white rounded-none hover:opacity-90"
                         >
                             Kembali ke soal
                         </button>

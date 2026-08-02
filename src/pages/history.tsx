@@ -87,9 +87,9 @@ function History() {
 
     return (
         <div className="flex flex-col items-center px-4 py-5">
-            <div className="max-w-4xl w-full">
+            <div className="max-w-4xl w-full lg:mt-10">
                 <div className="flex items-center gap-2 mb-1">
-                    <h1 className="text-2xl font-bold text-darks">Histori</h1>
+                    <h1 className="text-2xl lg:text-4xl font-bold text-darks">Histori</h1>
                 </div>
                 <p className="text-sm text-tinted mb-6">
                     Formulir yang pernah kamu kerjakan.
@@ -126,7 +126,7 @@ function History() {
                                 key={item.id}
                                 title={item.forms?.title || "Form"}
                                 author={item.forms?.author_name || "-"}
-                                duration={item.forms?.duration ? `${item.forms.duration} menit` : "-"}
+                                duration={item.forms?.duration ? `${item.forms.duration} menit` : "Tanpa Waktu Pengerjaan"}
                                 questions={item.forms?.question_count || 0}
                                 score={item.total_score || 0}
                                 passingScore={item.forms?.passing_score ?? null}

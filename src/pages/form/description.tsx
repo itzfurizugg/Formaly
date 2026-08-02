@@ -107,7 +107,7 @@ function FormDescriptionPage() {
 
     return (
         <div className="flex flex-col items-center min-h-screen sm:min-h-[80vh] sm:justify-center px-0 pt-6 pb-28 sm:px-4 sm:py-10 bg-white sm:bg-transparent">
-            <div className="w-full max-w-2xl bg-white sm:border sm:border-second p-4 sm:p-8 sm:shadow-sm sm:rounded-lg relative">
+            <div className="w-full max-w-4xl bg-white sm:border sm:border-second p-4 sm:p-8 sm:shadow-sm sm:rounded-lg relative">
 
                 {/* Tombol Kembali */}
                 {locationState?.form && (
@@ -134,7 +134,7 @@ function FormDescriptionPage() {
                         <Clock className="h-5 w-5 sm:h-6 sm:w-6 text-darks shrink-0" />
                         <div className="min-w-0">
                             <p className="text-[10px] sm:text-xs text-tinted">Durasi</p>
-                            <p className="text-xs sm:text-sm font-semibold text-darks truncate">{form.duration} Menit</p>
+                            <p className="text-xs sm:text-sm font-semibold text-darks truncate">{form.duration ? `${form.duration} Menit` : "Tanpa Waktu Pengerjaan"}</p>
                         </div>
                     </div>
                     <div className="flex items-center gap-2 sm:gap-3 p-3 sm:p-4 bg-base border border-second rounded-lg">

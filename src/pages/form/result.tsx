@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react"
 import { useNavigate, useParams } from "react-router-dom"
-import { ArrowLeft, Check, X, Award, Clock } from "lucide-react"
+import { ArrowLeft, Check, X, Clock } from "lucide-react"
 import { supabase } from "../../lib/supabase"
 import { useAuth } from "../../lib/auth"
 import Loading from "../../components/loading"
@@ -129,7 +129,7 @@ function ResultPage() {
 
     return (
         <div className="flex flex-col items-center px-4 py-10">
-            <div className="w-full max-w-2xl">
+            <div className="w-full max-w-4xl">
                 <button
                     onClick={() => navigate("/history")}
                     className="flex items-center gap-2 text-sm text-tinted hover:text-darks mb-4 transition-colors"
@@ -137,7 +137,7 @@ function ResultPage() {
                     <ArrowLeft className="h-4 w-4" /> Kembali
                 </button>
 
-                <h1 className="text-2xl font-bold text-darks mb-1">Hasil Pengerjaan</h1>
+                <h1 className="text-2xl lg:text-4xl font-bold text-darks mb-1">Hasil Pengerjaan</h1>
                 <p className="text-sm text-tinted mb-6">
                     {info?.form?.title || "Form"}
                 </p>
@@ -178,7 +178,7 @@ function ResultPage() {
                     <div className="mt-4 pt-4 border-t border-base text-sm text-tinted flex items-center justify-between">
                         <span>{answers.length} soal</span>
                         <span>
-                            <span className="text-done font-semibold">{correctCount} benar</span> &middot;{" "}
+                            <span className="text-pass font-semibold">{correctCount} benar</span> &middot;{" "}
                             <span className="text-wrong font-semibold">{answers.length - correctCount} salah</span>
                         </span>
                     </div>
@@ -196,7 +196,7 @@ function ResultPage() {
                                     <span className="text-sm font-bold text-darks">Soal {idx + 1}</span>
                                     <span className="badge badge-ghost text-tinted rounded-full text-xs">{typeLabel(a.question?.question_type || "")}</span>
                                     {isCorrect(a) ? (
-                                        <span className="text-xs text-done font-medium flex items-center gap-1">
+                                        <span className="text-xs text-pass font-medium flex items-center gap-1">
                                             <Check className="h-3 w-3" /> Benar
                                         </span>
                                     ) : a.question?.question_type === "text" ? (
@@ -228,7 +228,7 @@ function ResultPage() {
                                                     key={o.id}
                                                     className={`flex items-center gap-2 text-sm rounded-lg px-3 py-1.5 border ${
                                                         isCorrect
-                                                            ? "border-done/40 bg-done/5 text-done"
+                                                            ? "border-pass/40 bg-pass/5 text-pass"
                                                             : selected
                                                             ? "border-wrong/40 bg-wrong/5 text-wrong"
                                                             : "border-second text-tinted"

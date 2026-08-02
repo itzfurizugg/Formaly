@@ -19,13 +19,13 @@ function HistoryCard({ title, author, duration, questions, score, to, buttonLabe
             <div className="card-body">
                 <span
                     className={`badge border-none ${
-                        passingScore != null && score < passingScore ? "bg-wrong/10 text-wrong" : "bg-done/10 text-done"
+                        passingScore != null && score < passingScore ? "bg-wrong/10 text-wrong" : "bg-pass/10 text-pass"
                     }`}
                 >
                     {passingScore != null && score < passingScore ? <X className="h-4 w-4" /> : <Check className="h-4 w-4" />}
                     {passingScore != null && score < passingScore ? "Gagal" : "Selesai"}
                 </span>
-                <span className={`flex items-center gap-1 font-semibold ${passingScore != null && score < passingScore ? "text-wrong" : "text-done"}`}>
+                <span className={`flex items-center gap-1 font-semibold ${passingScore != null && score < passingScore ? "text-wrong" : "text-pass"}`}>
                     Skor: {score}
                 </span>
                 <div className="flex items-start justify-between gap-3">

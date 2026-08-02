@@ -105,7 +105,7 @@ function Available() {
                                 key={f.id}
                                 title={f.title}
                                 author={f.author_name}
-                                duration={`${f.duration} menit`}
+                                duration={f.duration ? `${f.duration} menit` : "Tanpa Waktu Pengerjaan"}
                                 questions={f.question_count}
                                 to="/form/description"
                                 buttonLabel="Kerjakan"
