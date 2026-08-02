@@ -84,7 +84,7 @@ function Otp() {
                 </div>
             </div>
 
-            <div className="flex-1 flex items-center justify-center px-6 py-12">
+            <div className="flex-1 flex items-center justify-center px-4 py-12">
                 <div className="w-full max-w-xl">
                     <div className="flex justify-center mb-8 lg:hidden">
                         <img src={logo} alt="Formaly" className="h-10 w-auto" />

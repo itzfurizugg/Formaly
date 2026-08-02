@@ -45,7 +45,7 @@ function FormNew() {
     const inputCls = "input w-full bg-base border-second focus:border-done focus:outline-none transition-colors"
 
     return (
-        <div className="flex flex-col items-center px-6 py-10">
+        <div className="flex flex-col items-center px-4 py-10">
             <div className="w-full max-w-xl">
                 <button
                     onClick={() => navigate("/creator/forms")}

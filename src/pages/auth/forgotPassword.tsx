@@ -1,6 +1,6 @@
 import { useState } from "react"
 import { Link } from "react-router-dom"
-import { KeyRound, ArrowLeft, MailCheck } from "lucide-react"
+import { ArrowLeft, MailCheck, KeyRound } from "lucide-react"
 import logo from "../../assets/logo.svg"
 import { useAuth } from "../../lib/auth"
 
@@ -43,7 +43,7 @@ function ForgotPassword() {
                 </div>
             </div>
 
-            <div className="flex-1 flex items-center justify-center px-6 py-12">
+            <div className="flex-1 flex items-center justify-center px-4 py-12">
                 <div className="w-full max-w-xl">
                     <div className="flex justify-center mb-8 lg:hidden">
                         <img src={logo} alt="Formaly" className="h-10 w-auto" />
@@ -59,7 +59,6 @@ function ForgotPassword() {
                         </Link>
 
                         <div className="flex items-center gap-2 mb-1">
-                            <KeyRound className="h-8 w-auto text-done" />
                             <h2 className="text-3xl font-bold text-darks">Lupa Password</h2>
                         </div>
                         <p className="text-sm text-tinted mt-2 mb-6">

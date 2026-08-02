@@ -122,7 +122,7 @@ function Tokens() {
     }
 
     return (
-        <div className="flex flex-col items-center px-6 py-10">
+        <div className="flex flex-col items-center px-4 py-10">
             <div className="w-full max-w-2xl">
                 <button
                     onClick={() => navigate(`/creator/forms/${id}`)}

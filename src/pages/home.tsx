@@ -80,7 +80,7 @@ function Home() {
 
     return (
         <div>
-            <div className="flex flex-col items-center justify-center min-h-[50vh] px-6 pt-10 pb-6 text-center">
+            <div className="flex flex-col items-center justify-center min-h-[50vh] px-4 pt-5 pb-6 text-center">
                 <h1 className="text-3xl md:text-4xl font-bold text-darks">
                     Mulai mengerjakan!
                 </h1>
@@ -93,7 +93,7 @@ function Home() {
                 </div>
             </div>
 
-            <div className="flex flex-col items-center px-6 pb-10">
+            <div className="flex flex-col items-center px-4 pb-10">
                 <div className="max-w-4xl w-full">
                     <div className="join w-full mb-6">
                         <div className="join-item flex-1 relative">

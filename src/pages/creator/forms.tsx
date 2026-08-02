@@ -64,7 +64,7 @@ function CreatorForms() {
     }
 
     return (
-        <div className="flex flex-col items-center px-6 py-10">
+        <div className="flex flex-col items-center px-4 py-10">
             <div className="max-w-4xl w-full">
                 <div className="flex items-center justify-between mb-1">
                     <h1 className="text-2xl font-bold text-darks">Kelola Form</h1>
