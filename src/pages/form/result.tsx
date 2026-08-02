@@ -27,7 +27,7 @@ interface SubmissionInfo {
     status: string
     started_at: string | null
     submitted_at: string | null
-    form: { id: string; title: string; duration: number } | null
+    form: { id: string; title: string; duration: number; passing_score: number | null } | null
     user: { name: string } | null
 }
 
@@ -59,7 +59,7 @@ function ResultPage() {
 
         const { data: sub } = await supabase
             .from("submissions")
-            .select("id, total_score, status, started_at, submitted_at, form:form_id ( id, title, duration ), user:user_id ( name )")
+            .select("id, total_score, status, started_at, submitted_at, form:form_id ( id, title, duration, passing_score ), user:user_id ( name )")
             .eq("id", submissionId)
             .eq("user_id", user.id)
             .single()
@@ -134,7 +134,7 @@ function ResultPage() {
                     onClick={() => navigate("/history")}
                     className="flex items-center gap-2 text-sm text-tinted hover:text-darks mb-4 transition-colors"
                 >
-                    <ArrowLeft className="h-4 w-4" /> Kembali ke Riwayat
+                    <ArrowLeft className="h-4 w-4" /> Kembali
                 </button>
 
                 <h1 className="text-2xl font-bold text-darks mb-1">Hasil Pengerjaan</h1>
@@ -146,17 +146,29 @@ function ResultPage() {
                     <div className="flex items-center gap-4">
                         <div className="flex-1">
                             <p className="text-xs text-tinted">Total Skor</p>
-                            <p className="text-5xl font-bold text-darks">
+                            <p
+                                className={`text-5xl font-bold ${
+                                    info?.form?.passing_score != null && (info?.total_score ?? 0) < info.form.passing_score
+                                        ? "text-wrong"
+                                        : "text-done"
+                                }`}
+                            >
                                 {info?.total_score ?? 0}
                             </p>
                         </div>
                         <div className="text-right">
                             <span
                                 className={`badge rounded-full text-xs ${
-                                    info?.status === "SUBMITTED" ? "bg-done/10 text-done border-none" : "badge-ghost text-tinted"
+                                    info?.form?.passing_score != null && (info?.total_score ?? 0) < info.form.passing_score
+                                        ? "bg-wrong/10 text-wrong border-none"
+                                        : info?.status === "SUBMITTED"
+                                        ? "bg-done/10 text-done border-none"
+                                        : "badge-ghost text-tinted"
                                 }`}
                             >
-                                {info?.status}
+                                {info?.form?.passing_score != null && (info?.total_score ?? 0) < info.form.passing_score
+                                    ? "Gagal"
+                                    : info?.status}
                             </span>
                             <p className="text-xs text-tinted mt-2 flex items-center gap-1 justify-end">
                                 <Clock className="h-3 w-3" /> {fmtDate(info?.submitted_at || info?.started_at || null)}

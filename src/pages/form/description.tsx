@@ -110,12 +110,14 @@ function FormDescriptionPage() {
             <div className="w-full max-w-2xl bg-white sm:border sm:border-second p-4 sm:p-8 sm:shadow-sm sm:rounded-lg relative">
 
                 {/* Tombol Kembali */}
-                <button
-                    onClick={() => navigate("/")}
-                    className="flex items-center gap-2 text-xs sm:text-sm text-tinted hover:text-darks mb-4 sm:mb-6 transition-colors"
-                >
-                    <ArrowLeft className="h-4 w-4" /> Kembali ke Beranda
-                </button>
+                {locationState?.form && (
+                    <button
+                        onClick={() => navigate("/")}
+                        className="flex items-center gap-2 text-xs sm:text-sm text-tinted hover:text-darks mb-4 sm:mb-6 transition-colors"
+                    >
+                        <ArrowLeft className="h-4 w-4" /> Kembali
+                    </button>
+                )}
 
                 <div className="border-b border-second pb-3 sm:pb-4">
                     <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold text-darks leading-snug sm:leading-tight">

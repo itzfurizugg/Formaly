@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react"
 import { useNavigate } from "react-router-dom"
 import { Search, RotateCcwClock, FileText } from "lucide-react"
-import Card from "../components/card"
+import HistoryCard from "../components/historyCard"
 import { supabase } from "../lib/supabase"
 import { useAuth } from "../lib/auth"
 import Loading from "../components/loading"
@@ -9,11 +9,13 @@ import Loading from "../components/loading"
 interface HistoryItem {
     id: string
     form_id: string
+    total_score: number
     forms: {
         title: string
         author_name: string
         duration: number
         question_count: number
+        passing_score: number | null
     }
 }
 
@@ -45,9 +47,9 @@ function History() {
         const { data } = await supabase
             .from("submissions")
             .select(`
-                id, form_id,
+                id, form_id, total_score,
                 forms (
-                    id, title, duration,
+                    id, title, duration, passing_score,
                     users:creator_id ( name ),
                     questions ( id )
                 )
@@ -57,15 +59,17 @@ function History() {
 
         if (data) {
             setItems((data as unknown as HistoryRow[]).map((item) => {
-                const f = item.forms as unknown as { title: string; duration: number; users?: { name: string } | null; questions?: { id: string }[] | null }
+                const f = item.forms as unknown as { title: string; duration: number; passing_score?: number | null; users?: { name: string } | null; questions?: { id: string }[] | null }
                 return {
                     id: item.id,
                     form_id: item.form_id,
+                    total_score: Number((item as unknown as { total_score?: number }).total_score) || 0,
                     forms: {
                         title: f?.title || "Form",
                         author_name: f?.users?.name || "Creator",
                         duration: f?.duration || 0,
                         question_count: f?.questions?.length || 0,
+                        passing_score: f?.passing_score ?? null,
                     },
                 }
             }))
@@ -82,10 +86,9 @@ function History() {
     if (authLoading || !user) return <Loading />
 
     return (
-        <div className="flex flex-col items-center px-6 py-10">
+        <div className="flex flex-col items-center px-4 py-5">
             <div className="max-w-4xl w-full">
                 <div className="flex items-center gap-2 mb-1">
-                    <RotateCcwClock className="h-5 w-5 text-darks" />
                     <h1 className="text-2xl font-bold text-darks">Histori</h1>
                 </div>
                 <p className="text-sm text-tinted mb-6">
@@ -119,12 +122,14 @@ function History() {
                 ) : (
                     <div className="space-y-3">
                         {filtered.map((item) => (
-                            <Card
+                            <HistoryCard
                                 key={item.id}
                                 title={item.forms?.title || "Form"}
                                 author={item.forms?.author_name || "-"}
                                 duration={item.forms?.duration ? `${item.forms.duration} menit` : "-"}
                                 questions={item.forms?.question_count || 0}
+                                score={item.total_score || 0}
+                                passingScore={item.forms?.passing_score ?? null}
                                 to={`/form/result/${item.id}`}
                                 buttonLabel="Lihat"
                             />

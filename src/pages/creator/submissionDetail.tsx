@@ -26,7 +26,7 @@ interface SubmissionInfo {
     status: string
     started_at: string | null
     submitted_at: string | null
-    form: { id: string; title: string } | null
+    form: { id: string; title: string; passing_score: number | null } | null
     user: { name: string } | null
     token: { token_code: string } | null
 }
@@ -51,7 +51,7 @@ function SubmissionDetail() {
 
         const { data: sub } = await supabase
             .from("submissions")
-            .select("id, total_score, status, started_at, submitted_at, form:form_id ( id, title ), user:user_id ( name ), token:token_id ( token_code )")
+            .select("id, total_score, status, started_at, submitted_at, form:form_id ( id, title, passing_score ), user:user_id ( name ), token:token_id ( token_code )")
             .eq("id", submissionId)
             .eq("form_id", id)
             .single()
@@ -125,14 +125,22 @@ function SubmissionDetail() {
                     <div className="bg-white border border-second p-5 shadow-sm rounded-2xl mb-6 flex items-center justify-between">
                         <div>
                             <p className="text-xs text-tinted">Total Skor</p>
-                            <p className="text-3xl font-bold text-darks">{info.total_score}</p>
+                            <p className={`text-3xl font-bold ${info.form?.passing_score != null && info.total_score < info.form.passing_score ? "text-wrong" : "text-done"}`}>
+                                {info.total_score}
+                            </p>
                         </div>
                         <span
                             className={`badge rounded-full text-xs ${
-                                info.status === "SUBMITTED" ? "bg-done/10 text-done border-none" : "badge-ghost text-tinted"
+                                info.form?.passing_score != null && info.total_score < info.form.passing_score
+                                    ? "bg-wrong/10 text-wrong border-none"
+                                    : info.status === "SUBMITTED"
+                                    ? "bg-done/10 text-done border-none"
+                                    : "badge-ghost text-tinted"
                             }`}
                         >
-                            {info.status}
+                            {info.form?.passing_score != null && info.total_score < info.form.passing_score
+                                ? "Gagal"
+                                : info.status}
                         </span>
                     </div>
                 )}
