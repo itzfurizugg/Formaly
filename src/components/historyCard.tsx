@@ -18,21 +18,20 @@ function HistoryCard({ title, author, duration, questions, score, to, buttonLabe
         <div className="card bg-base border border-second rounded-none">
             <div className="card-body">
                 <span
-                    className={`badge border-none ${
-                        passingScore != null && score < passingScore ? "bg-wrong/10 text-wrong" : "bg-pass/10 text-pass"
-                    }`}
+                    className={`badge border-none rounded-full ${passingScore != null && score < passingScore ? "bg-wrong/10 text-wrong" : "bg-done/10 text-done"
+                        }`}
                 >
                     {passingScore != null && score < passingScore ? <X className="h-4 w-4" /> : <Check className="h-4 w-4" />}
                     {passingScore != null && score < passingScore ? "Gagal" : "Selesai"}
                 </span>
-                <span className={`flex items-center gap-1 font-semibold ${passingScore != null && score < passingScore ? "text-wrong" : "text-pass"}`}>
+                {/* <span className={`flex items-center gap-1 font-semibold ${passingScore != null && score < passingScore ? "text-darks" : "text-darks"}`}>
                     Skor: {score}
-                </span>
+                </span> */}
                 <div className="flex items-start justify-between gap-3">
                     <h2 className="card-title text-darks">{title}</h2>
                 </div>
                 <p className="text-sm text-tinted">Oleh <span className="font-semibold text-accents">{author}</span></p>
-                <div className="flex items-center gap-4 mt-3 text-xs text-tinted/70">
+                <div className="flex items-center gap-4 mt-1 text-xs text-tinted/70">
                     <span className="flex items-center gap-1">
                         <Clock className="h-3.5 w-3.5" />
                         {duration}
@@ -42,11 +41,11 @@ function HistoryCard({ title, author, duration, questions, score, to, buttonLabe
                         {questions} soal
                     </span>
                 </div>
-                <div className="card-actions justify-end mt-3">
+                <div className="card-actions justify-center mt-3">
                     <Link
                         to={to}
                         state={state}
-                        className="btn rounded-none bg-darks text-base border-none h-9 min-h-0"
+                        className="btn rounded-none bg-darks text-base border-none h-9 min-h-0 w-full"
                     >
                         {buttonLabel}
                     </Link>

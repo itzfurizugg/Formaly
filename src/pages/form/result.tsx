@@ -4,6 +4,7 @@ import { ArrowLeft, Check, X, Clock } from "lucide-react"
 import { supabase } from "../../lib/supabase"
 import { useAuth } from "../../lib/auth"
 import Loading from "../../components/loading"
+import Filter from "../../components/filter"
 
 interface AnswerRow {
     id: string
@@ -40,6 +41,7 @@ function ResultPage() {
     const [answers, setAnswers] = useState<AnswerRow[]>([])
     const [loading, setLoading] = useState(true)
     const [error, setError] = useState<string | null>(null)
+    const [filter, setFilter] = useState("")
 
     useEffect(() => {
         if (authLoading) return
@@ -127,6 +129,19 @@ function ResultPage() {
 
     const correctCount = answers.filter(isCorrect).length
 
+    const filterOptions = [
+        { value: "correct", label: "Benar" },
+        { value: "wrong", label: "Salah" },
+        { value: "text", label: "Isian" },
+    ]
+
+    const filteredAnswers = answers.filter((a) => {
+        if (filter === "correct") return isCorrect(a)
+        if (filter === "wrong") return a.question?.question_type !== "text" && !isCorrect(a)
+        if (filter === "text") return a.question?.question_type === "text"
+        return true
+    })
+
     return (
         <div className="flex flex-col items-center px-4 py-10">
             <div className="w-full max-w-4xl">
@@ -189,8 +204,19 @@ function ResultPage() {
                         <p className="text-tinted">Belum ada jawaban.</p>
                     </div>
                 ) : (
-                    <div className="space-y-3">
-                        {answers.map((a, idx) => (
+                    <>
+                        <div className="mb-4">
+                            <Filter options={filterOptions} value={filter} onChange={setFilter} />
+                        </div>
+                        {filteredAnswers.length === 0 ? (
+                            <div className="text-center py-10">
+                                <p className="text-tinted">Tidak ada jawaban yang cocok dengan filter ini.</p>
+                            </div>
+                        ) : (
+                            <div className="space-y-3">
+                                {filteredAnswers.map((a) => {
+                                    const idx = answers.indexOf(a)
+                                    return (
                             <div key={a.id} className="bg-white border border-second p-5 shadow-sm rounded-none">
                                 <div className="flex items-center gap-2 flex-wrap mb-1">
                                     <span className="text-sm font-bold text-darks">Soal {idx + 1}</span>
@@ -248,8 +274,11 @@ function ResultPage() {
                                     </div>
                                 )}
                             </div>
-                        ))}
-                    </div>
+                                    )
+                                })}
+                            </div>
+                        )}
+                    </>
                 )}
             </div>
         </div>

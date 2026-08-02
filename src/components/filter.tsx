@@ -1,12 +1,37 @@
-function Filter() {
-    return (
-        <form className="filter">
-            <input className="btn btn-square" type="reset" value="×" />
-            <input className="btn" type="radio" name="frameworks" aria-label="Svelte" />
-            <input className="btn" type="radio" name="frameworks" aria-label="Vue" />
-            <input className="btn" type="radio" name="frameworks" aria-label="React" />
-        </form>
-    );
+interface FilterOption {
+    value: string
+    label: string
 }
 
-export default Filter;
+interface FilterProps {
+    options: FilterOption[]
+    value: string
+    onChange: (value: string) => void
+    name?: string
+}
+
+function Filter({ options, value, onChange, name = "filter" }: FilterProps) {
+    return (
+        <div className="filter flex flex-wrap items-center">
+            <input
+                className={`btn btn-square h-8 min-h-0 w-8 ${value === "" ? "hidden" : ""}`}
+                type="reset"
+                value="×"
+                onClick={() => onChange("")}
+            />
+            {options.map((opt) => (
+                <input
+                    key={opt.value}
+                    className="btn h-8 min-h-0"
+                    type="radio"
+                    name={name}
+                    aria-label={opt.label}
+                    checked={value === opt.value}
+                    onChange={() => onChange(opt.value)}
+                />
+            ))}
+        </div>
+    )
+}
+
+export default Filter
