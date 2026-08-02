@@ -306,52 +306,64 @@ function FormPage() {
                     )}
 
                     <div className="mt-6 space-y-3">
-                        {question.question_options?.map((option) => {
-                            const isMulti = question.question_type === "multiple_choice"
-                            const selected = isMulti
-                                ? Array.isArray(answers[question.id]) && (answers[question.id] as string[]).includes(option.id)
-                                : answers[question.id] === option.id
-                            return (
-                                <button
-                                    key={option.id}
-                                    onClick={() => selectOption(option.id)}
-                                    className={`w-full text-left px-4 py-3 rounded-lg border text-sm transition-colors ${
-                                        selected
-                                            ? "bg-darks border-darks text-white font-medium"
-                                            : "bg-white border-second text-darks hover:border-darks/50"
-                                    }`}
-                                >
-                                    <span className="flex items-center gap-3">
-                                        <span
-                                            className={`shrink-0 w-5 h-5 rounded-full border-2 flex items-center justify-center ${
-                                                isMulti ? "rounded-md" : "rounded-full"
-                                            } ${selected ? "border-darks bg-darks" : "border-tinted"}`}
-                                        >
-                                            {selected && <Check className="h-3 w-3 text-white" strokeWidth={3} />}
+                        {question.question_type === "text" ? (
+                            <textarea
+                                value={Array.isArray(answers[question.id]) ? "" : (answers[question.id] as string) || ""}
+                                onChange={(e) => setAnswers((prev) => ({ ...prev, [question.id]: e.target.value }))}
+                                rows={5}
+                                placeholder="Tulis jawabanmu di sini..."
+                                className="textarea w-full bg-white border-second focus:border-done focus:outline-none transition-colors text-sm resize-y"
+                            />
+                        ) : (
+                            question.question_options?.map((option) => {
+                                const isMulti = question.question_type === "multiple_choice"
+                                const selected = isMulti
+                                    ? Array.isArray(answers[question.id]) && (answers[question.id] as string[]).includes(option.id)
+                                    : answers[question.id] === option.id
+                                return (
+                                    <button
+                                        key={option.id}
+                                        onClick={() => selectOption(option.id)}
+                                        className={`w-full text-left px-4 py-3 rounded-lg border text-sm transition-colors ${
+                                            selected
+                                                ? "bg-darks border-darks text-white font-medium"
+                                                : "bg-white border-second text-darks hover:border-darks/50"
+                                        }`}
+                                    >
+                                        <span className="flex items-center gap-3">
+                                            <span
+                                                className={`shrink-0 w-5 h-5 rounded-full border-2 flex items-center justify-center ${
+                                                    isMulti ? "rounded-md" : "rounded-full"
+                                                } ${selected ? "border-darks bg-darks" : "border-tinted"}`}
+                                            >
+                                                {selected && <Check className="h-3 w-3 text-white" strokeWidth={3} />}
+                                            </span>
+                                            {option.option_text}
                                         </span>
-                                        {option.option_text}
-                                    </span>
-                                </button>
-                            )
-                        })}
+                                    </button>
+                                )
+                            })
+                        )}
                     </div>
                 </div>
 
                 {/* NOTE: LAYOUT DESKTOP (>= md) — PageIndicator & tombol Kirim inline di bawah konten */}
                 <div className="hidden md:flex items-center justify-between mt-4">
                     <PageIndicator total={total} current={current} answers={answers} onPrev={prev} onNext={next} onListClick={goToList} />
-                    <button
-                        onClick={handleSubmit}
-                        disabled={submitting}
-                        className="btn text-white h-12 min-h-0 px-4 bg-done border-none rounded-none hover:opacity-90 disabled:opacity-25"
-                    >
-                        {submitting ? (
-                            <span className="loading loading-spinner loading-sm" />
-                        ) : (
-                            <Check className="h-4 w-4" />
-                        )}
-                        {submitting ? "Mengirim..." : "Kirim"}
-                    </button>
+                    {current === total - 1 && (
+                        <button
+                            onClick={handleSubmit}
+                            disabled={submitting}
+                            className="btn text-white h-12 min-h-0 px-4 bg-done border-none rounded-none hover:opacity-90 disabled:opacity-25"
+                        >
+                            {submitting ? (
+                                <span className="loading loading-spinner loading-sm" />
+                            ) : (
+                                <Check className="h-4 w-4" />
+                            )}
+                            {submitting ? "Mengirim..." : "Kirim"}
+                        </button>
+                    )}
                 </div>
 
                 {error && (
@@ -365,18 +377,20 @@ function FormPage() {
             <div className="fixed bottom-0 left-0 right-0 z-40 bg-second border-t border-base px-4 py-3 md:hidden">
                 <div className="w-full max-w-3xl mx-auto flex items-center justify-between mb-3">
                     <PageIndicator total={total} current={current} answers={answers} onPrev={prev} onNext={next} onListClick={goToList} />
-                    <button
-                        onClick={handleSubmit}
-                        disabled={submitting}
-                        className="btn text-white h-12 min-h-0 px-4 bg-done border-none rounded-none hover:opacity-90 disabled:opacity-25"
-                    >
-                        {submitting ? (
-                            <span className="loading loading-spinner loading-sm" />
-                        ) : (
-                            <Check className="h-4 w-4" />
-                        )}
-                        {submitting ? "Mengirim..." : "Kirim"}
-                    </button>
+                    {current === total - 1 && (
+                        <button
+                            onClick={handleSubmit}
+                            disabled={submitting}
+                            className="btn text-white h-12 min-h-0 px-4 bg-done border-none rounded-none hover:opacity-90 disabled:opacity-25"
+                        >
+                            {submitting ? (
+                                <span className="loading loading-spinner loading-sm" />
+                            ) : (
+                                <Check className="h-4 w-4" />
+                            )}
+                            {submitting ? "Mengirim..." : "Kirim"}
+                        </button>
+                    )}
                 </div>
 
                 {error && (

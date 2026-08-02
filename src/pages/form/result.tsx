@@ -128,6 +128,7 @@ function ResultPage() {
     }
 
     const correctCount = answers.filter(isCorrect).length
+    const textCount = answers.filter((a) => a.question?.question_type === "text").length
 
     const filterOptions = [
         { value: "correct", label: "Benar" },
@@ -194,7 +195,7 @@ function ResultPage() {
                         <span>{answers.length} soal</span>
                         <span>
                             <span className="text-pass font-semibold">{correctCount} benar</span> &middot;{" "}
-                            <span className="text-wrong font-semibold">{answers.length - correctCount} salah</span>
+                            <span className="text-wrong font-semibold">{answers.length - correctCount - textCount} salah</span>
                         </span>
                     </div>
                 </div>
