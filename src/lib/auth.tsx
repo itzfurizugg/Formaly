@@ -16,6 +16,7 @@ interface AuthContextType {
   verifyOtp: (email: string, token: string) => Promise<void>
   resetPassword: (email: string) => Promise<void>
   updatePassword: (newPassword: string) => Promise<void>
+  updateProfile: (name: string, email: string) => Promise<void>
   logout: () => Promise<void>
 }
 
@@ -94,12 +95,35 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (error) throw error
   }
 
+  async function updateProfile(name: string, email: string) {
+    if (!user) return
+    const { data } = await supabase.auth.getSession()
+    const current = data.session?.user ?? user
+
+    if (email && email !== current.email) {
+      const { error } = await supabase.auth.updateUser({ email })
+      if (error) throw error
+    }
+    if (name && name !== (profile?.name ?? "")) {
+      const { error } = await supabase.auth.updateUser({ data: { name } })
+      if (error) throw error
+    }
+    const { error } = await supabase
+      .from("users")
+      .update({ name, email })
+      .eq("id", current.id)
+    if (error) throw error
+
+    const { data: fresh } = await supabase.auth.getSession()
+    if (fresh.session?.user) await fetchProfile(fresh.session.user)
+  }
+
   async function logout() {
     await supabase.auth.signOut()
   }
 
   return (
-    <AuthContext.Provider value={{ user, profile, loading, login, register, verifyOtp, resetPassword, updatePassword, logout }}>
+    <AuthContext.Provider value={{ user, profile, loading, login, register, verifyOtp, resetPassword, updatePassword, updateProfile, logout }}>
       {children}
     </AuthContext.Provider>
   )

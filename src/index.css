@@ -10,4 +10,11 @@
   --color-done: #007DCC;
   --color-pass: #2FA084;
   --color-wrong: #D90000;
+  --animate-loadingbar: loadingbar 1.2s ease-in-out infinite;
+}
+
+@keyframes loadingbar {
+  0% { left: -35%; right: 100%; }
+  50% { left: 0%; right: 0%; }
+  100% { left: 100%; right: -35%; }
 }

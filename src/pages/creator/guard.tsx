@@ -1,3 +1,4 @@
+import Loading from "../../components/loading"
 import { useEffect, useState } from "react"
 import { useNavigate } from "react-router-dom"
 import type { ReactNode } from "react"
@@ -33,11 +34,7 @@ function RequireCreator({ children }: { children: ReactNode }) {
     }, [user, authLoading, navigate])
 
     if (!allowed) {
-        return (
-            <div className="flex items-center justify-center min-h-screen">
-                <span className="loading loading-spinner loading-lg" />
-            </div>
-        )
+        return <Loading />
     }
 
     return <>{children}</>

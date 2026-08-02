@@ -1,3 +1,4 @@
+import Loading from "../../components/loading"
 import { useEffect, useState } from "react"
 import { useNavigate, useParams } from "react-router-dom"
 import { ArrowLeft, Eye, Trash2, Loader2 } from "lucide-react"
@@ -86,11 +87,7 @@ function Submissions() {
     }
 
     if (loading) {
-        return (
-            <div className="flex items-center justify-center min-h-screen">
-                <span className="loading loading-spinner loading-lg" />
-            </div>
-        )
+        return <Loading />
     }
 
     return (

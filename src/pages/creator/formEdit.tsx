@@ -1,6 +1,7 @@
+import Loading from "../../components/loading"
 import { useEffect, useState } from "react"
 import { useNavigate, useParams } from "react-router-dom"
-import { ArrowLeft, Save, Loader2, ClipboardList, KeyRound, Share2, Copy, Check, QrCode } from "lucide-react"
+import { ArrowLeft, Save, Loader2, ClipboardList, KeyRound, Share2, Copy, Check, QrCode, Tag, X } from "lucide-react"
 import { supabase } from "../../lib/supabase"
 import { useAuth } from "../../lib/auth"
 
@@ -30,6 +31,8 @@ function FormEdit() {
     const [error, setError] = useState<string | null>(null)
     const [saved, setSaved] = useState(false)
     const [copied, setCopied] = useState(false)
+    const [tags, setTags] = useState<string[]>([])
+    const [tagInput, setTagInput] = useState("")
 
     useEffect(() => {
         if (!user || !id) return
@@ -56,6 +59,50 @@ function FormEdit() {
         setPassingScore(data.passing_score || 0)
         setStatus(String(data.status))
         setLoading(false)
+
+        const { data: rel } = await supabase
+            .from("form_tags")
+            .select("tag:tags ( name )")
+            .eq("form_id", id)
+        if (rel) {
+            setTags(rel.map((r) => (r.tag as unknown as { name: string } | null)?.name).filter((n): n is string => !!n))
+        }
+    }
+
+    async function syncTags() {
+        if (!id) return
+        const normalized = [...new Set(tags.map((t) => t.trim()).filter(Boolean))]
+
+        const { error: delErr } = await supabase.from("form_tags").delete().eq("form_id", id)
+        if (delErr) throw new Error("Gagal memperbarui tag: " + delErr.message)
+
+        for (const name of normalized) {
+            const { data: existing, error: selErr } = await supabase.from("tags").select("id").eq("name", name).maybeSingle()
+            if (selErr && selErr.code !== "PGRST116") throw new Error("Gagal memperbarui tag: " + selErr.message)
+            let tagId = existing?.id as string | undefined
+
+            if (!tagId) {
+                const { data: ins, error: insErr } = await supabase.from("tags").insert({ name }).select("id").single()
+                if (insErr) throw new Error("Gagal membuat tag: " + insErr.message)
+                tagId = ins?.id as string | undefined
+            }
+
+            if (tagId) {
+                const { error: relErr } = await supabase.from("form_tags").insert({ form_id: id, tag_id: tagId })
+                if (relErr) throw new Error("Gagal menautkan tag: " + relErr.message)
+            }
+        }
+    }
+
+    const addTag = () => {
+        const value = tagInput.trim()
+        if (!value) return
+        setTags((prev) => (prev.includes(value) ? prev : [...prev, value]))
+        setTagInput("")
+    }
+
+    const removeTag = (name: string) => {
+        setTags((prev) => prev.filter((t) => t !== name))
     }
 
     const handleSave = async (e: React.FormEvent) => {
@@ -79,8 +126,13 @@ function FormEdit() {
         setSaving(false)
         if (err) setError(err.message)
         else {
-            setSaved(true)
-            setTimeout(() => setSaved(false), 2000)
+            try {
+                await syncTags()
+                setSaved(true)
+                setTimeout(() => setSaved(false), 2000)
+            } catch (err) {
+                setError(err instanceof Error ? err.message : "Gagal memperbarui tag.")
+            }
         }
     }
 
@@ -88,9 +140,7 @@ function FormEdit() {
 
     if (loading) {
         return (
-            <div className="flex items-center justify-center min-h-screen">
-                <span className="loading loading-spinner loading-lg" />
-            </div>
+            <Loading />
         )
     }
 
@@ -245,6 +295,50 @@ function FormEdit() {
                             <option value="draft">Draft</option>
                             <option value="published">Published</option>
                         </select>
+                    </div>
+
+                    <div>
+                        <label className="flex items-center gap-1.5 text-sm font-medium text-darks mb-1.5">
+                            <Tag className="h-4 w-4 text-tinted" /> Tag
+                        </label>
+                        <div className="flex gap-2">
+                            <input
+                                type="text"
+                                className="input flex-1 bg-base border-second focus:border-done focus:outline-none transition-colors"
+                                placeholder="Nama tag, lalu Enter"
+                                value={tagInput}
+                                onChange={(e) => setTagInput(e.target.value)}
+                                onKeyDown={(e) => {
+                                    if (e.key === "Enter") {
+                                        e.preventDefault()
+                                        addTag()
+                                    }
+                                }}
+                            />
+                            <button type="button" onClick={addTag} className="btn bg-base text-darks border border-second hover:bg-second">
+                                Tambah
+                            </button>
+                        </div>
+                        <p className="text-xs text-tinted mt-1.5">
+                            Form akan bisa ditemukan di beranda dengan memasukkan tag ini.
+                        </p>
+                        {tags.length > 0 && (
+                            <div className="flex flex-wrap gap-2 mt-3">
+                                {tags.map((t) => (
+                                    <span key={t} className="badge gap-1 py-3 rounded-full bg-done/10 text-done border-none">
+                                        #{t}
+                                        <button
+                                            type="button"
+                                            onClick={() => removeTag(t)}
+                                            className="hover:text-wrong transition-colors"
+                                            aria-label={`Hapus tag ${t}`}
+                                        >
+                                            <X className="h-3 w-3" />
+                                        </button>
+                                    </span>
+                                ))}
+                            </div>
+                        )}
                     </div>
 
                     <button

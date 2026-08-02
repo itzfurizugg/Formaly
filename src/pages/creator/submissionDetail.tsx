@@ -1,3 +1,4 @@
+import Loading from "../../components/loading"
 import { useEffect, useState } from "react"
 import { useNavigate, useParams } from "react-router-dom"
 import { ArrowLeft, Check, X } from "lucide-react"
@@ -89,11 +90,7 @@ function SubmissionDetail() {
     const fmtDate = (d: string | null) => (d ? new Date(d).toLocaleString("id-ID") : "-")
 
     if (loading) {
-        return (
-            <div className="flex items-center justify-center min-h-screen">
-                <span className="loading loading-spinner loading-lg" />
-            </div>
-        )
+        return <Loading />
     }
 
     if (error) {

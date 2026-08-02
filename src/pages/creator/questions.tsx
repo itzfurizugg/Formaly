@@ -1,3 +1,4 @@
+import Loading from "../../components/loading"
 import { useEffect, useState } from "react"
 import { useNavigate, useParams } from "react-router-dom"
 import { ArrowLeft, Plus, Pencil, Trash2, Save, X, Loader2, Image as ImageIcon } from "lucide-react"
@@ -187,11 +188,7 @@ function Questions() {
     }
 
     if (loading) {
-        return (
-            <div className="flex items-center justify-center min-h-screen">
-                <span className="loading loading-spinner loading-lg" />
-            </div>
-        )
+        return <Loading />
     }
 
     return (

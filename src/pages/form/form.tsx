@@ -1,3 +1,4 @@
+import Loading from "../../components/loading"
 import { useState, useEffect, useRef, useCallback } from "react"
 import { useNavigate, useParams, useLocation } from "react-router-dom"
 import { Check, Clock, ZoomIn, X } from "lucide-react"
@@ -211,9 +212,7 @@ function FormPage() {
 
     if (authLoading || loading) {
         return (
-            <div className="flex items-center justify-center min-h-screen">
-                <span className="loading loading-spinner loading-lg" />
-            </div>
+            <Loading />
         )
     }
 

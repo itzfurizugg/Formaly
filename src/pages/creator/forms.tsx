@@ -82,7 +82,11 @@ function CreatorForms() {
 
                 {loading ? (
                     <div className="flex justify-center py-20">
-                        <span className="loading loading-spinner loading-lg" />
+                        <div className="w-full max-w-xs">
+                            <div className="relative h-1.5 w-full bg-second rounded-full overflow-hidden">
+                                <div className="absolute h-full bg-darks rounded-full animate-loadingbar" />
+                            </div>
+                        </div>
                     </div>
                 ) : forms.length === 0 ? (
                     <div className="text-center py-20">

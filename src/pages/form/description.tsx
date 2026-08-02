@@ -1,3 +1,4 @@
+import Loading from "../../components/loading"
 import { useState, useEffect } from "react"
 import { useNavigate, useLocation } from "react-router-dom"
 import { Clock, FileText, ArrowLeft, AlertCircle } from "lucide-react"
@@ -93,9 +94,7 @@ function FormDescriptionPage() {
 
     if (!form) {
         return loading ? (
-            <div className="flex items-center justify-center min-h-screen">
-                <span className="loading loading-spinner loading-lg" />
-            </div>
+            <Loading />
         ) : null
     }
 

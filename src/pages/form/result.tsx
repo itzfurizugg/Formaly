@@ -143,6 +143,9 @@ function ResultPage() {
         return true
     })
 
+    const pgAnswers = filteredAnswers.filter((a) => a.question?.question_type !== "text")
+    const textAnswers = filteredAnswers.filter((a) => a.question?.question_type === "text")
+
     return (
         <div className="flex flex-col items-center px-4 py-10">
             <div className="w-full max-w-4xl">
@@ -163,24 +166,22 @@ function ResultPage() {
                         <div className="flex-1">
                             <p className="text-xs text-tinted">Total Skor</p>
                             <p
-                                className={`text-5xl font-bold ${
-                                    info?.form?.passing_score != null && (info?.total_score ?? 0) < info.form.passing_score
-                                        ? "text-wrong"
-                                        : "text-done"
-                                }`}
+                                className={`text-5xl font-bold ${info?.form?.passing_score != null && (info?.total_score ?? 0) < info.form.passing_score
+                                    ? "text-wrong"
+                                    : "text-done"
+                                    }`}
                             >
                                 {info?.total_score ?? 0}
                             </p>
                         </div>
                         <div className="text-right">
                             <span
-                                className={`badge rounded-full text-xs ${
-                                    info?.form?.passing_score != null && (info?.total_score ?? 0) < info.form.passing_score
-                                        ? "bg-wrong/10 text-wrong border-none"
-                                        : info?.status === "SUBMITTED"
+                                className={`badge rounded-full text-xs ${info?.form?.passing_score != null && (info?.total_score ?? 0) < info.form.passing_score
+                                    ? "bg-wrong/10 text-wrong border-none"
+                                    : info?.status === "SUBMITTED"
                                         ? "bg-done/10 text-done border-none"
                                         : "badge-ghost text-tinted"
-                                }`}
+                                    }`}
                             >
                                 {info?.form?.passing_score != null && (info?.total_score ?? 0) < info.form.passing_score
                                     ? "Gagal"
@@ -214,69 +215,93 @@ function ResultPage() {
                                 <p className="text-tinted">Tidak ada jawaban yang cocok dengan filter ini.</p>
                             </div>
                         ) : (
-                            <div className="space-y-3">
-                                {filteredAnswers.map((a) => {
-                                    const idx = answers.indexOf(a)
-                                    return (
-                            <div key={a.id} className="bg-white border border-second p-5 shadow-sm rounded-none">
-                                <div className="flex items-center gap-2 flex-wrap mb-1">
-                                    <span className="text-sm font-bold text-darks">Soal {idx + 1}</span>
-                                    <span className="badge badge-ghost text-tinted rounded-full text-xs">{typeLabel(a.question?.question_type || "")}</span>
-                                    {isCorrect(a) ? (
-                                        <span className="text-xs text-pass font-medium flex items-center gap-1">
-                                            <Check className="h-3 w-3" /> Benar
-                                        </span>
-                                    ) : a.question?.question_type === "text" ? (
-                                        <span className="text-xs text-tinted font-medium">Isian</span>
-                                    ) : (
-                                        <span className="text-xs text-wrong font-medium flex items-center gap-1">
-                                            <X className="h-3 w-3" /> Salah
-                                        </span>
-                                    )}
-                                </div>
-                                <p className="text-sm text-darks whitespace-pre-line">{a.question?.question_text}</p>
-                                {a.question?.image_question && (
-                                    <img src={a.question.image_question} alt="Soal" className="max-h-40 object-contain mt-2 border border-second rounded-lg" />
-                                )}
-
-                                {a.question?.question_type === "text" ? (
-                                    <div className="mt-3 text-sm text-darks bg-base border border-second rounded-lg px-3 py-2">
-                                        {a.answer_text || "-"}
-                                    </div>
-                                ) : (
-                                    <div className="mt-3 space-y-1.5">
-                                        {(a.question?.question_options || []).map((o) => {
-                                            const selected = a.question?.question_type === "multiple_choice"
-                                                ? (a.selected_options || []).includes(o.id)
-                                                : a.selected_option_id === o.id
-                                            const isCorrect = o.is_correct
+                            <div className="space-y-6">
+                                {pgAnswers.length > 0 && (
+                                    <div className="space-y-3">
+                                        <div className="flex items-center gap-3">
+                                            <h3 className="text-sm font-bold text-darks whitespace-nowrap">Pilihan Ganda (PG)</h3>
+                                            <div className="flex-1 h-px bg-second"></div>
+                                        </div>
+                                        {pgAnswers.map((a) => {
+                                            const idx = answers.indexOf(a)
                                             return (
-                                                <div
-                                                    key={o.id}
-                                                    className={`flex items-center gap-2 text-sm rounded-lg px-3 py-1.5 border ${
-                                                        isCorrect
-                                                            ? "border-pass/40 bg-pass/5 text-pass"
-                                                            : selected
-                                                            ? "border-wrong/40 bg-wrong/5 text-wrong"
-                                                            : "border-second text-tinted"
-                                                    }`}
-                                                >
-                                                    {isCorrect ? (
-                                                        <Check className="h-3.5 w-3.5 shrink-0" />
-                                                    ) : selected ? (
-                                                        <X className="h-3.5 w-3.5 shrink-0" />
-                                                    ) : (
-                                                        <span className="w-3.5 h-3.5 shrink-0" />
+                                                <div key={a.id} className="bg-white border border-second p-5 shadow-sm rounded-none">
+                                                    <div className="flex items-center gap-2 flex-wrap mb-1">
+                                                        <span className="text-sm font-bold text-darks">Soal {idx + 1}</span>
+                                                        <span className="badge badge-ghost text-tinted rounded-full text-xs">{typeLabel(a.question?.question_type || "")}</span>
+                                                        {isCorrect(a) ? (
+                                                            <span className="text-xs text-pass font-medium flex items-center gap-1">
+                                                                <Check className="h-3 w-3" /> Benar
+                                                            </span>
+                                                        ) : (
+                                                            <span className="text-xs text-wrong font-medium flex items-center gap-1">
+                                                                <X className="h-3 w-3" /> Salah
+                                                            </span>
+                                                        )}
+                                                    </div>
+                                                    <p className="text-sm text-darks whitespace-pre-line">{a.question?.question_text}</p>
+                                                    {a.question?.image_question && (
+                                                        <img src={a.question.image_question} alt="Soal" className="max-h-40 object-contain mt-2 border border-second rounded-lg" />
                                                     )}
-                                                    {o.option_text}
+                                                    <div className="mt-3 space-y-1.5">
+                                                        {(a.question?.question_options || []).map((o) => {
+                                                            const selected = a.question?.question_type === "multiple_choice"
+                                                                ? (a.selected_options || []).includes(o.id)
+                                                                : a.selected_option_id === o.id
+                                                            const isCorrect = o.is_correct
+                                                            return (
+                                                                <div
+                                                                    key={o.id}
+                                                                    className={`flex items-center gap-2 text-sm rounded-lg px-3 py-1.5 border ${isCorrect
+                                                                        ? "border-pass/40 bg-pass/5 text-pass"
+                                                                        : selected
+                                                                            ? "border-wrong/40 bg-wrong/5 text-wrong"
+                                                                            : "border-second text-tinted"
+                                                                        }`}
+                                                                >
+                                                                    {isCorrect ? (
+                                                                        <Check className="h-3.5 w-3.5 shrink-0" />
+                                                                    ) : selected ? (
+                                                                        <X className="h-3.5 w-3.5 shrink-0" />
+                                                                    ) : (
+                                                                        <span className="w-3.5 h-3.5 shrink-0" />
+                                                                    )}
+                                                                    {o.option_text}
+                                                                </div>
+                                                            )
+                                                        })}
+                                                    </div>
                                                 </div>
                                             )
                                         })}
                                     </div>
                                 )}
-                            </div>
-                                    )
-                                })}
+                                {textAnswers.length > 0 && (
+                                    <div className="space-y-3">
+                                        <div className="flex items-center gap-3">
+                                            <h3 className="text-sm font-bold text-darks whitespace-nowrap">Soal Isian</h3>
+                                            <div className="flex-1 h-px bg-second"></div>
+                                        </div>
+                                        {textAnswers.map((a) => {
+                                            const idx = answers.indexOf(a)
+                                            return (
+                                                <div key={a.id} className="bg-white border border-second p-5 shadow-sm rounded-none">
+                                                    <div className="flex items-center gap-2 flex-wrap mb-1">
+                                                        <span className="text-sm font-bold text-darks">Soal {idx + 1}</span>
+                                                        <span className="badge badge-ghost text-tinted rounded-full text-xs">{typeLabel(a.question?.question_type || "")}</span>
+                                                    </div>
+                                                    <p className="text-sm text-darks whitespace-pre-line">{a.question?.question_text}</p>
+                                                    {a.question?.image_question && (
+                                                        <img src={a.question.image_question} alt="Soal" className="max-h-40 object-contain mt-2 border border-second rounded-lg" />
+                                                    )}
+                                                    <div className="mt-3 text-sm text-darks bg-base border border-second rounded-lg px-3 py-2 whitespace-pre-wrap break-words">
+                                                        {a.answer_text || "-"}
+                                                    </div>
+                                                </div>
+                                            )
+                                        })}
+                                    </div>
+                                )}
                             </div>
                         )}
                     </>

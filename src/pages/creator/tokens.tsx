@@ -1,3 +1,4 @@
+import Loading from "../../components/loading"
 import { useEffect, useState } from "react"
 import { useNavigate, useParams } from "react-router-dom"
 import { ArrowLeft, Plus, Trash2, X, Loader2, Copy, Check } from "lucide-react"
@@ -114,11 +115,7 @@ function Tokens() {
     const fmtDate = (d: string | null) => (d ? new Date(d).toLocaleDateString("id-ID") : "Tanpa batas")
 
     if (loading) {
-        return (
-            <div className="flex items-center justify-center min-h-screen">
-                <span className="loading loading-spinner loading-lg" />
-            </div>
-        )
+        return <Loading />
     }
 
     return (

@@ -16,12 +16,23 @@ interface FormItem {
     question_count: number
 }
 
+interface FormRecord {
+    id: string
+    title: string
+    description: string
+    duration: number
+    users: { name: string } | null
+    questions: { id: string }[]
+}
+
 function Home() {
     const navigate = useNavigate()
     const { user, loading: authLoading } = useAuth()
     const [search, setSearch] = useState("")
     const [forms, setForms] = useState<FormItem[]>([])
     const [loading, setLoading] = useState(true)
+    const [activeTag, setActiveTag] = useState("")
+    const [tagLoading, setTagLoading] = useState(false)
 
     useEffect(() => {
         if (authLoading) return
@@ -52,7 +63,7 @@ function Home() {
             .order("created_at", { ascending: false })
 
         if (data) {
-            const formatted = data.map((f: any) => ({
+            const formatted = (data as unknown as FormRecord[]).map((f) => ({
                 id: f.id,
                 title: f.title,
                 description: f.description,
@@ -70,6 +81,64 @@ function Home() {
         setLoading(false)
     }
 
+    const handleTagSearch = async (tag: string) => {
+        setActiveTag(tag)
+        setTagLoading(true)
+        try {
+            const { data: tagRow } = await supabase
+                .from("tags")
+                .select("id")
+                .eq("name", tag)
+                .maybeSingle()
+
+            if (!tagRow) {
+                setForms([])
+                return
+            }
+
+            const { data: rel } = await supabase
+                .from("form_tags")
+                .select("form_id")
+                .eq("tag_id", tagRow.id)
+
+            if (!rel || rel.length === 0) {
+                setForms([])
+                return
+            }
+
+            const ids = rel.map((r) => r.form_id as string)
+            const { data } = await supabase
+                .from("forms")
+                .select(`
+                    id,
+                    title,
+                    description,
+                    duration,
+                    users:creator_id ( name ),
+                    questions ( id )
+                `)
+                .in("id", ids)
+                .order("created_at", { ascending: false })
+
+            const matches = (data as unknown as FormRecord[]).map((f) => ({
+                id: f.id,
+                title: f.title,
+                description: f.description,
+                author_name: f.users?.name || "Creator",
+                duration: f.duration || 0,
+                question_count: f.questions ? f.questions.length : 0
+            }))
+
+            if (matches.length === 1) {
+                navigate("/form/description", { state: { form: matches[0] } })
+            } else if (matches.length > 1) {
+                setForms(matches)
+            }
+        } finally {
+            setTagLoading(false)
+        }
+    }
+
     const filtered = forms.filter(
         (f) =>
             f.title.toLowerCase().includes(search.toLowerCase()) ||
@@ -85,54 +154,24 @@ function Home() {
                     Mulai mengerjakan!
                 </h1>
                 <p className="text-tinted mt-3 max-w-md">
-                    Masukan token yang diberikan untuk mulai mengerjakan.
+                    Cari formulir berdasarkan tag yang kamu ketahui, lalu kerjakan.
                 </p>
 
                 <div className="w-full max-w-xl mt-8">
-                    <Search />
-                </div>
-            </div>
-
-            <div className="flex flex-col items-center px-4 pb-10">
-                <div className="max-w-4xl w-full">
-                    <div className="join w-full mb-6">
-                        <div className="join-item flex-1 relative">
-                            <SearchIcon className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-tinted pointer-events-none" />
-                            <input
-                                type="text"
-                                placeholder="Cari formulir tersedia..."
-                                className="input w-full pl-10 bg-base border-second focus:border-done focus:outline-none transition-colors"
-                                value={search}
-                                onChange={(e) => setSearch(e.target.value)}
-                            />
-                        </div>
-                    </div>
-
-                    {loading ? (
-                        <div className="flex justify-center py-10">
-                            <span className="loading loading-spinner loading-lg" />
-                        </div>
-                    ) : filtered.length === 0 ? (
-                        <div className="text-center py-10">
-                            <FileText className="h-12 w-12 text-tinted/40 mx-auto mb-3" />
-                            <p className="text-tinted">
-                                {search ? "Formulir tidak ditemukan." : "Belum ada formulir tersedia."}
-                            </p>
-                        </div>
-                    ) : (
-                        <div className="space-y-3">
-                            {filtered.map((f) => (
-                                <Card
-                                    key={f.id}
-                                    title={f.title}
-                                    author={f.author_name}
-                                    duration={f.duration ? `${f.duration} menit` : "Tanpa Waktu Pengerjaan"}
-                                    questions={f.question_count}
-                                    to="/form/description"
-                                    buttonLabel="Kerjakan"
-                                    state={{ form: f }}
-                                />
-                            ))}
+                    <Search onSearch={handleTagSearch} loading={tagLoading} />
+                    {activeTag && (
+                        <div className="flex items-center justify-center gap-2 mt-3">
+                            <span className="text-sm text-tinted">Tag:</span>
+                            <button
+                                onClick={() => {
+                                    setActiveTag("")
+                                    loadForms()
+                                }}
+                                className="badge badge-ghost text-tinted rounded-full text-xs cursor-pointer hover:text-wrong"
+                                title="Hapus filter tag"
+                            >
+                                {activeTag} &times;
+                            </button>
                         </div>
                     )}
                 </div>

@@ -101,8 +101,12 @@ function ResetPassword() {
 
                     <div className="bg-white rounded-2xl border border-second p-8 shadow-sm">
                         {checking ? (
-                            <div className="flex flex-col items-center justify-center py-16">
-                                <span className="loading loading-spinner loading-lg text-done" />
+                            <div className="flex flex-col items-center justify-center py-16 px-6">
+                                <div className="w-full max-w-xs">
+                                    <div className="relative h-1.5 w-full bg-second rounded-full overflow-hidden">
+                                        <div className="absolute h-full bg-darks rounded-full animate-loadingbar" />
+                                    </div>
+                                </div>
                                 <p className="text-sm text-tinted mt-4">Memeriksa tautan...</p>
                             </div>
                         ) : success ? (
