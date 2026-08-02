@@ -1,8 +1,10 @@
 import { Routes, Route, useLocation } from "react-router-dom"
+import { useEffect, useState } from "react"
 import { AuthProvider } from "./lib/auth"
 import Login from "./pages/auth/login"
 import Register from "./pages/auth/register"
 import Otp from "./pages/auth/otp"
+import ForgotPassword from "./pages/auth/forgotPassword"
 import Home from "./pages/home"
 import History from "./pages/history"
 import Profile from "./pages/profile"
@@ -10,6 +12,7 @@ import AdminForms from "./pages/admin/forms"
 import FormDescription from "./pages/form/description"
 import FormPage from "./pages/form/form"
 import FormList from "./pages/form/formlist"
+import ResultPage from "./pages/form/result"
 import CreatorGuard from "./pages/creator/guard"
 import CreatorDashboard from "./pages/creator/dashboard"
 import CreatorForms from "./pages/creator/forms"
@@ -21,11 +24,27 @@ import CreatorSubmissions from "./pages/creator/submissions"
 import CreatorSubmissionDetail from "./pages/creator/submissionDetail"
 import Navbar from "./components/navbar"
 
-const hideNavPaths = ["/login", "/register", "/auth", "/form/description", "/form", "/form/list"]
+const hideNavPaths = ["/login", "/register", "/auth", "/forgot-password", "/form/description", "/form", "/form/list", "/form/result"]
+
+function useIsMobile() {
+  const [isMobile, setIsMobile] = useState(() =>
+    typeof window !== "undefined" ? window.innerWidth < 768 : false
+  )
+  useEffect(() => {
+    const onResize = () => setIsMobile(window.innerWidth < 768)
+    window.addEventListener("resize", onResize)
+    return () => window.removeEventListener("resize", onResize)
+  }, [])
+  return isMobile
+}
 
 function App() {
   const location = useLocation()
-  const hideNav = hideNavPaths.includes(location.pathname)
+  const isMobile = useIsMobile()
+  const hideNav =
+    hideNavPaths.includes(location.pathname) ||
+    /^\/form\/[^/]+$/.test(location.pathname) ||
+    (isMobile && location.pathname.startsWith("/form/result"))
 
   return (
     <AuthProvider>
@@ -37,8 +56,9 @@ function App() {
           <Route path="/profile" element={<Profile />} />
           <Route path="/admin/forms" element={<AdminForms />} />
           <Route path="/form/description" element={<FormDescription />} />
-          <Route path="/form" element={<FormPage />} />
+          <Route path="/form/:formId" element={<FormPage />} />
           <Route path="/form/list" element={<FormList />} />
+          <Route path="/form/result/:submissionId" element={<ResultPage />} />
           <Route
             path="/creator"
             element={
@@ -106,6 +126,7 @@ function App() {
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
           <Route path="/auth" element={<Otp />} />
+          <Route path="/forgot-password" element={<ForgotPassword />} />
         </Routes>
       </div>
     </AuthProvider>

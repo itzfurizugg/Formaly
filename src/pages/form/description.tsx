@@ -25,8 +25,11 @@ function FormDescriptionPage() {
     const params = new URLSearchParams(location.search)
     const formIdParam = params.get("formId")
     const [form, setForm] = useState<FormItem | null>(locationState?.form || null)
+    const [alreadySubmitted, setAlreadySubmitted] = useState(false)
 
     const [loading, setLoading] = useState(false)
+
+    const formId = form?.id || formIdParam
 
     useEffect(() => {
         if (authLoading) return
@@ -74,6 +77,20 @@ function FormDescriptionPage() {
         }
     }, [form, formIdParam, user, authLoading, navigate])
 
+    // Cek apakah user sudah pernah mengerjakan form ini
+    useEffect(() => {
+        if (authLoading || !user || !formId) return
+        supabase
+            .from("submissions")
+            .select("id")
+            .eq("user_id", user.id)
+            .eq("form_id", formId)
+            .single()
+            .then(({ data }) => {
+                setAlreadySubmitted(!!data)
+            })
+    }, [formId, user, authLoading])
+
     if (!form) {
         return loading ? (
             <div className="flex items-center justify-center min-h-screen">
@@ -84,80 +101,106 @@ function FormDescriptionPage() {
 
     const handleStartExam = () => {
         setLoading(true)
-        // Navigasi ke halaman pengerjaan soal (FormPage) dengan membawa formId
-        navigate("/form", { state: { formId: form.id } })
+        // Navigasi ke halaman pengerjaan soal (FormPage) dengan membawa formId di URL
+        navigate(`/form/${form.id}`)
     }
 
     return (
-        <div className="flex flex-col items-center px-4 py-10 min-h-[80vh] justify-center">
-            <div className="w-full max-w-2xl bg-white border border-second p-8 shadow-sm rounded-lg relative">
-                
+        <div className="flex flex-col items-center min-h-screen sm:min-h-[80vh] sm:justify-center px-0 pt-6 pb-28 sm:px-4 sm:py-10 bg-white sm:bg-transparent">
+            <div className="w-full max-w-2xl bg-white sm:border sm:border-second p-4 sm:p-8 sm:shadow-sm sm:rounded-lg relative">
+
                 {/* Tombol Kembali */}
                 <button
                     onClick={() => navigate("/")}
-                    className="flex items-center gap-2 text-sm text-tinted hover:text-darks mb-6 transition-colors"
+                    className="flex items-center gap-2 text-xs sm:text-sm text-tinted hover:text-darks mb-4 sm:mb-6 transition-colors"
                 >
                     <ArrowLeft className="h-4 w-4" /> Kembali ke Beranda
                 </button>
 
-                <div className="border-b border-second pb-6 mb-6">
-                    <span className="inline-block px-3 py-1 bg-done/10 text-done text-xs font-semibold rounded-full mb-3">
-                        Formulir / Ujian Tersedia
-                    </span>
-                    <h1 className="text-2xl md:text-3xl font-bold text-darks leading-tight">
+                <div className="border-b border-second pb-3 sm:pb-4">
+                    <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold text-darks leading-snug sm:leading-tight">
                         {form.title}
                     </h1>
-                    <p className="text-sm text-tinted mt-2">
+                    <p className="text-xs sm:text-sm text-tinted mt-2">
                         Dibuat oleh: <span className="font-medium text-darks">{form.author_name}</span>
                     </p>
                 </div>
 
                 {/* Informasi Detail (Durasi & Jumlah Soal) */}
-                <div className="grid grid-cols-2 gap-4 mb-6">
-                    <div className="flex items-center gap-3 p-4 bg-base border border-second rounded-lg">
-                        <Clock className="h-6 w-6 text-done" />
-                        <div>
-                            <p className="text-xs text-tinted">Durasi Pengerjaan</p>
-                            <p className="text-sm font-semibold text-darks">{form.duration} Menit</p>
+                <div className="grid grid-cols-2 gap-2 sm:gap-4 mb-4 sm:mb-6 mt-4 sm:mt-6">
+                    <div className="flex items-center gap-2 sm:gap-3 p-3 sm:p-4 bg-base border border-second rounded-lg">
+                        <Clock className="h-5 w-5 sm:h-6 sm:w-6 text-darks shrink-0" />
+                        <div className="min-w-0">
+                            <p className="text-[10px] sm:text-xs text-tinted">Durasi</p>
+                            <p className="text-xs sm:text-sm font-semibold text-darks truncate">{form.duration} Menit</p>
                         </div>
                     </div>
-                    <div className="flex items-center gap-3 p-4 bg-base border border-second rounded-lg">
-                        <FileText className="h-6 w-6 text-done" />
-                        <div>
-                            <p className="text-xs text-tinted">Jumlah Soal</p>
-                            <p className="text-sm font-semibold text-darks">{form.question_count} Soal</p>
+                    <div className="flex items-center gap-2 sm:gap-3 p-3 sm:p-4 bg-base border border-second rounded-lg">
+                        <FileText className="h-5 w-5 sm:h-6 sm:w-6 text-darks shrink-0" />
+                        <div className="min-w-0">
+                            <p className="text-[10px] sm:text-xs text-tinted">Jumlah Soal</p>
+                            <p className="text-xs sm:text-sm font-semibold text-darks truncate">{form.question_count} Soal</p>
                         </div>
                     </div>
                 </div>
 
                 {/* Deskripsi / Petunjuk Pengerjaan */}
-                <div className="mb-8">
-                    <h3 className="text-sm font-semibold text-darks mb-2">Deskripsi & Petunjuk:</h3>
-                    <div className="p-4 bg-base border border-second rounded-lg text-sm text-darks leading-relaxed whitespace-pre-line">
+                <div className="mb-6 sm:mb-8">
+                    <h3 className="text-xs sm:text-sm font-semibold text-darks mb-2">Deskripsi & Petunjuk:</h3>
+                    <div className="p-3 sm:p-4 bg-base border border-second rounded-lg text-xs sm:text-sm text-darks leading-relaxed whitespace-pre-line">
                         {form.description || "Tidak ada deskripsi tambahan untuk formulir ini. Silakan mulai mengerjakan jika sudah siap."}
                     </div>
                 </div>
 
                 {/* Peringatan sebelum mulai */}
-                <div className="flex items-start gap-3 p-4 bg-amber-500/10 border border-amber-500/20 rounded-lg mb-8 text-amber-800 text-xs md:text-sm">
-                    <AlertCircle className="h-5 w-5 shrink-0 mt-0.5 text-amber-600" />
-                    <p>
-                        Pastikan koneksi internet stabil. Timer akan berjalan otomatis setelah Anda menekan tombol "Mulai Mengerjakan" di bawah ini.
-                    </p>
-                </div>
+                {!alreadySubmitted && (
+                    <div className="flex items-start gap-2 sm:gap-3 p-3 sm:p-4 bg-amber-500/10 border border-amber-500/20 rounded-lg mb-6 sm:mb-8 text-amber-800 text-xs sm:text-sm">
+                        <AlertCircle className="h-4 w-4 sm:h-5 sm:w-5 shrink-0 mt-0.5 text-amber-600" />
+                        <p>
+                            Pastikan koneksi internet stabil. Timer akan berjalan otomatis setelah Anda menekan tombol "Mulai Mengerjakan" di bawah ini.
+                        </p>
+                    </div>
+                )}
+
+                {/* Peringatan sudah pernah mengerjakan */}
+                {alreadySubmitted && (
+                    <div className="flex items-start gap-2 sm:gap-3 p-3 sm:p-4 bg-red-500/10 border border-red-500/20 rounded-lg mb-4 sm:mb-6 text-red-600 text-xs sm:text-sm">
+                        <AlertCircle className="h-4 w-4 sm:h-5 sm:w-5 shrink-0 mt-0.5" />
+                        <p>
+                            Kamu sudah pernah mengerjakan form ini.
+                        </p>
+                    </div>
+                )}
 
                 {/* Tombol Mulai */}
                 <button
-                    onClick={handleStartExam}
+                    onClick={alreadySubmitted ? () => navigate("/history") : handleStartExam}
                     disabled={loading}
-                    className="w-full py-3.5 bg-darks text-white font-medium rounded-lg hover:opacity-90 transition-opacity flex items-center justify-center gap-2 text-sm"
+                    className="hidden sm:flex w-full py-3.5 bg-darks text-white font-medium rounded-lg hover:opacity-90 transition-opacity items-center justify-center gap-2 text-sm"
                 >
                     {loading ? (
                         <span className="loading loading-spinner loading-sm" />
                     ) : (
-                        "Mulai Mengerjakan"
+                        alreadySubmitted ? "Lihat Riwayat" : "Mulai Mengerjakan"
                     )}
                 </button>
+            </div>
+
+            {/* Tombol Mulai sticky di bawah (mobile) */}
+            <div className="fixed bottom-0 left-0 right-0 pointer-events-none sm:hidden">
+                <div className="bg-white px-4 pb-4 pt-3 border-t mb-3 border-second pointer-events-auto">
+                    <button
+                        onClick={alreadySubmitted ? () => navigate("/history") : handleStartExam}
+                        disabled={loading}
+                        className="w-full py-3 bg-darks text-white font-medium rounded-lg hover:opacity-90 transition-opacity flex items-center justify-center gap-2 text-sm"
+                    >
+                        {loading ? (
+                            <span className="loading loading-spinner loading-sm" />
+                        ) : (
+                            alreadySubmitted ? "Lihat Riwayat" : "Mulai Mengerjakan"
+                        )}
+                    </button>
+                </div>
             </div>
         </div>
     )

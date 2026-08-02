@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react"
-import { useNavigate, useLocation } from "react-router-dom"
+import { useNavigate, useParams, useLocation } from "react-router-dom"
 import { Check, Clock, ZoomIn, X } from "lucide-react"
 import PageIndicator from "../../components/pageindicator"
 import { supabase } from "../../lib/supabase"
@@ -25,17 +25,16 @@ interface Answer {
 }
 
 interface LocationState {
-    formId?: string
     current?: number
     answers?: Answer
 }
 
 function FormPage() {
-    const location = useLocation()
+    const { formId } = useParams()
     const navigate = useNavigate()
     const { user, loading: authLoading } = useAuth()
+    const location = useLocation()
     const locationState = location.state as LocationState | null
-    const formId = locationState?.formId
 
     const [questions, setQuestions] = useState<Question[]>([])
     const [formMeta, setFormMeta] = useState<{ title: string; duration: number } | null>(null)
@@ -185,16 +184,13 @@ function FormPage() {
             user_id: user.id,
             form_id: formId,
             total_score: totalScore,
-            status: 'SUBMITTED'
+            status: 'SUBMITTED',
+            submitted_at: new Date().toISOString()
         }).select("id").single()
 
         if (subErr) {
             setSubmitting(false)
-            if (subErr.code === "23505") {
-                setError("Kamu sudah pernah mengerjakan form ini.")
-            } else {
-                setError(subErr.message || "Gagal mengirim jawaban. Coba lagi.")
-            }
+            setError(subErr.message || "Gagal mengirim jawaban. Coba lagi.")
             return
         }
         const submissionId = subData.id
@@ -203,24 +199,36 @@ function FormPage() {
             const ans = answers[q.id]
             if (ans === undefined) continue
 
+            let scoreObtained = 0
+            if (q.question_type !== "text") {
+                const selected = Array.isArray(ans) ? ans : [ans]
+                const correct = q.question_options.filter((o) => o.is_correct).map((o) => o.id)
+                if (selected.length === correct.length && selected.every((id) => correct.includes(id))) {
+                    scoreObtained = Number(q.score_value) || 0
+                }
+            }
+
             let insertError = null
             if (q.question_type === "text") {
                 ;({ error: insertError } = await supabase.from("answers").insert({
                     submission_id: submissionId,
                     question_id: q.id,
                     answer_text: String(ans),
+                    score_obtained: scoreObtained,
                 }))
             } else if (Array.isArray(ans)) {
                 ;({ error: insertError } = await supabase.from("answers").insert({
                     submission_id: submissionId,
                     question_id: q.id,
                     selected_options: ans,
+                    score_obtained: scoreObtained,
                 }))
             } else {
                 ;({ error: insertError } = await supabase.from("answers").insert({
                     submission_id: submissionId,
                     question_id: q.id,
                     selected_option_id: ans,
+                    score_obtained: scoreObtained,
                 }))
             }
 
@@ -245,7 +253,7 @@ function FormPage() {
                     </p>
                 </div>
 
-                <div className="bg-white border border-second p-6 shadow-sm rounded-none">
+                <div className="bg-base-300 lg:bg-white border border-second p-1 lg:p-6 lg:shadow-sm rounded-none">
                     <div className="flex items-center justify-between mb-3">
                         <p className="text-sm text-tinted font-semibold">Soal {current + 1}</p>
                         <span
@@ -275,7 +283,7 @@ function FormPage() {
                             />
                             <button
                                 onClick={() => setModalImage(question.image_question ?? null)}
-                                className="absolute bottom-2 right-2 bg-darks/70 hover:bg-darks text-white p-1.5 rounded-md opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-1 text-xs"
+                                className="absolute bottom-2 right-2 bg-base/70 hover:bg-darks text-medium text-darks hover:text-white p-1.5 rounded-md opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-1 text-xs"
                             >
                                 <ZoomIn className="h-4 w-4" /> Perbesar
                             </button>
@@ -332,23 +340,15 @@ function FormPage() {
                 </div>
 
                 {error && (
-                    <div className="mt-4 flex flex-col md:flex-row items-start gap-3 bg-red-500/10 border border-red-500/20 rounded-lg px-4 py-3">
+                    <div className="mt-4 flex items-start gap-3 bg-red-500/10 border border-red-500/20 rounded-lg px-4 py-3">
                         <p className="text-sm text-red-600 font-medium">{error}</p>
-                        {error.includes("sudah pernah") && (
-                            <button
-                                onClick={() => navigate("/history")}
-                                className="btn btn-sm text-white bg-darks border-none rounded-none hover:opacity-90"
-                            >
-                                Lihat Riwayat
-                            </button>
-                        )}
                     </div>
                 )}
             </div>
 
             {/* NOTE: LAYOUT MOBILE (< md) — Dock fixed di bawah, latar bg-second */}
-            <div className="fixed bottom-0 left-0 right-0 z-40 bg-second border-t border-base px-4 py-3 md:hidden mb-5">
-                <div className="w-full max-w-3xl mx-auto flex items-center justify-between">
+            <div className="fixed bottom-0 left-0 right-0 z-40 bg-second border-t border-base px-4 py-3 md:hidden">
+                <div className="w-full max-w-3xl mx-auto flex items-center justify-between mb-3">
                     <PageIndicator total={total} current={current} answers={answers} onPrev={prev} onNext={next} onListClick={goToList} />
                     <button
                         onClick={handleSubmit}
@@ -367,14 +367,6 @@ function FormPage() {
                 {error && (
                     <div className="mt-3 flex flex-col items-stretch gap-2 bg-red-500/10 border border-red-500/20 rounded-lg px-4 py-3">
                         <p className="text-sm text-red-600 font-medium">{error}</p>
-                        {error.includes("sudah pernah") && (
-                            <button
-                                onClick={() => navigate("/history")}
-                                className="btn btn-sm text-white bg-darks border-none rounded-none hover:opacity-90"
-                            >
-                                Lihat Riwayat
-                            </button>
-                        )}
                     </div>
                 )}
             </div>

@@ -125,9 +125,8 @@ function History() {
                                 author={item.forms?.author_name || "-"}
                                 duration={item.forms?.duration ? `${item.forms.duration} menit` : "-"}
                                 questions={item.forms?.question_count || 0}
-                                to="/form/description"
+                                to={`/form/result/${item.id}`}
                                 buttonLabel="Lihat"
-                                state={{ form: item.forms }}
                             />
                         ))}
                     </div>
