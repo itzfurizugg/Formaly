@@ -79,7 +79,7 @@ function Profile() {
                     </div>
                 </div>
 
-                <div className="bg-white border border-second p-4 rounded-none">
+                <div className="bg-white border border-second p-4 rounded-none mb-5">
                     <h3 className="text-base font-bold text-darks mb-1">Informasi Akun</h3>
                     <p className="text-xs text-tinted mb-4">
                         Perbarui username dan email kamu. Perubahan email akan memerlukan verifikasi ulang.
@@ -146,10 +146,14 @@ function Profile() {
                     </form>
                 </div>
 
+                    <button className="btn w-full justify-start bg-white border-none hover:bg-done/10 text-darks hover:text-done">Reset Password</button>
+                {/* <div className="bg-white border border-second p-4 rounded-none hover:bg-darks">
+                </div> */}
+
                 <button
                     onClick={handleLogout}
                     disabled={loggingOut}
-                    className="btn bg-wrong/10 text-wrong border-none w-full mt-6 hover:opacity-90 transition-opacity"
+                    className="btn bg-wrong/10 text-wrong border-none w-full mt-6 lg:hidden hover:opacity-90 transition-opacity"
                 >
                     {loggingOut ? (
                         <span className="loading loading-spinner loading-sm" />

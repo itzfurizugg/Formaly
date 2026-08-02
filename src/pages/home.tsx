@@ -149,18 +149,18 @@ function Home() {
 
     return (
         <div>
-            <div className="flex flex-col items-center justify-center min-h-[50vh] px-4 pt-5 pb-6 text-center">
-                <h1 className="text-3xl md:text-4xl font-bold text-darks">
+            <div className="flex flex-col items-center justify-center min-h-[70vh] px-4 pt-5 pb-6 text-left lg:text-center">
+                <h1 className="w-full text-3xl md:text-4xl font-bold text-darks">
                     Mulai mengerjakan!
                 </h1>
-                <p className="text-tinted mt-3 max-w-md">
+                <p className="w-full text-tinted mt-3 max-w-xl">
                     Cari formulir berdasarkan tag yang kamu ketahui, lalu kerjakan.
                 </p>
 
                 <div className="w-full max-w-xl mt-8">
                     <Search onSearch={handleTagSearch} loading={tagLoading} />
                     {activeTag && (
-                        <div className="flex items-center justify-center gap-2 mt-3">
+                        <div className="flex items-center justify-start lg:justify-center gap-2 mt-3">
                             <span className="text-sm text-tinted">Tag:</span>
                             <button
                                 onClick={() => {

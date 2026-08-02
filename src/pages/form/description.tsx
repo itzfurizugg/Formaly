@@ -60,7 +60,7 @@ function FormDescriptionPage() {
                             id: data.id,
                             title: data.title,
                             description: data.description || "",
-                            author_name: data.users?.name || "Creator",
+                            author_name: (data.users as unknown as { name: string } | null)?.name || "Creator",
                             duration: data.duration || 0,
                             question_count: data.questions ? data.questions.length : 0,
                         })

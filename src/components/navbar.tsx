@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from "react"
-import { Link, useLocation } from "react-router-dom"
+import { Link, useLocation, useNavigate } from "react-router-dom"
 import logo from "../assets/logo.svg"
-import { House, RotateCcwClock, UserRound, LayoutDashboard, X } from "lucide-react"
+import { House, RotateCcwClock, UserRound, LayoutDashboard, X, LogOut } from "lucide-react"
 import { useAuth } from "../lib/auth"
 import { supabase } from "../lib/supabase"
 
@@ -13,9 +13,11 @@ const baseLinks = [
 
 function Navbar() {
     const { pathname } = useLocation()
-    const { user } = useAuth()
+    const navigate = useNavigate()
+    const { user, profile, logout } = useAuth()
     const [role, setRole] = useState("")
     const [open, setOpen] = useState(false)
+    const [avatarOpen, setAvatarOpen] = useState(false)
     const [closing, setClosing] = useState(false)
     const navRef = useRef<HTMLDivElement>(null)
     const [navHeight, setNavHeight] = useState(0)
@@ -53,6 +55,11 @@ function Navbar() {
         setClosing(true)
         setOpen(false)
         setTimeout(() => setClosing(false), 300)
+    }
+
+    const handleLogout = async () => {
+        await logout()
+        navigate("/login")
     }
 
     const toggle = () => {
@@ -144,16 +151,57 @@ function Navbar() {
                         </div>
                     </button>
 
-                    <div
-                        className={`hidden lg:flex flex-1 mt-1 justify-end transition-all duration-300 ease-out ${
+                    <div className={`hidden lg:flex flex-1 mt-1 justify-end items-center gap-2 transition-all duration-300 ease-out ${
                             open ? "opacity-0" : "opacity-100"
                         }`}
                     >
-                        <button className="btn btn-square btn-ghost text-darks">
-                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" className="inline-block h-5 w-5 stroke-current">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 12h.01M12 12h.01M19 12h.01M6 12a1 1 0 11-2 0 1 1 0 012 0zm7 0a1 1 0 11-2 0 1 1 0 012 0zm7 0a1 1 0 11-2 0 1 1 0 012 0z"></path>
-                            </svg>
-                        </button>
+                        <div className="relative">
+                            <button
+                                onClick={() => setAvatarOpen((v) => !v)}
+                                className="btn btn-circle btn-ghost"
+                                aria-label="Menu akun"
+                                aria-expanded={avatarOpen}
+                            >
+                                <div className="w-9 h-9 rounded-full bg-done overflow-hidden flex items-center justify-center">
+                                    <span className="text-base font-bold text-white">
+                                        {(profile?.name || "U").charAt(0).toUpperCase()}
+                                    </span>
+                                </div>
+                            </button>
+
+                            {avatarOpen && (
+                                <>
+                                    <div
+                                        className="fixed inset-0 z-40"
+                                        onClick={() => setAvatarOpen(false)}
+                                        aria-hidden="true"
+                                    />
+                                    <div className="absolute right-0 top-full mt-3 p-4 z-50 min-w-[16rem] max-w-[20rem] rounded-box bg-white border border-second shadow-lg overflow-hidden">
+                                        <div className="px-3 py-3 border-b border-base">
+                                            <p className="text-xl font-semibold text-darks break-words">
+                                                {profile?.name || "User"}
+                                            </p>
+                                            <p className="text-md text-tinted break-words">{profile?.email}</p>
+                                        </div>
+                                        <button
+                                            onClick={() => {
+                                                setAvatarOpen(false)
+                                                navigate("/profile")
+                                            }}
+                                            className="w-full flex items-center gap-2 px-3 py-2.5 text-sm text-darks hover:bg-base transition-colors text-left"
+                                        >
+                                            <UserRound className="h-4 w-4" /> Profil
+                                        </button>
+                                        <button
+                                            onClick={handleLogout}
+                                            className="w-full flex items-center gap-2 px-3 py-2.5 text-sm text-wrong hover:bg-wrong/10 transition-colors text-left"
+                                        >
+                                            <LogOut className="h-4 w-4" /> Keluar
+                                        </button>
+                                    </div>
+                                </>
+                            )}
+                        </div>
                     </div>
                 </div>
 
