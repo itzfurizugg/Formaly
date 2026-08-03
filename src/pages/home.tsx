@@ -26,7 +26,6 @@ interface FormRecord {
 function Home() {
     const navigate = useNavigate()
     const { user, loading: authLoading } = useAuth()
-    const [activeTag, setActiveTag] = useState("")
     const [searching, setSearching] = useState(false)
     const [error, setError] = useState("")
 
@@ -39,7 +38,6 @@ function Home() {
     }, [user, authLoading, navigate])
 
     const handleTagSearch = async (tag: string) => {
-        setActiveTag(tag)
         setSearching(true)
         setError("")
         try {
@@ -97,17 +95,12 @@ function Home() {
         }
     }
 
-    const clearTag = () => {
-        setActiveTag("")
-        setError("")
-    }
-
     if (authLoading || !user) return <Loading />
 
     return (
         <div className="flex flex-col items-center justify-center min-h-[70vh] px-4 py-10 text-left lg:text-center">
             <div className="w-full max-w-xl">
-                <h1 className="w-full text-3xl md:text-4xl font-bold text-darks">
+                <h1 className="w-full text-4xl md:text-5xl font-bold text-darks">
                     Mulai mengerjakan!
                 </h1>
                 <p className="w-full text-tinted mt-3">
@@ -117,7 +110,7 @@ function Home() {
                 <div className="mt-8">
                     <Search onSearch={handleTagSearch} loading={searching} />
                     {error && <p className="text-sm text-wrong mt-3">{error}</p>}
-                    {activeTag && !error && (
+                    {/* {activeTag && !error && (
                         <div className="flex items-center justify-start lg:justify-center gap-2 mt-3">
                             <span className="text-sm text-tinted">Tag:</span>
                             <button
@@ -128,7 +121,7 @@ function Home() {
                                 {activeTag} &times;
                             </button>
                         </div>
-                    )}
+                    )} */}
                 </div>
             </div>
         </div>

@@ -291,7 +291,7 @@ function FormEdit() {
 
                     <div>
                         <label className="block text-sm font-medium text-darks mb-1.5">Status</label>
-                        <select className="select w-full bg-base border-second focus:border-done focus:outline-none" value={status} onChange={(e) => setStatus(e.target.value)}>
+                        <select className="select select-bordered w-full bg-base border-second focus:border-done focus:outline-none rounded-full" value={status} onChange={(e) => setStatus(e.target.value)}>
                             <option value="draft">Draft</option>
                             <option value="published">Published</option>
                         </select>

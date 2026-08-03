@@ -241,7 +241,7 @@ function Questions() {
                             <div>
                                 <label className="block text-sm font-medium text-darks mb-1.5">Tipe</label>
                                 <select
-                                    className="select w-full bg-base border-second focus:border-done focus:outline-none"
+                                    className="select w-full bg-base border-second focus:border-done focus:outline-none rounded-full"
                                     value={questionType}
                                     onChange={(e) => setQuestionType(e.target.value)}
                                 >

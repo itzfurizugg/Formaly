@@ -95,22 +95,24 @@ function History() {
                     Formulir yang pernah kamu kerjakan.
                 </p>
 
-                <div className="join w-full mb-6">
-                    <div className="join-item flex-1 relative">
-                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-tinted pointer-events-none" />
-                        <input
-                            type="text"
-                            placeholder="Cari histori..."
-                            className="input w-full pl-10 bg-base border-second focus:border-done focus:outline-none transition-colors"
-                            value={search}
-                            onChange={(e) => setSearch(e.target.value)}
-                        />
+                {!loading && (
+                    <div className="join w-full mb-6">
+                        <div className="join-item flex-1 relative">
+                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-tinted pointer-events-none" />
+                            <input
+                                type="text"
+                                placeholder="Cari histori..."
+                                className="input w-full pl-5 bg-base focus:outline-none transition-colors"
+                                value={search}
+                                onChange={(e) => setSearch(e.target.value)}
+                            />
+                        </div>
                     </div>
-                </div>
+                )}
 
                 {loading ? (
                     <div className="flex justify-center py-20">
-                        <div className="w-full max-w-xs">
+                        <div className="w-full max-w-xl">
                             <div className="relative h-1.5 w-full bg-second rounded-full overflow-hidden">
                                 <div className="absolute h-full bg-darks rounded-full animate-loadingbar" />
                             </div>

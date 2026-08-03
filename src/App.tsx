@@ -23,6 +23,7 @@ import CreatorQuestions from "./pages/creator/questions"
 import CreatorTokens from "./pages/creator/tokens"
 import CreatorSubmissions from "./pages/creator/submissions"
 import CreatorSubmissionDetail from "./pages/creator/submissionDetail"
+import CreatorLayout from "./pages/creator/layout"
 import Navbar from "./components/navbar"
 
 const hideNavPaths = ["/login", "/register", "/auth", "/forgot-password", "/reset-password", "/form/description", "/form", "/form/list", "/form/result"]
@@ -45,6 +46,7 @@ function App() {
   const hideNav =
     hideNavPaths.includes(location.pathname) ||
     /^\/form\/[^/]+$/.test(location.pathname) ||
+    location.pathname.startsWith("/creator") ||
     (isMobile && location.pathname.startsWith("/form/result"))
 
   return (
@@ -60,70 +62,72 @@ function App() {
           <Route path="/form/:formId" element={<FormPage />} />
           <Route path="/form/list" element={<FormList />} />
           <Route path="/form/result/:submissionId" element={<ResultPage />} />
-          <Route
-            path="/creator"
-            element={
-              <CreatorGuard>
-                <CreatorDashboard />
-              </CreatorGuard>
-            }
-          />
-          <Route
-            path="/creator/forms"
-            element={
-              <CreatorGuard>
-                <CreatorForms />
-              </CreatorGuard>
-            }
-          />
-          <Route
-            path="/creator/forms/new"
-            element={
-              <CreatorGuard>
-                <CreatorFormNew />
-              </CreatorGuard>
-            }
-          />
-          <Route
-            path="/creator/forms/:id"
-            element={
-              <CreatorGuard>
-                <CreatorFormEdit />
-              </CreatorGuard>
-            }
-          />
-          <Route
-            path="/creator/forms/:id/questions"
-            element={
-              <CreatorGuard>
-                <CreatorQuestions />
-              </CreatorGuard>
-            }
-          />
-          <Route
-            path="/creator/forms/:id/tokens"
-            element={
-              <CreatorGuard>
-                <CreatorTokens />
-              </CreatorGuard>
-            }
-          />
-          <Route
-            path="/creator/forms/:id/submissions"
-            element={
-              <CreatorGuard>
-                <CreatorSubmissions />
-              </CreatorGuard>
-            }
-          />
-          <Route
-            path="/creator/forms/:id/submissions/:submissionId"
-            element={
-              <CreatorGuard>
-                <CreatorSubmissionDetail />
-              </CreatorGuard>
-            }
-          />
+          <Route element={<CreatorLayout />}>
+            <Route
+              path="/creator"
+              element={
+                <CreatorGuard>
+                  <CreatorDashboard />
+                </CreatorGuard>
+              }
+            />
+            <Route
+              path="/creator/forms"
+              element={
+                <CreatorGuard>
+                  <CreatorForms />
+                </CreatorGuard>
+              }
+            />
+            <Route
+              path="/creator/forms/new"
+              element={
+                <CreatorGuard>
+                  <CreatorFormNew />
+                </CreatorGuard>
+              }
+            />
+            <Route
+              path="/creator/forms/:id"
+              element={
+                <CreatorGuard>
+                  <CreatorFormEdit />
+                </CreatorGuard>
+              }
+            />
+            <Route
+              path="/creator/forms/:id/questions"
+              element={
+                <CreatorGuard>
+                  <CreatorQuestions />
+                </CreatorGuard>
+              }
+            />
+            <Route
+              path="/creator/forms/:id/tokens"
+              element={
+                <CreatorGuard>
+                  <CreatorTokens />
+                </CreatorGuard>
+              }
+            />
+            <Route
+              path="/creator/forms/:id/submissions"
+              element={
+                <CreatorGuard>
+                  <CreatorSubmissions />
+                </CreatorGuard>
+              }
+            />
+            <Route
+              path="/creator/forms/:id/submissions/:submissionId"
+              element={
+                <CreatorGuard>
+                  <CreatorSubmissionDetail />
+                </CreatorGuard>
+              }
+            />
+          </Route>
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
           <Route path="/auth" element={<Otp />} />
