@@ -1,9 +1,9 @@
 import Loading from "../../components/loading"
-import { useEffect, useState } from "react"
+import { useEffect, useState, useCallback } from "react"
 import { useNavigate, useParams } from "react-router-dom"
 import { ArrowLeft, Eye, Trash2, Loader2 } from "lucide-react"
 import { supabase } from "../../lib/supabase"
-import { useAuth } from "../../lib/auth"
+import { useAuth } from "../../lib/auth-context"
 
 interface Submission {
     id: string
@@ -26,12 +26,7 @@ function Submissions() {
     const [error, setError] = useState<string | null>(null)
     const [deletingId, setDeletingId] = useState<string | null>(null)
 
-    useEffect(() => {
-        if (!user || !id) return
-        loadAll()
-    }, [user, id])
-
-    async function loadAll() {
+    const loadAll = useCallback(async () => {
         if (!user || !id) return
 
         const { data: form } = await supabase
@@ -53,7 +48,12 @@ function Submissions() {
             setSubmissions((subs as unknown as Submission[]) || [])
         }
         setLoading(false)
-    }
+    }, [user, id])
+
+    useEffect(() => {
+        if (!user || !id) return
+        loadAll()
+    }, [user, id, loadAll])
 
     const statusLabel = (s: string) => {
         if (s === "SUBMITTED") return "Selesai"

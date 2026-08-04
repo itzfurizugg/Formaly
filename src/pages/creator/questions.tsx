@@ -1,9 +1,9 @@
 import Loading from "../../components/loading"
-import { useEffect, useState } from "react"
+import { useEffect, useState, useCallback } from "react"
 import { useNavigate, useParams } from "react-router-dom"
 import { ArrowLeft, Plus, Pencil, Trash2, Save, X, Loader2, Image as ImageIcon } from "lucide-react"
 import { supabase } from "../../lib/supabase"
-import { useAuth } from "../../lib/auth"
+import { useAuth } from "../../lib/auth-context"
 
 interface Option {
     id: string | null
@@ -42,12 +42,7 @@ function Questions() {
     const [removedOptionIds, setRemovedOptionIds] = useState<string[]>([])
     const [saving, setSaving] = useState(false)
 
-    useEffect(() => {
-        if (!user || !id) return
-        loadAll()
-    }, [user, id])
-
-    async function loadAll() {
+    const loadAll = useCallback(async () => {
         if (!user || !id) return
 
         const { data: form } = await supabase
@@ -69,7 +64,12 @@ function Questions() {
         if (qs) setQuestions(qs as unknown as Question[])
 
         setLoading(false)
-    }
+    }, [user, id])
+
+    useEffect(() => {
+        if (!user || !id) return
+        loadAll()
+    }, [user, id, loadAll])
 
     const resetEditor = () => {
         setEditingId(null)
@@ -193,7 +193,7 @@ function Questions() {
 
     return (
         <div className="flex flex-col items-center px-4 py-10">
-            <div className="w-full max-w-2xl">
+            <div className="w-full max-w-5xl">
                 <button
                     onClick={() => navigate(`/creator/forms/${id}`)}
                     className="flex items-center gap-2 text-sm text-tinted hover:text-darks mb-4 transition-colors"
@@ -219,7 +219,7 @@ function Questions() {
                 </div>
 
                 {showEditor && (
-                    <div className="bg-white border border-second p-6 shadow-sm rounded-2xl mb-6 space-y-4">
+                    <div className="bg-white border border-second p-6 shadow-sm rounded-none mb-6 space-y-4">
                         <div className="flex items-center justify-between">
                             <h2 className="font-semibold text-darks">{editingId ? "Edit Soal" : "Tambah Soal"}</h2>
                             <button onClick={resetEditor} className="btn btn-sm btn-ghost text-tinted">
@@ -347,7 +347,7 @@ function Questions() {
                 ) : (
                     <div className="space-y-3">
                         {questions.map((q, idx) => (
-                            <div key={q.id} className="bg-white border border-second p-5 shadow-sm rounded-2xl">
+                            <div key={q.id} className="bg-white border border-second p-5 shadow-sm rounded-none">
                                 <div className="flex items-start justify-between gap-2">
                                     <div className="min-w-0">
                                         <div className="flex items-center gap-2 flex-wrap mb-1">

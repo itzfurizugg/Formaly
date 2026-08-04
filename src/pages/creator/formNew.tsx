@@ -2,7 +2,7 @@ import { useState } from "react"
 import { useNavigate } from "react-router-dom"
 import { ArrowLeft } from "lucide-react"
 import { supabase } from "../../lib/supabase"
-import { useAuth } from "../../lib/auth"
+import { useAuth } from "../../lib/auth-context"
 
 function FormNew() {
     const navigate = useNavigate()

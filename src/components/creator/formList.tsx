@@ -1,8 +1,8 @@
-import { useEffect, useState } from "react"
+import { useEffect, useState, useCallback } from "react"
 import { useNavigate } from "react-router-dom"
 import { FileText, Pencil, Trash2, ClipboardList, KeyRound, Loader2 } from "lucide-react"
 import { supabase } from "../../lib/supabase"
-import { useAuth } from "../../lib/auth"
+import { useAuth } from "../../lib/auth-context"
 import Loading from "../loading"
 
 interface FormRow {
@@ -25,12 +25,7 @@ function FormList() {
     const [deleting, setDeleting] = useState<string | null>(null)
     const [error, setError] = useState<string | null>(null)
 
-    useEffect(() => {
-        if (!user) return
-        loadForms()
-    }, [user])
-
-    async function loadForms() {
+    const loadForms = useCallback(async () => {
         if (!user) return
         setLoading(true)
         const { data, error: err } = await supabase
@@ -46,7 +41,12 @@ function FormList() {
         if (err) setError(err.message)
         else setForms((data as FormRow[]) || [])
         setLoading(false)
-    }
+    }, [user])
+
+    useEffect(() => {
+        if (!user) return
+        loadForms()
+    }, [user, loadForms])
 
     async function handleDelete(id: string) {
         if (!window.confirm("Hapus form ini beserta soal, token & submission-nya? Tindakan ini tidak dapat dibatalkan.")) return

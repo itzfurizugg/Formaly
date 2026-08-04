@@ -1,9 +1,9 @@
 import Loading from "../../components/loading"
-import { useEffect, useState } from "react"
+import { useEffect, useState, useCallback } from "react"
 import { useNavigate, useParams } from "react-router-dom"
 import { ArrowLeft, Check, X } from "lucide-react"
 import { supabase } from "../../lib/supabase"
-import { useAuth } from "../../lib/auth"
+import { useAuth } from "../../lib/auth-context"
 
 interface AnswerRow {
     id: string
@@ -42,12 +42,7 @@ function SubmissionDetail() {
     const [loading, setLoading] = useState(true)
     const [error, setError] = useState<string | null>(null)
 
-    useEffect(() => {
-        if (!user || !id || !submissionId) return
-        loadAll()
-    }, [user, id, submissionId])
-
-    async function loadAll() {
+    const loadAll = useCallback(async () => {
         if (!user || !id || !submissionId) return
 
         const { data: sub } = await supabase
@@ -79,7 +74,12 @@ function SubmissionDetail() {
         setAnswers((ans as unknown as AnswerRow[]) || [])
 
         setLoading(false)
-    }
+    }, [user, id, submissionId])
+
+    useEffect(() => {
+        if (!user || !id || !submissionId) return
+        loadAll()
+    }, [user, id, submissionId, loadAll])
 
     const typeLabel = (t: string) => {
         if (t === "multiple_choice") return "Pilihan Ganda"

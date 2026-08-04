@@ -2,7 +2,7 @@ import { useEffect, useState } from "react"
 import { useNavigate } from "react-router-dom"
 import Search from "../components/search"
 import { supabase } from "../lib/supabase"
-import { useAuth } from "../lib/auth"
+import { useAuth } from "../lib/auth-context"
 import Loading from "../components/loading"
 
 interface FormData {

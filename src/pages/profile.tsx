@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react"
 import { useNavigate } from "react-router-dom"
 import { LogOut, Save, UserRound, Mail } from "lucide-react"
-import { useAuth } from "../lib/auth"
+import { useAuth } from "../lib/auth-context"
 
 function Profile() {
     const navigate = useNavigate()

@@ -1,9 +1,9 @@
 import Loading from "../../components/loading"
-import { useEffect, useState } from "react"
+import { useEffect, useState, useCallback } from "react"
 import { useNavigate, useParams } from "react-router-dom"
 import { ArrowLeft, Save, Loader2, ClipboardList, KeyRound, Share2, Copy, Check, QrCode, Tag, X } from "lucide-react"
 import { supabase } from "../../lib/supabase"
-import { useAuth } from "../../lib/auth"
+import { useAuth } from "../../lib/auth-context"
 
 interface FormDetail {
     id: string
@@ -34,12 +34,7 @@ function FormEdit() {
     const [tags, setTags] = useState<string[]>([])
     const [tagInput, setTagInput] = useState("")
 
-    useEffect(() => {
-        if (!user || !id) return
-        loadForm()
-    }, [user, id])
-
-    async function loadForm() {
+    const loadForm = useCallback(async () => {
         if (!user || !id) return
         const { data, error: err } = await supabase
             .from("forms")
@@ -67,7 +62,12 @@ function FormEdit() {
         if (rel) {
             setTags(rel.map((r) => (r.tag as unknown as { name: string } | null)?.name).filter((n): n is string => !!n))
         }
-    }
+    }, [user, id, navigate])
+
+    useEffect(() => {
+        if (!user || !id) return
+        loadForm()
+    }, [user, id, loadForm])
 
     async function syncTags() {
         if (!id) return
@@ -136,8 +136,8 @@ function FormEdit() {
         }
     }
 
-    const inputCls = "input w-full bg-white text-3xl h-20 border-second focus:border-done focus:outline-none transition-colors"
-    const inputWithVal = "input w-full bg-base text-lg border-second focus:border-done focus:outline-none transition-colors"
+    const inputCls = "input w-full bg-white text-xl lg:text-3xl h-auto p-2 border-second focus:border-done focus:outline-none transition-colors"
+    const inputWithVal = "input w-full bg-base text-sm lg:text-xl border-second focus:border-done focus:outline-none transition-colors"
 
     if (loading) {
         return (
@@ -147,16 +147,13 @@ function FormEdit() {
 
     return (
         <div className="flex flex-col items-center px-4 py-10">
-            <div className="w-full max-w-2xl">
+            <div className="w-full max-w-5xl">
                 <button
                     onClick={() => navigate("/creator")}
                     className="flex items-center gap-2 text-sm text-tinted hover:text-darks mb-4 transition-colors"
                 >
                     <ArrowLeft className="h-4 w-4" /> Kembali
                 </button>
-
-                <h1 className="text-2xl font-bold text-darks mb-1">{form?.title}</h1>
-                <p className="text-sm text-tinted mb-6">Edit detail form, kelola soal, token, dan submission.</p>
 
                 <div className="flex flex-wrap gap-2 mb-6">
                     <button
@@ -186,9 +183,8 @@ function FormEdit() {
                 </div>
 
                 {status === "published" && (
-                    <div className="bg-white border border-second p-6 shadow-sm rounded-2xl mb-6">
+                    <div className="bg-white border border-second p-4 shadow-sm rounded-none mb-6">
                         <div className="flex items-center gap-2 mb-1">
-                            <Share2 className="h-4 w-4 text-done" />
                             <h2 className="font-semibold text-darks">Bagikan Form</h2>
                         </div>
                         <p className="text-sm text-tinted mb-4">
@@ -217,14 +213,14 @@ function FormEdit() {
                             </button>
                         </div>
 
-                        <div className="mt-4 flex items-center gap-4">
+                        <div className="mt-4 flex flex-col items-center gap-4">
                             <div className="bg-base border border-second rounded-lg p-3 w-fit">
                                 <img
                                     src={`https://api.qrserver.com/v1/create-qr-code/?size=140x140&data=${encodeURIComponent(
                                         `${window.location.origin}/form/description?formId=${id}`
                                     )}`}
                                     alt="QR Code"
-                                    className="w-28 h-28"
+                                    className="w-60 h-auto"
                                 />
                             </div>
                             <p className="text-xs text-tinted leading-relaxed">
@@ -246,16 +242,14 @@ function FormEdit() {
                     </div>
                 )}
 
-                <form onSubmit={handleSave} className="space-y-4 bg-white border border-second p-6 shadow-sm rounded-2xl">
+                <form onSubmit={handleSave} className="space-y-4 bg-white border border-second p-3 lg:p-6 sm:p-4 shadow-sm rounded-none">
                     <div>
-                        {/* <label className="block text-sm font-medium text-darks mb-1.5">Judul</label> */}
                         <input type="text" required className={inputCls} value={title} onChange={(e) => setTitle(e.target.value)} />
                     </div>
 
                     <div>
-                        {/* <label className="block text-sm font-medium text-darks mb-1.5">Deskripsi</label> */}
                         <textarea
-                            className="textarea w-full bg-base border-second focus:border-done focus:outline-none transition-colors"
+                            className="textarea w-full bg-base text-xs lg:text-sm border-second focus:border-done focus:outline-none transition-colors"
                             rows={3}
                             value={description}
                             onChange={(e) => setDescription(e.target.value)}
@@ -300,7 +294,7 @@ function FormEdit() {
 
                     <div>
                         <label className="block text-sm font-medium text-darks mb-1.5">Status</label>
-                        <select className="select select-bordered w-full bg-base border-second focus:border-done focus:outline-none rounded-full" value={status} onChange={(e) => setStatus(e.target.value)}>
+                        <select className="select select-bordered w-full bg-base border-second focus:border-done focus:outline-none" value={status} onChange={(e) => setStatus(e.target.value)}>
                             <option value="draft">Draft</option>
                             <option value="published">Published</option>
                         </select>
@@ -314,8 +308,7 @@ function FormEdit() {
                             <input
                                 type="text"
                                 className="input flex-1 bg-base border-second focus:border-done focus:outline-none transition-colors"
-                                placeholder="Form akan bisa ditemukan di beranda dengan memasukkan tag ini.
-"
+                                placeholder="Form akan bisa ditemukan di beranda dengan memasukkan tag ini."
                                 value={tagInput}
                                 onChange={(e) => setTagInput(e.target.value)}
                                 onKeyDown={(e) => {

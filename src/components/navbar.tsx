@@ -2,7 +2,7 @@ import { useState, useRef, useEffect } from "react"
 import { Link, useLocation, useNavigate } from "react-router-dom"
 import logo from "../assets/logo.svg"
 import { House, RotateCcwClock, UserRound, LayoutDashboard, X, LogOut } from "lucide-react"
-import { useAuth } from "../lib/auth"
+import { useAuth } from "../lib/auth-context"
 import { supabase } from "../lib/supabase"
 
 const baseLinks = [

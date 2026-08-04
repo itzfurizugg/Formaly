@@ -2,7 +2,7 @@ import { useState } from "react"
 import { Link } from "react-router-dom"
 import { ArrowLeft, MailCheck, KeyRound } from "lucide-react"
 import logo from "../../assets/logo.svg"
-import { useAuth } from "../../lib/auth"
+import { useAuth } from "../../lib/auth-context"
 
 function ForgotPassword() {
     const { resetPassword } = useAuth()
