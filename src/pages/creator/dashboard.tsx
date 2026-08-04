@@ -1,9 +1,9 @@
-import { useEffect, useState, useCallback } from "react"
+import { useEffect, useState } from "react"
 import { useNavigate } from "react-router-dom"
 import { FileText, CheckCircle2, ClipboardList, ArrowLeft, Plus } from "lucide-react"
 import { Link } from "react-router-dom"
 import { supabase } from "../../lib/supabase"
-import { useAuth } from "../../lib/auth-context"
+import { useAuth } from "../../lib/auth"
 import { DistributionChart, type BarDatum } from "../../components/charts"
 import { colors } from "../../lib/colorbase"
 import FormList from "../../components/creator/formList"
@@ -36,7 +36,12 @@ function CreatorDashboard() {
     const [loading, setLoading] = useState(true)
     const [barData, setBarData] = useState<BarDatum[]>([])
 
-    const loadStats = useCallback(async () => {
+    useEffect(() => {
+        if (!user) return
+        loadStats()
+    }, [user])
+
+    async function loadStats() {
         if (!user) return
         setLoading(true)
 
@@ -81,13 +86,19 @@ function CreatorDashboard() {
                 .filter((d) => d.value > 0)
         )
 
-        setLoading(false)
-    }, [user])
+        const passingMap = new Map(formRows.map((f) => [f.id, f.passing_score]))
+        let passed = 0
+        let failed = 0
+        for (const s of subRows) {
+            const passing = passingMap.get(s.form_id)
+            if (passing != null) {
+                if ((s.total_score ?? 0) >= passing) passed++
+                else failed++
+            }
+        }
 
-    useEffect(() => {
-        if (!user) return
-        loadStats()
-    }, [user, loadStats])
+        setLoading(false)
+    }
 
     return (
         <div className="flex flex-col items-center px-4 py-10 lg:h-screen lg:overflow-hidden">

@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react"
 import { useNavigate } from "react-router-dom"
 import { LogOut, Save, UserRound, Mail } from "lucide-react"
-import { useAuth } from "../lib/auth-context"
+import { useAuth } from "../lib/auth"
 
 function Profile() {
     const navigate = useNavigate()
@@ -22,12 +22,12 @@ function Profile() {
         if (!authLoading && !user) navigate("/login")
     }, [user, authLoading, navigate])
 
-    const [prevProfile, setPrevProfile] = useState<{ name: string; email: string } | null>(null)
-    if (profile && profile !== prevProfile) {
-        setPrevProfile(profile)
-        setName(profile.name || "")
-        setEmail(profile.email || "")
-    }
+    useEffect(() => {
+        if (profile) {
+            setName(profile.name || "")
+            setEmail(profile.email || "")
+        }
+    }, [profile])
 
     const handleSave = async (e: React.FormEvent) => {
         e.preventDefault()

@@ -50,3 +50,11 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
     autoRefreshToken: true,
   },
 });
+
+const { error } = await supabase.rpc('delete_form', { p_form_id: formId });
+
+if (error) {
+  console.error('Gagal hapus form:', error.message);
+} else {
+  // sukses, misal refresh list form atau redirect
+}

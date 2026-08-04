@@ -3,7 +3,7 @@ import { Link, useNavigate } from "react-router-dom"
 import { KeyRound, CheckCircle2 } from "lucide-react"
 import logo from "../../assets/logo.svg"
 import { supabase } from "../../lib/supabase"
-import { useAuth } from "../../lib/auth-context"
+import { useAuth } from "../../lib/auth"
 import PasswordInput from "../../components/passwordInput"
 
 function friendlyError(message: string): string {

@@ -18,11 +18,5 @@ export default defineConfig([
     languageOptions: {
       globals: globals.browser,
     },
-    rules: {
-      // False positives on the standard async/await data-fetching pattern
-      // (setState in an effect after `await` is not synchronous). See the
-      // React docs' own data-fetching examples which use async/await.
-      'react-hooks/set-state-in-effect': 'off',
-    },
   },
 ])

@@ -2,7 +2,7 @@ import Loading from "../../components/loading"
 import { useEffect, useState } from "react"
 import { useNavigate } from "react-router-dom"
 import type { ReactNode } from "react"
-import { useAuth } from "../../lib/auth-context"
+import { useAuth } from "../../lib/auth"
 import { supabase } from "../../lib/supabase"
 
 function RequireCreator({ children }: { children: ReactNode }) {

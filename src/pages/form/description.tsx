@@ -3,7 +3,7 @@ import { useState, useEffect } from "react"
 import { useNavigate, useLocation } from "react-router-dom"
 import { Clock, FileText, ArrowLeft, AlertCircle } from "lucide-react"
 import { supabase } from "../../lib/supabase"
-import { useAuth } from "../../lib/auth-context"
+import { useAuth } from "../../lib/auth"
 
 interface FormItem {
     id: string
@@ -41,6 +41,7 @@ function FormDescriptionPage() {
         }
 
         if (!form && formIdParam) {
+            setLoading(true)
             supabase
                 .from("forms")
                 .select(`
@@ -92,7 +93,9 @@ function FormDescriptionPage() {
     }, [formId, user, authLoading])
 
     if (!form) {
-        return <Loading />
+        return loading ? (
+            <Loading />
+        ) : null
     }
 
     const handleStartExam = () => {

@@ -1,9 +1,9 @@
-import { useEffect, useState, useCallback } from "react"
+import { useEffect, useState } from "react"
 import { useNavigate } from "react-router-dom"
 import { FileText } from "lucide-react"
 import HistoryCard from "../components/historyCard"
 import { supabase } from "../lib/supabase"
-import { useAuth } from "../lib/auth-context"
+import { useAuth } from "../lib/auth"
 import Loading from "../components/loading"
 
 interface HistoryItem {
@@ -31,7 +31,16 @@ function History() {
     const [items, setItems] = useState<HistoryItem[]>([])
     const [loading, setLoading] = useState(true)
 
-    const loadHistory = useCallback(async () => {
+    useEffect(() => {
+        if (authLoading) return
+        if (!user) {
+            navigate("/login")
+            return
+        }
+        loadHistory()
+    }, [user, authLoading, navigate])
+
+    async function loadHistory() {
         if (!user) return
         setLoading(true)
         const { data } = await supabase
@@ -65,16 +74,7 @@ function History() {
             }))
         }
         setLoading(false)
-    }, [user])
-
-    useEffect(() => {
-        if (authLoading) return
-        if (!user) {
-            navigate("/login")
-            return
-        }
-        loadHistory()
-    }, [user, authLoading, navigate, loadHistory])
+    }
 
     const filtered = items
 

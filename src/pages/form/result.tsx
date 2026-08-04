@@ -1,8 +1,8 @@
-import { useEffect, useState, useCallback } from "react"
+import { useEffect, useState } from "react"
 import { useNavigate, useParams } from "react-router-dom"
 import { ArrowLeft, Check, X, Clock } from "lucide-react"
 import { supabase } from "../../lib/supabase"
-import { useAuth } from "../../lib/auth-context"
+import { useAuth } from "../../lib/auth"
 import Loading from "../../components/loading"
 import Filter from "../../components/filter"
 
@@ -43,7 +43,20 @@ function ResultPage() {
     const [error, setError] = useState<string | null>(null)
     const [filter, setFilter] = useState("")
 
-    const loadAll = useCallback(async () => {
+    useEffect(() => {
+        if (authLoading) return
+        if (!user) {
+            navigate("/login")
+            return
+        }
+        if (!submissionId) {
+            navigate("/history")
+            return
+        }
+        loadAll()
+    }, [user, authLoading, submissionId, navigate])
+
+    async function loadAll() {
         if (!user || !submissionId) return
 
         const { data: sub } = await supabase
@@ -74,20 +87,7 @@ function ResultPage() {
 
         setAnswers((ans as unknown as AnswerRow[]) || [])
         setLoading(false)
-    }, [user, submissionId])
-
-    useEffect(() => {
-        if (authLoading) return
-        if (!user) {
-            navigate("/login")
-            return
-        }
-        if (!submissionId) {
-            navigate("/history")
-            return
-        }
-        loadAll()
-    }, [user, authLoading, submissionId, navigate, loadAll])
+    }
 
     const typeLabel = (t: string) => {
         if (t === "multiple_choice") return "Pilihan Ganda"

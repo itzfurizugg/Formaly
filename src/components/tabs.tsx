@@ -14,10 +14,10 @@ function Tabs() {
     if (!id) return null
 
     return (
-        <div className="w-full mb-6">
+        <div className="w-full mb-6 flex">
             <div
                 role="tablist"
-                className="tabs tabs-box tabs-lg bg-white border border-second/80 shadow-sm rounded-2xl p-1.5 w-full flex flex-wrap lg:flex-nowrap gap-1 overflow-x-auto scrollbar-none"
+                className="tabs tabs-box bg-white border border-second p-1 w-full rounded-none flex flex-row flex-nowrap items-center justify-between gap-1"
             >
                 {tabItems.map((tab) => {
                     const targetPath = tab.to ? `/creator/forms/${id}/${tab.to}` : `/creator/forms/${id}`
@@ -30,17 +30,19 @@ function Tabs() {
                             end={tab.end}
                             role="tab"
                             className={({ isActive }) =>
-                                `tab flex-1 min-w-[120px] gap-2 text-sm font-medium transition-all duration-200 rounded-xl select-none ${
+                                `tab flex-1 flex flex-row items-center justify-center gap-1.5 px-2 sm:px-4 py-2 rounded-none text-xs sm:text-sm font-medium transition-all select-none whitespace-nowrap ${
                                     isActive
-                                        ? "tab-active !bg-darks !text-white font-semibold shadow-md shadow-darks/15 scale-[1.01]"
-                                        : "text-tinted hover:text-darks hover:bg-second/60 active:scale-[0.98]"
+                                        ? "tab-active !bg-darks !text-white font-semibold shadow-sm"
+                                        : "text-tinted hover:text-darks hover:bg-second/60"
                                 }`
                             }
                         >
                             {({ isActive }) => (
                                 <>
-                                    <Icon className={`h-4 w-4 transition-transform duration-200 ${isActive ? "scale-110" : ""}`} />
-                                    <span>{tab.label}</span>
+                                    <Icon className={`h-4 w-4 shrink-0 transition-transform duration-150 ${isActive ? "scale-105" : ""}`} />
+                                    <span className={`whitespace-nowrap ${isActive ? "block" : "hidden sm:block"}`}>
+                                        {tab.label}
+                                    </span>
                                 </>
                             )}
                         </NavLink>

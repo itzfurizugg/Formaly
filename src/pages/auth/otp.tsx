@@ -2,7 +2,7 @@ import { useState, useRef, type KeyboardEvent } from "react"
 import { Link, useLocation, useNavigate } from "react-router-dom"
 import { ShieldCheck, ArrowLeft, RotateCcw } from "lucide-react"
 import logo from "../../assets/logo.svg"
-import { useAuth } from "../../lib/auth-context"
+import { useAuth } from "../../lib/auth"
 
 const OTP_LENGTH = 6
 
