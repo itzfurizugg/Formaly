@@ -52,7 +52,7 @@ function Search({ onSearch, loading = false }: SearchProps) {
                     <input
                         ref={inputRef}
                         type="text"
-                        placeholder="Cari berdasarkan tag..."
+                        placeholder="Cari berdasarkan tag"
                         value={tag}
                         onChange={(e) => setTag(e.target.value)}
                         onFocus={() => setFocused(true)}

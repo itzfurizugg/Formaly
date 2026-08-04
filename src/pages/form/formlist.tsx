@@ -15,6 +15,7 @@ interface LocationState {
     answers?: Answer
     formId?: string
     questions?: Question[]
+    deadline?: number
 }
 
 function FormList() {
@@ -25,6 +26,11 @@ function FormList() {
     const answers = locationState?.answers || {}
     const formId = locationState?.formId
     const questions = locationState?.questions || []
+    const deadline = locationState?.deadline
+
+    const backToForm = (index: number) => {
+        navigate(`/form/${formId}`, { state: { current: index, answers, questions, deadline } })
+    }
 
     if (questions.length === 0) {
         return (
@@ -56,7 +62,7 @@ function FormList() {
                             <button
                                 key={q.id}
                                 onClick={() => {
-                                    navigate(`/form/${formId}`, { state: { current: index, answers, questions } })
+                                    backToForm(index)
                                 }}
                                 className={`aspect-square p-3 rounded-sm transition-all flex items-center justify-center text-xl lg:text-sm font-medium
                                     ${isCurrent
@@ -74,7 +80,7 @@ function FormList() {
                 </div>
 
                 <button
-                            onClick={() => navigate(`/form/${formId}`, { state: { current, answers, questions } })}
+                            onClick={() => backToForm(current)}
                     className="hidden lg:block btn w-full h-12 min-h-0 bg-darks text-white rounded-none hover:opacity-90"
                 >
                     Kembali ke soal
@@ -85,7 +91,7 @@ function FormList() {
                 <div className="bg-base-300 px-4 pb-4 pointer-events-auto">
                     <div className="w-full max-w-3xl mx-auto">
                         <button
-                    onClick={() => navigate(`/form/${formId}`, { state: { current, answers, questions } })}
+                    onClick={() => backToForm(current)}
                             className="btn w-full h-12 mb-3 min-h-0 bg-darks text-white rounded-none hover:opacity-90"
                         >
                             Kembali ke soal

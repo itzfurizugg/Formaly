@@ -1,5 +1,5 @@
 import { Link, useLocation } from "react-router-dom"
-import { LayoutDashboard, FileText, Plus, House, UserRound } from "lucide-react"
+import { LayoutDashboard, Plus, House, UserRound } from "lucide-react"
 
 interface NavItem {
     to: string
@@ -9,13 +9,7 @@ interface NavItem {
 }
 
 const items: NavItem[] = [
-    { to: "/creator", label: "Dashboard", icon: LayoutDashboard, match: (p) => p === "/creator" },
-    {
-        to: "/creator/forms",
-        label: "Formulir",
-        icon: FileText,
-        match: (p) => p.startsWith("/creator/forms") && p !== "/creator/forms/new",
-    },
+    { to: "/creator", label: "Dashboard", icon: LayoutDashboard, match: (p) => p === "/creator" || p.startsWith("/creator/forms") },
     {
         to: "/creator/forms/new",
         label: "Buat",

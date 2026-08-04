@@ -1,4 +1,4 @@
-import { Routes, Route, useLocation } from "react-router-dom"
+import { Routes, Route, Navigate, useLocation } from "react-router-dom"
 import { useEffect, useState } from "react"
 import { AuthProvider } from "./lib/auth"
 import Login from "./pages/auth/login"
@@ -16,7 +16,6 @@ import FormList from "./pages/form/formlist"
 import ResultPage from "./pages/form/result"
 import CreatorGuard from "./pages/creator/guard"
 import CreatorDashboard from "./pages/creator/dashboard"
-import CreatorForms from "./pages/creator/forms"
 import CreatorFormNew from "./pages/creator/formNew"
 import CreatorFormEdit from "./pages/creator/formEdit"
 import CreatorQuestions from "./pages/creator/questions"
@@ -73,11 +72,7 @@ function App() {
             />
             <Route
               path="/creator/forms"
-              element={
-                <CreatorGuard>
-                  <CreatorForms />
-                </CreatorGuard>
-              }
+              element={<Navigate to="/creator" replace />}
             />
             <Route
               path="/creator/forms/new"

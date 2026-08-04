@@ -28,6 +28,7 @@ interface Answer {
 interface LocationState {
     current?: number
     answers?: Answer
+    deadline?: number
 }
 
 function FormPage() {
@@ -48,6 +49,7 @@ function FormPage() {
     const [modalImage, setModalImage] = useState<string | null>(null)
     const [hasTimer, setHasTimer] = useState(false)
     const autoSubmitted = useRef(false)
+    const deadlineRef = useRef<number | null>(null)
 
     const handleSubmit = useCallback(async () => {
         if (!user || !formId) return
@@ -156,7 +158,16 @@ function FormPage() {
             setFormMeta(formData)
             const dur = Number(formData.duration) || 0
             setHasTimer(dur > 0)
-            setTimeLeft(dur > 0 ? dur * 60 : 300)
+            if (dur > 0) {
+                if (locationState?.deadline) {
+                    deadlineRef.current = locationState.deadline
+                } else {
+                    deadlineRef.current = Date.now() + dur * 60 * 1000
+                }
+                setTimeLeft(Math.max(0, Math.round((deadlineRef.current - Date.now()) / 1000)))
+            } else {
+                setTimeLeft(300)
+            }
         }
 
         const { data: qData } = await supabase
@@ -184,15 +195,11 @@ function FormPage() {
     }
 
     useEffect(() => {
-        if (!hasTimer || timeLeft <= 0 || loading) return
+        if (!hasTimer || !deadlineRef.current || loading) return
         const timer = setInterval(() => {
-            setTimeLeft(prev => {
-                if (prev <= 1) {
-                    clearInterval(timer)
-                    return 0
-                }
-                return prev - 1
-            })
+            const remaining = Math.max(0, Math.round((deadlineRef.current! - Date.now()) / 1000))
+            setTimeLeft(remaining)
+            if (remaining <= 0) clearInterval(timer)
         }, 1000)
         return () => clearInterval(timer)
     }, [loading, hasTimer])
@@ -252,7 +259,7 @@ function FormPage() {
     }
 
     const goToList = () => {
-        navigate('/form/list', { state: { current, answers, formId, questions } })
+        navigate('/form/list', { state: { current, answers, formId, questions, deadline: deadlineRef.current || undefined } })
     }
 
     return (
@@ -348,7 +355,7 @@ function FormPage() {
 
                 {/* NOTE: LAYOUT DESKTOP (>= md) — PageIndicator & tombol Kirim inline di bawah konten */}
                 <div className="hidden md:flex items-center justify-between mt-4">
-                    <PageIndicator total={total} current={current} answers={answers} onPrev={prev} onNext={next} onListClick={goToList} />
+                    <PageIndicator total={total} current={current} onPrev={prev} onNext={next} onListClick={goToList} />
                     {current === total - 1 && (
                         <button
                             onClick={handleSubmit}
@@ -375,7 +382,7 @@ function FormPage() {
             {/* NOTE: LAYOUT MOBILE (< md) — Dock fixed di bawah, latar bg-second */}
             <div className="fixed bottom-0 left-0 right-0 z-40 bg-second border-t border-base px-4 py-3 md:hidden">
                 <div className="w-full max-w-3xl mx-auto flex items-center justify-between mb-3">
-                    <PageIndicator total={total} current={current} answers={answers} onPrev={prev} onNext={next} onListClick={goToList} />
+                    <PageIndicator total={total} current={current} onPrev={prev} onNext={next} onListClick={goToList} />
                     {current === total - 1 && (
                         <button
                             onClick={handleSubmit}

@@ -88,13 +88,7 @@ function Available() {
                 </div>
 
                 {loading ? (
-                    <div className="flex justify-center py-20">
-                        <div className="w-full max-w-xs">
-                            <div className="relative h-1.5 w-full bg-second rounded-full overflow-hidden">
-                                <div className="absolute h-full bg-darks rounded-full animate-loadingbar" />
-                            </div>
-                        </div>
-                    </div>
+                    <Loading />
                 ) : filtered.length === 0 ? (
                     <div className="text-center py-20">
                         <FileText className="h-12 w-12 text-tinted/40 mx-auto mb-3" />

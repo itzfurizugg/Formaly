@@ -15,7 +15,7 @@ interface CardProps {
 
 function HistoryCard({ title, author, duration, questions, score, to, buttonLabel = "Lihat Hasil", state, passingScore = null }: CardProps) {
     return (
-        <div className="card bg-base border border-second rounded-none">
+        <div className="card bg-white border border-second rounded-none">
             <div className="card-body">
                 <span
                     className={`badge border-none rounded-full ${passingScore != null && score < passingScore ? "bg-wrong/10 text-wrong" : "bg-done/10 text-done"
@@ -37,7 +37,7 @@ function HistoryCard({ title, author, duration, questions, score, to, buttonLabe
                         {duration}
                     </span>
                     <span className="flex items-center gap-1">
-                        <FileText className="h-3.5 w-3.5" />
+                        <FileText className="h-3.5 w-3.5w bo" />
                         {questions} soal
                     </span>
                 </div>

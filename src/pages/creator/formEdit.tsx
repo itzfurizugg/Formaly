@@ -49,7 +49,7 @@ function FormEdit() {
             .single()
 
         if (err || !data) {
-            navigate("/creator/forms")
+            navigate("/creator")
             return
         }
         setForm(data as FormDetail)
@@ -148,7 +148,7 @@ function FormEdit() {
         <div className="flex flex-col items-center px-4 py-10">
             <div className="w-full max-w-2xl">
                 <button
-                    onClick={() => navigate("/creator/forms")}
+                    onClick={() => navigate("/creator")}
                     className="flex items-center gap-2 text-sm text-tinted hover:text-darks mb-4 transition-colors"
                 >
                     <ArrowLeft className="h-4 w-4" /> Kembali

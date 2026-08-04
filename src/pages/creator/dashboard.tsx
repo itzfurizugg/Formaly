@@ -1,10 +1,13 @@
 import { useEffect, useState } from "react"
+import { useNavigate } from "react-router-dom"
+import { FileText, CheckCircle2, ClipboardList, ArrowLeft, Plus } from "lucide-react"
 import { Link } from "react-router-dom"
-import { FileText, CheckCircle2, ClipboardList, Trophy, Plus } from "lucide-react"
 import { supabase } from "../../lib/supabase"
 import { useAuth } from "../../lib/auth"
-import { DistributionChart, DonutChart } from "../../components/charts"
+import { DistributionChart, type BarDatum } from "../../components/charts"
 import { colors } from "../../lib/colorbase"
+import FormList from "../../components/creator/formList"
+import Loading from "../../components/loading"
 
 interface Stats {
     total: number
@@ -23,16 +26,15 @@ interface FormRow {
 interface SubmissionRow {
     id: string
     total_score: number | null
-    status: string
     form_id: string
 }
 
 function CreatorDashboard() {
     const { user } = useAuth()
+    const navigate = useNavigate()
     const [stats, setStats] = useState<Stats>({ total: 0, active: 0, submissions: 0, score: 0 })
     const [loading, setLoading] = useState(true)
-    const [barData, setBarData] = useState<{ name: string; value: number }[]>([])
-    const [donutData, setDonutData] = useState<{ name: string; value: number; color: string }[]>([])
+    const [barData, setBarData] = useState<BarDatum[]>([])
 
     useEffect(() => {
         if (!user) return
@@ -41,6 +43,7 @@ function CreatorDashboard() {
 
     async function loadStats() {
         if (!user) return
+        setLoading(true)
 
         const { data: forms } = await supabase
             .from("forms")
@@ -61,7 +64,7 @@ function CreatorDashboard() {
                     .in("form_id", formIds),
                 supabase
                     .from("submissions")
-                    .select("id, total_score, status, form_id")
+                    .select("id, total_score, form_id")
                     .in("form_id", formIds),
             ])
             subs = { count: subRes.count || 0 }
@@ -78,6 +81,7 @@ function CreatorDashboard() {
                 .map((f) => ({
                     name: f.title.length > 14 ? f.title.slice(0, 14) + "…" : f.title,
                     value: subRows.filter((s) => s.form_id === f.id).length,
+                    formId: f.id,
                 }))
                 .filter((d) => d.value > 0)
         )
@@ -92,89 +96,96 @@ function CreatorDashboard() {
                 else failed++
             }
         }
-        setDonutData([
-            { name: "Lulus", value: passed, color: colors.pass },
-            { name: "Gagal", value: failed, color: colors.wrong },
-        ])
 
         setLoading(false)
     }
 
-    const cards = [
-        { label: "Total Form", value: stats.total, icon: FileText, color: "text-darks" },
-        { label: "Form Aktif", value: stats.active, icon: CheckCircle2, color: "text-done" },
-        { label: "Total Submission", value: stats.submissions, icon: ClipboardList, color: "text-accents" },
-        { label: "Total Skor", value: stats.score, icon: Trophy, color: "text-amber-500" },
-    ]
-
     return (
-        <div className="flex flex-col items-center px-4 py-10">
-            <div className="max-w-5xl w-full">
+        <div className="flex flex-col items-center px-4 py-10 lg:h-screen lg:overflow-hidden">
+            <div className="max-w-7xl w-full lg:h-full lg:flex lg:flex-col lg:min-h-0">
+                <button
+                    onClick={() => navigate("/")}
+                    className="flex items-center gap-2 text-xs sm:text-sm text-tinted hover:text-darks mb-4 sm:mb-6 lg:hidden transition-colors"
+                >
+                    <ArrowLeft className="h-4 w-4" /> Kembali
+                </button>
                 <div className="flex items-center justify-between mb-1">
-                    <h1 className="text-2xl font-bold text-darks">Dashboard Creator</h1>
-                    <Link to="/creator/forms/new" className="btn bg-darks text-base border-none h-9 min-h-0">
-                        <Plus className="h-4 w-4" /> Buat Form
-                    </Link>
+                    <h1 className="text-2xl lg:text-4xl font-bold text-darks">Dashboard Creator</h1>
                 </div>
                 <p className="text-sm text-tinted mb-6">Ringkasan formulir milik kamu.</p>
 
                 {loading ? (
-                    <div className="flex justify-center py-20">
-                        <div className="w-full max-w-xs">
-                            <div className="relative h-1.5 w-full bg-second rounded-full overflow-hidden">
-                                <div className="absolute h-full bg-darks rounded-full animate-loadingbar" />
-                            </div>
-                        </div>
-                    </div>
+                    <Loading />
                 ) : (
-                    <>
-                        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-                            {cards.map(({ label, value, icon: Icon, color }) => (
-                                <div key={label} className="bg-white border border-second p-5 shadow-sm rounded-2xl">
-                                    <div className="flex items-center justify-between mb-2">
-                                        <p className="text-sm text-tinted">{label}</p>
-                                        <Icon className={`h-5 w-5 ${color}`} />
-                                    </div>
-                                    <p className="text-2xl font-bold text-darks">{value}</p>
-                                </div>
-                            ))}
+                    <div className="flex flex-col flex-1 min-h-0">
+                    <div className="stats stats-vertical sm:stats-horizontal shadow w-full bg-white border border-second">
+                        <div className="stat">
+                            <div className="stat-figure text-darks">
+                                <FileText className="h-8 w-8" />
+                            </div>
+                            <div className="stat-title text-tinted">Total Form</div>
+                            <div className="stat-value text-darks">{stats.total}</div>
+                            <div className="stat-desc text-tinted">Semua formulir kamu</div>
                         </div>
 
-                        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-8">
+                        <div className="stat">
+                            <div className="stat-figure text-done">
+                                <CheckCircle2 className="h-8 w-8" />
+                            </div>
+                            <div className="stat-title text-tinted">Form Aktif</div>
+                            <div className="stat-value text-darks">{stats.active}</div>
+                            <div className="stat-desc text-tinted">Status published</div>
+                        </div>
+
+                        <div className="stat">
+                            <div className="stat-figure text-tinted">
+                                <ClipboardList className="h-8 w-8" />
+                            </div>
+                            <div className="stat-title text-tinted">Total Submission</div>
+                            <div className="stat-value text-darks">{stats.submissions}</div>
+                            <div className="stat-desc text-tinted">Jumlah pengerjaan</div>
+                        </div>
+
+                        {/* <div className="stat">
+                            <div className="stat-figure text-amber-500">
+                                <Trophy className="h-8 w-8" />
+                            </div>
+                            <div className="stat-title text-tinted">Total Skor</div>
+                            <div className="stat-value text-darks">{stats.score}</div>
+                            <div className="stat-desc text-tinted">Akumulasi skor</div>
+                        </div> */}
+                    </div>
+
+                    <div className="grid gap-4 mt-8 lg:grid-cols-2 lg:flex-1 lg:min-h-0">
+                        <div className="lg:min-h-0 lg:overflow-y-auto">
                             {barData.length > 0 ? (
                                 <DistributionChart
                                     title="Submission per Form"
                                     subtitle="Jumlah submission tiap formulir."
                                     data={barData}
                                     barColor={colors.done}
+                                    onBarClick={(id) => navigate(`/creator/forms/${id}`)}
                                 />
                             ) : (
                                 <div className="bg-white border border-second p-5 shadow-sm rounded-2xl flex items-center justify-center h-[260px]">
                                     <p className="text-sm text-tinted">Belum ada submission untuk ditampilkan.</p>
                                 </div>
                             )}
-                            {donutData[0]?.value > 0 || donutData[1]?.value > 0 ? (
-                                <DonutChart
-                                    title="Hasil Submission"
-                                    subtitle="Lulus vs gagal berdasarkan passing score."
-                                    data={donutData}
-                                />
-                            ) : (
-                                <div className="bg-white border border-second p-5 shadow-sm rounded-2xl flex items-center justify-center h-[260px]">
-                                    <p className="text-sm text-tinted">Belum ada hasil untuk ditampilkan.</p>
-                                </div>
-                            )}
                         </div>
 
-                        <div className="flex flex-wrap gap-3">
-                            <Link to="/creator/forms" className="btn bg-darks text-base border-none">
-                                <FileText className="h-4 w-4" /> Kelola Form
-                            </Link>
-                            <Link to="/creator/forms/new" className="btn bg-base text-darks border border-second hover:bg-second">
-                                <Plus className="h-4 w-4" /> Buat Form Baru
-                            </Link>
+                        <div className="lg:flex lg:flex-col lg:min-h-0 lg:overflow-hidden">
+                            <div className="flex items-center justify-between mb-4 shrink-0">
+                                <h2 className="text-xl lg:text-2xl font-bold text-darks">Kelola Form</h2>
+                                <Link to="/creator/forms/new" className="btn bg-darks text-base border-none h-9 min-h-0">
+                                    <Plus className="h-4 w-4" /> Buat Form
+                                </Link>
+                            </div>
+                            <div className="lg:min-h-0 lg:overflow-y-auto">
+                                <FormList />
+                            </div>
                         </div>
-                    </>
+                    </div>
+                    </div>
                 )}
             </div>
         </div>

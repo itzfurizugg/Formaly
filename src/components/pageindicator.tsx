@@ -3,13 +3,12 @@ import { ChevronLeft, ChevronRight } from "lucide-react"
 interface PageIndicatorProps {
     total: number
     current: number
-    answers: unknown
     onPrev: () => void
     onNext: () => void
     onListClick: () => void
 }
 
-function PageIndicator({ total, current, answers: _answers, onPrev, onNext, onListClick }: PageIndicatorProps) {
+function PageIndicator({ total, current, onPrev, onNext, onListClick }: PageIndicatorProps) {
     const isLast = current >= total - 1
 
     return (

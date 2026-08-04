@@ -23,10 +23,7 @@ function Navbar() {
     const [navHeight, setNavHeight] = useState(0)
 
     useEffect(() => {
-        if (!user) {
-            setRole("")
-            return
-        }
+        if (!user) return
         supabase
             .from("users")
             .select("role")
