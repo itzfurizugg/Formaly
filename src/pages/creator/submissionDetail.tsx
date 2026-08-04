@@ -111,10 +111,10 @@ function SubmissionDetail() {
                     onClick={() => navigate(`/creator/forms/${id}/submissions`)}
                     className="flex items-center gap-2 text-sm text-tinted hover:text-darks mb-4 transition-colors"
                 >
-                    <ArrowLeft className="h-4 w-4" /> Kembali ke Submission
+                    <ArrowLeft className="h-4 w-4" /> Kembali
                 </button>
 
-                <h1 className="text-2xl font-bold text-darks mb-1">Detail Submission</h1>
+                <h1 className="text-2xl lg:text-4xl font-bold text-darks mb-1">Detail Submission</h1>
                 <p className="text-sm text-tinted mb-6">
                     {info?.user?.name || "Pengguna"} &middot; {info?.form?.title || "Form"} &middot; {fmtDate(info?.submitted_at || null)}
                 </p>
@@ -122,7 +122,7 @@ function SubmissionDetail() {
                 <Tabs />
 
                 {info && info.total_score != null && (
-                    <div className="bg-white border border-second p-5 shadow-sm rounded-2xl mb-6 flex items-center justify-between">
+                    <div className="bg-white border border-second p-5 shadow-sm rounded-none mb-6 flex items-center justify-between">
                         <div>
                             <p className="text-xs text-tinted">Total Skor</p>
                             <p className={`text-3xl font-bold ${info.form?.passing_score != null && info.total_score < info.form.passing_score ? "text-wrong" : "text-done"}`}>
@@ -152,7 +152,7 @@ function SubmissionDetail() {
                 ) : (
                     <div className="space-y-3">
                         {answers.map((a, idx) => (
-                            <div key={a.id} className="bg-white border border-second p-5 shadow-sm rounded-2xl">
+                            <div key={a.id} className="bg-white border border-second p-5 shadow-sm rounded-none">
                                 <div className="flex items-center gap-2 flex-wrap mb-1">
                                     <span className="text-sm font-bold text-darks">Soal {idx + 1}</span>
                                     <span className="badge badge-ghost text-tinted rounded-full text-xs">{typeLabel(a.question?.question_type || "")}</span>

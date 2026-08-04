@@ -128,7 +128,7 @@ function Tokens() {
 
     return (
         <div className="flex flex-col items-center px-4 py-10">
-            <div className="w-full max-w-2xl">
+            <div className="w-full max-w-4xl">
                 <button
                     onClick={() => navigate(`/creator/forms/${id}`)}
                     className="flex items-center gap-2 text-sm text-tinted hover:text-darks mb-4 transition-colors"
@@ -136,7 +136,7 @@ function Tokens() {
                     <ArrowLeft className="h-4 w-4" /> Kembali ke Detail
                 </button>
 
-                <h1 className="text-2xl font-bold text-darks mb-1">Token</h1>
+                <h1 className="text-2xl lg:text-4xl font-bold text-darks mb-1">Token</h1>
                 <p className="text-sm text-tinted mb-6">Form: {formTitle}</p>
 
                 <Tabs />

@@ -156,7 +156,7 @@ function CreatorDashboard() {
                                     onBarClick={(id) => navigate(`/creator/forms/${id}`)}
                                 />
                             ) : (
-                                <div className="bg-white border border-second p-5 shadow-sm rounded-2xl flex items-center justify-center h-[260px]">
+                                <div className="bg-white border border-second p-5 shadow-sm rounded-none flex items-center justify-center h-[260px]">
                                     <p className="text-sm text-tinted">Belum ada submission untuk ditampilkan.</p>
                                 </div>
                             )}

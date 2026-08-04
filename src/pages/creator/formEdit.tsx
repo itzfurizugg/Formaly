@@ -137,7 +137,8 @@ function FormEdit() {
         }
     }
 
-    const inputCls = "input w-full bg-base border-second focus:border-done focus:outline-none transition-colors"
+    const inputCls = "input w-full bg-white text-3xl h-20 border-second focus:border-done focus:outline-none transition-colors"
+    const inputWithVal = "input w-full bg-base text-lg border-second focus:border-done focus:outline-none transition-colors"
 
     if (loading) {
         return (
@@ -243,7 +244,7 @@ function FormEdit() {
                                 type="number"
                                 min={0}
                                 step={1}
-                                className={inputCls}
+                                className={inputWithVal}
                                 value={duration}
                                 onChange={(e) => setDuration(Number(e.target.value))}
                                 placeholder="0"
@@ -256,7 +257,7 @@ function FormEdit() {
                                 min={0}
                                 max={100}
                                 step={1}
-                                className={inputCls}
+                                className={inputWithVal}
                                 value={passingScore}
                                 onChange={(e) => setPassingScore(Number(e.target.value))}
                                 placeholder="0"

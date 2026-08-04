@@ -206,7 +206,7 @@ function Questions() {
                     <ArrowLeft className="h-4 w-4" /> Kembali ke Detail
                 </button>
 
-                <h1 className="text-2xl font-bold text-darks mb-1">Soal</h1>
+                <h1 className="text-2xl lg:text-4xl font-bold text-darks mb-1">Soal</h1>
                 <p className="text-sm text-tinted mb-6">Form: {formTitle}</p>
 
                 <Tabs />

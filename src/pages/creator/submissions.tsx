@@ -101,7 +101,7 @@ function Submissions() {
                     <ArrowLeft className="h-4 w-4" /> Kembali ke Detail
                 </button>
 
-                <h1 className="text-2xl font-bold text-darks mb-1">Submission</h1>
+                <h1 className="text-2xl lg:text-4xl font-bold text-darks mb-1">Submission</h1>
                 <p className="text-sm text-tinted mb-6">Form: {formTitle}</p>
 
                 <Tabs />
@@ -119,7 +119,7 @@ function Submissions() {
                 ) : (
                     <div className="space-y-3">
                         {submissions.map((s) => (
-                            <div key={s.id} className="bg-white border border-second p-5 shadow-sm rounded-2xl">
+                            <div key={s.id} className="bg-white border border-second p-5 shadow-sm rounded-none">
                                 <div className="flex items-start justify-between gap-2">
                                     <div className="min-w-0">
                                         <p className="font-semibold text-darks">{s.user?.name || "Pengguna"}</p>
