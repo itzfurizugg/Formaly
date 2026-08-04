@@ -1,26 +1,15 @@
 import Loading from "../../components/loading"
 import { useEffect, useState, useCallback } from "react"
 import { useNavigate, useParams } from "react-router-dom"
-import { ArrowLeft, Save, Loader2, ClipboardList, KeyRound, Share2, Copy, Check, QrCode, Tag, X } from "lucide-react"
+import { ArrowLeft, Save, Loader2, ClipboardList, KeyRound, Copy, Check, QrCode, Tag, X } from "lucide-react"
 import { supabase } from "../../lib/supabase"
 import { useAuth } from "../../lib/auth-context"
-
-interface FormDetail {
-    id: string
-    title: string
-    description: string
-    status: string
-    duration: number
-    passing_score: number
-    created_at: string
-}
 
 function FormEdit() {
     const { id } = useParams()
     const navigate = useNavigate()
     const { user } = useAuth()
 
-    const [form, setForm] = useState<FormDetail | null>(null)
     const [title, setTitle] = useState("")
     const [description, setDescription] = useState("")
     const [duration, setDuration] = useState<number | "">(0)
@@ -47,7 +36,6 @@ function FormEdit() {
             navigate("/creator")
             return
         }
-        setForm(data as FormDetail)
         setTitle(data.title)
         setDescription(data.description || "")
         setDuration(data.duration || 0)

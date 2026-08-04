@@ -1,9 +1,10 @@
 import Loading from "../../components/loading"
 import { useEffect, useState, useCallback } from "react"
 import { useNavigate, useParams } from "react-router-dom"
-import { ArrowLeft, Plus, Pencil, Trash2, Save, X, Loader2, Image as ImageIcon } from "lucide-react"
+import { ArrowLeft, Plus, Pencil, Trash2, Save, X, Loader2, Image as ImageIcon, FileUp } from "lucide-react"
 import { supabase } from "../../lib/supabase"
 import { useAuth } from "../../lib/auth-context"
+import QuestionImportModal from "../../components/creator/QuestionImportModal"
 
 interface Option {
     id: string | null
@@ -41,6 +42,8 @@ function Questions() {
     const [options, setOptions] = useState<Option[]>([])
     const [removedOptionIds, setRemovedOptionIds] = useState<string[]>([])
     const [saving, setSaving] = useState(false)
+    const [showImport, setShowImport] = useState(false)
+    const [importSummary, setImportSummary] = useState<string | null>(null)
 
     const loadAll = useCallback(async () => {
         if (!user || !id) return
@@ -209,12 +212,22 @@ function Questions() {
                         {error}
                     </div>
                 )}
+                {importSummary && (
+                    <div role="status" className="fixed right-4 top-4 z-50 text-sm text-done bg-white border border-done/30 shadow-lg px-4 py-3 rounded-lg">
+                        {importSummary}
+                    </div>
+                )}
 
-                <div className="flex justify-end mb-4">
+                <div className="flex justify-end gap-2 mb-4">
                     {!showEditor && (
-                        <button onClick={startAdd} className="btn bg-darks text-base border-none h-9 min-h-0">
-                            <Plus className="h-4 w-4" /> Tambah Soal
-                        </button>
+                        <>
+                            <button onClick={() => setShowImport(true)} className="btn bg-base text-darks border border-second h-9 min-h-0">
+                                <FileUp className="h-4 w-4" /> Impor Soal
+                            </button>
+                            <button onClick={startAdd} className="btn bg-darks text-base border-none h-9 min-h-0">
+                                <Plus className="h-4 w-4" /> Tambah Soal
+                            </button>
+                        </>
                     )}
                 </div>
 
@@ -389,6 +402,19 @@ function Questions() {
                     </div>
                 )}
             </div>
+            {showImport && id && (
+                <QuestionImportModal
+                    formId={id}
+                    startingOrder={questions.length}
+                    onClose={() => setShowImport(false)}
+                    onImported={(summary) => {
+                        setShowImport(false)
+                        setImportSummary(summary)
+                        window.setTimeout(() => setImportSummary(null), 4000)
+                        loadAll()
+                    }}
+                />
+            )}
         </div>
     )
 }
