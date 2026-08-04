@@ -2,7 +2,7 @@ import { useState } from "react"
 import { Link, useNavigate } from "react-router-dom"
 import { LogIn } from "lucide-react"
 import logo from "../../assets/logo.svg"
-import { useAuth } from "../../lib/auth"
+import { useAuth } from "../../lib/auth-context"
 import PasswordInput from "../../components/passwordInput"
 
 function Login() {

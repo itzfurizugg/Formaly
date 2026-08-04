@@ -21,8 +21,6 @@ function AdminForms() {
     const [error, setError] = useState<string | null>(null)
 
     const fetchForms = useCallback(async () => {
-        setLoading(true)
-        setError(null)
         const { data, error: err } = await supabase
             .from("forms")
             .select("*")
@@ -30,8 +28,10 @@ function AdminForms() {
 
         if (err) {
             setError(err.message)
+            setForms([])
         } else {
             setForms(data || [])
+            setError(null)
         }
         setLoading(false)
     }, [])
@@ -47,7 +47,7 @@ function AdminForms() {
             <div className="max-w-4xl w-full">
                 <div className="flex items-center justify-between mb-1">
                     <h1 className="text-2xl font-bold text-darks">Daftar Form</h1>
-                    <button onClick={fetchForms} className="btn btn-ghost btn-sm">
+                    <button onClick={() => { setLoading(true); setError(null); fetchForms() }} className="btn btn-ghost btn-sm">
                         <RefreshCw className="h-4 w-4" />
                         Refresh
                     </button>
@@ -57,7 +57,7 @@ function AdminForms() {
                 {error && (
                     <div className="text-sm text-wrong bg-wrong/5 border border-wrong/20 rounded-lg px-4 py-3 mb-4">
                         <p>{error}</p>
-                        <button onClick={fetchForms} className="btn btn-sm bg-wrong text-base border-none mt-2">
+                        <button onClick={() => { setLoading(true); setError(null); fetchForms() }} className="btn btn-sm bg-wrong text-base border-none mt-2">
                             <RefreshCw className="h-3 w-3" />
                             Coba lagi
                         </button>

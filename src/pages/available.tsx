@@ -1,9 +1,9 @@
-import { useEffect, useState } from "react"
+import { useEffect, useState, useCallback } from "react"
 import { useNavigate } from "react-router-dom"
 import { Search, Library, FileText } from "lucide-react"
 import Card from "../components/card"
 import { supabase } from "../lib/supabase"
-import { useAuth } from "../lib/auth"
+import { useAuth } from "../lib/auth-context"
 import Loading from "../components/loading"
 
 interface FormItem {
@@ -15,6 +15,15 @@ interface FormItem {
     question_count: number
 }
 
+interface FormRow {
+    id: string
+    title: string
+    description: string | null
+    duration: number | null
+    users: { name: string } | null
+    questions: { id: string }[] | null
+}
+
 function Available() {
     const navigate = useNavigate()
     const { user, loading: authLoading } = useAuth()
@@ -22,16 +31,7 @@ function Available() {
     const [forms, setForms] = useState<FormItem[]>([])
     const [loading, setLoading] = useState(true)
 
-    useEffect(() => {
-        if (authLoading) return
-        if (!user) {
-            navigate("/login")
-            return
-        }
-        loadForms()
-    }, [user, authLoading, navigate])
-
-    async function loadForms() {
+    const loadForms = useCallback(async () => {
         setLoading(true)
         const { data } = await supabase
             .from("forms")
@@ -43,17 +43,26 @@ function Available() {
             .order("created_at", { ascending: false })
 
         if (data) {
-            setForms(data.map((f: any) => ({
+            setForms((data as unknown as FormRow[]).map((f) => ({
                 id: f.id,
                 title: f.title,
-                description: f.description,
+                description: f.description || "",
                 author_name: f.users?.name || "Creator",
                 duration: f.duration || 0,
                 question_count: f.questions ? f.questions.length : 0
             })))
         }
         setLoading(false)
-    }
+    }, [])
+
+    useEffect(() => {
+        if (authLoading) return
+        if (!user) {
+            navigate("/login")
+            return
+        }
+        loadForms()
+    }, [user, authLoading, navigate, loadForms])
 
     const filtered = forms.filter(
         (f) =>

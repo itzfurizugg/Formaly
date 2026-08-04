@@ -1,9 +1,10 @@
 import Loading from "../../components/loading"
-import { useEffect, useState } from "react"
+import { useEffect, useState, useCallback } from "react"
 import { useNavigate, useParams } from "react-router-dom"
 import { ArrowLeft, Eye, Trash2, Loader2 } from "lucide-react"
 import { supabase } from "../../lib/supabase"
-import { useAuth } from "../../lib/auth"
+import { useAuth } from "../../lib/auth-context"
+import Tabs from "../../components/tabs"
 
 interface Submission {
     id: string
@@ -26,12 +27,7 @@ function Submissions() {
     const [error, setError] = useState<string | null>(null)
     const [deletingId, setDeletingId] = useState<string | null>(null)
 
-    useEffect(() => {
-        if (!user || !id) return
-        loadAll()
-    }, [user, id])
-
-    async function loadAll() {
+    const loadAll = useCallback(async () => {
         if (!user || !id) return
 
         const { data: form } = await supabase
@@ -53,7 +49,12 @@ function Submissions() {
             setSubmissions((subs as unknown as Submission[]) || [])
         }
         setLoading(false)
-    }
+    }, [user, id])
+
+    useEffect(() => {
+        if (!user || !id) return
+        loadAll()
+    }, [user, id, loadAll])
 
     const statusLabel = (s: string) => {
         if (s === "SUBMITTED") return "Selesai"
@@ -92,7 +93,7 @@ function Submissions() {
 
     return (
         <div className="flex flex-col items-center px-4 py-10">
-            <div className="w-full max-w-2xl">
+            <div className="w-full max-w-4xl">
                 <button
                     onClick={() => navigate(`/creator/forms/${id}`)}
                     className="flex items-center gap-2 text-sm text-tinted hover:text-darks mb-4 transition-colors"
@@ -102,6 +103,8 @@ function Submissions() {
 
                 <h1 className="text-2xl font-bold text-darks mb-1">Submission</h1>
                 <p className="text-sm text-tinted mb-6">Form: {formTitle}</p>
+
+                <Tabs />
 
                 {error && (
                     <div role="alert" className="text-sm text-wrong bg-wrong/5 border border-wrong/20 rounded-lg px-4 py-3 mb-4">

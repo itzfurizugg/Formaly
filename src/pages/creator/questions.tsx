@@ -1,9 +1,10 @@
 import Loading from "../../components/loading"
-import { useEffect, useState } from "react"
+import { useEffect, useState, useCallback } from "react"
 import { useNavigate, useParams } from "react-router-dom"
 import { ArrowLeft, Plus, Pencil, Trash2, Save, X, Loader2, Image as ImageIcon } from "lucide-react"
 import { supabase } from "../../lib/supabase"
-import { useAuth } from "../../lib/auth"
+import { useAuth } from "../../lib/auth-context"
+import Tabs from "../../components/tabs"
 
 interface Option {
     id: string | null
@@ -42,12 +43,7 @@ function Questions() {
     const [removedOptionIds, setRemovedOptionIds] = useState<string[]>([])
     const [saving, setSaving] = useState(false)
 
-    useEffect(() => {
-        if (!user || !id) return
-        loadAll()
-    }, [user, id])
-
-    async function loadAll() {
+    const loadAll = useCallback(async () => {
         if (!user || !id) return
 
         const { data: form } = await supabase
@@ -69,7 +65,12 @@ function Questions() {
         if (qs) setQuestions(qs as unknown as Question[])
 
         setLoading(false)
-    }
+    }, [user, id])
+
+    useEffect(() => {
+        if (!user || !id) return
+        loadAll()
+    }, [user, id, loadAll])
 
     const resetEditor = () => {
         setEditingId(null)
@@ -107,6 +108,10 @@ function Questions() {
     }
 
     const updateOption = (index: number, patch: Partial<Option>) => {
+        if (questionType === "single_choice" && patch.is_correct) {
+            setOptions(options.map((o, i) => (i === index ? { ...o, ...patch } : { ...o, is_correct: false })))
+            return
+        }
         setOptions(options.map((o, i) => (i === index ? { ...o, ...patch } : o)))
     }
 
@@ -191,9 +196,9 @@ function Questions() {
         return <Loading />
     }
 
-    return (
+        return (
         <div className="flex flex-col items-center px-4 py-10">
-            <div className="w-full max-w-2xl">
+            <div className="w-full max-w-4xl">
                 <button
                     onClick={() => navigate(`/creator/forms/${id}`)}
                     className="flex items-center gap-2 text-sm text-tinted hover:text-darks mb-4 transition-colors"
@@ -203,6 +208,8 @@ function Questions() {
 
                 <h1 className="text-2xl font-bold text-darks mb-1">Soal</h1>
                 <p className="text-sm text-tinted mb-6">Form: {formTitle}</p>
+
+                <Tabs />
 
                 {error && (
                     <div role="alert" className="text-sm text-wrong bg-wrong/5 border border-wrong/20 rounded-lg px-4 py-3 mb-4">
@@ -219,7 +226,7 @@ function Questions() {
                 </div>
 
                 {showEditor && (
-                    <div className="bg-white border border-second p-6 shadow-sm rounded-2xl mb-6 space-y-4">
+                    <div className="bg-white border border-second p-6 shadow-sm rounded-none mb-6 space-y-4">
                         <div className="flex items-center justify-between">
                             <h2 className="font-semibold text-darks">{editingId ? "Edit Soal" : "Tambah Soal"}</h2>
                             <button onClick={resetEditor} className="btn btn-sm btn-ghost text-tinted">
@@ -243,7 +250,16 @@ function Questions() {
                                 <select
                                     className="select w-full bg-base border-second focus:border-done focus:outline-none rounded-full"
                                     value={questionType}
-                                    onChange={(e) => setQuestionType(e.target.value)}
+                                    onChange={(e) => {
+                                        const t = e.target.value
+                                        setQuestionType(t)
+                                        if (t === "single_choice") {
+                                            const firstCorrect = options.findIndex((o) => o.is_correct)
+                                            setOptions(
+                                                options.map((o, i) => (i === firstCorrect ? o : { ...o, is_correct: false }))
+                                            )
+                                        }
+                                    }}
                                 >
                                     <option value="single_choice">Pilihan Tunggal</option>
                                     <option value="multiple_choice">Pilihan Ganda</option>
@@ -310,8 +326,9 @@ function Questions() {
                                             />
                                             <label className="flex items-center gap-1 text-xs text-darks shrink-0 cursor-pointer">
                                                 <input
-                                                    type="checkbox"
-                                                    className="checkbox checkbox-xs border-second"
+                                                    type={questionType === "single_choice" ? "radio" : "checkbox"}
+                                                    name="correct-option"
+                                                    className={questionType === "single_choice" ? "radio radio-xs border-second" : "checkbox checkbox-xs border-second"}
                                                     checked={opt.is_correct}
                                                     onChange={(e) => updateOption(index, { is_correct: e.target.checked })}
                                                 />
@@ -338,11 +355,8 @@ function Questions() {
                 )}
 
                 {questions.length === 0 ? (
-                    <div className="text-center py-16">
+                    <div className="text-center py-30">
                         <p className="text-tinted mb-4">Belum ada soal.</p>
-                        <button onClick={startAdd} className="btn bg-darks text-base border-none">
-                            <Plus className="h-4 w-4" /> Tambah Soal
-                        </button>
                     </div>
                 ) : (
                     <div className="space-y-3">

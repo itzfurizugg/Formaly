@@ -4,7 +4,7 @@ import { useNavigate, useParams, useLocation } from "react-router-dom"
 import { Check, Clock, ZoomIn, X } from "lucide-react"
 import PageIndicator from "../../components/pageindicator"
 import { supabase } from "../../lib/supabase"
-import { useAuth } from "../../lib/auth"
+import { useAuth } from "../../lib/auth-context"
 
 interface Option {
     id: string
@@ -98,7 +98,7 @@ function FormPage() {
                 }
             }
 
-            let insertError = null
+            let insertError
             if (q.question_type === "text") {
                 ;({ error: insertError } = await supabase.from("answers").insert({
                     submission_id: submissionId,
@@ -133,20 +133,7 @@ function FormPage() {
         navigate("/history")
     }, [user, formId, questions, answers, navigate])
 
-    useEffect(() => {
-        if (authLoading) return
-        if (!user) {
-            navigate("/login")
-            return
-        }
-        if (!formId) {
-            navigate("/")
-            return
-        }
-        loadForm()
-    }, [user, authLoading, formId, navigate])
-
-    async function loadForm() {
+    const loadForm = useCallback(async () => {
         setLoading(true)
         const { data: formData } = await supabase
             .from("forms")
@@ -192,7 +179,20 @@ function FormPage() {
         }
 
         setLoading(false)
-    }
+    }, [formId, locationState])
+
+    useEffect(() => {
+        if (authLoading) return
+        if (!user) {
+            navigate("/login")
+            return
+        }
+        if (!formId) {
+            navigate("/")
+            return
+        }
+        loadForm()
+    }, [user, authLoading, formId, navigate, loadForm])
 
     useEffect(() => {
         if (!hasTimer || !deadlineRef.current || loading) return

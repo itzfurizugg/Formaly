@@ -1,9 +1,10 @@
 import Loading from "../../components/loading"
-import { useEffect, useState } from "react"
+import { useEffect, useState, useCallback } from "react"
 import { useNavigate, useParams } from "react-router-dom"
-import { ArrowLeft, Save, Loader2, ClipboardList, KeyRound, Share2, Copy, Check, QrCode, Tag, X } from "lucide-react"
+import { ArrowLeft, Save, Loader2, Copy, Check, QrCode, Tag, X } from "lucide-react"
 import { supabase } from "../../lib/supabase"
-import { useAuth } from "../../lib/auth"
+import { useAuth } from "../../lib/auth-context"
+import Tabs from "../../components/tabs"
 
 interface FormDetail {
     id: string
@@ -34,12 +35,7 @@ function FormEdit() {
     const [tags, setTags] = useState<string[]>([])
     const [tagInput, setTagInput] = useState("")
 
-    useEffect(() => {
-        if (!user || !id) return
-        loadForm()
-    }, [user, id])
-
-    async function loadForm() {
+    const loadForm = useCallback(async () => {
         if (!user || !id) return
         const { data, error: err } = await supabase
             .from("forms")
@@ -67,7 +63,12 @@ function FormEdit() {
         if (rel) {
             setTags(rel.map((r) => (r.tag as unknown as { name: string } | null)?.name).filter((n): n is string => !!n))
         }
-    }
+    }, [user, id, navigate])
+
+    useEffect(() => {
+        if (!user || !id) return
+        loadForm()
+    }, [user, id, loadForm])
 
     async function syncTags() {
         if (!id) return
@@ -146,7 +147,7 @@ function FormEdit() {
 
     return (
         <div className="flex flex-col items-center px-4 py-10">
-            <div className="w-full max-w-2xl">
+            <div className="w-full max-w-4xl">
                 <button
                     onClick={() => navigate("/creator")}
                     className="flex items-center gap-2 text-sm text-tinted hover:text-darks mb-4 transition-colors"
@@ -154,41 +155,15 @@ function FormEdit() {
                     <ArrowLeft className="h-4 w-4" /> Kembali
                 </button>
 
-                <h1 className="text-2xl font-bold text-darks mb-1">{form?.title}</h1>
+                <h1 className="text-2xl lg:text-4xl font-bold text-darks mb-1">{form?.title}</h1>
                 <p className="text-sm text-tinted mb-6">Edit detail form, kelola soal, token, dan submission.</p>
 
-                <div className="flex flex-wrap gap-2 mb-6">
-                    <button
-                        onClick={() => navigate(`/creator/forms/${id}`)}
-                        className="btn btn-sm bg-darks text-base border-none"
-                    >
-                        Detail
-                    </button>
-                    <button
-                        onClick={() => navigate(`/creator/forms/${id}/questions`)}
-                        className="btn btn-sm bg-base text-darks border border-second hover:bg-second"
-                    >
-                        Soal
-                    </button>
-                    <button
-                        onClick={() => navigate(`/creator/forms/${id}/tokens`)}
-                        className="btn btn-sm bg-base text-darks border border-second hover:bg-second"
-                    >
-                        <KeyRound className="h-3.5 w-3.5" /> Token
-                    </button>
-                    <button
-                        onClick={() => navigate(`/creator/forms/${id}/submissions`)}
-                        className="btn btn-sm bg-base text-darks border border-second hover:bg-second"
-                    >
-                        <ClipboardList className="h-3.5 w-3.5" /> Submission
-                    </button>
-                </div>
+                <Tabs />
 
                 {status === "published" && (
-                    <div className="bg-white border border-second p-6 shadow-sm rounded-2xl mb-6">
+                    <div className="bg-white border border-second p-6 shadow-sm rounded-none mb-6">
                         <div className="flex items-center gap-2 mb-1">
-                            <Share2 className="h-4 w-4 text-done" />
-                            <h2 className="font-semibold text-darks">Bagikan Form</h2>
+                            <h2 className="font-semibold text-xl text-darks">Bagikan Form</h2>
                         </div>
                         <p className="text-sm text-tinted mb-4">
                             Form ini sudah public. Bagikan link atau QR code agar orang lain bisa mengerjakannya.
@@ -245,7 +220,7 @@ function FormEdit() {
                     </div>
                 )}
 
-                <form onSubmit={handleSave} className="space-y-4 bg-white border border-second p-6 shadow-sm rounded-2xl">
+                <form onSubmit={handleSave} className="space-y-4 bg-white border border-second p-6 shadow-sm rounded-none">
                     <div>
                         <label className="block text-sm font-medium text-darks mb-1.5">Judul</label>
                         <input type="text" required className={inputCls} value={title} onChange={(e) => setTitle(e.target.value)} />
@@ -291,7 +266,7 @@ function FormEdit() {
 
                     <div>
                         <label className="block text-sm font-medium text-darks mb-1.5">Status</label>
-                        <select className="select select-bordered w-full bg-base border-second focus:border-done focus:outline-none rounded-full" value={status} onChange={(e) => setStatus(e.target.value)}>
+                        <select className="select select-bordered w-full bg-base border-second focus:border-done focus:outline-none" value={status} onChange={(e) => setStatus(e.target.value)}>
                             <option value="draft">Draft</option>
                             <option value="published">Published</option>
                         </select>

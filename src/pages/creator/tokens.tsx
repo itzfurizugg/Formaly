@@ -1,9 +1,10 @@
 import Loading from "../../components/loading"
-import { useEffect, useState } from "react"
+import { useEffect, useState, useCallback } from "react"
 import { useNavigate, useParams } from "react-router-dom"
 import { ArrowLeft, Plus, Trash2, X, Loader2, Copy, Check } from "lucide-react"
 import { supabase } from "../../lib/supabase"
-import { useAuth } from "../../lib/auth"
+import { useAuth } from "../../lib/auth-context"
+import Tabs from "../../components/tabs"
 
 interface Token {
     id: string
@@ -12,6 +13,7 @@ interface Token {
     used_count: number
     expires_at: string | null
     is_active: boolean
+    expired: boolean
 }
 
 function Tokens() {
@@ -31,12 +33,7 @@ function Tokens() {
     const [expiresAt, setExpiresAt] = useState("")
     const [saving, setSaving] = useState(false)
 
-    useEffect(() => {
-        if (!user || !id) return
-        loadAll()
-    }, [user, id])
-
-    async function loadAll() {
+    const loadAll = useCallback(async () => {
         if (!user || !id) return
 
         const { data: form } = await supabase
@@ -52,10 +49,21 @@ function Tokens() {
             .select("id, token_code, max_usage, used_count, expires_at, is_active")
             .eq("form_id", id)
             .order("is_active", { ascending: false })
-        if (tks) setTokens(tks)
+        if (tks) {
+            const now = Date.now()
+            setTokens((tks as Omit<Token, "expired">[]).map((t) => ({
+                ...t,
+                expired: t.expires_at ? new Date(t.expires_at).getTime() < now : false,
+            })))
+        }
 
         setLoading(false)
-    }
+    }, [user, id])
+
+    useEffect(() => {
+        if (!user || !id) return
+        loadAll()
+    }, [user, id, loadAll])
 
     const generateCode = () => {
         const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ0123456789"
@@ -130,6 +138,8 @@ function Tokens() {
 
                 <h1 className="text-2xl font-bold text-darks mb-1">Token</h1>
                 <p className="text-sm text-tinted mb-6">Form: {formTitle}</p>
+
+                <Tabs />
 
                 {error && (
                     <div role="alert" className="text-sm text-wrong bg-wrong/5 border border-wrong/20 rounded-lg px-4 py-3 mb-4">
@@ -213,7 +223,7 @@ function Tokens() {
                 ) : (
                     <div className="space-y-3">
                         {tokens.map((t) => {
-                            const expired = t.expires_at ? new Date(t.expires_at).getTime() < Date.now() : false
+                            const expired = t.expired
                             return (
                                 <div key={t.id} className="bg-white border border-second p-5 shadow-sm rounded-2xl">
                                     <div className="flex items-start justify-between gap-2">

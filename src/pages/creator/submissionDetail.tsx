@@ -1,9 +1,10 @@
 import Loading from "../../components/loading"
-import { useEffect, useState } from "react"
+import { useEffect, useState, useCallback } from "react"
 import { useNavigate, useParams } from "react-router-dom"
 import { ArrowLeft, Check, X } from "lucide-react"
 import { supabase } from "../../lib/supabase"
-import { useAuth } from "../../lib/auth"
+import { useAuth } from "../../lib/auth-context"
+import Tabs from "../../components/tabs"
 
 interface AnswerRow {
     id: string
@@ -42,12 +43,7 @@ function SubmissionDetail() {
     const [loading, setLoading] = useState(true)
     const [error, setError] = useState<string | null>(null)
 
-    useEffect(() => {
-        if (!user || !id || !submissionId) return
-        loadAll()
-    }, [user, id, submissionId])
-
-    async function loadAll() {
+    const loadAll = useCallback(async () => {
         if (!user || !id || !submissionId) return
 
         const { data: sub } = await supabase
@@ -79,7 +75,12 @@ function SubmissionDetail() {
         setAnswers((ans as unknown as AnswerRow[]) || [])
 
         setLoading(false)
-    }
+    }, [user, id, submissionId])
+
+    useEffect(() => {
+        if (!user || !id || !submissionId) return
+        loadAll()
+    }, [user, id, submissionId, loadAll])
 
     const typeLabel = (t: string) => {
         if (t === "multiple_choice") return "Pilihan Ganda"
@@ -105,7 +106,7 @@ function SubmissionDetail() {
 
     return (
         <div className="flex flex-col items-center px-4 py-10">
-            <div className="w-full max-w-2xl">
+            <div className="w-full max-w-4xl">
                 <button
                     onClick={() => navigate(`/creator/forms/${id}/submissions`)}
                     className="flex items-center gap-2 text-sm text-tinted hover:text-darks mb-4 transition-colors"
@@ -117,6 +118,8 @@ function SubmissionDetail() {
                 <p className="text-sm text-tinted mb-6">
                     {info?.user?.name || "Pengguna"} &middot; {info?.form?.title || "Form"} &middot; {fmtDate(info?.submitted_at || null)}
                 </p>
+
+                <Tabs />
 
                 {info && info.total_score != null && (
                     <div className="bg-white border border-second p-5 shadow-sm rounded-2xl mb-6 flex items-center justify-between">
