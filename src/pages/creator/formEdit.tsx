@@ -24,8 +24,8 @@ function FormEdit() {
     const [form, setForm] = useState<FormDetail | null>(null)
     const [title, setTitle] = useState("")
     const [description, setDescription] = useState("")
-    const [duration, setDuration] = useState(0)
-    const [passingScore, setPassingScore] = useState(70)
+    const [duration, setDuration] = useState<number | "">(0)
+    const [passingScore, setPassingScore] = useState<number | "">(70)
     const [status, setStatus] = useState("draft")
     const [loading, setLoading] = useState(true)
     const [saving, setSaving] = useState(false)
@@ -118,8 +118,8 @@ function FormEdit() {
             .update({
                 title,
                 description: description || null,
-                duration: duration || null,
-                passing_score: passingScore,
+                duration: duration === "" ? null : duration,
+                passing_score: passingScore === "" ? 70 : passingScore,
                 status,
             })
             .eq("id", id)
@@ -223,12 +223,12 @@ function FormEdit() {
 
                 <form onSubmit={handleSave} className="space-y-4 bg-white border border-second p-6 shadow-sm rounded-none">
                     <div>
-                        <label className="block text-sm font-medium text-darks mb-1.5">Judul</label>
+                        {/* <label className="block text-sm font-medium text-darks mb-1.5">Judul</label> */}
                         <input type="text" required className={inputCls} value={title} onChange={(e) => setTitle(e.target.value)} />
                     </div>
 
                     <div>
-                        <label className="block text-sm font-medium text-darks mb-1.5">Deskripsi</label>
+                        {/* <label className="block text-sm font-medium text-darks mb-1.5">Deskripsi</label> */}
                         <textarea
                             className="textarea w-full bg-base border-second focus:border-done focus:outline-none transition-colors"
                             rows={3}
@@ -246,7 +246,11 @@ function FormEdit() {
                                 step={1}
                                 className={inputWithVal}
                                 value={duration}
-                                onChange={(e) => setDuration(Number(e.target.value))}
+                                onFocus={(e) => e.target.select()}
+                                onChange={(e) => {
+                                    const val = e.target.value
+                                    setDuration(val === "" ? "" : Number(val))
+                                }}
                                 placeholder="0"
                             />
                         </div>
@@ -259,7 +263,11 @@ function FormEdit() {
                                 step={1}
                                 className={inputWithVal}
                                 value={passingScore}
-                                onChange={(e) => setPassingScore(Number(e.target.value))}
+                                onFocus={(e) => e.target.select()}
+                                onChange={(e) => {
+                                    const val = e.target.value
+                                    setPassingScore(val === "" ? "" : Number(val))
+                                }}
                                 placeholder="0"
                             />
                         </div>
@@ -281,7 +289,8 @@ function FormEdit() {
                             <input
                                 type="text"
                                 className="input flex-1 bg-base border-second focus:border-done focus:outline-none transition-colors"
-                                placeholder="Nama tag, lalu Enter"
+                                placeholder="Form akan bisa ditemukan di beranda dengan memasukkan tag ini.
+"
                                 value={tagInput}
                                 onChange={(e) => setTagInput(e.target.value)}
                                 onKeyDown={(e) => {
@@ -295,9 +304,6 @@ function FormEdit() {
                                 Tambah
                             </button>
                         </div>
-                        <p className="text-xs text-tinted mt-1.5">
-                            Form akan bisa ditemukan di beranda dengan memasukkan tag ini.
-                        </p>
                         {tags.length > 0 && (
                             <div className="flex flex-wrap gap-2 mt-3">
                                 {tags.map((t) => (

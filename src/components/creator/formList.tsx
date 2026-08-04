@@ -89,7 +89,7 @@ function FormList() {
     return (
         <div className="space-y-3">
             {forms.map((form) => (
-                <div key={form.id} className="card bg-base border border-second rounded-2xl">
+                <div key={form.id} className="card bg-white border border-second rounded-none">
                     <div className="card-body">
                         <div className="flex items-start justify-between gap-2">
                             <div className="min-w-0">

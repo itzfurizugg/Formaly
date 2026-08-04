@@ -107,7 +107,7 @@ function CreatorDashboard() {
                     <Loading />
                 ) : (
                     <div className="flex flex-col flex-1 min-h-0">
-                    <div className="stats stats-vertical sm:stats-horizontal shadow w-full bg-white border border-second">
+                    <div className="stats stats-vertical sm:stats-horizontal shadow w-full bg-white border border-second rounded-none">
                         <div className="stat">
                             <div className="stat-figure text-darks">
                                 <FileText className="h-8 w-8" />
@@ -146,7 +146,7 @@ function CreatorDashboard() {
                     </div>
 
                     <div className="grid gap-4 mt-8 lg:grid-cols-2 lg:flex-1 lg:min-h-0">
-                        <div className="lg:min-h-0 lg:overflow-y-auto">
+                        <div className="lg:min-h-0 lg:overflow-y-auto rounded-none">
                             {barData.length > 0 ? (
                                 <DistributionChart
                                     title="Submission per Form"
