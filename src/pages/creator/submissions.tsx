@@ -4,6 +4,7 @@ import { useNavigate, useParams } from "react-router-dom"
 import { ArrowLeft, Eye, Trash2, Loader2 } from "lucide-react"
 import { supabase } from "../../lib/supabase"
 import { useAuth } from "../../lib/auth-context"
+import { confirmDelete } from "../../lib/alerts"
 
 interface Submission {
     id: string
@@ -64,26 +65,21 @@ function Submissions() {
     const fmtDate = (d: string | null) => (d ? new Date(d).toLocaleString("id-ID") : "-")
 
     const handleDelete = async (s: Submission) => {
-        if (!window.confirm(`Hapus submission dari ${s.user?.name || "Pengguna"}? Tindakan ini tidak dapat dibatalkan.`)) return
-        setDeletingId(s.id)
-        setError(null)
-
-        const { error: ansErr } = await supabase.from("answers").delete().eq("submission_id", s.id)
-        if (ansErr) {
-            setError(ansErr.message || "Gagal menghapus jawaban.")
-            setDeletingId(null)
-            return
-        }
-
-        const { error: subErr } = await supabase.from("submissions").delete().eq("id", s.id)
-        if (subErr) {
-            setError(subErr.message || "Gagal menghapus submission.")
-            setDeletingId(null)
-            return
-        }
-
-        setDeletingId(null)
-        loadAll()
+        confirmDelete({
+            title: "Hapus submission ini?",
+            description: "Jawaban peserta pada submission ini akan hilang permanen.",
+            onConfirm: async () => {
+                setDeletingId(s.id)
+                setError(null)
+                try {
+                    const { error } = await supabase.rpc("delete_submission", { p_submission_id: s.id })
+                    if (error) throw new Error(error.message)
+                    await loadAll()
+                } finally {
+                    setDeletingId(null)
+                }
+            },
+        })
     }
 
     if (loading) {
@@ -92,7 +88,7 @@ function Submissions() {
 
     return (
         <div className="flex flex-col items-center px-4 py-10">
-            <div className="w-full max-w-2xl">
+            <div className="w-full max-w-5xl">
                 <button
                     onClick={() => navigate(`/creator/forms/${id}`)}
                     className="flex items-center gap-2 text-sm text-tinted hover:text-darks mb-4 transition-colors"

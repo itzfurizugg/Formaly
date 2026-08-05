@@ -4,6 +4,7 @@ import { useNavigate, useParams } from "react-router-dom"
 import { ArrowLeft, Plus, Trash2, X, Loader2, Copy, Check } from "lucide-react"
 import { supabase } from "../../lib/supabase"
 import { useAuth } from "../../lib/auth-context"
+import { confirmDelete } from "../../lib/alerts"
 
 interface Token {
     id: string
@@ -107,10 +108,15 @@ function Tokens() {
     }
 
     const handleDelete = async (t: Token) => {
-        if (!window.confirm(`Hapus token ${t.token_code}?`)) return
-        const { error: err } = await supabase.from("tokens").delete().eq("id", t.id)
-        if (err) setError(err.message)
-        loadAll()
+        confirmDelete({
+            title: "Hapus token ini?",
+            description: `Token ${t.token_code} akan terhapus permanen dan tidak dapat digunakan lagi.`,
+            onConfirm: async () => {
+                const { error: err } = await supabase.from("tokens").delete().eq("id", t.id)
+                if (err) throw new Error(err.message)
+                await loadAll()
+            },
+        })
     }
 
     const handleCopy = (t: Token) => {

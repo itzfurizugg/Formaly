@@ -5,6 +5,7 @@ import { ArrowLeft, Plus, Pencil, Trash2, Save, X, Loader2, Image as ImageIcon, 
 import { supabase } from "../../lib/supabase"
 import { useAuth } from "../../lib/auth-context"
 import QuestionImportModal from "../../components/creator/QuestionImportModal"
+import { alertSaveError, alertSaveSuccess, confirmDelete, showAlert } from "../../lib/alerts"
 
 interface Option {
     id: string | null
@@ -30,7 +31,6 @@ function Questions() {
     const [formTitle, setFormTitle] = useState("")
     const [questions, setQuestions] = useState<Question[]>([])
     const [loading, setLoading] = useState(true)
-    const [error, setError] = useState<string | null>(null)
 
     const [showEditor, setShowEditor] = useState(false)
     const [editingId, setEditingId] = useState<string | null>(null)
@@ -43,7 +43,6 @@ function Questions() {
     const [removedOptionIds, setRemovedOptionIds] = useState<string[]>([])
     const [saving, setSaving] = useState(false)
     const [showImport, setShowImport] = useState(false)
-    const [importSummary, setImportSummary] = useState<string | null>(null)
 
     const loadAll = useCallback(async () => {
         if (!user || !id) return
@@ -84,7 +83,6 @@ function Questions() {
         setOptions([])
         setRemovedOptionIds([])
         setShowEditor(false)
-        setError(null)
     }
 
     const startAdd = () => {
@@ -122,16 +120,15 @@ function Questions() {
     const handleSave = async () => {
         if (!id) return
         if (!questionText.trim()) {
-            setError("Soal tidak boleh kosong.")
+            showAlert("Soal tidak boleh kosong.", "error")
             return
         }
         if (questionType !== "text" && options.length === 0) {
-            setError("Tambahkan minimal satu pilihan jawaban.")
+            showAlert("Tambahkan minimal satu pilihan jawaban.", "error")
             return
         }
 
         setSaving(true)
-        setError(null)
 
         const { data: qData, error: qErr } = await supabase
             .from("questions")
@@ -149,7 +146,7 @@ function Questions() {
 
         if (qErr) {
             setSaving(false)
-            setError(qErr.message)
+            alertSaveError(qErr.message)
             return
         }
         const questionId = qData.id
@@ -174,14 +171,21 @@ function Questions() {
         setSaving(false)
         resetEditor()
         loadAll()
+        alertSaveSuccess(editingId ? "Soal berhasil diperbarui." : "Soal berhasil ditambahkan.")
     }
 
     const handleDelete = async (q: Question) => {
-        if (!window.confirm("Hapus soal ini beserta pilihannya?")) return
-        await supabase.from("question_options").delete().eq("question_id", q.id)
-        const { error: err } = await supabase.from("questions").delete().eq("id", q.id)
-        if (err) setError(err.message)
-        loadAll()
+        confirmDelete({
+            title: "Hapus soal ini?",
+            description: "Pilihan jawaban pada soal ini akan ikut terhapus.",
+            onConfirm: async () => {
+                const { error: optionError } = await supabase.from("question_options").delete().eq("question_id", q.id)
+                if (optionError) throw new Error(optionError.message)
+                const { error: questionError } = await supabase.from("questions").delete().eq("id", q.id)
+                if (questionError) throw new Error(questionError.message)
+                await loadAll()
+            },
+        })
     }
 
     const typeLabel = (t: string) => {
@@ -206,17 +210,6 @@ function Questions() {
 
                 <h1 className="text-2xl lg:text-4xl font-bold text-darks mb-1">Soal</h1>
                 <p className="text-sm text-tinted mb-6">Form: {formTitle}</p>
-
-                {error && (
-                    <div role="alert" className="text-sm text-wrong bg-wrong/5 border border-wrong/20 rounded-lg px-4 py-3 mb-4">
-                        {error}
-                    </div>
-                )}
-                {importSummary && (
-                    <div role="status" className="fixed right-4 top-4 z-50 text-sm text-done bg-white border border-done/30 shadow-lg px-4 py-3 rounded-lg">
-                        {importSummary}
-                    </div>
-                )}
 
                 <div className="flex justify-end gap-2 mb-4">
                     {!showEditor && (
@@ -409,8 +402,7 @@ function Questions() {
                     onClose={() => setShowImport(false)}
                     onImported={(summary) => {
                         setShowImport(false)
-                        setImportSummary(summary)
-                        window.setTimeout(() => setImportSummary(null), 4000)
+                        showAlert(summary, "success")
                         loadAll()
                     }}
                 />

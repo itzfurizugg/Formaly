@@ -1,9 +1,10 @@
 import Loading from "../../components/loading"
 import { useEffect, useState, useCallback } from "react"
 import { useNavigate, useParams } from "react-router-dom"
-import { ArrowLeft, Save, Loader2, ClipboardList, KeyRound, Copy, Check, QrCode, Tag, X } from "lucide-react"
+import { ArrowLeft, Save, Loader2, ClipboardList, KeyRound, Copy, QrCode, Tag, X } from "lucide-react"
 import { supabase } from "../../lib/supabase"
 import { useAuth } from "../../lib/auth-context"
+import { alertSaveError, alertSaveSuccess, showAlert } from "../../lib/alerts"
 
 function FormEdit() {
     const { id } = useParams()
@@ -17,9 +18,6 @@ function FormEdit() {
     const [status, setStatus] = useState("draft")
     const [loading, setLoading] = useState(true)
     const [saving, setSaving] = useState(false)
-    const [error, setError] = useState<string | null>(null)
-    const [saved, setSaved] = useState(false)
-    const [copied, setCopied] = useState(false)
     const [tags, setTags] = useState<string[]>([])
     const [tagInput, setTagInput] = useState("")
 
@@ -97,8 +95,6 @@ function FormEdit() {
         e.preventDefault()
         if (!id) return
         setSaving(true)
-        setError(null)
-        setSaved(false)
 
         const { error: err } = await supabase
             .from("forms")
@@ -111,16 +107,18 @@ function FormEdit() {
             })
             .eq("id", id)
 
-        setSaving(false)
-        if (err) setError(err.message)
-        else {
-            try {
-                await syncTags()
-                setSaved(true)
-                setTimeout(() => setSaved(false), 2000)
-            } catch (err) {
-                setError(err instanceof Error ? err.message : "Gagal memperbarui tag.")
-            }
+        if (err) {
+            setSaving(false)
+            alertSaveError(err.message)
+            return
+        }
+        try {
+            await syncTags()
+            alertSaveSuccess()
+        } catch (err) {
+            alertSaveError(err instanceof Error ? err.message : "Gagal memperbarui tag.")
+        } finally {
+            setSaving(false)
         }
     }
 
@@ -190,13 +188,12 @@ function FormEdit() {
                             <button
                                 onClick={() => {
                                     navigator.clipboard.writeText(`${window.location.origin}/form/description?formId=${id}`)
-                                    setCopied(true)
-                                    setTimeout(() => setCopied(false), 1500)
+                                    showAlert("Link disalin.", "success")
                                 }}
                                 className="btn bg-darks text-base border-none"
                                 title="Salin link"
                             >
-                                {copied ? <Check className="h-4 w-4 text-done" /> : <Copy className="h-4 w-4" />}
+                                <Copy className="h-4 w-4" />
                                 Salin
                             </button>
                         </div>
@@ -216,17 +213,6 @@ function FormEdit() {
                                 Scan QR code untuk membuka form langsung di perangkat lain.
                             </p>
                         </div>
-                    </div>
-                )}
-
-                {error && (
-                    <div role="alert" className="text-sm text-wrong bg-wrong/5 border border-wrong/20 rounded-lg px-4 py-3 mb-4">
-                        {error}
-                    </div>
-                )}
-                {saved && (
-                    <div role="alert" className="text-sm text-done bg-done/5 border border-done/20 rounded-lg px-4 py-3 mb-4">
-                        Tersimpan.
                     </div>
                 )}
 
@@ -284,8 +270,11 @@ function FormEdit() {
                         <label className="block text-sm font-medium text-darks mb-1.5">Status</label>
                         <select className="select select-bordered w-full bg-base border-second focus:border-done focus:outline-none" value={status} onChange={(e) => setStatus(e.target.value)}>
                             <option value="draft">Draft</option>
-                            <option value="published">Published</option>
+                            <option value="published">Public</option>
                         </select>
+                        <p className="text-xs text-tinted mt-1.5">
+                            Hanya form berstatus <span className="font-medium text-darks">Public</span> yang bisa diakses orang lain, termasuk lewat tag.
+                        </p>
                     </div>
 
                     <div>

@@ -12,6 +12,7 @@ interface FormData {
     duration: number
     author_name: string
     question_count: number
+    status?: string
 }
 
 interface FormRecord {
@@ -19,6 +20,7 @@ interface FormRecord {
     title: string
     description: string
     duration: number
+    status?: string
     users: { name: string } | null
     questions: { id: string }[]
 }
@@ -70,10 +72,12 @@ function Home() {
                     title,
                     description,
                     duration,
+                    status,
                     users:creator_id ( name ),
                     questions ( id )
                 `)
                 .in("id", ids)
+                .eq("status", "published")
                 .order("created_at", { ascending: false })
 
             const matches = (data as unknown as FormRecord[]).map((f) => ({
@@ -82,7 +86,8 @@ function Home() {
                 description: f.description,
                 author_name: f.users?.name || "Creator",
                 duration: f.duration || 0,
-                question_count: f.questions ? f.questions.length : 0
+                question_count: f.questions ? f.questions.length : 0,
+                status: f.status,
             }))
 
             if (matches.length >= 1) {

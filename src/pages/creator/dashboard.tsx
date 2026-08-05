@@ -107,46 +107,37 @@ function CreatorDashboard() {
                     <Loading />
                 ) : (
                     <div className="flex flex-col flex-1 min-h-0">
-                    <div className="stats stats-vertical sm:stats-horizontal shadow w-full bg-white border border-second rounded-none">
-                        <div className="stat">
-                            <div className="stat-figure text-darks">
+                    <div className="grid grid-cols-3 sm:stats sm:stats-horizontal shadow w-full bg-white border border-second rounded-none divide-x divide-second">
+                        <div className="stat p-3 sm:p-4">
+                            <div className="stat-figure text-darks hidden sm:block">
                                 <FileText className="h-8 w-8" />
                             </div>
-                            <div className="stat-title text-tinted">Total Form</div>
-                            <div className="stat-value text-darks">{stats.total}</div>
-                            <div className="stat-desc text-tinted">Semua formulir kamu</div>
+                            <div className="stat-title text-tinted text-[11px] sm:text-sm">Total Form</div>
+                            <div className="stat-value text-darks text-3xl sm:text-4xl">{stats.total}</div>
+                            <div className="stat-desc text-tinted hidden sm:block">Semua formulir kamu</div>
                         </div>
 
-                        <div className="stat">
-                            <div className="stat-figure text-done">
+                        <div className="stat p-3 sm:p-4">
+                            <div className="stat-figure text-done hidden sm:block">
                                 <CheckCircle2 className="h-8 w-8" />
                             </div>
-                            <div className="stat-title text-tinted">Form Aktif</div>
-                            <div className="stat-value text-darks">{stats.active}</div>
-                            <div className="stat-desc text-tinted">Status published</div>
+                            <div className="stat-title text-tinted text-[11px] sm:text-sm">Form Aktif</div>
+                            <div className="stat-value text-darks text-3xl sm:text-4xl">{stats.active}</div>
+                            <div className="stat-desc text-tinted hidden sm:block">Status public</div>
                         </div>
 
-                        <div className="stat">
-                            <div className="stat-figure text-tinted">
+                        <div className="stat p-3 sm:p-4">
+                            <div className="stat-figure text-tinted hidden sm:block">
                                 <ClipboardList className="h-8 w-8" />
                             </div>
-                            <div className="stat-title text-tinted">Total Submission</div>
-                            <div className="stat-value text-darks">{stats.submissions}</div>
-                            <div className="stat-desc text-tinted">Jumlah pengerjaan</div>
+                            <div className="stat-title text-tinted text-[11px] sm:text-sm">Total Submission</div>
+                            <div className="stat-value text-darks text-3xl sm:text-4xl">{stats.submissions}</div>
+                            <div className="stat-desc text-tinted hidden sm:block">Jumlah pengerjaan</div>
                         </div>
-
-                        {/* <div className="stat">
-                            <div className="stat-figure text-amber-500">
-                                <Trophy className="h-8 w-8" />
-                            </div>
-                            <div className="stat-title text-tinted">Total Skor</div>
-                            <div className="stat-value text-darks">{stats.score}</div>
-                            <div className="stat-desc text-tinted">Akumulasi skor</div>
-                        </div> */}
                     </div>
 
                     <div className="grid gap-4 mt-8 lg:grid-cols-2 lg:flex-1 lg:min-h-0">
-                        <div className="lg:min-h-0 lg:overflow-y-auto rounded-none">
+                        <div className="lg:min-h-0 lg:overflow-y-auto rounded-none hidden sm:block">
                             {barData.length > 0 ? (
                                 <DistributionChart
                                     title="Submission per Form"

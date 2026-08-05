@@ -12,6 +12,7 @@ interface FormItem {
     author_name: string
     duration: number
     question_count: number
+    status?: string
 }
 
 interface LocationState {
@@ -49,6 +50,7 @@ function FormDescriptionPage() {
                     title,
                     description,
                     duration,
+                    status,
                     users:creator_id ( name ),
                     questions ( id )
                 `)
@@ -56,6 +58,10 @@ function FormDescriptionPage() {
                 .single()
                 .then(({ data }) => {
                     if (data) {
+                        if (String(data.status).toLowerCase() !== "published") {
+                            navigate("/")
+                            return
+                        }
                         setForm({
                             id: data.id,
                             title: data.title,
@@ -63,6 +69,7 @@ function FormDescriptionPage() {
                             author_name: (data.users as unknown as { name: string } | null)?.name || "Creator",
                             duration: data.duration || 0,
                             question_count: data.questions ? data.questions.length : 0,
+                            status: data.status,
                         })
                     } else {
                         navigate("/")
@@ -74,6 +81,11 @@ function FormDescriptionPage() {
 
         // Jika user mengakses halaman ini langsung via URL tanpa lewat Home (state kosong)
         if (!form) {
+            navigate("/")
+        }
+
+        // Form yang masih draft tidak boleh diakses, walau dibawa lewat state Home
+        if (form?.status && String(form.status).toLowerCase() !== "published") {
             navigate("/")
         }
     }, [form, formIdParam, user, authLoading, navigate])

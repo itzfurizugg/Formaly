@@ -89,7 +89,7 @@ function AdminForms() {
                                                     form.status === "published" ? "badge-success text-white" : "badge-ghost text-tinted"
                                                 }`}
                                             >
-                                                {form.status === "published" ? "published" : "draft"}
+                                                {form.status === "published" ? "public" : "draft"}
                                             </span>
                                         </div>
                                     </div>

@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom"
 import { ArrowLeft } from "lucide-react"
 import { supabase } from "../../lib/supabase"
 import { useAuth } from "../../lib/auth-context"
+import { alertSaveError, alertSaveSuccess } from "../../lib/alerts"
 
 function FormNew() {
     const navigate = useNavigate()
@@ -10,16 +11,14 @@ function FormNew() {
 
     const [title, setTitle] = useState("")
     const [description, setDescription] = useState("")
-    const [duration, setDuration] = useState(0)
-    const [passingScore, setPassingScore] = useState(70)
+    const [duration, setDuration] = useState<number | "">(0)
+    const [passingScore, setPassingScore] = useState<number | "">(70)
     const [loading, setLoading] = useState(false)
-    const [error, setError] = useState<string | null>(null)
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault()
         if (!user) return
         setLoading(true)
-        setError(null)
 
         const { data, error: err } = await supabase
             .from("forms")
@@ -27,8 +26,8 @@ function FormNew() {
                 creator_id: user.id,
                 title,
                 description: description || null,
-                duration: duration || null,
-                passing_score: passingScore,
+                duration: duration === "" ? null : duration,
+                passing_score: passingScore === "" ? 70 : passingScore,
                 status: "draft",
             })
             .select("id")
@@ -36,17 +35,17 @@ function FormNew() {
 
         setLoading(false)
         if (err) {
-            setError(err.message)
+            alertSaveError(err.message)
             return
         }
+        alertSaveSuccess("Form berhasil dibuat.")
         navigate(`/creator/forms/${data.id}`)
     }
 
-    const inputCls = "input w-full bg-base border-second focus:border-done focus:outline-none transition-colors"
-
+    const inputCls = "input w-full bg-white text-xl lg:text-3xl h-auto p-2 border-second focus:border-done focus:outline-none transition-colors"
     return (
         <div className="flex flex-col items-center px-4 py-10">
-            <div className="w-full max-w-xl">
+            <div className="w-full max-w-5xl">
                 <button
                     onClick={() => navigate("/creator")}
                     className="flex items-center gap-2 text-sm text-tinted hover:text-darks mb-4 transition-colors"
@@ -57,33 +56,27 @@ function FormNew() {
                 <h1 className="text-2xl font-bold text-darks mb-1">Buat Form Baru</h1>
                 <p className="text-sm text-tinted mb-6">Lengkapi informasi dasar form.</p>
 
-                {error && (
-                    <div role="alert" className="text-sm text-wrong bg-wrong/5 border border-wrong/20 rounded-lg px-4 py-3 mb-4">
-                        {error}
-                    </div>
-                )}
-
-                <form onSubmit={handleSubmit} className="space-y-4 bg-white border border-second p-6 shadow-sm rounded-2xl">
+                <form onSubmit={handleSubmit} className="space-y-4 bg-white border border-second p-3 lg:p-6 shadow-sm rounded-none">
                     <div>
-                        <label className="block text-sm font-medium text-darks mb-1.5">Judul</label>
+                        {/* <label className="block text-sm font-medium text-darks mb-1.5">Judul</label> */}
                         <input
                             type="text"
                             required
                             className={inputCls}
                             value={title}
                             onChange={(e) => setTitle(e.target.value)}
-                            placeholder="Contoh: Ujian Matematika"
+                            placeholder="Judul Form"
                         />
                     </div>
 
                     <div>
-                        <label className="block text-sm font-medium text-darks mb-1.5">Deskripsi</label>
+                        {/* <label className="block text-sm font-medium text-darks mb-1.5">Deskripsi</label> */}
                         <textarea
                             className="textarea w-full bg-base border-second focus:border-done focus:outline-none transition-colors"
                             rows={3}
                             value={description}
                             onChange={(e) => setDescription(e.target.value)}
-                            placeholder="Deskripsi / petunjuk pengerjaan"
+                            placeholder="Deskripsi Form"
                         />
                     </div>
 
@@ -96,7 +89,11 @@ function FormNew() {
                                 step={1}
                                 className={inputCls}
                                 value={duration}
-                                onChange={(e) => setDuration(Number(e.target.value))}
+                                onFocus={(e) => e.target.select()}
+                                onChange={(e) => {
+                                    const val = e.target.value
+                                    setDuration(val === "" ? "" : Number(val))
+                                }}
                                 placeholder="0"
                             />
                         </div>
@@ -109,7 +106,11 @@ function FormNew() {
                                 step={1}
                                 className={inputCls}
                                 value={passingScore}
-                                onChange={(e) => setPassingScore(Number(e.target.value))}
+                                onFocus={(e) => e.target.select()}
+                                onChange={(e) => {
+                                    const val = e.target.value
+                                    setPassingScore(val === "" ? "" : Number(val))
+                                }}
                                 placeholder="0"
                             />
                         </div>
@@ -118,7 +119,7 @@ function FormNew() {
                     <button
                         type="submit"
                         disabled={loading}
-                        className="btn bg-darks text-base border-none w-full hover:opacity-90 transition-opacity disabled:opacity-60"
+                        className="btn bg-darks text-base mt-10 h-12 border-none w-full hover:opacity-90 transition-opacity disabled:opacity-60"
                     >
                         {loading ? <span className="loading loading-spinner loading-sm" /> : "Simpan & Lanjut"}
                     </button>

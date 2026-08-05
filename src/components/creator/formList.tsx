@@ -1,8 +1,9 @@
 import { useEffect, useState, useCallback } from "react"
 import { useNavigate } from "react-router-dom"
-import { FileText, Pencil, Trash2, ClipboardList, KeyRound, Loader2 } from "lucide-react"
+import { FileText, Pencil, Trash2, ClipboardList, KeyRound, Loader2, Share } from "lucide-react"
 import { supabase } from "../../lib/supabase"
 import { useAuth } from "../../lib/auth-context"
+import { confirmDelete } from "../../lib/alerts"
 import Loading from "../loading"
 
 interface FormRow {
@@ -49,20 +50,27 @@ function FormList() {
     }, [user, loadForms])
 
     async function handleDelete(id: string) {
-        if (!window.confirm("Hapus form ini beserta soal, token & submission-nya? Tindakan ini tidak dapat dibatalkan.")) return
-        setDeleting(id)
-        setError(null)
-
-        const { error } = await supabase.rpc("delete_form", { p_form_id: id })
-        setDeleting(null)
-        if (error) setError(error.message)
-        else loadForms()
+        confirmDelete({
+            title: "Hapus form ini?",
+            description: "Form, soal, token, dan semua submission terkait akan ikut terhapus permanen.",
+            onConfirm: async () => {
+                setDeleting(id)
+                setError(null)
+                try {
+                    const { error } = await supabase.rpc("delete_form", { p_form_id: id })
+                    if (error) throw new Error(error.message)
+                    await loadForms()
+                } finally {
+                    setDeleting(null)
+                }
+            },
+        })
     }
 
     const statusBadge = (status: string) => {
         const s = String(status).toLowerCase()
-        if (s === "published") return <span className="badge badge-success text-white rounded-full">{status}</span>
-        return <span className="badge badge-ghost text-tinted rounded-full">{status}</span>
+        if (s === "published") return <span className="badge badge-success text-white rounded-full">Public</span>
+        return <span className="badge badge-ghost text-tinted rounded-full">Draft</span>
     }
 
     if (loading) {
@@ -120,6 +128,12 @@ function FormList() {
                                 className="btn btn-sm bg-base text-darks border border-second hover:bg-second"
                             >
                                 <ClipboardList className="h-3.5 w-3.5" /> Submission
+                            </button>
+                            <button
+                                onClick={() => navigate(`/creator/forms/${form.id}`)}
+                                className="btn btn-sm bg-base text-darks border border-second hover:bg-second"
+                            >
+                                <Share className="h-3.5 w-3.5" /> Bagikan
                             </button>
                             <button
                                 onClick={() => navigate(`/creator/forms/${form.id}/tokens`)}

@@ -44,6 +44,7 @@ function FormPage() {
     const [answers, setAnswers] = useState<Answer>(locationState?.answers || {})
     const [timeLeft, setTimeLeft] = useState(300)
     const [loading, setLoading] = useState(true)
+    const [notFound, setNotFound] = useState(false)
     const [submitting, setSubmitting] = useState(false)
     const [error, setError] = useState<string | null>(null)
     const [modalImage, setModalImage] = useState<string | null>(null)
@@ -135,26 +136,37 @@ function FormPage() {
 
     const loadForm = useCallback(async () => {
         setLoading(true)
+        setNotFound(false)
         const { data: formData } = await supabase
             .from("forms")
-            .select("title, duration")
+            .select("title, duration, status")
             .eq("id", formId)
             .single()
 
-        if (formData) {
-            setFormMeta(formData)
-            const dur = Number(formData.duration) || 0
-            setHasTimer(dur > 0)
-            if (dur > 0) {
-                if (locationState?.deadline) {
-                    deadlineRef.current = locationState.deadline
-                } else {
-                    deadlineRef.current = Date.now() + dur * 60 * 1000
-                }
-                setTimeLeft(Math.max(0, Math.round((deadlineRef.current - Date.now()) / 1000)))
+        if (!formData) {
+            setNotFound(true)
+            setLoading(false)
+            return
+        }
+
+        if (String(formData.status).toLowerCase() !== "published") {
+            setNotFound(true)
+            setLoading(false)
+            return
+        }
+
+        setFormMeta(formData)
+        const dur = Number(formData.duration) || 0
+        setHasTimer(dur > 0)
+        if (dur > 0) {
+            if (locationState?.deadline) {
+                deadlineRef.current = locationState.deadline
             } else {
-                setTimeLeft(300)
+                deadlineRef.current = Date.now() + dur * 60 * 1000
             }
+            setTimeLeft(Math.max(0, Math.round((deadlineRef.current - Date.now()) / 1000)))
+        } else {
+            setTimeLeft(300)
         }
 
         const { data: qData } = await supabase
@@ -220,6 +232,17 @@ function FormPage() {
     if (authLoading || loading) {
         return (
             <Loading />
+        )
+    }
+
+    if (notFound) {
+        return (
+            <div className="flex flex-col items-center justify-center min-h-screen px-4">
+                <p className="text-tinted mb-4">Form tidak ditemukan atau belum dipublikasikan.</p>
+                <button onClick={() => navigate("/")} className="btn bg-darks text-white border-none">
+                    Kembali
+                </button>
+            </div>
         )
     }
 

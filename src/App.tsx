@@ -24,6 +24,7 @@ import CreatorSubmissions from "./pages/creator/submissions"
 import CreatorSubmissionDetail from "./pages/creator/submissionDetail"
 import CreatorLayout from "./pages/creator/layout"
 import Navbar from "./components/navbar"
+import { AlertToaster } from "./lib/alerts"
 
 const hideNavPaths = ["/login", "/register", "/auth", "/forgot-password", "/reset-password", "/form/description", "/form", "/form/list", "/form/result"]
 
@@ -130,6 +131,7 @@ function App() {
           <Route path="/reset-password" element={<ResetPassword />} />
         </Routes>
       </div>
+      <AlertToaster />
     </AuthProvider>
   )
 }
