@@ -107,6 +107,12 @@ function ResultPage() {
         return selected.length === correct.length && selected.every((id) => correct.includes(id))
     }
 
+    const hasCorrectAnswer = (a: AnswerRow) => {
+        const q = a.question
+        if (!q || q.question_type === "text") return false
+        return q.question_options.some((o) => o.is_correct)
+    }
+
     if (authLoading || loading) return <Loading />
 
     if (error) {
@@ -129,16 +135,19 @@ function ResultPage() {
 
     const correctCount = answers.filter(isCorrect).length
     const textCount = answers.filter((a) => a.question?.question_type === "text").length
+    const noAnswerCount = answers.filter((a) => a.question?.question_type !== "text" && !hasCorrectAnswer(a)).length
 
     const filterOptions = [
         { value: "correct", label: "Benar" },
         { value: "wrong", label: "Salah" },
         { value: "text", label: "Isian" },
+        { value: "ungraded", label: "Tanpa Penilaian" },
     ]
 
     const filteredAnswers = answers.filter((a) => {
         if (filter === "correct") return isCorrect(a)
-        if (filter === "wrong") return a.question?.question_type !== "text" && !isCorrect(a)
+        if (filter === "wrong") return a.question?.question_type !== "text" && hasCorrectAnswer(a) && !isCorrect(a)
+        if (filter === "ungraded") return a.question?.question_type !== "text" && !hasCorrectAnswer(a)
         if (filter === "text") return a.question?.question_type === "text"
         return true
     })
@@ -168,7 +177,7 @@ function ResultPage() {
                             <p
                                 className={`text-5xl font-bold ${info?.form?.passing_score != null && (info?.total_score ?? 0) < info.form.passing_score
                                     ? "text-wrong"
-                                    : "text-done"
+                                    : "text-pass"
                                     }`}
                             >
                                 {info?.total_score ?? 0}
@@ -179,7 +188,7 @@ function ResultPage() {
                                 className={`badge rounded-full text-xs ${info?.form?.passing_score != null && (info?.total_score ?? 0) < info.form.passing_score
                                     ? "bg-wrong/10 text-wrong border-none"
                                     : info?.status === "SUBMITTED"
-                                        ? "bg-done/10 text-done border-none"
+                                        ? "bg-pass/10 text-pass border-none"
                                         : "badge-ghost text-tinted"
                                     }`}
                             >
@@ -196,7 +205,8 @@ function ResultPage() {
                         <span>{answers.length} soal</span>
                         <span>
                             <span className="text-pass font-semibold">{correctCount} benar</span> &middot;{" "}
-                            <span className="text-wrong font-semibold">{answers.length - correctCount - textCount} salah</span>
+                            <span className="text-wrong font-semibold">{answers.length - correctCount - textCount - noAnswerCount} salah</span>
+                            {noAnswerCount > 0 && <>&nbsp;&middot;&nbsp;<span className="text-tinted">{noAnswerCount} tanpa penilaian</span></>}
                         </span>
                     </div>
                 </div>
@@ -229,14 +239,18 @@ function ResultPage() {
                                                     <div className="flex items-center gap-2 flex-wrap mb-1">
                                                         <span className="text-sm font-bold text-darks">Soal {idx + 1}</span>
                                                         <span className="badge badge-ghost text-tinted rounded-full text-xs">{typeLabel(a.question?.question_type || "")}</span>
-                                                        {isCorrect(a) ? (
-                                                            <span className="text-xs text-pass font-medium flex items-center gap-1">
-                                                                <Check className="h-3 w-3" /> Benar
-                                                            </span>
+                                                        {hasCorrectAnswer(a) ? (
+                                                            isCorrect(a) ? (
+                                                                <span className="text-xs text-pass font-medium flex items-center gap-1">
+                                                                    <Check className="h-3 w-3" /> Benar
+                                                                </span>
+                                                            ) : (
+                                                                <span className="text-xs text-wrong font-medium flex items-center gap-1">
+                                                                    <X className="h-3 w-3" /> Salah
+                                                                </span>
+                                                            )
                                                         ) : (
-                                                            <span className="text-xs text-wrong font-medium flex items-center gap-1">
-                                                                <X className="h-3 w-3" /> Salah
-                                                            </span>
+                                                            <span className="text-xs text-tinted font-medium">Tanpa Penilaian</span>
                                                         )}
                                                     </div>
                                                     <p className="text-sm text-darks whitespace-pre-line">{a.question?.question_text}</p>
@@ -248,21 +262,35 @@ function ResultPage() {
                                                             const selected = a.question?.question_type === "multiple_choice"
                                                                 ? (a.selected_options || []).includes(o.id)
                                                                 : a.selected_option_id === o.id
-                                                            const isCorrect = o.is_correct
+                                                            const graded = hasCorrectAnswer(a)
+                                                            const isCorrectOption = o.is_correct
                                                             return (
                                                                 <div
                                                                     key={o.id}
-                                                                    className={`flex items-center gap-2 text-sm rounded-lg px-3 py-1.5 border ${isCorrect
-                                                                        ? "border-pass/40 bg-pass/5 text-pass"
-                                                                        : selected
-                                                                            ? "border-wrong/40 bg-wrong/5 text-wrong"
+                                                                    className={`flex items-center gap-2 text-sm rounded-lg px-3 py-1.5 border ${
+                                                                        graded
+                                                                            ? isCorrectOption
+                                                                                ? selected
+                                                                                    ? "border-pass/40 bg-pass/5 text-pass"
+                                                                                    : "border-done/40 bg-done/5 text-done"
+                                                                                : selected
+                                                                                ? "border-wrong/40 bg-wrong/5 text-wrong"
+                                                                                : "border-second text-tinted"
+                                                                            : selected
+                                                                            ? "border-darks/30 bg-darks/5 text-darks"
                                                                             : "border-second text-tinted"
-                                                                        }`}
+                                                                    }`}
                                                                 >
-                                                                    {isCorrect ? (
-                                                                        <Check className="h-3.5 w-3.5 shrink-0" />
+                                                                    {graded ? (
+                                                                        isCorrectOption ? (
+                                                                            <Check className="h-3.5 w-3.5 shrink-0" />
+                                                                        ) : selected ? (
+                                                                            <X className="h-3.5 w-3.5 shrink-0" />
+                                                                        ) : (
+                                                                            <span className="w-3.5 h-3.5 shrink-0" />
+                                                                        )
                                                                     ) : selected ? (
-                                                                        <X className="h-3.5 w-3.5 shrink-0" />
+                                                                        <span className="h-2 w-2 shrink-0 rounded-full bg-darks/50" />
                                                                     ) : (
                                                                         <span className="w-3.5 h-3.5 shrink-0" />
                                                                     )}

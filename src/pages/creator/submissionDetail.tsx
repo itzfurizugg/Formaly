@@ -89,9 +89,16 @@ function SubmissionDetail() {
 
     const fmtDate = (d: string | null) => (d ? new Date(d).toLocaleString("id-ID") : "-")
 
+    const hasCorrectAnswer = (a: AnswerRow) => {
+        const q = a.question
+        if (!q || q.question_type === "text") return false
+        return q.question_options.some((o) => o.is_correct)
+    }
+
     const isCorrect = (a: AnswerRow) => {
         const q = a.question
         if (!q || q.question_type === "text") return false
+        if (!hasCorrectAnswer(a)) return false
         const correct = q.question_options.filter((o) => o.is_correct).map((o) => o.id)
         const selected = q.question_type === "multiple_choice"
             ? a.selected_options || []
@@ -101,8 +108,9 @@ function SubmissionDetail() {
 
     const correctCount = answers.filter(isCorrect).length
     const textCount = answers.filter((a) => a.question?.question_type === "text").length
-    const wrongCount = answers.length - correctCount - textCount
-    const scoredCount = answers.length - textCount
+    const noAnswerCount = answers.filter((a) => a.question?.question_type !== "text" && !hasCorrectAnswer(a)).length
+    const wrongCount = answers.length - correctCount - textCount - noAnswerCount
+    const scoredCount = answers.length - textCount - noAnswerCount
     const correctPct = scoredCount > 0 ? Math.round((correctCount / scoredCount) * 100) : 0
     const wrongPct = scoredCount > 0 ? Math.round((wrongCount / scoredCount) * 100) : 0
 
@@ -140,7 +148,7 @@ function SubmissionDetail() {
                         <div className="flex items-center justify-between">
                             <div>
                                 <p className="text-xs text-tinted">Total Skor</p>
-                                <p className={`text-3xl font-bold ${info.form?.passing_score != null && info.total_score < info.form.passing_score ? "text-wrong" : "text-done"}`}>
+                                <p className={`text-3xl font-bold ${info.form?.passing_score != null && info.total_score < info.form.passing_score ? "text-wrong" : "text-pass"}`}>
                                     {info.total_score}
                                 </p>
                             </div>
@@ -149,7 +157,7 @@ function SubmissionDetail() {
                                     info.form?.passing_score != null && info.total_score < info.form.passing_score
                                         ? "bg-wrong/10 text-wrong border-none"
                                         : info.status === "SUBMITTED"
-                                        ? "bg-done/10 text-done border-none"
+                                        ? "bg-pass/10 text-pass border-none"
                                         : "badge-ghost text-tinted"
                                 }`}
                             >
@@ -161,7 +169,7 @@ function SubmissionDetail() {
                         <div className="mt-4 pt-4 border-t border-second text-sm text-tinted flex items-center justify-between">
                             <span>{answers.length} soal</span>
                             <span>
-                                <span className="text-done font-semibold">{correctCount} benar ({correctPct}%)</span> &middot;{" "}
+                                <span className="text-pass font-semibold">{correctCount} benar ({correctPct}%)</span> &middot;{" "}
                                 <span className="text-wrong font-semibold">{wrongCount} salah ({wrongPct}%)</span>
                                 {textCount > 0 && <>&nbsp;&middot;&nbsp;<span className="text-tinted">{textCount} isian</span></>}
                             </span>
@@ -181,14 +189,18 @@ function SubmissionDetail() {
                                     <span className="text-sm font-bold text-darks">Soal {idx + 1}</span>
                                     <span className="badge badge-ghost text-tinted rounded-full text-xs">{typeLabel(a.question?.question_type || "")}</span>
                                     {a.question?.question_type !== "text" &&
-                                        (isCorrect(a) ? (
-                                            <span className="text-xs text-done font-medium flex items-center gap-1">
-                                                <Check className="h-3 w-3" /> Benar
-                                            </span>
+                                        (hasCorrectAnswer(a) ? (
+                                            isCorrect(a) ? (
+                                                <span className="text-xs text-pass font-medium flex items-center gap-1">
+                                                    <Check className="h-3 w-3" /> Benar
+                                                </span>
+                                            ) : (
+                                                <span className="text-xs text-wrong font-medium flex items-center gap-1">
+                                                    <X className="h-3 w-3" /> Salah
+                                                </span>
+                                            )
                                         ) : (
-                                            <span className="text-xs text-wrong font-medium flex items-center gap-1">
-                                                <X className="h-3 w-3" /> Salah
-                                            </span>
+                                            <span className="text-xs text-tinted font-medium">Tanpa Penilaian</span>
                                         ))}
                                     {Number(a.score_obtained) > 0 && (
                                         <span className="text-xs text-done font-medium">+{a.score_obtained} poin</span>
@@ -209,22 +221,35 @@ function SubmissionDetail() {
                                             const selected = a.question?.question_type === "multiple_choice"
                                                 ? (a.selected_options || []).includes(o.id)
                                                 : a.selected_option_id === o.id
-                                            const isCorrect = o.is_correct
+                                            const graded = hasCorrectAnswer(a)
+                                            const isCorrectOption = o.is_correct
                                             return (
                                                 <div
                                                     key={o.id}
                                                     className={`flex items-center gap-2 text-sm rounded-lg px-3 py-1.5 border ${
-                                                        isCorrect
-                                                            ? "border-done/40 bg-done/5 text-done"
+                                                        graded
+                                                            ? isCorrectOption
+                                                                ? selected
+                                                                    ? "border-pass/40 bg-pass/5 text-pass"
+                                                                    : "border-done/40 bg-done/5 text-done"
+                                                                : selected
+                                                                ? "border-wrong/40 bg-wrong/5 text-wrong"
+                                                                : "border-second text-tinted"
                                                             : selected
-                                                            ? "border-wrong/40 bg-wrong/5 text-wrong"
+                                                            ? "border-darks/30 bg-darks/5 text-darks"
                                                             : "border-second text-tinted"
                                                     }`}
                                                 >
-                                                    {isCorrect ? (
-                                                        <Check className="h-3.5 w-3.5 shrink-0" />
+                                                    {graded ? (
+                                                        isCorrectOption ? (
+                                                            <Check className="h-3.5 w-3.5 shrink-0" />
+                                                        ) : selected ? (
+                                                            <X className="h-3.5 w-3.5 shrink-0" />
+                                                        ) : (
+                                                            <span className="w-3.5 h-3.5 shrink-0" />
+                                                        )
                                                     ) : selected ? (
-                                                        <X className="h-3.5 w-3.5 shrink-0" />
+                                                        <span className="h-2 w-2 shrink-0 rounded-full bg-darks/50" />
                                                     ) : (
                                                         <span className="w-3.5 h-3.5 shrink-0" />
                                                     )}
