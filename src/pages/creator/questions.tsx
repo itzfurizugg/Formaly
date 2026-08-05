@@ -411,9 +411,9 @@ function Questions({ embedded = false }: { embedded?: boolean }) {
                 {questions.length === 0 ? (
                     <div className="text-center py-16">
                         <p className="text-tinted mb-4">Belum ada soal.</p>
-                        <button onClick={startAdd} className="btn bg-darks text-base border-none">
+                        {/* <button onClick={startAdd} className="btn bg-darks text-base border-none">
                             <Plus className="h-4 w-4" /> Tambah Soal
-                        </button>
+                        </button> */}
                     </div>
                 ) : (
                     <div className="space-y-3 pb-8">
