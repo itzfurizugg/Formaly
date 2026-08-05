@@ -107,31 +107,31 @@ function CreatorDashboard() {
                     <Loading />
                 ) : (
                     <div className="flex flex-col flex-1 min-h-0">
-                    <div className="grid grid-cols-3 sm:stats sm:stats-horizontal shadow w-full bg-white border border-second rounded-none divide-x divide-second">
-                        <div className="stat p-3 sm:p-4">
+                    <div className="grid grid-cols-3 gap-2 sm:gap-0 sm:stats sm:stats-horizontal shadow w-full bg-white border border-second rounded-none divide-x divide-second">
+                        <div className="stat p-3 sm:p-4 min-w-0">
                             <div className="stat-figure text-darks hidden sm:block">
                                 <FileText className="h-8 w-8" />
                             </div>
-                            <div className="stat-title text-tinted text-[11px] sm:text-sm">Total Form</div>
-                            <div className="stat-value text-darks text-3xl sm:text-4xl">{stats.total}</div>
+                            <div className="stat-title text-tinted text-[11px] sm:text-sm leading-tight">Total Form</div>
+                            <div className="stat-value text-darks text-2xl sm:text-4xl break-words">{stats.total}</div>
                             <div className="stat-desc text-tinted hidden sm:block">Semua formulir kamu</div>
                         </div>
 
-                        <div className="stat p-3 sm:p-4">
+                        <div className="stat p-3 sm:p-4 min-w-0">
                             <div className="stat-figure text-done hidden sm:block">
                                 <CheckCircle2 className="h-8 w-8" />
                             </div>
-                            <div className="stat-title text-tinted text-[11px] sm:text-sm">Form Aktif</div>
-                            <div className="stat-value text-darks text-3xl sm:text-4xl">{stats.active}</div>
+                            <div className="stat-title text-tinted text-[11px] sm:text-sm leading-tight">Form Aktif</div>
+                            <div className="stat-value text-darks text-2xl sm:text-4xl break-words">{stats.active}</div>
                             <div className="stat-desc text-tinted hidden sm:block">Status public</div>
                         </div>
 
-                        <div className="stat p-3 sm:p-4">
+                        <div className="stat p-3 sm:p-4 min-w-0">
                             <div className="stat-figure text-tinted hidden sm:block">
                                 <ClipboardList className="h-8 w-8" />
                             </div>
-                            <div className="stat-title text-tinted text-[11px] sm:text-sm">Total Submission</div>
-                            <div className="stat-value text-darks text-3xl sm:text-4xl">{stats.submissions}</div>
+                            <div className="stat-title text-tinted text-[11px] sm:text-sm leading-tight">Total Submission</div>
+                            <div className="stat-value text-darks text-2xl sm:text-4xl break-words">{stats.submissions}</div>
                             <div className="stat-desc text-tinted hidden sm:block">Jumlah pengerjaan</div>
                         </div>
                     </div>
@@ -153,14 +153,14 @@ function CreatorDashboard() {
                             )}
                         </div>
 
-                        <div className="lg:flex lg:flex-col lg:min-h-0 lg:overflow-hidden">
-                            <div className="flex items-center justify-between mb-4 shrink-0">
+                        <div className="lg:flex lg:flex-col lg:min-h-0 lg:overflow-hidden min-w-0">
+                            <div className="flex flex-wrap items-center justify-between gap-2 mb-4 shrink-0">
                                 <h2 className="text-xl lg:text-2xl font-bold text-darks">Kelola Form</h2>
                                 <Link to="/creator/forms/new" className="btn bg-darks text-base border-none h-9 min-h-0">
                                     <Plus className="h-4 w-4" /> Buat Form
                                 </Link>
                             </div>
-                            <div className="lg:min-h-0 lg:overflow-y-auto">
+                            <div className="lg:min-h-0 lg:overflow-y-auto min-w-0">
                                 <FormList />
                             </div>
                         </div>

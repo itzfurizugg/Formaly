@@ -1,11 +1,12 @@
 import Loading from "../../components/loading"
 import { useEffect, useState, useCallback } from "react"
 import { useNavigate, useParams } from "react-router-dom"
-import { ArrowLeft, Eye, Trash2, Loader2, FileSpreadsheet, ClipboardList, CheckCircle2, Clock, TrendingUp } from "lucide-react"
+import { ArrowLeft, Eye, Trash2, Loader2, ClipboardList, CheckCircle2, Clock, TrendingUp, QrCode, KeyRound } from "lucide-react"
 import { supabase } from "../../lib/supabase"
 import { useAuth } from "../../lib/auth-context"
-import { confirmDelete, showAlert } from "../../lib/alerts"
-import { exportFormXlsx } from "../../lib/exportForm"
+import { confirmDelete } from "../../lib/alerts"
+import { DonutChart } from "../../components/charts"
+import { colors } from "../../lib/colorbase"
 
 interface Submission {
     id: string
@@ -17,28 +18,30 @@ interface Submission {
     token: { token_code: string } | null
 }
 
+interface AnswerRow {
+    submission_id: string
+    selected_option_id: string | null
+    selected_options: string[] | null
+    question: {
+        question_type: string
+        question_options: { id: string; is_correct: boolean }[]
+    } | null
+}
+
 function Submissions() {
     const { id } = useParams()
     const navigate = useNavigate()
     const { user } = useAuth()
 
-    const [formTitle, setFormTitle] = useState("")
     const [submissions, setSubmissions] = useState<Submission[]>([])
     const [loading, setLoading] = useState(true)
     const [error, setError] = useState<string | null>(null)
     const [deletingId, setDeletingId] = useState<string | null>(null)
-    const [exporting, setExporting] = useState(false)
+    const [totalCorrect, setTotalCorrect] = useState(0)
+    const [totalWrong, setTotalWrong] = useState(0)
 
     const loadAll = useCallback(async () => {
         if (!user || !id) return
-
-        const { data: form } = await supabase
-            .from("forms")
-            .select("title")
-            .eq("id", id)
-            .eq("creator_id", user.id)
-            .single()
-        if (form) setFormTitle(form.title)
 
         const { data: subs, error: err } = await supabase
             .from("submissions")
@@ -50,6 +53,48 @@ function Submissions() {
         } else {
             setSubmissions((subs as unknown as Submission[]) || [])
         }
+
+        // Ambil jawaban beserta soal-nya dari database untuk menghitung benar/salah
+        // (logika sama seperti submissionDetail: cocokkan pilihan dengan is_correct).
+        const subIds = ((subs as unknown as Submission[]) || []).map((s) => s.id)
+        let answers: AnswerRow[] = []
+        if (subIds.length > 0) {
+            const { data: ans } = await supabase
+                .from("answers")
+                .select(`
+                    submission_id, selected_option_id, selected_options,
+                    question:question_id ( question_type, question_options ( id, is_correct ) )
+                `)
+                .in("submission_id", subIds)
+            answers = (ans as unknown as AnswerRow[]) || []
+        }
+        const isAnswerCorrect = (a: AnswerRow) => {
+            const q = a.question
+            if (!q || q.question_type === "text") return false
+            const correct = q.question_options.filter((o) => o.is_correct).map((o) => o.id)
+            if (correct.length === 0) return false
+            const selected = q.question_type === "multiple_choice"
+                ? a.selected_options || []
+                : a.selected_option_id
+                    ? [a.selected_option_id]
+                    : []
+            return selected.length === correct.length && selected.every((id) => correct.includes(id))
+        }
+        let correctTotal = 0
+        let wrongTotal = 0
+        for (const a of answers) {
+            const q = a.question
+            if (!q || q.question_type === "text") continue
+            if (q.question_options.filter((o) => o.is_correct).length === 0) continue
+            if (isAnswerCorrect(a)) {
+                correctTotal++
+            } else {
+                wrongTotal++
+            }
+        }
+        setTotalCorrect(correctTotal)
+        setTotalWrong(wrongTotal)
+
         setLoading(false)
     }, [user, id])
 
@@ -57,20 +102,6 @@ function Submissions() {
         if (!user || !id) return
         loadAll()
     }, [user, id, loadAll])
-
-    const handleExport = async () => {
-        if (!id) return
-        setExporting(true)
-        setError(null)
-        try {
-            await exportFormXlsx({ formId: id, formTitle: formTitle || "form" })
-            showAlert("Export berhasil diunduh.", "success")
-        } catch (err) {
-            setError(err instanceof Error ? err.message : "Gagal mengekspor data.")
-        } finally {
-            setExporting(false)
-        }
-    }
 
     const stats = {
         total: submissions.length,
@@ -115,29 +146,40 @@ function Submissions() {
 
     return (
         <div className="flex flex-col items-center px-4 py-10">
-            <div className="w-full max-w-5xl">
+            <div className="w-full max-w-7xl">
                 <button
-                    onClick={() => navigate(`/creator/forms/${id}`)}
+                    onClick={() => navigate("/creator")}
                     className="flex items-center gap-2 text-sm text-tinted hover:text-darks mb-4 transition-colors"
                 >
-                    <ArrowLeft className="h-4 w-4" /> Kembali ke Detail
+                    <ArrowLeft className="h-4 w-4" /> Kembali
                 </button>
 
-                <h1 className="text-2xl lg:text-4xl font-bold text-darks mb-1">Submission</h1>
-                <p className="text-sm text-tinted mb-6">Form: {formTitle}</p>
-
-                <div className="flex justify-end gap-2 mb-4">
-                    <button
-                        onClick={handleExport}
-                        disabled={exporting}
-                        className="btn bg-darks text-base border-none h-9 min-h-0 disabled:opacity-60"
-                    >
-                        {exporting ? <Loader2 className="h-4 w-4 animate-spin" /> : <FileSpreadsheet className="h-4 w-4" />}
-                        Export XLSX
+                <div className="flex flex-wrap gap-2 mb-6">
+                    <button onClick={() => navigate(`/creator/forms/${id}`)} className="btn btn-sm bg-base text-darks border border-second hover:bg-second">
+                        Detail
+                    </button>
+                    <button onClick={() => navigate(`/creator/forms/${id}/shared`)} className="btn btn-sm bg-base text-darks border border-second hover:bg-second">
+                        <QrCode className="h-3.5 w-3.5" /> Shared
+                    </button>
+                    <button onClick={() => navigate(`/creator/forms/${id}/tokens`)} className="btn btn-sm bg-base text-darks border border-second hover:bg-second">
+                        <KeyRound className="h-3.5 w-3.5" /> Token
+                    </button>
+                    <button onClick={() => navigate(`/creator/forms/${id}/submissions`)} className="btn btn-sm bg-darks text-base border-none">
+                        <ClipboardList className="h-3.5 w-3.5" /> Submission
                     </button>
                 </div>
 
-                <div className="grid grid-cols-2 sm:stats sm:stats-horizontal shadow w-full bg-white border border-second rounded-none divide-x divide-second mb-6">
+                {/* <h1 className="text-2xl lg:text-4xl font-bold text-darks mb-1">Submission</h1>
+                <p className="text-sm text-tinted mb-6">Form: {formTitle}</p> */}
+
+                {error && (
+                    <div role="alert" className="text-sm text-wrong bg-wrong/5 border border-wrong/20 rounded-lg px-4 py-3 mb-4">
+                        {error}
+                    </div>
+                )}
+
+                <div className="flex flex-col lg:flex-row gap-4 items-stretch mb-6">
+                    <div className="grid grid-cols-2 sm:stats sm:stats-horizontal shadow w-full lg:flex-1 bg-white border border-second rounded-none divide-x divide-second">
                     <div className="stat p-3 sm:p-4">
                         <div className="stat-figure text-darks hidden sm:block">
                             <ClipboardList className="h-8 w-8" />
@@ -172,11 +214,26 @@ function Submissions() {
                     </div>
                 </div>
 
-                {error && (
-                    <div role="alert" className="text-sm text-wrong bg-wrong/5 border border-wrong/20 rounded-lg px-4 py-3 mb-4">
-                        {error}
+                {totalCorrect + totalWrong > 0 && (
+                    <div className="bg-white border border-second p-5 shadow-sm rounded-none lg:w-[340px] flex flex-col">
+                        <p className="font-semibold text-darks mb-0.5">Benar vs Salah</p>
+                        <p className="text-xs text-tinted mb-4">
+                            Jawaban benar dan salah dari seluruh submission (soal isian tidak dihitung).
+                        </p>
+                        <div className="h-[240px] flex-1">
+                            <DonutChart
+                                bare
+                                showLegend
+                                data={[
+                                    { name: "Benar", value: totalCorrect, color: colors.pass },
+                                    { name: "Salah", value: totalWrong, color: colors.wrong },
+                                ]}
+                                height={240}
+                            />
+                        </div>
                     </div>
                 )}
+                    </div>
 
                 {submissions.length === 0 ? (
                     <div className="text-center py-16">

@@ -1,18 +1,14 @@
 import { useParams, useNavigate } from "react-router-dom"
-import { ArrowLeft, Copy, QrCode, ClipboardList, KeyRound, FileSpreadsheet } from "lucide-react"
+import { ArrowLeft, Copy, QrCode, ClipboardList, KeyRound } from "lucide-react"
 import { showAlert } from "../../lib/alerts"
 
 function Shared() {
     const { id } = useParams()
     const navigate = useNavigate()
 
-    const handleExport = async () => {
-        // placeholder - shared page doesn't export
-    }
-
     return (
         <div className="flex flex-col items-center px-4 py-10">
-            <div className="w-full max-w-5xl">
+            <div className="w-full max-w-7xl">
                 <button
                     onClick={() => navigate("/creator")}
                     className="flex items-center gap-2 text-sm text-tinted hover:text-darks mb-4 transition-colors"
@@ -34,12 +30,6 @@ function Shared() {
                         <QrCode className="h-3.5 w-3.5" /> Shared
                     </button>
                     <button
-                        onClick={() => navigate(`/creator/forms/${id}/questions`)}
-                        className="btn btn-sm bg-base text-darks border border-second hover:bg-second"
-                    >
-                        Soal
-                    </button>
-                    <button
                         onClick={() => navigate(`/creator/forms/${id}/tokens`)}
                         className="btn btn-sm bg-base text-darks border border-second hover:bg-second"
                     >
@@ -50,13 +40,6 @@ function Shared() {
                         className="btn btn-sm bg-base text-darks border border-second hover:bg-second"
                     >
                         <ClipboardList className="h-3.5 w-3.5" /> Submission
-                    </button>
-                    <button
-                        onClick={handleExport}
-                        className="btn btn-sm bg-base text-darks border border-second hover:bg-second disabled:opacity-60"
-                    >
-                        <FileSpreadsheet className="h-3.5 w-3.5" />
-                        Export XLSX
                     </button>
                 </div>
 

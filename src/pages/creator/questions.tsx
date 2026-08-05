@@ -1,10 +1,12 @@
 import Loading from "../../components/loading"
 import { useEffect, useState, useCallback, type DragEvent } from "react"
 import { useNavigate, useParams } from "react-router-dom"
-import { ArrowLeft, Plus, Pencil, Trash2, Save, X, Loader2, Image as ImageIcon, FileUp, GripVertical } from "lucide-react"
+import { ArrowLeft, Plus, Pencil, Trash2, Save, X, Loader2, Check, Image as ImageIcon, FileUp, GripVertical } from "lucide-react"
 import { supabase } from "../../lib/supabase"
 import { useAuth } from "../../lib/auth-context"
 import QuestionImportModal from "../../components/creator/QuestionImportModal"
+import RichTextEditor, { RichText } from "../../components/richText"
+import { richTextToPlain } from "../../lib/richtext"
 import { alertSaveError, alertSaveSuccess, confirmDelete, showAlert } from "../../lib/alerts"
 
 interface Option {
@@ -23,7 +25,7 @@ interface Question {
     question_options: Option[]
 }
 
-function Questions() {
+function Questions({ embedded = false }: { embedded?: boolean }) {
     const { id } = useParams()
     const navigate = useNavigate()
     const { user } = useAuth()
@@ -120,7 +122,7 @@ function Questions() {
 
     const handleSave = async () => {
         if (!id) return
-        if (!questionText.trim()) {
+        if (!richTextToPlain(questionText).trim()) {
             showAlert("Soal tidak boleh kosong.", "error")
             return
         }
@@ -246,19 +248,23 @@ function Questions() {
     }
 
     return (
-        <div className="flex flex-col items-center px-4 py-10">
-            <div className="w-full max-w-5xl">
-                <button
-                    onClick={() => navigate(`/creator/forms/${id}`)}
-                    className="flex items-center gap-2 text-sm text-tinted hover:text-darks mb-4 transition-colors"
-                >
-                    <ArrowLeft className="h-4 w-4" /> Kembali ke Detail
-                </button>
+        <div className={embedded ? "w-full min-w-0 pb-8" : "flex flex-col items-center px-4 py-10"}>
+            <div className={embedded ? "" : "w-full max-w-5xl"}>
+                {!embedded && (
+                    <>
+                        <button
+                            onClick={() => navigate(`/creator/forms/${id}`)}
+                            className="flex items-center gap-2 text-sm text-tinted hover:text-darks mb-4 transition-colors"
+                        >
+                            <ArrowLeft className="h-4 w-4" /> Kembali ke Detail
+                        </button>
 
-                <h1 className="text-2xl lg:text-4xl font-bold text-darks mb-1">Soal</h1>
-                <p className="text-sm text-tinted mb-6">Form: {formTitle}</p>
+                        <h1 className="text-2xl lg:text-4xl font-bold text-darks mb-1">Soal</h1>
+                        <p className="text-sm text-tinted mb-6">Form: {formTitle}</p>
+                    </>
+                )}
 
-                <div className="flex justify-end gap-2 mb-4">
+                <div className={`flex justify-end gap-2 ${embedded ? "mb-3" : "mb-4"}`}>
                     {!showEditor && (
                         <>
                             <button onClick={() => setShowImport(true)} className="btn bg-base text-darks border border-second h-9 min-h-0">
@@ -272,7 +278,7 @@ function Questions() {
                 </div>
 
                 {showEditor && (
-                    <div className="bg-white border border-second p-6 shadow-sm rounded-none mb-6 space-y-4">
+                    <div className="bg-white border border-second p-6 shadow-sm rounded-none mb-6 overflow-block space-y-4">
                         <div className="flex items-center justify-between">
                             <h2 className="font-semibold text-darks">{editingId ? "Edit Soal" : "Tambah Soal"}</h2>
                             <button onClick={resetEditor} className="btn btn-sm btn-ghost text-tinted">
@@ -282,11 +288,10 @@ function Questions() {
 
                         <div>
                             <label className="block text-sm font-medium text-darks mb-1.5">Soal</label>
-                            <textarea
-                                className="textarea w-full bg-base border-second focus:border-done focus:outline-none transition-colors"
-                                rows={2}
+                            <RichTextEditor
                                 value={questionText}
-                                onChange={(e) => setQuestionText(e.target.value)}
+                                onChange={setQuestionText}
+                                placeholder="Tulis soal di sini..."
                             />
                         </div>
 
@@ -354,22 +359,35 @@ function Questions() {
                                 <div className="space-y-2">
                                     {options.map((opt, index) => (
                                         <div key={index} className="flex items-center gap-2">
-                                            <input
-                                                type="text"
-                                                className="input flex-1 bg-base border-second focus:border-done focus:outline-none"
+                                            <RichTextEditor
+                                                compact
+                                                className="flex-1"
                                                 value={opt.option_text}
-                                                onChange={(e) => updateOption(index, { option_text: e.target.value })}
+                                                onChange={(v) => updateOption(index, { option_text: v })}
                                                 placeholder={`Pilihan ${index + 1}`}
                                             />
-                                            <label className="flex items-center gap-1 text-xs text-darks shrink-0 cursor-pointer">
-                                                <input
-                                                    type="checkbox"
-                                                    className="checkbox checkbox-xs border-second"
-                                                    checked={opt.is_correct}
-                                                    onChange={(e) => updateOption(index, { is_correct: e.target.checked })}
-                                                />
-                                                Benar
-                                            </label>
+                                            <button
+                                                type="button"
+                                                onClick={() => {
+                                                    const next = !opt.is_correct
+                                                    if (questionType === "single_choice" && next) {
+                                                        setOptions(
+                                                            options.map((o, i) => (i === index ? { ...o, is_correct: true } : { ...o, is_correct: false }))
+                                                        )
+                                                    } else {
+                                                        updateOption(index, { is_correct: next })
+                                                    }
+                                                }}
+                                                title="Tandai jawaban benar"
+                                                aria-label="Tandai jawaban benar"
+                                                className={`shrink-0 rounded-full border p-1.5 transition-colors ${
+                                                    opt.is_correct
+                                                        ? "bg-darks text-base border-darks"
+                                                        : "bg-base text-tinted border-second hover:border-darks hover:text-darks"
+                                                }`}
+                                            >
+                                                <Check className="h-4 w-4" />
+                                            </button>
                                             <button onClick={() => removeOption(index)} className="btn btn-sm btn-ghost text-wrong">
                                                 <X className="h-4 w-4" />
                                             </button>
@@ -398,7 +416,7 @@ function Questions() {
                         </button>
                     </div>
                 ) : (
-                    <div className="space-y-3">
+                    <div className="space-y-3 pb-8">
                         {questions.map((q, idx) => (
                             <div
                                 key={q.id}
@@ -422,7 +440,7 @@ function Questions() {
                                             <span className="badge badge-ghost text-tinted rounded-full text-xs">{typeLabel(q.question_type)}</span>
                                             {Number(q.score_value) > 0 && <span className="badge badge-ghost text-tinted rounded-full text-xs">{q.score_value} poin</span>}
                                         </div>
-                                        <p className="text-sm text-darks whitespace-pre-line">{q.question_text}</p>
+                                        <div className="text-sm text-darks"><RichText html={q.question_text} /></div>
                                         {q.image_question && (
                                             <img src={q.image_question} alt="Soal" className="max-h-40 object-contain mt-2 border border-second rounded-lg" />
                                         )}
@@ -435,7 +453,7 @@ function Questions() {
                                                                 o.is_correct ? "bg-done" : "bg-tinted/40"
                                                             }`}
                                                         />
-                                                        {o.option_text}
+                                                        <RichText as="span" html={o.option_text} />
                                                         {o.is_correct && <span className="text-xs text-done font-medium">(kunci)</span>}
                                                     </div>
                                                 ))}

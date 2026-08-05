@@ -2,6 +2,7 @@ import Loading from "../../components/loading"
 import { useState, useEffect } from "react"
 import { useNavigate, useLocation } from "react-router-dom"
 import { Clock, FileText, ArrowLeft, AlertCircle } from "lucide-react"
+import { RichText } from "../../components/richText"
 import { supabase } from "../../lib/supabase"
 import { useAuth } from "../../lib/auth-context"
 
@@ -161,7 +162,7 @@ function FormDescriptionPage() {
                 <div className="mb-6 sm:mb-8">
                     <h3 className="text-xs sm:text-sm font-semibold text-darks mb-2">Deskripsi & Petunjuk:</h3>
                     <div className="p-3 sm:p-4 bg-base border border-second rounded-lg text-xs sm:text-sm text-darks leading-relaxed whitespace-pre-line">
-                        {form.description || "Tidak ada deskripsi tambahan untuk formulir ini. Silakan mulai mengerjakan jika sudah siap."}
+                        {form.description ? <RichText html={form.description} /> : "Tidak ada deskripsi tambahan untuk formulir ini. Silakan mulai mengerjakan jika sudah siap."}
                     </div>
                 </div>
 

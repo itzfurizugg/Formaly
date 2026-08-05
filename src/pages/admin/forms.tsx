@@ -1,6 +1,7 @@
 import { useEffect, useState, useCallback } from "react"
 import { FileText, RefreshCw } from "lucide-react"
 import Loading from "../../components/loading"
+import { RichText } from "../../components/richText"
 import { supabase } from "../../lib/supabase"
 
 type FormStatus = "draft" | "published"
@@ -80,7 +81,9 @@ function AdminForms() {
                                         <div className="min-w-0">
                                             <h2 className="card-title text-darks break-words">{form.title}</h2>
                                             {form.description && (
-                                                <p className="text-sm text-tinted mt-1 line-clamp-2">{form.description}</p>
+                                                <p className="text-sm text-tinted mt-1 line-clamp-2">
+                                                    <RichText html={form.description} className="line-clamp-2" />
+                                                </p>
                                             )}
                                         </div>
                                         <div className="flex items-center gap-2 shrink-0">

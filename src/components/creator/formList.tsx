@@ -5,6 +5,8 @@ import { supabase } from "../../lib/supabase"
 import { useAuth } from "../../lib/auth-context"
 import { confirmDelete } from "../../lib/alerts"
 import Loading from "../loading"
+import { RichText } from "../richText"
+import { colors } from "../../lib/colorbase"
 
 interface FormRow {
     id: string
@@ -69,7 +71,7 @@ function FormList() {
 
     const statusBadge = (status: string) => {
         const s = String(status).toLowerCase()
-        if (s === "published") return <span className="badge badge-success text-white rounded-full">Public</span>
+        if (s === "published") return <span className="badge text-white rounded-none" style={{ backgroundColor: colors.done }}>Public</span>
         return <span className="badge badge-ghost text-tinted rounded-full">Draft</span>
     }
 
@@ -106,7 +108,7 @@ function FormList() {
                             <div className="min-w-0">
                                 <h2 className="card-title text-darks break-words">{form.title}</h2>
                                 <p className="text-sm text-tinted mt-1 line-clamp-2">
-                                    {form.description || "Tidak ada deskripsi"}
+                                    {form.description ? <RichText html={form.description} className="line-clamp-2" /> : "Tidak ada deskripsi"}
                                 </p>
                             </div>
                             <div className="flex items-center gap-2 shrink-0">
@@ -130,7 +132,7 @@ function FormList() {
                                 <ClipboardList className="h-3.5 w-3.5" /> Submission
                             </button>
                             <button
-                                onClick={() => navigate(`/creator/forms/${form.id}`)}
+                                onClick={() => navigate(`/creator/forms/${form.id}/shared`)}
                                 className="btn btn-sm bg-base text-darks border border-second hover:bg-second"
                             >
                                 <Share className="h-3.5 w-3.5" /> Bagikan
@@ -150,7 +152,7 @@ function FormList() {
                             <button
                                 onClick={() => handleDelete(form.id)}
                                 disabled={deleting === form.id}
-                                className="btn btn-sm bg-wrong text-base border-none"
+                                className="btn btn-sm bg-wrong/10 text-wrong border-none"
                             >
                                 {deleting === form.id ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Trash2 className="h-3.5 w-3.5" />}
                                 Hapus

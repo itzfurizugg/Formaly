@@ -1,7 +1,6 @@
-import Loading from "../../components/loading"
 import { useEffect, useState, useCallback } from "react"
 import { useNavigate, useParams } from "react-router-dom"
-import { ArrowLeft, Plus, Trash2, X, Loader2, Copy, Check } from "lucide-react"
+import { ArrowLeft, Plus, Trash2, X, Loader2, Copy, Check, QrCode, KeyRound, ClipboardList } from "lucide-react"
 import { supabase } from "../../lib/supabase"
 import { useAuth } from "../../lib/auth-context"
 import { confirmDelete } from "../../lib/alerts"
@@ -21,9 +20,7 @@ function Tokens() {
     const navigate = useNavigate()
     const { user } = useAuth()
 
-    const [formTitle, setFormTitle] = useState("")
     const [tokens, setTokens] = useState<Token[]>([])
-    const [loading, setLoading] = useState(true)
     const [error, setError] = useState<string | null>(null)
     const [copiedId, setCopiedId] = useState<string | null>(null)
 
@@ -35,14 +32,6 @@ function Tokens() {
 
     const loadAll = useCallback(async () => {
         if (!user || !id) return
-
-        const { data: form } = await supabase
-            .from("forms")
-            .select("title")
-            .eq("id", id)
-            .eq("creator_id", user.id)
-            .single()
-        if (form) setFormTitle(form.title)
 
         const { data: tks } = await supabase
             .from("tokens")
@@ -57,7 +46,6 @@ function Tokens() {
             })))
         }
 
-        setLoading(false)
     }, [user, id])
 
     useEffect(() => {
@@ -127,22 +115,37 @@ function Tokens() {
 
     const fmtDate = (d: string | null) => (d ? new Date(d).toLocaleDateString("id-ID") : "Tanpa batas")
 
-    if (loading) {
-        return <Loading />
-    }
+    // if (loading) {
+    //     return <Loading />
+    // }
 
     return (
         <div className="flex flex-col items-center px-4 py-10">
-            <div className="w-full max-w-4xl">
+            <div className="w-full max-w-7xl">
                 <button
-                    onClick={() => navigate(`/creator/forms/${id}`)}
+                    onClick={() => navigate("/creator")}
                     className="flex items-center gap-2 text-sm text-tinted hover:text-darks mb-4 transition-colors"
                 >
-                    <ArrowLeft className="h-4 w-4" /> Kembali ke Detail
+                    <ArrowLeft className="h-4 w-4" /> Kembali
                 </button>
 
-                <h1 className="text-2xl lg:text-4xl font-bold text-darks mb-1">Token</h1>
-                <p className="text-sm text-tinted mb-6">Form: {formTitle}</p>
+                <div className="flex flex-wrap gap-2 mb-6">
+                    <button onClick={() => navigate(`/creator/forms/${id}`)} className="btn btn-sm bg-base text-darks border border-second hover:bg-second">
+                        Detail
+                    </button>
+                    <button onClick={() => navigate(`/creator/forms/${id}/shared`)} className="btn btn-sm bg-base text-darks border border-second hover:bg-second">
+                        <QrCode className="h-3.5 w-3.5" /> Shared
+                    </button>
+                    <button onClick={() => navigate(`/creator/forms/${id}/tokens`)} className="btn btn-sm bg-darks text-base border-none">
+                        <KeyRound className="h-3.5 w-3.5" /> Token
+                    </button>
+                    <button onClick={() => navigate(`/creator/forms/${id}/submissions`)} className="btn btn-sm bg-base text-darks border border-second hover:bg-second">
+                        <ClipboardList className="h-3.5 w-3.5" /> Submission
+                    </button>
+                </div>
+
+                {/* <h1 className="text-2xl lg:text-4xl font-bold text-darks mb-1">Token</h1>
+                <p className="text-sm text-tinted mb-6">Form: {formTitle}</p> */}
 
                 {error && (
                     <div role="alert" className="text-sm text-wrong bg-wrong/5 border border-wrong/20 rounded-lg px-4 py-3 mb-4">
@@ -219,9 +222,6 @@ function Tokens() {
                 {tokens.length === 0 ? (
                     <div className="text-center py-16">
                         <p className="text-tinted mb-4">Belum ada token.</p>
-                        <button onClick={() => setShowCreate(true)} className="btn bg-darks text-base border-none">
-                            <Plus className="h-4 w-4" /> Buat Token
-                        </button>
                     </div>
                 ) : (
                     <div className="space-y-3">

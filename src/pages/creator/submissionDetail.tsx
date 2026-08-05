@@ -2,6 +2,9 @@ import Loading from "../../components/loading"
 import { useEffect, useState, useCallback } from "react"
 import { useNavigate, useParams } from "react-router-dom"
 import { ArrowLeft, Check, X } from "lucide-react"
+import { RichText } from "../../components/richText"
+import { DonutChart } from "../../components/charts"
+import { colors } from "../../lib/colorbase"
 import { supabase } from "../../lib/supabase"
 import { useAuth } from "../../lib/auth-context"
 
@@ -145,26 +148,39 @@ function SubmissionDetail() {
 
                 {info && info.total_score != null && (
                     <div className="bg-white border border-second p-5 shadow-sm rounded-none mb-6">
-                        <div className="flex items-center justify-between">
-                            <div>
+                        <div className="flex items-center justify-between gap-6">
+                            <div className="flex-1">
                                 <p className="text-xs text-tinted">Total Skor</p>
                                 <p className={`text-3xl font-bold ${info.form?.passing_score != null && info.total_score < info.form.passing_score ? "text-wrong" : "text-pass"}`}>
                                     {info.total_score}
                                 </p>
+                                <span
+                                    className={`badge rounded-full text-xs mt-2 ${
+                                        info.form?.passing_score != null && info.total_score < info.form.passing_score
+                                            ? "bg-wrong/10 text-wrong border-none"
+                                            : info.status === "SUBMITTED"
+                                            ? "bg-pass/10 text-pass border-none"
+                                            : "badge-ghost text-tinted"
+                                    }`}
+                                >
+                                    {info.form?.passing_score != null && info.total_score < info.form.passing_score
+                                        ? "Gagal"
+                                        : info.status}
+                                </span>
                             </div>
-                            <span
-                                className={`badge rounded-full text-xs ${
-                                    info.form?.passing_score != null && info.total_score < info.form.passing_score
-                                        ? "bg-wrong/10 text-wrong border-none"
-                                        : info.status === "SUBMITTED"
-                                        ? "bg-pass/10 text-pass border-none"
-                                        : "badge-ghost text-tinted"
-                                }`}
-                            >
-                                {info.form?.passing_score != null && info.total_score < info.form.passing_score
-                                    ? "Gagal"
-                                    : info.status}
-                            </span>
+                            {scoredCount > 0 && (
+                                <div className="w-28 h-28 shrink-0">
+                                    <DonutChart
+                                        bare
+                                        showLegend={false}
+                                        height={112}
+                                        data={[
+                                            { name: "Benar", value: correctCount, color: colors.pass },
+                                            { name: "Salah", value: wrongCount, color: colors.wrong },
+                                        ]}
+                                    />
+                                </div>
+                            )}
                         </div>
                         <div className="mt-4 pt-4 border-t border-second text-sm text-tinted flex items-center justify-between">
                             <span>{answers.length} soal</span>
@@ -206,7 +222,7 @@ function SubmissionDetail() {
                                         <span className="text-xs text-done font-medium">+{a.score_obtained} poin</span>
                                     )}
                                 </div>
-                                <p className="text-sm text-darks whitespace-pre-line">{a.question?.question_text}</p>
+                                <div className="text-sm text-darks"><RichText html={a.question?.question_text} /></div>
                                 {a.question?.image_question && (
                                     <img src={a.question.image_question} alt="Soal" className="max-h-40 object-contain mt-2 border border-second rounded-lg" />
                                 )}
@@ -253,7 +269,7 @@ function SubmissionDetail() {
                                                     ) : (
                                                         <span className="w-3.5 h-3.5 shrink-0" />
                                                     )}
-                                                    {o.option_text}
+                                                    <RichText as="span" html={o.option_text} />
                                                 </div>
                                             )
                                         })}

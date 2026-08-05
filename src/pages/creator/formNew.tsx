@@ -4,6 +4,7 @@ import { ArrowLeft } from "lucide-react"
 import { supabase } from "../../lib/supabase"
 import { useAuth } from "../../lib/auth-context"
 import { alertSaveError, alertSaveSuccess } from "../../lib/alerts"
+import RichTextEditor from "../../components/richText"
 
 function FormNew() {
     const navigate = useNavigate()
@@ -71,11 +72,9 @@ function FormNew() {
 
                     <div>
                         {/* <label className="block text-sm font-medium text-darks mb-1.5">Deskripsi</label> */}
-                        <textarea
-                            className="textarea w-full bg-base border-second focus:border-done focus:outline-none transition-colors"
-                            rows={3}
+                        <RichTextEditor
                             value={description}
-                            onChange={(e) => setDescription(e.target.value)}
+                            onChange={setDescription}
                             placeholder="Deskripsi Form"
                         />
                     </div>

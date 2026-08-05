@@ -1,11 +1,12 @@
 import Loading from "../../components/loading"
 import { useEffect, useState, useCallback } from "react"
 import { useNavigate, useParams } from "react-router-dom"
-import { ArrowLeft, Save, Loader2, ClipboardList, KeyRound, QrCode, Tag, X, FileSpreadsheet } from "lucide-react"
+import { ArrowLeft, Save, Loader2, ClipboardList, KeyRound, QrCode, Tag, X } from "lucide-react"
 import { supabase } from "../../lib/supabase"
 import { useAuth } from "../../lib/auth-context"
-import { alertSaveError, alertSaveSuccess, showAlert } from "../../lib/alerts"
-import { exportFormXlsx } from "../../lib/exportForm"
+import { alertSaveError, alertSaveSuccess } from "../../lib/alerts"
+import RichTextEditor from "../../components/richText"
+import Questions from "./questions"
 
 function FormEdit() {
     const { id } = useParams()
@@ -19,7 +20,6 @@ function FormEdit() {
     const [status, setStatus] = useState("draft")
     const [loading, setLoading] = useState(true)
     const [saving, setSaving] = useState(false)
-    const [exporting, setExporting] = useState(false)
     const [tags, setTags] = useState<string[]>([])
     const [tagInput, setTagInput] = useState("")
 
@@ -134,19 +134,6 @@ function FormEdit() {
         throw new Error(error.message)
     }
 
-    const handleExport = async () => {
-        if (!id) return
-        setExporting(true)
-        try {
-            await exportFormXlsx({ formId: id, formTitle: title || "form" })
-            showAlert("Export berhasil diunduh.", "success")
-        } catch (err) {
-            alertSaveError(err instanceof Error ? err.message : "Gagal mengekspor data.")
-        } finally {
-            setExporting(false)
-        }
-    }
-
     const handleSave = async (e: React.FormEvent) => {
         e.preventDefault()
         if (!id) return
@@ -174,7 +161,7 @@ function FormEdit() {
 
     return (
         <div className="flex flex-col items-center px-4 py-10">
-            <div className="w-full max-w-5xl">
+            <div className="w-full max-w-7xl">
                 <button
                     onClick={() => navigate("/creator")}
                     className="flex items-center gap-2 text-sm text-tinted hover:text-darks mb-4 transition-colors"
@@ -196,12 +183,6 @@ function FormEdit() {
                         <QrCode className="h-3.5 w-3.5" /> Shared
                     </button>
                     <button
-                        onClick={() => navigate(`/creator/forms/${id}/questions`)}
-                        className="btn btn-sm bg-base text-darks border border-second hover:bg-second"
-                    >
-                        Soal
-                    </button>
-                    <button
                         onClick={() => navigate(`/creator/forms/${id}/tokens`)}
                         className="btn btn-sm bg-base text-darks border border-second hover:bg-second"
                     >
@@ -213,27 +194,21 @@ function FormEdit() {
                     >
                         <ClipboardList className="h-3.5 w-3.5" /> Submission
                     </button>
-                    <button
-                        onClick={handleExport}
-                        disabled={exporting}
-                        className="btn btn-sm bg-base text-darks border border-second hover:bg-second disabled:opacity-60"
-                    >
-                        {exporting ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <FileSpreadsheet className="h-3.5 w-3.5" />}
-                        Export XLSX
-                    </button>
                 </div>
 
-                <form onSubmit={handleSave} className="space-y-4 bg-white border border-second p-3 lg:p-6 sm:p-4 shadow-sm rounded-none">
+                <div className="flex flex-col xl:flex-row items-start gap-6">
+                    <div className="w-full xl:w-[45%]">
+                        <form onSubmit={handleSave} className="space-y-4 bg-white border border-second p-3 lg:p-6 sm:p-4 shadow-sm rounded-none">
                     <div>
                         <input type="text" required className={inputCls} value={title} onChange={(e) => setTitle(e.target.value)} />
                     </div>
 
                     <div>
-                        <textarea
-                            className="textarea w-full bg-base text-xs lg:text-sm border-second focus:border-done focus:outline-none transition-colors"
-                            rows={3}
+                        <label className="block text-sm font-medium text-darks mb-1.5">Deskripsi</label>
+                        <RichTextEditor
                             value={description}
-                            onChange={(e) => setDescription(e.target.value)}
+                            onChange={setDescription}
+                            placeholder="Deskripsi Form..."
                         />
                     </div>
 
@@ -286,7 +261,7 @@ function FormEdit() {
 
                     <div>
                         <label className="flex items-center gap-1.5 text-sm font-medium text-darks mb-1.5">
-                            <Tag className="h-4 w-4 text-tinted" /> Tag
+                            Tag
                         </label>
                         <div className="flex gap-2">
                             <input
@@ -310,7 +285,7 @@ function FormEdit() {
                             <div className="flex flex-wrap gap-2 mt-3">
                                 {tags.map((t) => (
                                     <span key={t} className="badge gap-1 py-3 rounded-full bg-done/10 text-done border-none">
-                                        #{t}
+                                        @{t}
                                         <button
                                             type="button"
                                             onClick={() => removeTag(t)}
@@ -333,9 +308,17 @@ function FormEdit() {
                         {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
                         Simpan Perubahan
                     </button>
-                </form>
+                    </form>
+                </div>
+
+                <div className="w-full xl:flex-1 min-w-0 xl:sticky xl:top-6 self-start">
+                    <div className="xl:max-h-[calc(100vh-6rem)] xl:overflow-y-auto xl:overscroll-contain pr-1">
+                        <Questions embedded />
+                    </div>
+                </div>
             </div>
         </div>
+    </div>
     )
 }
 

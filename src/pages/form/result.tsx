@@ -5,6 +5,7 @@ import { supabase } from "../../lib/supabase"
 import { useAuth } from "../../lib/auth-context"
 import Loading from "../../components/loading"
 import Filter from "../../components/filter"
+import { RichText } from "../../components/richText"
 
 interface AnswerRow {
     id: string
@@ -253,7 +254,7 @@ function ResultPage() {
                                                             <span className="text-xs text-tinted font-medium">Tanpa Penilaian</span>
                                                         )}
                                                     </div>
-                                                    <p className="text-sm text-darks whitespace-pre-line">{a.question?.question_text}</p>
+                                                    <div className="text-sm text-darks"><RichText html={a.question?.question_text} /></div>
                                                     {a.question?.image_question && (
                                                         <img src={a.question.image_question} alt="Soal" className="max-h-40 object-contain mt-2 border border-second rounded-lg" />
                                                     )}
@@ -294,7 +295,7 @@ function ResultPage() {
                                                                     ) : (
                                                                         <span className="w-3.5 h-3.5 shrink-0" />
                                                                     )}
-                                                                    {o.option_text}
+                                                                    <RichText as="span" html={o.option_text} />
                                                                 </div>
                                                             )
                                                         })}
@@ -318,7 +319,7 @@ function ResultPage() {
                                                         <span className="text-sm font-bold text-darks">Soal {idx + 1}</span>
                                                         <span className="badge badge-ghost text-tinted rounded-full text-xs">{typeLabel(a.question?.question_type || "")}</span>
                                                     </div>
-                                                    <p className="text-sm text-darks whitespace-pre-line">{a.question?.question_text}</p>
+                                                    <div className="text-sm text-darks"><RichText html={a.question?.question_text} /></div>
                                                     {a.question?.image_question && (
                                                         <img src={a.question.image_question} alt="Soal" className="max-h-40 object-contain mt-2 border border-second rounded-lg" />
                                                     )}

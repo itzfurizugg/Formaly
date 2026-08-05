@@ -1,6 +1,6 @@
 import {
     Bar, BarChart, ResponsiveContainer,
-    Tooltip, XAxis, YAxis,
+    Tooltip, XAxis, YAxis, PieChart, Pie, Cell, Legend,
     type TooltipContentProps,
 } from "recharts"
 import { colors } from "../../lib/colorbase"
@@ -18,7 +18,7 @@ export interface PieDatum {
 }
 
 interface ChartCardProps {
-    title: string
+    title?: string
     subtitle?: string
     children: React.ReactNode
     height?: number
@@ -80,6 +80,40 @@ export function DistributionChart({
                     />
                 </BarChart>
             </ResponsiveContainer>
+        </Card>
+    )
+}
+
+export interface DonutChartProps {
+    title?: string
+    subtitle?: string
+    data: PieDatum[]
+    height?: number
+    bare?: boolean
+    showLegend?: boolean
+}
+
+export function DonutChart({ title, subtitle, data, height = 260, bare = false, showLegend = true }: DonutChartProps) {
+    const pie = (
+        <ResponsiveContainer width="100%" height="100%">
+            <PieChart>
+                <Pie data={data} dataKey="value" nameKey="name" innerRadius="55%" outerRadius="80%" paddingAngle={2} strokeWidth={0}>
+                    {data.map((d, i) => (
+                        <Cell key={i} fill={d.color ?? colors.done} />
+                    ))}
+                </Pie>
+                <Tooltip />
+                {showLegend && <Legend iconType="circle" wrapperStyle={{ fontSize: 12 }} />}
+            </PieChart>
+        </ResponsiveContainer>
+    )
+
+    if (bare) {
+        return <div style={{ height }}>{pie}</div>
+    }
+    return (
+        <Card title={title} subtitle={subtitle} height={height}>
+            {pie}
         </Card>
     )
 }

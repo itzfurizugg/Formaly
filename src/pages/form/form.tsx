@@ -3,6 +3,7 @@ import { useState, useEffect, useRef, useCallback } from "react"
 import { useNavigate, useParams, useLocation } from "react-router-dom"
 import { Check, Clock, ZoomIn, X } from "lucide-react"
 import PageIndicator from "../../components/pageindicator"
+import { RichText } from "../../components/richText"
 import { supabase } from "../../lib/supabase"
 import { useAuth } from "../../lib/auth-context"
 
@@ -312,9 +313,9 @@ function FormPage() {
                         </span>
                     </div>
 
-                    <p className="text-base font-medium text-darks leading-relaxed">
-                        {question.question_text}
-                    </p>
+                    <div className="text-base font-medium text-darks leading-relaxed">
+                        <RichText html={question.question_text} />
+                    </div>
 
                     {/* Menampilkan Gambar Soal menggunakan field image_question */}
                     {question.image_question && (
@@ -359,16 +360,16 @@ function FormPage() {
                                                 : "bg-white border-second text-darks hover:border-darks/50"
                                         }`}
                                     >
-                                        <span className="flex items-center gap-3">
-                                            <span
-                                                className={`shrink-0 w-5 h-5 rounded-full border-2 flex items-center justify-center ${
-                                                    isMulti ? "rounded-md" : "rounded-full"
-                                                } ${selected ? "border-darks bg-darks" : "border-tinted"}`}
-                                            >
-                                                {selected && <Check className="h-3 w-3 text-white" strokeWidth={3} />}
+                                            <span className="flex items-center gap-3">
+                                                <span
+                                                    className={`shrink-0 w-5 h-5 rounded-full border-2 flex items-center justify-center ${
+                                                        isMulti ? "rounded-md" : "rounded-full"
+                                                    } ${selected ? "border-darks bg-darks" : "border-tinted"}`}
+                                                >
+                                                    {selected && <Check className="h-3 w-3 text-white" strokeWidth={3} />}
+                                                </span>
+                                                <RichText as="span" html={option.option_text} />
                                             </span>
-                                            {option.option_text}
-                                        </span>
                                     </button>
                                 )
                             })

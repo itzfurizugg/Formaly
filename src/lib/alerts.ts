@@ -161,3 +161,94 @@ export function confirmDelete(options: ConfirmDeleteOptions) {
     activeDialog = { close }
     root.render(createElement(DeleteDialog, { options, onClose: close }))
 }
+
+type PromptTextOptions = {
+    title: string
+    description?: string
+    placeholder?: string
+    defaultValue?: string
+    confirmLabel?: string
+    cancelLabel?: string
+}
+
+function PromptDialog({ options, onClose }: { options: PromptTextOptions; onClose: (value: string | null) => void }) {
+    const [value, setValue] = useState(options.defaultValue ?? "")
+
+    useEffect(() => {
+        const previouslyFocused = document.activeElement as HTMLElement | null
+        document.getElementById("prompt-dialog-input")?.focus()
+
+        const onKeyDown = (event: KeyboardEvent) => {
+            if (event.key === "Escape") {
+                onClose(null)
+                return
+            }
+            if (event.key === "Enter") {
+                onClose(value)
+            }
+        }
+
+        document.addEventListener("keydown", onKeyDown)
+        return () => {
+            document.removeEventListener("keydown", onKeyDown)
+            previouslyFocused?.focus()
+        }
+    }, [value, onClose])
+
+    return createElement(
+        "div",
+        { className: "formaly-dialog fixed inset-0 z-[100] flex items-center justify-center bg-darks/45 p-4" },
+        createElement(
+            "div",
+            {
+                role: "alertdialog",
+                "aria-modal": true,
+                "aria-labelledby": "prompt-dialog-title",
+                className: "w-full max-w-md rounded-none border border-second bg-white p-6 font-sans shadow-xl",
+            },
+            createElement("h2", { id: "prompt-dialog-title", className: "text-lg font-semibold text-darks" }, options.title),
+            options.description
+                ? createElement("p", { className: "mt-2 text-sm leading-relaxed text-tinted" }, options.description)
+                : null,
+            createElement("input", {
+                id: "prompt-dialog-input",
+                type: "text",
+                value,
+                onChange: (e: React.ChangeEvent<HTMLInputElement>) => setValue(e.target.value),
+                placeholder: options.placeholder ?? "",
+                className: "input mt-4 w-full rounded-none border border-second bg-base text-darks focus:border-done focus:outline-none",
+            }),
+            createElement(
+                "div",
+                { className: "mt-6 flex justify-end gap-3" },
+                createElement(
+                    "button",
+                    { type: "button", onClick: () => onClose(null), className: "btn rounded-none border border-second bg-base text-darks hover:bg-second" },
+                    options.cancelLabel ?? "Batal"
+                ),
+                createElement(
+                    "button",
+                    { type: "button", onClick: () => onClose(value), className: "btn rounded-none border-none bg-darks text-base hover:opacity-90" },
+                    options.confirmLabel ?? "OK"
+                )
+            )
+        )
+    )
+}
+
+/** Membuka dialog input teks yang blocking (pengganti window.prompt) dengan gaya Formaly. */
+export function promptText(options: PromptTextOptions): Promise<string | null> {
+    return new Promise((resolve) => {
+        const container = document.createElement("div")
+        document.body.appendChild(container)
+        const root: Root = createRoot(container)
+
+        const close = (value: string | null) => {
+            root.unmount()
+            container.remove()
+            resolve(value)
+        }
+
+        root.render(createElement(PromptDialog, { options, onClose: close }))
+    })
+}

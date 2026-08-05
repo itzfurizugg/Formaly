@@ -18,3 +18,255 @@
   50% { left: 0%; right: 0%; }
   100% { left: 100%; right: -35%; }
 }
+
+/* ---- Quill editor (hasil "format" yang rapi & konsisten) ---- */
+.rich-editor {
+  border: 1px solid var(--color-second);
+  border-radius: 0.75rem;
+  background: #fff;
+  overflow: hidden;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.rich-editor:focus-within {
+  border-color: var(--color-done);
+  box-shadow: 0 0 0 3px rgb(0 125 204 / 0.12);
+}
+
+.rich-editor .ql-toolbar.ql-snow {
+  border: none;
+  border-bottom: 1px solid var(--color-second);
+  border-radius: 0;
+  background: var(--color-base);
+  padding: 0.35rem 0.5rem;
+}
+
+.rich-editor .ql-toolbar.ql-snow .ql-formats {
+  margin-right: 0.25rem;
+}
+
+.rich-editor .ql-snow .ql-picker,
+.rich-editor .ql-snow .ql-picker-label,
+.rich-editor .ql-snow button {
+  color: var(--color-darks);
+}
+
+.rich-editor .ql-toolbar.ql-snow button {
+  border-radius: 0.375rem;
+}
+
+.rich-editor .ql-toolbar.ql-snow button:hover {
+  background: var(--color-second);
+  color: var(--color-done);
+}
+
+.rich-editor .ql-toolbar.ql-snow button.ql-active {
+  background: var(--color-done);
+  color: #fff;
+}
+
+.rich-editor .ql-toolbar.ql-snow button.ql-active .ql-stroke {
+  stroke: #fff;
+}
+
+.rich-editor .ql-toolbar.ql-snow button:hover .ql-stroke,
+.rich-editor .ql-toolbar.ql-snow button.ql-active .ql-stroke,
+.rich-editor .ql-toolbar.ql-snow .ql-picker-label:hover .ql-stroke {
+  stroke: var(--color-done);
+}
+
+.rich-editor .ql-toolbar.ql-snow button.ql-active .ql-fill {
+  fill: #fff;
+}
+
+.rich-editor .ql-container.ql-snow {
+  border: none;
+  background: #fff;
+  font-family: var(--font-sans);
+  font-size: 1rem;
+  color: var(--color-darks);
+}
+
+.rich-editor .ql-editor {
+  min-height: 96px;
+  line-height: 1.6;
+}
+
+.rich-editor .ql-editor.ql-blank::before {
+  color: var(--color-tinted);
+  font-style: normal;
+}
+
+.rich-editor .ql-snow .ql-picker.ql-expanded .ql-picker-label {
+  color: var(--color-done);
+}
+
+/* tooltip Quill (input formula & link) tampil di tengah area editor */
+.rich-editor .ql-tooltip:not(.ql-hidden) {
+  left: 50% !important;
+  top: 50% !important;
+  transform: translate(-50%, -50%) !important;
+  z-index: 5;
+}
+
+.rich-editor .ql-tooltip:not(.ql-hidden) .ql-tooltip-arrow {
+  display: none;
+}
+
+/* reset Preflight (Tailwind) menyamakan ukuran heading; pulihkan hierarki */
+.rich-editor .ql-editor h1,
+.rich-editor .ql-editor h2,
+.rich-editor .ql-editor h3 {
+  font-weight: 700;
+  margin: 0.75em 0 0.35em;
+  line-height: 1.25;
+}
+
+.rich-editor .ql-editor h1 { font-size: 1.5em; }
+.rich-editor .ql-editor h2 { font-size: 1.3em; }
+.rich-editor .ql-editor h3 { font-size: 1.1em; }
+
+/* varian ringkas (pilihan jawaban) */
+.rich-editor-compact .ql-toolbar.ql-snow {
+  padding: 0.2rem 0.35rem;
+}
+
+.rich-editor-compact .ql-editor {
+  min-height: 52px;
+  padding: 0.375rem 0.75rem;
+  font-size: 0.9rem;
+}
+
+.rich-editor-compact .ql-toolbar.ql-snow .ql-formats {
+  margin-right: 0;
+}
+
+/* ---- Preview (editor non-aktif) ---- */
+.rich-preview > div > *:first-child {
+  margin-top: 0;
+}
+
+.rich-preview > div > *:last-child {
+  margin-bottom: 0;
+}
+
+/* ---- Rich text render (viewer) — konsisten dengan editor ---- */
+.rich-content {
+  line-height: 1.6;
+  word-break: break-word;
+}
+
+.rich-content p {
+  margin: 0 0 0.5em;
+}
+
+.rich-content p:last-child {
+  margin-bottom: 0;
+}
+
+.rich-content h1,
+.rich-content h2,
+.rich-content h3 {
+  font-weight: 700;
+  margin: 0.75em 0 0.35em;
+  line-height: 1.25;
+}
+
+.rich-content h1 { font-size: 1.5em; }
+.rich-content h2 { font-size: 1.3em; }
+.rich-content h3 { font-size: 1.1em; }
+
+.rich-content ul,
+.rich-content ol {
+  margin: 0.5em 0;
+  padding-inline-start: 1.5em;
+}
+
+.rich-content li {
+  margin: 0.2em 0;
+}
+
+/* daftar yang disimpan Quill (li[data-list] + span.ql-ui) dirender sama seperti editor */
+.rich-content li[data-list] {
+  list-style-type: none;
+  padding-left: 1.5em;
+  position: relative;
+}
+
+.rich-content li[data-list] > .ql-ui::before {
+  display: inline-block;
+  margin-left: -1.5em;
+  margin-right: 0.3em;
+  text-align: right;
+  white-space: nowrap;
+  width: 1.2em;
+}
+
+.rich-content li[data-list="bullet"] > .ql-ui::before {
+  content: "\2022";
+}
+
+.rich-content ol {
+  counter-reset: list-0;
+}
+
+.rich-content li[data-list="ordered"] {
+  counter-increment: list-0;
+}
+
+.rich-content li[data-list="ordered"] > .ql-ui::before {
+  content: counter(list-0, decimal) ". ";
+}
+
+.rich-content a {
+  color: var(--color-done);
+  text-decoration: underline;
+}
+
+.rich-content strong {
+  font-weight: 700;
+}
+
+.rich-content em {
+  font-style: italic;
+}
+
+.rich-content s {
+  text-decoration: line-through;
+}
+
+/* kode blok — meniru warna gelap ql-code-block-container editor */
+.rich-content pre {
+  background: #23241f;
+  color: #f8f8f2;
+  border-radius: 3px;
+  padding: 5px 10px;
+  margin: 5px 0;
+  font-family: "DM Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 0.875rem;
+  line-height: 1.5;
+  overflow-x: auto;
+  white-space: pre-wrap;
+}
+
+.rich-content code {
+  background: #f0f0f0;
+  border-radius: 3px;
+  padding: 0.1em 0.35em;
+  font-family: "DM Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 0.875em;
+}
+
+.rich-content .katex {
+  font-size: 1.05em;
+}
+
+.rich-content iframe.ql-video {
+  display: block;
+  width: 100%;
+  max-width: 100%;
+  aspect-ratio: 16 / 9;
+  border: none;
+  margin: 0.5em 0;
+  background: #000;
+}
