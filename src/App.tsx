@@ -1,31 +1,33 @@
 import { Routes, Route, Navigate, useLocation } from "react-router-dom"
-import { useEffect, useState } from "react"
+import { lazy, Suspense, useEffect, useState } from "react"
 import { AuthProvider } from "./lib/auth"
-import Login from "./pages/auth/login"
-import Register from "./pages/auth/register"
-import Otp from "./pages/auth/otp"
-import ForgotPassword from "./pages/auth/forgotPassword"
-import ResetPassword from "./pages/auth/resetPassword"
-import Home from "./pages/home"
-import History from "./pages/history"
-import Profile from "./pages/profile"
-import AdminForms from "./pages/admin/forms"
-import FormDescription from "./pages/form/description"
-import FormPage from "./pages/form/form"
-import FormList from "./pages/form/formlist"
-import ResultPage from "./pages/form/result"
-import CreatorGuard from "./pages/creator/guard"
-import CreatorDashboard from "./pages/creator/dashboard"
-import CreatorFormNew from "./pages/creator/formNew"
-import CreatorFormEdit from "./pages/creator/formEdit"
-import CreatorQuestions from "./pages/creator/questions"
-import CreatorTokens from "./pages/creator/tokens"
-import CreatorSubmissions from "./pages/creator/submissions"
-import CreatorSubmissionDetail from "./pages/creator/submissionDetail"
-import CreatorShared from "./pages/creator/shared"
-import CreatorLayout from "./pages/creator/layout"
+import Loading from "./components/loading"
 import Navbar from "./components/navbar"
 import { AlertToaster } from "./lib/alerts"
+
+const Login = lazy(() => import("./pages/auth/login"))
+const Register = lazy(() => import("./pages/auth/register"))
+const Otp = lazy(() => import("./pages/auth/otp"))
+const ForgotPassword = lazy(() => import("./pages/auth/forgotPassword"))
+const ResetPassword = lazy(() => import("./pages/auth/resetPassword"))
+const Home = lazy(() => import("./pages/home"))
+const History = lazy(() => import("./pages/history"))
+const Profile = lazy(() => import("./pages/profile"))
+const AdminForms = lazy(() => import("./pages/admin/forms"))
+const FormDescription = lazy(() => import("./pages/form/description"))
+const FormPage = lazy(() => import("./pages/form/form"))
+const FormList = lazy(() => import("./pages/form/formlist"))
+const ResultPage = lazy(() => import("./pages/form/result"))
+const CreatorGuard = lazy(() => import("./pages/creator/guard"))
+const CreatorDashboard = lazy(() => import("./pages/creator/dashboard"))
+const CreatorFormNew = lazy(() => import("./pages/creator/formNew"))
+const CreatorFormEdit = lazy(() => import("./pages/creator/formEdit"))
+const CreatorQuestions = lazy(() => import("./pages/creator/questions"))
+const CreatorTokens = lazy(() => import("./pages/creator/tokens"))
+const CreatorSubmissions = lazy(() => import("./pages/creator/submissions"))
+const CreatorSubmissionDetail = lazy(() => import("./pages/creator/submissionDetail"))
+const CreatorShared = lazy(() => import("./pages/creator/shared"))
+const CreatorLayout = lazy(() => import("./pages/creator/layout"))
 
 const hideNavPaths = ["/login", "/register", "/auth", "/forgot-password", "/reset-password", "/form/description", "/form", "/form/list", "/form/result"]
 
@@ -54,7 +56,8 @@ function App() {
     <AuthProvider>
       <div className="bg-second min-h-screen">
         {!hideNav && <Navbar />}
-        <Routes>
+        <Suspense fallback={<Loading />}>
+          <Routes>
           <Route path="/" element={<Home />} />
           <Route path="/history" element={<History />} />
           <Route path="/profile" element={<Profile />} />
@@ -139,6 +142,7 @@ function App() {
           <Route path="/forgot-password" element={<ForgotPassword />} />
           <Route path="/reset-password" element={<ResetPassword />} />
         </Routes>
+        </Suspense>
       </div>
       <AlertToaster />
     </AuthProvider>
