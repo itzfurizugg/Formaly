@@ -298,6 +298,9 @@ function FormEdit() {
                                 ))}
                             </div>
                         )}
+                        <p className="text-xs text-tinted mt-2">
+                            Tag pertama dipakai sebagai link singkat form, contoh: <span className="font-medium text-darks">/form/CODEVERSE</span>.
+                        </p>
                     </div>
 
                     <button

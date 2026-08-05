@@ -1,10 +1,35 @@
 import { useParams, useNavigate } from "react-router-dom"
+import { useEffect, useState } from "react"
 import { ArrowLeft, Copy, QrCode, ClipboardList, KeyRound } from "lucide-react"
 import { showAlert } from "../../lib/alerts"
+import { supabase } from "../../lib/supabase"
 
 function Shared() {
     const { id } = useParams()
     const navigate = useNavigate()
+    const [tags, setTags] = useState<string[]>([])
+
+    useEffect(() => {
+        if (!id) return
+        supabase
+            .from("form_tags")
+            .select("tag:tags ( name )")
+            .eq("form_id", id)
+            .then(({ data }) => {
+                if (data) {
+                    setTags(
+                        data
+                            .map((r) => (r.tag as unknown as { name: string } | null)?.name)
+                            .filter((n): n is string => !!n)
+                    )
+                }
+            })
+    }, [id])
+
+    const tag = tags[0]
+    const shareUrl = tag
+        ? `${window.location.origin}/form/${encodeURIComponent(tag)}`
+        : `${window.location.origin}/form/description?formId=${id}`
 
     return (
         <div className="flex flex-col items-center px-4 py-10">
@@ -51,17 +76,25 @@ function Shared() {
                         Form ini sudah public. Bagikan link atau QR code agar orang lain bisa mengerjakannya.
                     </p>
 
+                    {!tag && (
+                        <div className="flex items-start gap-2 p-3 bg-amber-500/10 border border-amber-500/20 rounded-lg mb-4 text-amber-800 text-xs sm:text-sm">
+                            <p>
+                                Tambahkan tag di halaman Detail agar link singkat (contoh: <span className="font-medium">/form/CODEVERSE</span>) bisa dipakai.
+                            </p>
+                        </div>
+                    )}
+
                     <div className="flex gap-2">
                         <input
                             type="text"
                             readOnly
                             className="input flex-1 bg-base border-second focus:border-done focus:outline-none text-sm"
-                            value={`${window.location.origin}/form/description?formId=${id}`}
+                            value={shareUrl}
                             onFocus={(e) => e.currentTarget.select()}
                         />
                         <button
                             onClick={() => {
-                                navigator.clipboard.writeText(`${window.location.origin}/form/description?formId=${id}`)
+                                navigator.clipboard.writeText(shareUrl)
                                 showAlert("Link disalin.", "success")
                             }}
                             className="btn bg-darks text-base border-none"
@@ -75,9 +108,7 @@ function Shared() {
                     <div className="mt-4 flex flex-col items-center gap-4">
                         <div className="bg-base border border-second rounded-lg p-3 w-fit">
                             <img
-                                src={`https://api.qrserver.com/v1/create-qr-code/?size=140x140&data=${encodeURIComponent(
-                                    `${window.location.origin}/form/description?formId=${id}`
-                                )}`}
+                                src={`https://api.qrserver.com/v1/create-qr-code/?size=140x140&data=${encodeURIComponent(shareUrl)}`}
                                 alt="QR Code"
                                 className="w-60 h-auto"
                             />

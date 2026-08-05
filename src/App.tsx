@@ -15,7 +15,7 @@ const History = lazy(() => import("./pages/history"))
 const Profile = lazy(() => import("./pages/profile"))
 const AdminForms = lazy(() => import("./pages/admin/forms"))
 const FormDescription = lazy(() => import("./pages/form/description"))
-const FormPage = lazy(() => import("./pages/form/form"))
+const FormResolver = lazy(() => import("./pages/form/resolver"))
 const FormList = lazy(() => import("./pages/form/formlist"))
 const ResultPage = lazy(() => import("./pages/form/result"))
 const CreatorGuard = lazy(() => import("./pages/creator/guard"))
@@ -63,7 +63,7 @@ function App() {
           <Route path="/profile" element={<Profile />} />
           <Route path="/admin/forms" element={<AdminForms />} />
           <Route path="/form/description" element={<FormDescription />} />
-          <Route path="/form/:formId" element={<FormPage />} />
+          <Route path="/form/:formId" element={<FormResolver />} />
           <Route path="/form/list" element={<FormList />} />
           <Route path="/form/result/:submissionId" element={<ResultPage />} />
           <Route element={<CreatorLayout />}>
