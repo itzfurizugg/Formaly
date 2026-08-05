@@ -2,9 +2,8 @@ import * as mammoth from "mammoth"
 import { OPTION_LETTERS, type ParsedOption, type ParsedQuestion, validateParsedQuestion } from "./types"
 
 const questionNumberPattern = /^\s*\d+\.\s+(.+)\s*$/
-const optionPattern = /^\s*([a-e])\s*(?:[.)\-:]\s*)+(.+)\s*$/i
-const anyOptionPattern = /^\s*([a-z])\s*(?:[.)\-:]\s*)+(.+)\s*$/i
-const answerKeyPattern = /^\s*kunci\s*jawaban\s*:\s*([a-e])\s*$/i
+const optionPattern = /^\s*([a-z])\s*(?:[.)\-:]\s*)+(.+)\s*$/i
+const answerKeyPattern = /^\s*kunci\s*jawaban\s*:\s*([a-z])\s*$/i
 
 function parseBlock(rawBlock: string): ParsedQuestion {
     const lines = rawBlock.split("\n").map((line) => line.trim()).filter(Boolean)
@@ -33,10 +32,6 @@ function parseBlock(rawBlock: string): ParsedQuestion {
             const letter = optionMatch[1].toLowerCase()
             if (optionsByLetter.has(letter)) errorMessage = `Pilihan ${letter.toUpperCase()} ditulis lebih dari sekali.`
             optionsByLetter.set(letter, optionMatch[2].trim())
-            continue
-        }
-        if (anyOptionPattern.test(line)) {
-            errorMessage = "Pilihan jawaban hanya boleh berlabel A sampai E."
             continue
         }
 

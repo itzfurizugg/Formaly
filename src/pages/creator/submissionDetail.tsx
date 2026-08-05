@@ -102,6 +102,9 @@ function SubmissionDetail() {
     const correctCount = answers.filter(isCorrect).length
     const textCount = answers.filter((a) => a.question?.question_type === "text").length
     const wrongCount = answers.length - correctCount - textCount
+    const scoredCount = answers.length - textCount
+    const correctPct = scoredCount > 0 ? Math.round((correctCount / scoredCount) * 100) : 0
+    const wrongPct = scoredCount > 0 ? Math.round((wrongCount / scoredCount) * 100) : 0
 
     if (loading) {
         return <Loading />
@@ -158,8 +161,8 @@ function SubmissionDetail() {
                         <div className="mt-4 pt-4 border-t border-second text-sm text-tinted flex items-center justify-between">
                             <span>{answers.length} soal</span>
                             <span>
-                                <span className="text-done font-semibold">{correctCount} benar</span> &middot;{" "}
-                                <span className="text-wrong font-semibold">{wrongCount} salah</span>
+                                <span className="text-done font-semibold">{correctCount} benar ({correctPct}%)</span> &middot;{" "}
+                                <span className="text-wrong font-semibold">{wrongCount} salah ({wrongPct}%)</span>
                                 {textCount > 0 && <>&nbsp;&middot;&nbsp;<span className="text-tinted">{textCount} isian</span></>}
                             </span>
                         </div>

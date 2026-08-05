@@ -107,10 +107,14 @@ function FormEdit() {
         const { error } = await supabase.rpc("update_form", payload)
         if (!error) return
 
-        // RPC belum tersedia di database (migrasi belum diterapkan) -> fallback
-        // ke UPDATE langsung, tetapi verifikasi baris yang benar-benar berubah
-        // agar RLS yang memfilter diam-diam tidak tampak seperti sukses.
-        if (/does not exist|not found|PGRST202/i.test(error.message)) {
+        // Fallback ke UPDATE langsung ketika RPC belum tersedia di database
+        // (migrasi belum diterapkan) ATAU versi RPC lama masih belum memakai
+        // cast enum (p_status dikirim sebagai text, kolom status bertipe
+        // form_status). PostgREST menangani cast enum secara otomatis, jadi
+        // UPDATE langsung ini tetap berhasil. Baris yang benar-benar berubah
+        // tetap diverifikasi agar RLS yang memfilter diam-diam tidak tampak
+        // seperti sukses.
+        if (/(does not exist|not found|PGRST202)/i.test(error.message) || /is of type .* but expression is of type/i.test(error.message)) {
             const { data, error: fallbackError } = await supabase
                 .from("forms")
                 .update({

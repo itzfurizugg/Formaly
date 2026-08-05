@@ -14,16 +14,17 @@ function parseRows(rows: SourceRow[]): ParsedQuestion[] {
         .filter((row) => Object.values(row).some((cell) => String(cell ?? "").trim()))
         .map((row) => {
             const answer = value(row, "correct_answer").toLowerCase()
+            const options = OPTION_LETTERS.map((letter) => ({
+                text: value(row, `option_${letter}`),
+                is_correct: answer === letter,
+            })).filter((option) => option.text !== "")
             const parsed = validateParsedQuestion({
                 question_text: value(row, "question_text"),
-                options: OPTION_LETTERS.map((letter) => ({
-                    text: value(row, `option_${letter}`),
-                    is_correct: answer === letter,
-                })),
+                options,
                 raw_block: JSON.stringify(row),
             })
-            if (!/^[a-e]$/.test(answer)) {
-                return { ...parsed, parse_status: "error" as const, error_message: "correct_answer harus berupa huruf A–E." }
+            if (!/^[a-z]$/.test(answer)) {
+                return { ...parsed, parse_status: "error" as const, error_message: "correct_answer harus berupa huruf A–Z." }
             }
             return parsed
         })
