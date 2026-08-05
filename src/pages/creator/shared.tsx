@@ -1,6 +1,6 @@
 import { useParams, useNavigate } from "react-router-dom"
 import { useEffect, useState } from "react"
-import { ArrowLeft, Copy, QrCode, ClipboardList, KeyRound } from "lucide-react"
+import { ArrowLeft, Copy, QrCode, ClipboardList, KeyRound, Globe } from "lucide-react"
 import { showAlert } from "../../lib/alerts"
 import { supabase } from "../../lib/supabase"
 
@@ -8,6 +8,7 @@ function Shared() {
     const { id } = useParams()
     const navigate = useNavigate()
     const [tags, setTags] = useState<string[]>([])
+    const [shortMode, setShortMode] = useState(false)
 
     useEffect(() => {
         if (!id) return
@@ -27,9 +28,14 @@ function Shared() {
     }, [id])
 
     const tag = tags[0]
-    const shareUrl = tag
-        ? `${window.location.origin}/form/${encodeURIComponent(tag)}`
-        : `${window.location.origin}/form/description?formId=${id}`
+    const shortUrl = tag ? `${window.location.origin}/form/${encodeURIComponent(tag)}` : null
+    const longUrl = `${window.location.origin}/form/description?formId=${id}`
+    const shareUrl = shortMode && shortUrl ? shortUrl : longUrl
+
+    const copy = () => {
+        navigator.clipboard.writeText(shareUrl)
+        showAlert("Link disalin.", "success")
+    }
 
     return (
         <div className="flex flex-col items-center px-4 py-10">
@@ -79,30 +85,39 @@ function Shared() {
                     {!tag && (
                         <div className="flex items-start gap-2 p-3 bg-amber-500/10 border border-amber-500/20 rounded-lg mb-4 text-amber-800 text-xs sm:text-sm">
                             <p>
-                                Tambahkan tag di halaman Detail agar link singkat (contoh: <span className="font-medium">/form/CODEVERSE</span>) bisa dipakai.
+                                Tambahkan tag di halaman Detail agar link singkat (contoh: <span className="font-medium">/form/CODEVERSE</span>) juga bisa dipakai.
                             </p>
                         </div>
                     )}
 
-                    <div className="flex gap-2">
+                    <div className="flex flex-col sm:flex-row gap-2">
                         <input
                             type="text"
                             readOnly
-                            className="input flex-1 bg-base border-second focus:border-done focus:outline-none text-sm"
+                            className="input w-full sm:flex-1 bg-base border-second focus:border-done focus:outline-none text-sm"
                             value={shareUrl}
                             onFocus={(e) => e.currentTarget.select()}
                         />
+                        <div className="flex gap-2 w-full sm:w-auto">
                         <button
-                            onClick={() => {
-                                navigator.clipboard.writeText(shareUrl)
-                                showAlert("Link disalin.", "success")
-                            }}
-                            className="btn bg-darks text-base border-none"
+                            type="button"
+                            onClick={() => setShortMode((v) => !v)}
+                            disabled={!shortUrl}
+                            className="btn bg-base text-darks border-second flex-1 sm:flex-none"
+                            title={shortUrl ? (shortMode ? "Kembalikan ke link panjang" : "Ubah ke link singkat") : "Tambahkan tag untuk link singkat"}
+                        >
+                            <Globe className="h-4 w-4"/>
+                            {shortMode ? "Link Asli" : "Link dari Tag"}
+                        </button>
+                        <button
+                            onClick={copy}
+                            className="btn bg-darks text-base border-none flex-1 sm:flex-none"
                             title="Salin link"
                         >
                             <Copy className="h-4 w-4" />
                             Salin
                         </button>
+                        </div>
                     </div>
 
                     <div className="mt-4 flex flex-col items-center gap-4">
