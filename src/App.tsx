@@ -22,6 +22,7 @@ import CreatorQuestions from "./pages/creator/questions"
 import CreatorTokens from "./pages/creator/tokens"
 import CreatorSubmissions from "./pages/creator/submissions"
 import CreatorSubmissionDetail from "./pages/creator/submissionDetail"
+import CreatorShared from "./pages/creator/shared"
 import CreatorLayout from "./pages/creator/layout"
 import Navbar from "./components/navbar"
 import { AlertToaster } from "./lib/alerts"
@@ -112,6 +113,14 @@ function App() {
               element={
                 <CreatorGuard>
                   <CreatorSubmissions />
+                </CreatorGuard>
+              }
+            />
+            <Route
+              path="/creator/forms/:id/shared"
+              element={
+                <CreatorGuard>
+                  <CreatorShared />
                 </CreatorGuard>
               }
             />

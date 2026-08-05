@@ -1,5 +1,5 @@
 import { createContext, useContext } from "react"
-import type { User } from "@supabase/supabase-js"
+import type { User, EmailOtpType } from "@supabase/supabase-js"
 
 export interface Profile {
   name: string
@@ -12,7 +12,9 @@ export interface AuthContextType {
   loading: boolean
   login: (email: string, password: string) => Promise<void>
   register: (name: string, email: string, password: string) => Promise<void>
-  verifyOtp: (email: string, token: string) => Promise<void>
+  resendOtp: (email: string, type?: "signup" | "email_change") => Promise<void>
+  sendOtp: (email: string) => Promise<void>
+  verifyOtp: (email: string, token: string, type?: EmailOtpType) => Promise<void>
   resetPassword: (email: string) => Promise<void>
   updatePassword: (newPassword: string) => Promise<void>
   updateProfile: (name: string, email: string) => Promise<void>
@@ -26,3 +28,4 @@ export function useAuth() {
   if (!ctx) throw new Error("useAuth must be used within AuthProvider")
   return ctx
 }
+

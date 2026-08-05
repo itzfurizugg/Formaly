@@ -1,21 +1,36 @@
-import { useState, useRef, type KeyboardEvent } from "react"
+import { useState, useRef, useEffect, type KeyboardEvent } from "react"
 import { Link, useLocation, useNavigate } from "react-router-dom"
-import { ShieldCheck, ArrowLeft, RotateCcw } from "lucide-react"
+import { ShieldCheck, ArrowLeft, RotateCcw, CheckCircle2 } from "lucide-react"
 import logo from "../../assets/logo.svg"
 import { useAuth } from "../../lib/auth-context"
+import type { EmailOtpType } from "@supabase/supabase-js"
 
 const OTP_LENGTH = 6
 
 function Otp() {
     const location = useLocation()
     const navigate = useNavigate()
-    const { verifyOtp } = useAuth()
-    const email = (location.state as { email?: string })?.email || ""
+    const { verifyOtp, resendOtp, sendOtp, logout } = useAuth()
+    
+    const stateData = location.state as { email?: string; type?: EmailOtpType } | null
+    const [email, setEmail] = useState(stateData?.email || "")
+    const otpType = stateData?.type || "signup"
 
     const [otp, setOtp] = useState<string[]>(Array(OTP_LENGTH).fill(""))
     const [loading, setLoading] = useState(false)
+    const [resendLoading, setResendLoading] = useState(false)
+    const [resendSuccess, setResendSuccess] = useState<string | null>(null)
+    const [resendCountdown, setResendCountdown] = useState(0)
     const [error, setError] = useState<string | null>(null)
     const inputsRef = useRef<(HTMLInputElement | null)[]>([])
+
+    useEffect(() => {
+        if (resendCountdown <= 0) return
+        const timer = setInterval(() => {
+            setResendCountdown((prev) => prev - 1)
+        }, 1000)
+        return () => clearInterval(timer)
+    }, [resendCountdown])
 
     const handleChange = (index: number, value: string) => {
         if (!/^\d?$/.test(value)) return
@@ -48,15 +63,24 @@ function Otp() {
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault()
         setError(null)
+        setResendSuccess(null)
+
+        if (!email) {
+            setError("Email wajib diisi untuk memverifikasi OTP.")
+            return
+        }
+
         const code = otp.join("")
         if (code.length !== OTP_LENGTH) {
             setError("Masukkan kode OTP yang valid.")
             return
         }
+
         setLoading(true)
         try {
-            await verifyOtp(email, code)
-            navigate("/")
+            await verifyOtp(email, code, otpType)
+            await logout()
+            navigate("/login", { state: { verified: true, email } })
         } catch (err) {
             setError(err instanceof Error ? err.message : "Verifikasi gagal, coba lagi.")
         } finally {
@@ -64,7 +88,30 @@ function Otp() {
         }
     }
 
-    const isComplete = otp.every((d) => d !== "")
+    const handleResendOtp = async () => {
+        if (!email) {
+            setError("Email wajib diisi untuk mengirim ulang OTP.")
+            return
+        }
+        setResendLoading(true)
+        setError(null)
+        setResendSuccess(null)
+        try {
+            if (otpType === "email") {
+                await sendOtp(email)
+            } else {
+                await resendOtp(email, otpType as "signup" | "email_change")
+            }
+            setResendSuccess("Kode OTP baru telah dikirim ke email kamu.")
+            setResendCountdown(60)
+        } catch (err) {
+            setError(err instanceof Error ? err.message : "Gagal mengirim ulang OTP.")
+        } finally {
+            setResendLoading(false)
+        }
+    }
+
+    const isComplete = otp.every((d) => d !== "") && Boolean(email)
 
     return (
         <div className="min-h-screen flex bg-base overflow-x-hidden">
@@ -92,7 +139,7 @@ function Otp() {
 
                     <div className="bg-white rounded-2xl border border-second p-4 lg:p-8 shadow-sm">
                         <Link
-                            to="/register"
+                            to="/login"
                             className="inline-flex items-center gap-1 text-xs text-tinted hover:text-darks transition-colors mb-4"
                         >
                             <ArrowLeft className="h-3 w-3" />
@@ -100,15 +147,39 @@ function Otp() {
                         </Link>
 
                         <div className="flex items-center gap-2 mb-1">
-                            <h2 className="text-2xl font-bold text-darks">Verifikasi</h2>
+                            <h2 className="text-2xl font-bold text-darks">Verifikasi OTP</h2>
                         </div>
                         <p className="text-sm text-tinted mt-2 mb-6">
-                            Masukkan kode OTP yang dikirim ke {email || "email kamu"}
+                            Masukkan kode OTP yang dikirim ke <span className="font-semibold text-darks">{email || "email kamu"}</span>
                         </p>
+
+                        {!stateData?.email && (
+                            <div className="mb-4">
+                                <label htmlFor="email" className="block text-xs font-medium text-darks mb-1">
+                                    Alamat Email
+                                </label>
+                                <input
+                                    id="email"
+                                    type="email"
+                                    required
+                                    placeholder="nama@email.com"
+                                    className="input w-full bg-base border-second focus:border-done focus:outline-none transition-colors text-sm"
+                                    value={email}
+                                    onChange={(e) => setEmail(e.target.value)}
+                                />
+                            </div>
+                        )}
 
                         {error && (
                             <div role="alert" className="text-sm text-wrong bg-wrong/5 border border-wrong/20 rounded-lg px-4 py-3 mb-4">
                                 {error}
+                            </div>
+                        )}
+
+                        {resendSuccess && (
+                            <div role="alert" className="flex items-center gap-2 text-sm text-done bg-done/10 border border-done/20 rounded-lg px-4 py-3 mb-4">
+                                <CheckCircle2 className="h-4 w-4 shrink-0" />
+                                <span>{resendSuccess}</span>
                             </div>
                         )}
 
@@ -140,13 +211,24 @@ function Otp() {
                                 ) : (
                                     <ShieldCheck className="h-4 w-4" />
                                 )}
-                                {loading ? "Memverifikasi..." : "Verifikasi"}
+                                {loading ? "Memverifikasi..." : "Verifikasi OTP"}
                             </button>
                         </form>
 
-                        <button type="button" className="btn bg-base text-darks border border-second hover:bg-second w-full mt-2">
-                            <RotateCcw className="h-4 w-4" />
-                            Tidak menerima kode? Kirim ulang
+                        <button
+                            type="button"
+                            onClick={handleResendOtp}
+                            disabled={resendLoading || resendCountdown > 0 || !email}
+                            className="btn bg-base text-darks border border-second hover:bg-second w-full mt-2 disabled:opacity-60"
+                        >
+                            {resendLoading ? (
+                                <span className="loading loading-spinner loading-sm" />
+                            ) : (
+                                <RotateCcw className="h-4 w-4" />
+                            )}
+                            {resendCountdown > 0
+                                ? `Kirim ulang OTP dalam (${resendCountdown}s)`
+                                : "Tidak menerima kode? Kirim ulang"}
                         </button>
                     </div>
                 </div>
@@ -156,3 +238,4 @@ function Otp() {
 }
 
 export default Otp
+

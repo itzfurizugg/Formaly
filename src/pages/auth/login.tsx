@@ -1,14 +1,17 @@
 import { useState } from "react"
-import { Link, useNavigate } from "react-router-dom"
-import { LogIn } from "lucide-react"
+import { Link, useLocation, useNavigate } from "react-router-dom"
+import { LogIn, CheckCircle2 } from "lucide-react"
 import logo from "../../assets/logo.svg"
 import { useAuth } from "../../lib/auth-context"
 import PasswordInput from "../../components/passwordInput"
 
 function Login() {
     const navigate = useNavigate()
+    const location = useLocation()
     const { login } = useAuth()
-    const [email, setEmail] = useState("")
+
+    const stateData = location.state as { verified?: boolean; email?: string } | null
+    const [email, setEmail] = useState(stateData?.email || "")
     const [password, setPassword] = useState("")
     const [loading, setLoading] = useState(false)
     const [error, setError] = useState<string | null>(null)
@@ -56,6 +59,13 @@ function Login() {
                         <p className="text-sm text-tinted mt-1 mb-6">
                             Masuk untuk melanjutkan ke akun kamu
                         </p>
+
+                        {stateData?.verified && (
+                            <div role="alert" className="flex items-center gap-2 text-sm text-done bg-done/10 border border-done/20 rounded-lg px-4 py-3 mb-4">
+                                <CheckCircle2 className="h-4 w-4 shrink-0" />
+                                <span>Email kamu berhasil diverifikasi! Silakan masuk ke akun kamu.</span>
+                            </div>
+                        )}
 
                         {error && (
                             <div role="alert" className="text-sm text-wrong bg-wrong/5 border border-wrong/20 rounded-lg px-4 py-3 mb-4">

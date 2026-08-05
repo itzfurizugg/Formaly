@@ -1,7 +1,7 @@
 import Loading from "../../components/loading"
-import { useEffect, useState, useCallback } from "react"
+import { useEffect, useState, useCallback, type DragEvent } from "react"
 import { useNavigate, useParams } from "react-router-dom"
-import { ArrowLeft, Plus, Pencil, Trash2, Save, X, Loader2, Image as ImageIcon, FileUp } from "lucide-react"
+import { ArrowLeft, Plus, Pencil, Trash2, Save, X, Loader2, Image as ImageIcon, FileUp, GripVertical } from "lucide-react"
 import { supabase } from "../../lib/supabase"
 import { useAuth } from "../../lib/auth-context"
 import QuestionImportModal from "../../components/creator/QuestionImportModal"
@@ -43,6 +43,7 @@ function Questions() {
     const [removedOptionIds, setRemovedOptionIds] = useState<string[]>([])
     const [saving, setSaving] = useState(false)
     const [showImport, setShowImport] = useState(false)
+    const [dragIndex, setDragIndex] = useState<number | null>(null)
 
     const loadAll = useCallback(async () => {
         if (!user || !id) return
@@ -194,6 +195,44 @@ function Questions() {
                 await loadAll()
             },
         })
+    }
+
+    const persistOrder = async (list: Question[]) => {
+        for (let i = 0; i < list.length; i++) {
+            if (list[i].order_index !== i) {
+                await supabase.from("questions").update({ order_index: i }).eq("id", list[i].id)
+            }
+        }
+    }
+
+    const handleDragStart = (e: DragEvent, index: number) => {
+        setDragIndex(index)
+        e.dataTransfer.effectAllowed = "move"
+        e.dataTransfer.setData("text/plain", String(index))
+    }
+
+    const handleDragOver = (e: DragEvent) => {
+        e.preventDefault()
+        e.dataTransfer.dropEffect = "move"
+    }
+
+    const handleDrop = (e: DragEvent, index: number) => {
+        e.preventDefault()
+        const from = dragIndex
+        if (from === null || from === index) {
+            setDragIndex(null)
+            return
+        }
+        const next = [...questions]
+        const [moved] = next.splice(from, 1)
+        next.splice(index, 0, moved)
+        setQuestions(next)
+        setDragIndex(null)
+        persistOrder(next)
+    }
+
+    const handleDragEnd = () => {
+        setDragIndex(null)
     }
 
     const typeLabel = (t: string) => {
@@ -361,9 +400,23 @@ function Questions() {
                 ) : (
                     <div className="space-y-3">
                         {questions.map((q, idx) => (
-                            <div key={q.id} className="bg-white border border-second p-5 shadow-sm rounded-none">
+                            <div
+                                key={q.id}
+                                draggable
+                                onDragStart={(e) => handleDragStart(e, idx)}
+                                onDragOver={handleDragOver}
+                                onDrop={(e) => handleDrop(e, idx)}
+                                onDragEnd={handleDragEnd}
+                                className={`bg-white border p-5 shadow-sm rounded-none cursor-grab active:cursor-grabbing ${
+                                    dragIndex === idx
+                                        ? "border-done opacity-50"
+                                        : "border-second"
+                                }`}
+                            >
                                 <div className="flex items-start justify-between gap-2">
-                                    <div className="min-w-0">
+                                    <div className="flex gap-3 min-w-0">
+                                        <GripVertical className="h-5 w-5 text-tinted shrink-0 mt-0.5" />
+                                        <div className="min-w-0">
                                         <div className="flex items-center gap-2 flex-wrap mb-1">
                                             <span className="text-sm font-bold text-darks">Soal {idx + 1}</span>
                                             <span className="badge badge-ghost text-tinted rounded-full text-xs">{typeLabel(q.question_type)}</span>
@@ -388,6 +441,7 @@ function Questions() {
                                                 ))}
                                             </div>
                                         )}
+                                    </div>
                                     </div>
                                     <div className="flex gap-1 shrink-0">
                                         <button onClick={() => startEdit(q)} className="btn btn-sm btn-ghost text-darks">
