@@ -1,8 +1,9 @@
 import { useEffect, useState } from "react"
-import { useNavigate } from "react-router-dom"
+import { useNavigate, useLocation } from "react-router-dom"
 import Search from "../components/search"
 import { supabase } from "../lib/supabase"
 import { useAuth } from "../lib/auth-context"
+import { loginUrl } from "../lib/redirect"
 import Loading from "../components/loading"
 
 interface FormData {
@@ -27,6 +28,7 @@ interface FormRecord {
 
 function Home() {
     const navigate = useNavigate()
+    const location = useLocation()
     const { user, loading: authLoading } = useAuth()
     const [searching, setSearching] = useState(false)
     const [error, setError] = useState("")
@@ -34,10 +36,10 @@ function Home() {
     useEffect(() => {
         if (authLoading) return
         if (!user) {
-            navigate("/login")
+            navigate(loginUrl(location.pathname + location.search))
             return
         }
-    }, [user, authLoading, navigate])
+    }, [user, authLoading, navigate, location])
 
     const handleTagSearch = async (tag: string) => {
         setSearching(true)

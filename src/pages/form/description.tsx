@@ -5,6 +5,7 @@ import { Clock, FileText, ArrowLeft, AlertCircle } from "lucide-react"
 import { RichText } from "../../components/richText"
 import { supabase } from "../../lib/supabase"
 import { useAuth } from "../../lib/auth-context"
+import { loginUrl } from "../../lib/redirect"
 
 interface FormItem {
     id: string
@@ -38,7 +39,7 @@ function FormDescriptionPage() {
         if (authLoading) return
 
         if (!user) {
-            navigate("/login")
+            navigate(loginUrl(location.pathname + location.search))
             return
         }
 
@@ -89,7 +90,7 @@ function FormDescriptionPage() {
         if (form?.status && String(form.status).toLowerCase() !== "published") {
             navigate("/")
         }
-    }, [form, formIdParam, user, authLoading, navigate])
+    }, [form, formIdParam, user, authLoading, navigate, location])
 
     // Cek apakah user sudah pernah mengerjakan form ini
     useEffect(() => {

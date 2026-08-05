@@ -1,13 +1,17 @@
 import { useState } from "react"
-import { Link, useNavigate } from "react-router-dom"
+import { Link, useLocation, useNavigate } from "react-router-dom"
 import { UserPlus } from "lucide-react"
 import logo from "../../assets/logo.svg"
 import { useAuth } from "../../lib/auth-context"
+import { safeNext } from "../../lib/redirect"
 import PasswordInput from "../../components/passwordInput"
 
 function Register() {
     const navigate = useNavigate()
+    const location = useLocation()
     const { register } = useAuth()
+    const nextPath = safeNext(new URLSearchParams(location.search).get("next"))
+    const nextQuery = nextPath !== "/" ? `?next=${encodeURIComponent(nextPath)}` : ""
     const [name, setName] = useState("")
     const [email, setEmail] = useState("")
     const [password, setPassword] = useState("")
@@ -32,7 +36,7 @@ function Register() {
         setLoading(true)
         try {
             await register(name, email, password)
-            navigate("/auth", { state: { email } })
+            navigate("/auth", { state: { email, next: nextPath } })
         } catch (err) {
             setError(err instanceof Error ? err.message : "Gagal daftar, coba lagi.")
         } finally {
@@ -149,7 +153,7 @@ function Register() {
                             </button>
                         </form>
 
-                        <Link to="/login" className="btn bg-base text-darks border border-second hover:bg-second w-full mt-2">
+                        <Link to={`/login${nextQuery}`} className="btn bg-base text-darks border border-second hover:bg-second w-full mt-2">
                             Sudah punya akun? Masuk
                         </Link>
                     </div>

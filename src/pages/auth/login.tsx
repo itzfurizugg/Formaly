@@ -3,6 +3,7 @@ import { Link, useLocation, useNavigate } from "react-router-dom"
 import { LogIn, CheckCircle2 } from "lucide-react"
 import logo from "../../assets/logo.svg"
 import { useAuth } from "../../lib/auth-context"
+import { safeNext } from "../../lib/redirect"
 import PasswordInput from "../../components/passwordInput"
 
 function Login() {
@@ -11,6 +12,9 @@ function Login() {
     const { login } = useAuth()
 
     const stateData = location.state as { verified?: boolean; email?: string } | null
+    const nextParams = new URLSearchParams(location.search)
+    const nextPath = safeNext(nextParams.get("next"))
+    const nextQuery = nextPath !== "/" ? `?next=${encodeURIComponent(nextPath)}` : ""
     const [email, setEmail] = useState(stateData?.email || "")
     const [password, setPassword] = useState("")
     const [loading, setLoading] = useState(false)
@@ -22,7 +26,7 @@ function Login() {
         setLoading(true)
         try {
             await login(email, password)
-            navigate("/")
+            navigate(nextPath, { replace: true })
         } catch (err) {
             setError(err instanceof Error ? err.message : "Gagal masuk, coba lagi.")
         } finally {
@@ -102,7 +106,7 @@ function Login() {
                                     value={password}
                                     onChange={setPassword}
                                 />
-                                <a href="/forgot-password" className="text-xs text-done hover:underline mt-1.5 inline-block">
+                                <a href={`/forgot-password${nextQuery}`} className="text-xs text-done hover:underline mt-1.5 inline-block">
                                     Lupa password?
                                 </a>
                             </div>
@@ -121,7 +125,7 @@ function Login() {
                             </button>
                         </form>
 
-                        <Link to="/register" className="btn bg-base text-darks border border-second hover:bg-second w-full mt-2">
+                        <Link to={`/register${nextQuery}`} className="btn bg-base text-darks border border-second hover:bg-second w-full mt-2">
                             Belum punya akun? Daftar
                         </Link>
                     </div>

@@ -1,20 +1,22 @@
 import { useState, useEffect } from "react"
-import { useNavigate, useParams } from "react-router-dom"
+import { useNavigate, useParams, useLocation } from "react-router-dom"
 import Loading from "../../components/loading"
 import { supabase } from "../../lib/supabase"
 import { useAuth } from "../../lib/auth-context"
+import { loginUrl } from "../../lib/redirect"
 import FormPage from "./form"
 
 function FormResolver() {
     const { formId } = useParams()
     const navigate = useNavigate()
+    const location = useLocation()
     const { user, loading: authLoading } = useAuth()
     const [mode, setMode] = useState<"loading" | "exam" | "notFound">("loading")
 
     useEffect(() => {
         if (authLoading) return
         if (!user) {
-            navigate("/login")
+            navigate(loginUrl(location.pathname + location.search))
             return
         }
         if (!formId) {
@@ -86,7 +88,7 @@ function FormResolver() {
         return () => {
             cancelled = true
         }
-    }, [formId, user, authLoading, navigate])
+    }, [formId, user, authLoading, navigate, location.pathname, location.search])
 
     if (mode === "exam") return <FormPage />
     if (mode === "notFound") {

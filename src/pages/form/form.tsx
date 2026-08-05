@@ -6,6 +6,7 @@ import PageIndicator from "../../components/pageindicator"
 import { RichText } from "../../components/richText"
 import { supabase } from "../../lib/supabase"
 import { useAuth } from "../../lib/auth-context"
+import { loginUrl } from "../../lib/redirect"
 
 interface Option {
     id: string
@@ -197,7 +198,7 @@ function FormPage() {
     useEffect(() => {
         if (authLoading) return
         if (!user) {
-            navigate("/login")
+            navigate(loginUrl(location.pathname + location.search))
             return
         }
         if (!formId) {
@@ -205,7 +206,7 @@ function FormPage() {
             return
         }
         loadForm()
-    }, [user, authLoading, formId, navigate, loadForm])
+    }, [user, authLoading, formId, navigate, location, loadForm])
 
     useEffect(() => {
         if (!hasTimer || !deadlineRef.current || loading) return

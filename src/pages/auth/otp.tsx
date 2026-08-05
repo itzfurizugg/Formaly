@@ -3,6 +3,7 @@ import { Link, useLocation, useNavigate } from "react-router-dom"
 import { ShieldCheck, ArrowLeft, RotateCcw, CheckCircle2 } from "lucide-react"
 import logo from "../../assets/logo.svg"
 import { useAuth } from "../../lib/auth-context"
+import { safeNext } from "../../lib/redirect"
 import type { EmailOtpType } from "@supabase/supabase-js"
 
 const OTP_LENGTH = 6
@@ -12,7 +13,9 @@ function Otp() {
     const navigate = useNavigate()
     const { verifyOtp, resendOtp, sendOtp, logout } = useAuth()
     
-    const stateData = location.state as { email?: string; type?: EmailOtpType } | null
+    const stateData = location.state as { email?: string; type?: EmailOtpType; next?: string } | null
+    const nextPath = safeNext(stateData?.next)
+    const nextQuery = nextPath !== "/" ? `?next=${encodeURIComponent(nextPath)}` : ""
     const [email, setEmail] = useState(stateData?.email || "")
     const otpType = stateData?.type || "signup"
 
@@ -80,7 +83,7 @@ function Otp() {
         try {
             await verifyOtp(email, code, otpType)
             await logout()
-            navigate("/login", { state: { verified: true, email } })
+            navigate(`/login${nextQuery}`, { state: { verified: true, email } })
         } catch (err) {
             setError(err instanceof Error ? err.message : "Verifikasi gagal, coba lagi.")
         } finally {
@@ -139,7 +142,7 @@ function Otp() {
 
                     <div className="bg-white rounded-2xl border border-second p-4 lg:p-8 shadow-sm">
                         <Link
-                            to="/login"
+                            to={`/login${nextQuery}`}
                             className="inline-flex items-center gap-1 text-xs text-tinted hover:text-darks transition-colors mb-4"
                         >
                             <ArrowLeft className="h-3 w-3" />
