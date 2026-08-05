@@ -43,13 +43,13 @@ function Home() {
         setSearching(true)
         setError("")
         try {
-            const { data: tagRows, error: tagError } = await supabase
+            const { data: tagRow } = await supabase
                 .from("tags")
                 .select("id")
                 .eq("name", tag)
-                .limit(1)
+                .maybeSingle()
 
-            if (tagError || !tagRows || tagRows.length === 0) {
+            if (!tagRow) {
                 setError(`Formulir dengan tag "${tag}" tidak ditemukan.`)
                 return
             }
@@ -57,7 +57,7 @@ function Home() {
             const { data: rel } = await supabase
                 .from("form_tags")
                 .select("form_id")
-                .eq("tag_id", tagRows[0].id)
+                .eq("tag_id", tagRow.id)
 
             if (!rel || rel.length === 0) {
                 setError(`Formulir dengan tag "${tag}" tidak ditemukan.`)

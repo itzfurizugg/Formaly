@@ -69,7 +69,7 @@ function FormList() {
 
     const statusBadge = (status: string) => {
         const s = String(status).toLowerCase()
-        if (s === "published") return <span className="badge badge-black text-white rounded-full">Public</span>
+        if (s === "published") return <span className="badge badge-success text-white rounded-full">Public</span>
         return <span className="badge badge-ghost text-tinted rounded-full">Draft</span>
     }
 
