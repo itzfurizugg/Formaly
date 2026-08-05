@@ -89,6 +89,20 @@ function SubmissionDetail() {
 
     const fmtDate = (d: string | null) => (d ? new Date(d).toLocaleString("id-ID") : "-")
 
+    const isCorrect = (a: AnswerRow) => {
+        const q = a.question
+        if (!q || q.question_type === "text") return false
+        const correct = q.question_options.filter((o) => o.is_correct).map((o) => o.id)
+        const selected = q.question_type === "multiple_choice"
+            ? a.selected_options || []
+            : a.selected_option_id ? [a.selected_option_id] : []
+        return selected.length === correct.length && selected.every((id) => correct.includes(id))
+    }
+
+    const correctCount = answers.filter(isCorrect).length
+    const textCount = answers.filter((a) => a.question?.question_type === "text").length
+    const wrongCount = answers.length - correctCount - textCount
+
     if (loading) {
         return <Loading />
     }
@@ -119,26 +133,36 @@ function SubmissionDetail() {
                 </p>
 
                 {info && info.total_score != null && (
-                    <div className="bg-white border border-second p-5 shadow-sm rounded-none mb-6 flex items-center justify-between">
-                        <div>
-                            <p className="text-xs text-tinted">Total Skor</p>
-                            <p className={`text-3xl font-bold ${info.form?.passing_score != null && info.total_score < info.form.passing_score ? "text-wrong" : "text-done"}`}>
-                                {info.total_score}
-                            </p>
+                    <div className="bg-white border border-second p-5 shadow-sm rounded-none mb-6">
+                        <div className="flex items-center justify-between">
+                            <div>
+                                <p className="text-xs text-tinted">Total Skor</p>
+                                <p className={`text-3xl font-bold ${info.form?.passing_score != null && info.total_score < info.form.passing_score ? "text-wrong" : "text-done"}`}>
+                                    {info.total_score}
+                                </p>
+                            </div>
+                            <span
+                                className={`badge rounded-full text-xs ${
+                                    info.form?.passing_score != null && info.total_score < info.form.passing_score
+                                        ? "bg-wrong/10 text-wrong border-none"
+                                        : info.status === "SUBMITTED"
+                                        ? "bg-done/10 text-done border-none"
+                                        : "badge-ghost text-tinted"
+                                }`}
+                            >
+                                {info.form?.passing_score != null && info.total_score < info.form.passing_score
+                                    ? "Gagal"
+                                    : info.status}
+                            </span>
                         </div>
-                        <span
-                            className={`badge rounded-full text-xs ${
-                                info.form?.passing_score != null && info.total_score < info.form.passing_score
-                                    ? "bg-wrong/10 text-wrong border-none"
-                                    : info.status === "SUBMITTED"
-                                    ? "bg-done/10 text-done border-none"
-                                    : "badge-ghost text-tinted"
-                            }`}
-                        >
-                            {info.form?.passing_score != null && info.total_score < info.form.passing_score
-                                ? "Gagal"
-                                : info.status}
-                        </span>
+                        <div className="mt-4 pt-4 border-t border-second text-sm text-tinted flex items-center justify-between">
+                            <span>{answers.length} soal</span>
+                            <span>
+                                <span className="text-done font-semibold">{correctCount} benar</span> &middot;{" "}
+                                <span className="text-wrong font-semibold">{wrongCount} salah</span>
+                                {textCount > 0 && <>&nbsp;&middot;&nbsp;<span className="text-tinted">{textCount} isian</span></>}
+                            </span>
+                        </div>
                     </div>
                 )}
 
@@ -153,6 +177,16 @@ function SubmissionDetail() {
                                 <div className="flex items-center gap-2 flex-wrap mb-1">
                                     <span className="text-sm font-bold text-darks">Soal {idx + 1}</span>
                                     <span className="badge badge-ghost text-tinted rounded-full text-xs">{typeLabel(a.question?.question_type || "")}</span>
+                                    {a.question?.question_type !== "text" &&
+                                        (isCorrect(a) ? (
+                                            <span className="text-xs text-done font-medium flex items-center gap-1">
+                                                <Check className="h-3 w-3" /> Benar
+                                            </span>
+                                        ) : (
+                                            <span className="text-xs text-wrong font-medium flex items-center gap-1">
+                                                <X className="h-3 w-3" /> Salah
+                                            </span>
+                                        ))}
                                     {Number(a.score_obtained) > 0 && (
                                         <span className="text-xs text-done font-medium">+{a.score_obtained} poin</span>
                                     )}

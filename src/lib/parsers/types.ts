@@ -24,7 +24,8 @@ export function validateParsedQuestion(question: Omit<ParsedQuestion, "parse_sta
 
     let errorMessage = ""
     if (!questionText) errorMessage = "Teks soal wajib diisi."
-    else if (options.length !== OPTION_LETTERS.length) errorMessage = "Setiap soal harus memiliki tepat 5 pilihan (A–E)."
+    else if (options.length < 1) errorMessage = "Setiap soal harus memiliki minimal satu pilihan jawaban."
+    else if (options.length > OPTION_LETTERS.length) errorMessage = "Pilihan jawaban maksimal 5 (A–E)."
     else if (options.some((option) => !option.text)) errorMessage = "Semua pilihan jawaban wajib diisi."
     else if (options.filter((option) => option.is_correct).length !== 1) errorMessage = "Tentukan tepat satu jawaban yang benar."
 

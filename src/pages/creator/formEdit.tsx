@@ -1,10 +1,11 @@
 import Loading from "../../components/loading"
 import { useEffect, useState, useCallback } from "react"
 import { useNavigate, useParams } from "react-router-dom"
-import { ArrowLeft, Save, Loader2, ClipboardList, KeyRound, Copy, QrCode, Tag, X } from "lucide-react"
+import { ArrowLeft, Save, Loader2, ClipboardList, KeyRound, Copy, QrCode, Tag, X, FileSpreadsheet } from "lucide-react"
 import { supabase } from "../../lib/supabase"
 import { useAuth } from "../../lib/auth-context"
 import { alertSaveError, alertSaveSuccess, showAlert } from "../../lib/alerts"
+import { exportFormXlsx } from "../../lib/exportForm"
 
 function FormEdit() {
     const { id } = useParams()
@@ -18,6 +19,7 @@ function FormEdit() {
     const [status, setStatus] = useState("draft")
     const [loading, setLoading] = useState(true)
     const [saving, setSaving] = useState(false)
+    const [exporting, setExporting] = useState(false)
     const [tags, setTags] = useState<string[]>([])
     const [tagInput, setTagInput] = useState("")
 
@@ -91,32 +93,67 @@ function FormEdit() {
         setTags((prev) => prev.filter((t) => t !== name))
     }
 
+    const saveFormData = async () => {
+        if (!id) return
+        const payload = {
+            p_form_id: id,
+            p_title: title,
+            p_description: description || null,
+            p_duration: duration === "" ? null : duration,
+            p_passing_score: passingScore === "" ? 70 : passingScore,
+            p_status: status,
+        }
+
+        const { error } = await supabase.rpc("update_form", payload)
+        if (!error) return
+
+        // RPC belum tersedia di database (migrasi belum diterapkan) -> fallback
+        // ke UPDATE langsung, tetapi verifikasi baris yang benar-benar berubah
+        // agar RLS yang memfilter diam-diam tidak tampak seperti sukses.
+        if (/does not exist|not found|PGRST202/i.test(error.message)) {
+            const { data, error: fallbackError } = await supabase
+                .from("forms")
+                .update({
+                    title,
+                    description: description || null,
+                    duration: duration === "" ? null : duration,
+                    passing_score: passingScore === "" ? 70 : passingScore,
+                    status,
+                })
+                .eq("id", id)
+                .select("id")
+                .maybeSingle()
+            if (fallbackError) throw new Error(fallbackError.message)
+            if (!data) throw new Error("Perubahan tidak tersimpan. Pastikan migrasi RPC update_form sudah diterapkan di database.")
+            return
+        }
+        throw new Error(error.message)
+    }
+
+    const handleExport = async () => {
+        if (!id) return
+        setExporting(true)
+        try {
+            await exportFormXlsx({ formId: id, formTitle: title || "form" })
+            showAlert("Export berhasil diunduh.", "success")
+        } catch (err) {
+            alertSaveError(err instanceof Error ? err.message : "Gagal mengekspor data.")
+        } finally {
+            setExporting(false)
+        }
+    }
+
     const handleSave = async (e: React.FormEvent) => {
         e.preventDefault()
         if (!id) return
         setSaving(true)
 
-        const { error: err } = await supabase
-            .from("forms")
-            .update({
-                title,
-                description: description || null,
-                duration: duration === "" ? null : duration,
-                passing_score: passingScore === "" ? 70 : passingScore,
-                status,
-            })
-            .eq("id", id)
-
-        if (err) {
-            setSaving(false)
-            alertSaveError(err.message)
-            return
-        }
         try {
+            await saveFormData()
             await syncTags()
             alertSaveSuccess()
         } catch (err) {
-            alertSaveError(err instanceof Error ? err.message : "Gagal memperbarui tag.")
+            alertSaveError(err instanceof Error ? err.message : "Gagal menyimpan perubahan.")
         } finally {
             setSaving(false)
         }
@@ -165,6 +202,14 @@ function FormEdit() {
                         className="btn btn-sm bg-base text-darks border border-second hover:bg-second"
                     >
                         <ClipboardList className="h-3.5 w-3.5" /> Submission
+                    </button>
+                    <button
+                        onClick={handleExport}
+                        disabled={exporting}
+                        className="btn btn-sm bg-base text-darks border border-second hover:bg-second disabled:opacity-60"
+                    >
+                        {exporting ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <FileSpreadsheet className="h-3.5 w-3.5" />}
+                        Export XLSX
                     </button>
                 </div>
 

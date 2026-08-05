@@ -179,10 +179,18 @@ function Questions() {
             title: "Hapus soal ini?",
             description: "Pilihan jawaban pada soal ini akan ikut terhapus.",
             onConfirm: async () => {
-                const { error: optionError } = await supabase.from("question_options").delete().eq("question_id", q.id)
-                if (optionError) throw new Error(optionError.message)
-                const { error: questionError } = await supabase.from("questions").delete().eq("id", q.id)
-                if (questionError) throw new Error(questionError.message)
+                const { error } = await supabase.rpc("delete_question", { p_question_id: q.id })
+                if (error) {
+                    // RPC belum tersedia di database -> fallback ke DELETE langsung.
+                    if (/does not exist|not found|PGRST202/i.test(error.message)) {
+                        const { error: optionError } = await supabase.from("question_options").delete().eq("question_id", q.id)
+                        if (optionError) throw new Error(optionError.message)
+                        const { error: questionError } = await supabase.from("questions").delete().eq("id", q.id)
+                        if (questionError) throw new Error(questionError.message)
+                    } else {
+                        throw new Error(error.message)
+                    }
+                }
                 await loadAll()
             },
         })

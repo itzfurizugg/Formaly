@@ -43,7 +43,13 @@ function parseBlock(rawBlock: string): ParsedQuestion {
         if (!foundOption) questionLines.push(line)
     }
 
-    const options: ParsedOption[] = OPTION_LETTERS.map((letter) => ({
+    const presentLetters = OPTION_LETTERS.filter((letter) => optionsByLetter.has(letter))
+    if (presentLetters.length > 0) {
+        const isContiguous = presentLetters.every((letter, index) => letter === OPTION_LETTERS[index])
+        if (!isContiguous) errorMessage = "Pilihan jawaban harus berurutan dari A."
+    }
+
+    const options: ParsedOption[] = presentLetters.map((letter) => ({
         text: optionsByLetter.get(letter) || "",
         is_correct: answerLetter === letter,
     }))
@@ -55,9 +61,6 @@ function parseBlock(rawBlock: string): ParsedQuestion {
 
     if (errorMessage) return { ...parsed, parse_status: "error", error_message: errorMessage }
     if (!answerLetter) return { ...parsed, parse_status: "error", error_message: "Kunci Jawaban tidak ditemukan atau tidak valid." }
-    if (optionsByLetter.size !== OPTION_LETTERS.length) {
-        return { ...parsed, parse_status: "error", error_message: "Pilihan jawaban harus lengkap dari A sampai E." }
-    }
     return parsed
 }
 

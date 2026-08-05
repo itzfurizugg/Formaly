@@ -141,7 +141,7 @@ export default function QuestionImportModal({ formId, startingOrder, onClose, on
                             </div>
                             <div className="overflow-x-auto border border-second">
                                 <table className="table table-sm min-w-[900px]">
-                                    <thead><tr className="text-tinted"><th>Status</th><th>Soal</th><th>Pilihan A–E</th><th></th></tr></thead>
+                                    <thead><tr className="text-tinted"><th>Status</th><th>Soal</th><th>Pilihan Jawaban</th><th></th></tr></thead>
                                     <tbody>{rows.map((row, index) => (
                                         <tr key={index} className={row.parse_status === "error" ? "bg-wrong/5" : ""}>
                                             <td className="align-top w-32"><span className={`badge rounded-full text-xs ${row.parse_status === "ok" ? "badge-success" : "badge-error"}`}>{row.parse_status === "ok" ? "Siap" : "Perlu edit"}</span>{row.error_message && <p className="text-xs text-wrong mt-2 max-w-40">{row.error_message}</p>}</td>
