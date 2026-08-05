@@ -13,6 +13,9 @@ dist-ssr
 *.local
 .env
 
+# Supabase migrations (dikelola lokal / diterapkan manual, tidak perlu masuk repo)
+supabase/migrations/
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json
