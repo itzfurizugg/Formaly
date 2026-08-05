@@ -1,7 +1,7 @@
 import Loading from "../../components/loading"
 import { useEffect, useState, useCallback, type DragEvent } from "react"
-import { useNavigate, useParams } from "react-router-dom"
-import { ArrowLeft, Plus, Pencil, Trash2, Save, X, Loader2, Image as ImageIcon, FileUp, GripVertical } from "lucide-react"
+import { useParams } from "react-router-dom"
+import { Plus, Pencil, Trash2, Save, X, Loader2, Image as ImageIcon, FileUp, GripVertical } from "lucide-react"
 import { supabase } from "../../lib/supabase"
 import { useAuth } from "../../lib/auth-context"
 import QuestionImportModal from "../../components/creator/QuestionImportModal"
@@ -23,12 +23,10 @@ interface Question {
     question_options: Option[]
 }
 
-function Questions() {
+function Questions({ embedded = false }: { embedded?: boolean }) {
     const { id } = useParams()
-    const navigate = useNavigate()
     const { user } = useAuth()
 
-    const [formTitle, setFormTitle] = useState("")
     const [questions, setQuestions] = useState<Question[]>([])
     const [loading, setLoading] = useState(true)
 
@@ -47,14 +45,6 @@ function Questions() {
 
     const loadAll = useCallback(async () => {
         if (!user || !id) return
-
-        const { data: form } = await supabase
-            .from("forms")
-            .select("title")
-            .eq("id", id)
-            .eq("creator_id", user.id)
-            .single()
-        if (form) setFormTitle(form.title)
 
         const { data: qs } = await supabase
             .from("questions")
@@ -246,17 +236,7 @@ function Questions() {
     }
 
     return (
-        <div className="flex flex-col items-center px-4 py-10">
-            <div className="w-full max-w-5xl">
-                <button
-                    onClick={() => navigate(`/creator/forms/${id}`)}
-                    className="flex items-center gap-2 text-sm text-tinted hover:text-darks mb-4 transition-colors"
-                >
-                    <ArrowLeft className="h-4 w-4" /> Kembali ke Detail
-                </button>
-
-                <h1 className="text-2xl lg:text-4xl font-bold text-darks mb-1">Soal</h1>
-                <p className="text-sm text-tinted mb-6">Form: {formTitle}</p>
+        <div className={embedded ? "w-full flex flex-col lg:h-full" : "w-full flex flex-col items-center px-4 py-10"}>
 
                 <div className="flex justify-end gap-2 mb-4">
                     {!showEditor && (
@@ -270,6 +250,8 @@ function Questions() {
                         </>
                     )}
                 </div>
+
+                <div className={embedded ? "flex-1 min-h-0 overflow-y-auto" : undefined}>
 
                 {showEditor && (
                     <div className="bg-white border border-second p-6 shadow-sm rounded-none mb-6 space-y-4">
@@ -456,7 +438,7 @@ function Questions() {
                         ))}
                     </div>
                 )}
-            </div>
+                </div>
             {showImport && id && (
                 <QuestionImportModal
                     formId={id}

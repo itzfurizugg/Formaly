@@ -18,16 +18,17 @@ const FormDescription = lazy(() => import("./pages/form/description"))
 const FormPage = lazy(() => import("./pages/form/form"))
 const FormList = lazy(() => import("./pages/form/formlist"))
 const ResultPage = lazy(() => import("./pages/form/result"))
-const CreatorGuard = lazy(() => import("./pages/creator/guard"))
-const CreatorDashboard = lazy(() => import("./pages/creator/dashboard"))
-const CreatorFormNew = lazy(() => import("./pages/creator/formNew"))
-const CreatorFormEdit = lazy(() => import("./pages/creator/formEdit"))
-const CreatorQuestions = lazy(() => import("./pages/creator/questions"))
-const CreatorTokens = lazy(() => import("./pages/creator/tokens"))
-const CreatorSubmissions = lazy(() => import("./pages/creator/submissions"))
-const CreatorSubmissionDetail = lazy(() => import("./pages/creator/submissionDetail"))
-const CreatorShared = lazy(() => import("./pages/creator/shared"))
-const CreatorLayout = lazy(() => import("./pages/creator/layout"))
+
+import CreatorGuard from "./pages/creator/guard"
+import CreatorDashboard from "./pages/creator/dashboard"
+import CreatorFormNew from "./pages/creator/formNew"
+import CreatorFormEdit from "./pages/creator/formEdit"
+import CreatorQuestions from "./pages/creator/questions"
+import CreatorTokens from "./pages/creator/tokens"
+import CreatorSubmissions from "./pages/creator/submissions"
+import CreatorSubmissionDetail from "./pages/creator/submissionDetail"
+import CreatorShared from "./pages/creator/shared"
+import CreatorLayout from "./pages/creator/layout"
 
 const hideNavPaths = ["/login", "/register", "/auth", "/forgot-password", "/reset-password", "/form/description", "/form", "/form/list", "/form/result"]
 

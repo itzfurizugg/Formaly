@@ -18,3 +18,8 @@
   50% { left: 0%; right: 0%; }
   100% { left: 100%; right: -35%; }
 }
+
+html,
+body {
+  overscroll-behavior-y: none;
+}

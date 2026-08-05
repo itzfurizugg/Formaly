@@ -1,11 +1,12 @@
 import Loading from "../../components/loading"
 import { useEffect, useState, useCallback } from "react"
 import { useNavigate, useParams } from "react-router-dom"
-import { ArrowLeft, Save, Loader2, ClipboardList, KeyRound, QrCode, Tag, X, FileSpreadsheet } from "lucide-react"
+import { ArrowLeft, Save, Loader2, ClipboardList, KeyRound, QrCode, X, FileSpreadsheet } from "lucide-react"
 import { supabase } from "../../lib/supabase"
 import { useAuth } from "../../lib/auth-context"
 import { alertSaveError, alertSaveSuccess, showAlert } from "../../lib/alerts"
 import { exportFormXlsx } from "../../lib/exportForm"
+import Questions from "./questions"
 
 function FormEdit() {
     const { id } = useParams()
@@ -65,9 +66,9 @@ function FormEdit() {
         if (delErr) throw new Error("Gagal memperbarui tag: " + delErr.message)
 
         for (const name of normalized) {
-            const { data: existing, error: selErr } = await supabase.from("tags").select("id").eq("name", name).maybeSingle()
-            if (selErr && selErr.code !== "PGRST116") throw new Error("Gagal memperbarui tag: " + selErr.message)
-            let tagId = existing?.id as string | undefined
+            const { data: existing, error: selErr } = await supabase.from("tags").select("id").eq("name", name).limit(1)
+            if (selErr) throw new Error("Gagal memperbarui tag: " + selErr.message)
+            let tagId = existing?.[0]?.id as string | undefined
 
             if (!tagId) {
                 const { data: ins, error: insErr } = await supabase.from("tags").insert({ name }).select("id").single()
@@ -173,8 +174,8 @@ function FormEdit() {
     }
 
     return (
-        <div className="flex flex-col items-center px-4 py-10">
-            <div className="w-full max-w-5xl">
+        <div className="flex flex-col items-center px-4 py-6 lg:h-screen lg:overflow-hidden">
+            <div className="w-full max-w-5xl lg:h-full lg:flex lg:flex-col">
                 <button
                     onClick={() => navigate("/creator")}
                     className="flex items-center gap-2 text-sm text-tinted hover:text-darks mb-4 transition-colors"
@@ -223,7 +224,9 @@ function FormEdit() {
                     </button>
                 </div>
 
-                <form onSubmit={handleSave} className="space-y-4 bg-white border border-second p-3 lg:p-6 sm:p-4 shadow-sm rounded-none">
+                <div className="flex flex-col lg:flex-row items-stretch gap-4 lg:flex-1 lg:min-h-0">
+                    <div className="w-full lg:w-1/2 min-w-0 lg:h-full lg:overflow-hidden">
+                        <form onSubmit={handleSave} className="space-y-4 bg-white border border-second p-3 lg:p-6 sm:p-4 shadow-sm rounded-none">
                     <div>
                         <input type="text" required className={inputCls} value={title} onChange={(e) => setTitle(e.target.value)} />
                     </div>
@@ -286,7 +289,7 @@ function FormEdit() {
 
                     <div>
                         <label className="flex items-center gap-1.5 text-sm font-medium text-darks mb-1.5">
-                            <Tag className="h-4 w-4 text-tinted" /> Tag
+                            Tag
                         </label>
                         <div className="flex gap-2">
                             <input
@@ -334,6 +337,11 @@ function FormEdit() {
                         Simpan Perubahan
                     </button>
                 </form>
+                    </div>
+                    <div className="w-full lg:w-1/2 min-w-0 lg:h-full lg:overflow-hidden">
+                        <Questions embedded />
+                    </div>
+                </div>
             </div>
         </div>
     )
