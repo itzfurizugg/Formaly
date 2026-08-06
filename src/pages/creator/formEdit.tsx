@@ -160,8 +160,8 @@ function FormEdit() {
     }
 
     return (
-        <div className="flex flex-col items-center px-4 py-10">
-            <div className="w-full max-w-7xl">
+        <div className="flex flex-col items-center px-4 pt-10 lg:h-screen lg:overflow-hidden">
+            <div className="w-full max-w-7xl lg:h-full lg:flex lg:flex-col">
                 <button
                     onClick={() => navigate("/creator")}
                     className="flex items-center gap-2 text-sm text-tinted hover:text-darks mb-4 transition-colors"
@@ -196,8 +196,8 @@ function FormEdit() {
                     </button>
                 </div>
 
-                <div className="flex flex-col xl:flex-row items-start gap-6">
-                    <div className="w-full xl:w-[45%]">
+                <div className="flex flex-col lg:flex-row items-start gap-6 lg:flex-1 lg:min-h-0 lg:overflow-hidden lg:mt-2">
+                    <div className="w-full lg:w-[45%] lg:min-h-0 lg:overflow-y-auto">
                         <form onSubmit={handleSave} className="space-y-4 bg-white border border-second p-3 lg:p-6 sm:p-4 shadow-sm rounded-none">
                     <div>
                         <input type="text" required className={inputCls} value={title} onChange={(e) => setTitle(e.target.value)} />
@@ -314,8 +314,8 @@ function FormEdit() {
                     </form>
                 </div>
 
-                <div className="w-full xl:flex-1 min-w-0 xl:sticky xl:top-6 self-start">
-                    <div className="xl:max-h-[calc(100vh-6rem)] xl:overflow-y-auto xl:overscroll-contain pr-1">
+                <div className="w-full lg:flex-1 min-w-0 lg:h-full lg:overflow-y-auto lg:overscroll-contain">
+                    <div className="pr-1">
                         <Questions embedded />
                     </div>
                 </div>
