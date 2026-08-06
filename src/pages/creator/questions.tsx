@@ -133,45 +133,36 @@ function Questions({ embedded = false }: { embedded?: boolean }) {
 
         setSaving(true)
 
-        const { data: qData, error: qErr } = await supabase
-            .from("questions")
-            .upsert({
-                id: editingId || undefined,
-                form_id: id,
-                question_text: questionText,
-                question_type: questionType,
-                score_value: scoreValue,
-                order_index: orderIndex,
-                image_question: imageQuestion || null,
-            })
-            .select("id")
-            .single()
-
-        if (qErr) {
-            setSaving(false)
-            alertSaveError(qErr.message)
-            return
-        }
-        const questionId = qData.id
-
-        for (let i = 0; i < options.length; i++) {
-            const o = options[i]
-            if (o.id) {
-                await supabase.from("question_options").update({ option_text: o.option_text, is_correct: o.is_correct }).eq("id", o.id)
-            } else {
-                await supabase.from("question_options").insert({
-                    question_id: questionId,
-                    option_text: o.option_text,
-                    is_correct: o.is_correct,
-                    order_index: i,
-                })
-            }
-        }
-        for (const rid of removedOptionIds) {
-            await supabase.from("question_options").delete().eq("id", rid)
-        }
+        // Panggil fungsi RPC yang sudah dibuat di database
+        const { error: rpcErr } = await supabase.rpc("save_question_with_options", {
+            p_question_id: editingId || null,
+            p_form_id: id,
+            p_question_text: questionText,
+            p_question_type: questionType,
+            p_score_value: scoreValue,
+            p_order_index: orderIndex,
+            p_image_question: imageQuestion || null,
+            p_options: options.map((o, idx) => ({
+                id: o.id || null,
+                option_text: o.option_text,
+                is_correct: o.is_correct,
+                order_index: idx,
+            })),
+            p_removed_option_ids: removedOptionIds,
+        })
 
         setSaving(false)
+
+        if (rpcErr) {
+            // Cek jika error disebabkan oleh Foreign Key (opsi sudah dipilih siswa)
+            if (rpcErr.message.includes("violates foreign key constraint")) {
+                showAlert("Opsi jawaban ini tidak bisa dihapus karena sudah pernah dipilih oleh siswa yang mengerjakan.", "error")
+            } else {
+                showAlert("Gagal menyimpan soal: " + rpcErr.message, "error")
+            }
+            return
+        }
+
         resetEditor()
         loadAll()
         alertSaveSuccess(editingId ? "Soal berhasil diperbarui." : "Soal berhasil ditambahkan.")
