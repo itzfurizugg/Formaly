@@ -7,7 +7,7 @@ import { useAuth } from "../../lib/auth-context"
 import QuestionImportModal from "../../components/creator/QuestionImportModal"
 import RichTextEditor, { RichText } from "../../components/richText"
 import { richTextToPlain } from "../../lib/richtext"
-import { alertSaveError, alertSaveSuccess, confirmDelete, showAlert } from "../../lib/alerts"
+import { alertSaveSuccess, confirmDelete, showAlert } from "../../lib/alerts"
 
 interface Option {
     id: string | null
