@@ -1,3 +1,5 @@
+<img width="2293" height="720" alt="Frame 7" src="https://github.com/user-attachments/assets/a8f83054-9a7f-40c8-99ae-29b02ab21bb5" />
+
 # Formaly
 
 Aplikasi pembuat formulir yang dikembangkan sebagai tugas akhir kelompok. Mendukung pembuatan form/kuis umum maupun ujian, dengan editor soal berbasis rich text yang juga mendukung notasi matematika (formula/KaTeX).
