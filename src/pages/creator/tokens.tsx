@@ -1,6 +1,6 @@
 import { useEffect, useState, useCallback } from "react"
 import { useNavigate, useParams } from "react-router-dom"
-import { ArrowLeft, Plus, Trash2, X, Loader2, Copy, Check, QrCode, KeyRound, ClipboardList } from "lucide-react"
+import { ArrowLeft, Plus, Trash2, X, Loader2, Copy, Check, Share2, KeyRound, ClipboardList } from "lucide-react"
 import { supabase } from "../../lib/supabase"
 import { useAuth } from "../../lib/auth-context"
 import { confirmDelete } from "../../lib/alerts"
@@ -121,7 +121,7 @@ function Tokens() {
 
     return (
         <div className="flex flex-col items-center px-4 py-10">
-            <div className="w-full max-w-7xl">
+            <div className="w-full xl:max-w-7xl lg:max-w-5xl">
                 <button
                     onClick={() => navigate("/creator")}
                     className="flex items-center gap-2 text-sm text-tinted hover:text-darks mb-4 transition-colors"
@@ -134,7 +134,7 @@ function Tokens() {
                         Detail
                     </button>
                     <button onClick={() => navigate(`/creator/forms/${id}/shared`)} className="btn btn-sm bg-base text-darks border border-second hover:bg-second">
-                        <QrCode className="h-3.5 w-3.5" /> Shared
+                        <Share2 className="h-3.5 w-3.5" /> Shared
                     </button>
                     <button onClick={() => navigate(`/creator/forms/${id}/tokens`)} className="btn btn-sm bg-darks text-base border-none">
                         <KeyRound className="h-3.5 w-3.5" /> Token

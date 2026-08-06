@@ -91,7 +91,7 @@ function CreatorDashboard() {
 
     return (
         <div className="flex flex-col items-center px-4 py-10 lg:h-screen lg:overflow-hidden">
-            <div className="max-w-7xl w-full lg:h-full lg:flex lg:flex-col lg:min-h-0">
+            <div className="xl:max-w-7xl lg:max-w-5xl w-full lg:h-full lg:flex lg:flex-col lg:min-h-0">
                 <button
                     onClick={() => navigate("/")}
                     className="flex items-center gap-2 text-xs sm:text-sm text-tinted hover:text-darks mb-4 sm:mb-6 lg:hidden transition-colors"

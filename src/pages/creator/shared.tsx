@@ -1,6 +1,6 @@
 import { useParams, useNavigate } from "react-router-dom"
 import { useEffect, useState } from "react"
-import { ArrowLeft, Copy, QrCode, ClipboardList, KeyRound, Globe } from "lucide-react"
+import { ArrowLeft, Copy, QrCode, ClipboardList, KeyRound, Globe, Share2 } from "lucide-react"
 import { showAlert } from "../../lib/alerts"
 import { supabase } from "../../lib/supabase"
 
@@ -39,7 +39,7 @@ function Shared() {
 
     return (
         <div className="flex flex-col items-center px-4 py-10">
-            <div className="w-full max-w-7xl">
+            <div className="w-full xl:max-w-7xl lg:max-w-5xl">
                 <button
                     onClick={() => navigate("/creator")}
                     className="flex items-center gap-2 text-sm text-tinted hover:text-darks mb-4 transition-colors"
@@ -58,7 +58,7 @@ function Shared() {
                         onClick={() => navigate(`/creator/forms/${id}/shared`)}
                         className="btn btn-sm bg-darks text-base border-none"
                     >
-                        <QrCode className="h-3.5 w-3.5" /> Shared
+                        <Share2 className="h-3.5 w-3.5" /> Shared
                     </button>
                     <button
                         onClick={() => navigate(`/creator/forms/${id}/tokens`)}

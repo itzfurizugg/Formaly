@@ -1,3 +1,5 @@
+![alt text](src/assets/banner.png)
+
 # Formaly
 
 Aplikasi pembuat formulir yang dikembangkan sebagai tugas akhir kelompok. Mendukung pembuatan form/kuis umum maupun ujian, dengan editor soal berbasis rich text yang juga mendukung notasi matematika (formula/KaTeX).

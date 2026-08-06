@@ -1,12 +1,14 @@
 import Loading from "../../components/loading"
 import { useEffect, useState, useCallback } from "react"
 import { useNavigate, useParams } from "react-router-dom"
-import { ArrowLeft, Eye, Trash2, Loader2, ClipboardList, CheckCircle2, Clock, TrendingUp, QrCode, KeyRound } from "lucide-react"
+import { ArrowLeft, Eye, Trash2, Loader2, ClipboardList, Share2, KeyRound } from "lucide-react"
 import { supabase } from "../../lib/supabase"
 import { useAuth } from "../../lib/auth-context"
 import { confirmDelete } from "../../lib/alerts"
-import { DonutChart } from "../../components/charts"
+import { richTextToPlain } from "../../lib/richtext"
 import { colors } from "../../lib/colorbase"
+import { DonutChart } from "../../components/charts"
+import { Bar, BarChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts"
 
 interface Submission {
     id: string
@@ -22,11 +24,25 @@ interface AnswerRow {
     submission_id: string
     selected_option_id: string | null
     selected_options: string[] | null
-    question: {
-        question_type: string
-        question_options: { id: string; is_correct: boolean }[]
-    } | null
+question: {
+            id: string
+            question_type: string
+            question_options: { id: string; option_text: string; is_correct: boolean }[]
+        } | null
 }
+
+interface StackDatum {
+    question: string
+    [key: string]: string | number
+}
+
+interface OptionSeries {
+    key: string
+    label: string
+    color: string
+}
+
+const OPTION_COLORS = ["#007DCC", "#2FA084", "#D90000", "#929AAB", "#7A3D6C", "#E67E22", "#16A085", "#8E44AD", "#C0392B", "#2C3E50"]
 
 function Submissions() {
     const { id } = useParams()
@@ -37,6 +53,8 @@ function Submissions() {
     const [loading, setLoading] = useState(true)
     const [error, setError] = useState<string | null>(null)
     const [deletingId, setDeletingId] = useState<string | null>(null)
+    const [stackData, setStackData] = useState<StackDatum[]>([])
+    const [stackSeries, setStackSeries] = useState<OptionSeries[]>([])
     const [totalCorrect, setTotalCorrect] = useState(0)
     const [totalWrong, setTotalWrong] = useState(0)
 
@@ -54,8 +72,8 @@ function Submissions() {
             setSubmissions((subs as unknown as Submission[]) || [])
         }
 
-        // Ambil jawaban beserta soal-nya dari database untuk menghitung benar/salah
-        // (logika sama seperti submissionDetail: cocokkan pilihan dengan is_correct).
+        // Ambil jawaban beserta soal-nya dari database untuk menyusun statistik
+        // distribusi opsi jawaban dari seluruh submission.
         const subIds = ((subs as unknown as Submission[]) || []).map((s) => s.id)
         let answers: AnswerRow[] = []
         if (subIds.length > 0) {
@@ -63,30 +81,78 @@ function Submissions() {
                 .from("answers")
                 .select(`
                     submission_id, selected_option_id, selected_options,
-                    question:question_id ( question_type, question_options ( id, is_correct ) )
+                    question:question_id ( id, question_type, question_options ( id, option_text, is_correct ) )
                 `)
                 .in("submission_id", subIds)
             answers = (ans as unknown as AnswerRow[]) || []
         }
-        const isAnswerCorrect = (a: AnswerRow) => {
+
+        // Kelompokkan jawaban per soal, lalu hitung berapa kali tiap opsi dipilih.
+        const qOrder = new Map<string, number>()
+        const qMap = new Map<string, { options: { id: string; text: string; count: number }[] }>()
+        let order = 0
+        for (const a of answers) {
             const q = a.question
-            if (!q || q.question_type === "text") return false
-            const correct = q.question_options.filter((o) => o.is_correct).map((o) => o.id)
-            if (correct.length === 0) return false
-            const selected = q.question_type === "multiple_choice"
-                ? a.selected_options || []
-                : a.selected_option_id
-                    ? [a.selected_option_id]
-                    : []
-            return selected.length === correct.length && selected.every((id) => correct.includes(id))
+            if (!q || q.question_type === "text") continue
+            if (!qOrder.has(q.id)) {
+                qOrder.set(q.id, order++)
+                qMap.set(q.id, {
+                    options: q.question_options.map((o) => ({
+                        id: o.id,
+                        text: richTextToPlain(o.option_text || ""),
+                        count: 0,
+                    })),
+                })
+            }
+            const selected =
+                q.question_type === "multiple_choice"
+                    ? a.selected_options || []
+                    : a.selected_option_id
+                        ? [a.selected_option_id]
+                        : []
+            for (const optId of selected) {
+                const opt = qMap.get(q.id)?.options.find((o) => o.id === optId)
+                if (opt) opt.count++
+            }
         }
+
+        // Susun data stacked bar: satu bar per soal, segmen per opsi jawaban.
+        const data: StackDatum[] = []
+        const series: OptionSeries[] = []
+        for (const [qid, entry] of qMap) {
+            const qno = (qOrder.get(qid) ?? 0) + 1
+            const row: StackDatum = { question: `Soal ${qno}` }
+            entry.options.forEach((o, oi) => {
+                if (o.count === 0) return
+                const key = `opt_${o.id}`
+                row[key] = o.count
+                series.push({
+                    key,
+                    label: `Soal ${qno} - ${o.text || `Opsi ${oi + 1}`}`,
+                    color: OPTION_COLORS[oi % OPTION_COLORS.length],
+                })
+            })
+            data.push(row)
+        }
+        setStackData(data)
+        setStackSeries(series)
+
+        // Hitung jumlah jawaban benar vs salah (soal isian dan tanpa kunci tidak dihitung).
         let correctTotal = 0
         let wrongTotal = 0
         for (const a of answers) {
             const q = a.question
             if (!q || q.question_type === "text") continue
-            if (q.question_options.filter((o) => o.is_correct).length === 0) continue
-            if (isAnswerCorrect(a)) {
+            const correct = q.question_options.filter((o) => o.is_correct).map((o) => o.id)
+            if (correct.length === 0) continue
+            const selected =
+                q.question_type === "multiple_choice"
+                    ? a.selected_options || []
+                    : a.selected_option_id
+                        ? [a.selected_option_id]
+                        : []
+            const isCorrect = selected.length === correct.length && selected.every((id) => correct.includes(id))
+            if (isCorrect) {
                 correctTotal++
             } else {
                 wrongTotal++
@@ -102,17 +168,6 @@ function Submissions() {
         if (!user || !id) return
         loadAll()
     }, [user, id, loadAll])
-
-    const stats = {
-        total: submissions.length,
-        completed: submissions.filter((s) => s.status === "SUBMITTED").length,
-        inProgress: submissions.filter((s) => s.status === "IN_PROGRESS").length,
-        avgScore: (() => {
-            const scored = submissions.filter((s) => s.total_score != null)
-            if (!scored.length) return 0
-            return scored.reduce((sum, s) => sum + (Number(s.total_score) || 0), 0) / scored.length
-        })(),
-    }
 
     const statusLabel = (s: string) => {
         if (s === "SUBMITTED") return "Selesai"
@@ -146,7 +201,7 @@ function Submissions() {
 
     return (
         <div className="flex flex-col items-center px-4 py-10">
-            <div className="w-full max-w-7xl">
+            <div className="w-full xl:max-w-7xl lg:max-w-5xl">
                 <button
                     onClick={() => navigate("/creator")}
                     className="flex items-center gap-2 text-sm text-tinted hover:text-darks mb-4 transition-colors"
@@ -159,7 +214,7 @@ function Submissions() {
                         Detail
                     </button>
                     <button onClick={() => navigate(`/creator/forms/${id}/shared`)} className="btn btn-sm bg-base text-darks border border-second hover:bg-second">
-                        <QrCode className="h-3.5 w-3.5" /> Shared
+                        <Share2 className="h-3.5 w-3.5" /> Shared
                     </button>
                     <button onClick={() => navigate(`/creator/forms/${id}/tokens`)} className="btn btn-sm bg-base text-darks border border-second hover:bg-second">
                         <KeyRound className="h-3.5 w-3.5" /> Token
@@ -178,62 +233,53 @@ function Submissions() {
                     </div>
                 )}
 
-                <div className="flex flex-col lg:flex-row gap-4 items-stretch mb-6">
-                    <div className="grid grid-cols-2 sm:stats sm:stats-horizontal shadow w-full lg:flex-1 bg-white border border-second rounded-none divide-x divide-second">
-                    <div className="stat p-3 sm:p-4">
-                        <div className="stat-figure text-darks hidden sm:block">
-                            <ClipboardList className="h-8 w-8" />
-                        </div>
-                        <div className="stat-title text-tinted text-[11px] sm:text-sm">Total Submission</div>
-                        <div className="stat-value text-darks text-3xl sm:text-4xl">{stats.total}</div>
-                        <div className="stat-desc text-tinted hidden sm:block">Semua pengerjaan</div>
-                    </div>
-                    <div className="stat p-3 sm:p-4">
-                        <div className="stat-figure text-done hidden sm:block">
-                            <CheckCircle2 className="h-8 w-8" />
-                        </div>
-                        <div className="stat-title text-tinted text-[11px] sm:text-sm">Selesai</div>
-                        <div className="stat-value text-darks text-3xl sm:text-4xl">{stats.completed}</div>
-                        <div className="stat-desc text-tinted hidden sm:block">Status SUBMITTED</div>
-                    </div>
-                    <div className="stat p-3 sm:p-4">
-                        <div className="stat-figure text-tinted hidden sm:block">
-                            <Clock className="h-8 w-8" />
-                        </div>
-                        <div className="stat-title text-tinted text-[11px] sm:text-sm">Sedang Dikerjakan</div>
-                        <div className="stat-value text-darks text-3xl sm:text-4xl">{stats.inProgress}</div>
-                        <div className="stat-desc text-tinted hidden sm:block">Status IN_PROGRESS</div>
-                    </div>
-                    <div className="stat p-3 sm:p-4">
-                        <div className="stat-figure text-darks hidden sm:block">
-                            <TrendingUp className="h-8 w-8" />
-                        </div>
-                        <div className="stat-title text-tinted text-[11px] sm:text-sm">Rata-rata Skor</div>
-                        <div className="stat-value text-darks text-3xl sm:text-4xl">{stats.avgScore.toFixed(1)}</div>
-                        <div className="stat-desc text-tinted hidden sm:block">Dari submission berisi skor</div>
-                    </div>
-                </div>
-
                 {totalCorrect + totalWrong > 0 && (
-                    <div className="bg-white border border-second p-5 shadow-sm rounded-none lg:w-[340px] flex flex-col">
-                        <p className="font-semibold text-darks mb-0.5">Benar vs Salah</p>
-                        <p className="text-xs text-tinted mb-4">
-                            Jawaban benar dan salah dari seluruh submission (soal isian tidak dihitung).
-                        </p>
-                        <div className="h-[240px] flex-1">
-                            <DonutChart
-                                bare
-                                showLegend
-                                data={[
-                                    { name: "Benar", value: totalCorrect, color: colors.pass },
-                                    { name: "Salah", value: totalWrong, color: colors.wrong },
-                                ]}
-                                height={240}
-                            />
+                    <div className="flex flex-col lg:flex-row gap-4 mb-6">
+                        <div className="bg-white border border-second p-5 shadow-sm rounded-none lg:flex-none lg:w-64">
+                            <p className="font-semibold text-darks mb-0.5">Benar vs Salah</p>
+                            <p className="text-xs text-tinted mb-2">
+                                Jawaban benar dan salah dari seluruh submission.
+                            </p>
+                            <div className="h-[180px]">
+                                <DonutChart
+                                    bare
+                                    showLegend
+                                    height={190}
+                                    data={[
+                                        { name: "Benar", value: totalCorrect, color: colors.pass },
+                                        { name: "Salah", value: totalWrong, color: colors.wrong },
+                                    ]}
+                                />
+                            </div>
+                        </div>
+                        <div className="bg-white border border-second p-5 shadow-sm rounded-none w-full lg:flex-1 lg:col-span-2">
+                            <p className="font-semibold text-darks mb-0.5">Distribusi Opsi Jawaban</p>
+                            <p className="text-xs text-tinted mb-4">
+                                Jumlah pilihan tiap opsi per soal dari seluruh submission (soal isian tidak dihitung).
+                            </p>
+                            <div style={{ height: Math.max(200, stackData.length * 90) }}>
+                                <ResponsiveContainer width="100%" height="100%">
+                                    <BarChart data={stackData} margin={{ top: 8, right: 16, left: -14, bottom: 0 }}>
+                                        <XAxis dataKey="question" tick={{ fontSize: 11, fill: colors.tinted }} axisLine={false} tickLine={false} interval={0} />
+                                        <YAxis tick={{ fontSize: 11, fill: colors.tinted }} axisLine={false} tickLine={false} allowDecimals={false} />
+                                        <Tooltip cursor={{ fill: colors.second }} />
+                                        {stackSeries.map((s) => (
+                                            <Bar key={s.key} dataKey={s.key} stackId="opt" name={s.label} fill={s.color} />
+                                        ))}
+                                    </BarChart>
+                                </ResponsiveContainer>
+                            </div>
+                            <div className="mt-3 flex flex-wrap gap-x-4 gap-y-1.5">
+                                {stackSeries.map((s) => (
+                                    <span key={s.key} className="inline-flex items-center gap-1.5 text-xs text-tinted">
+                                        <span className="h-2.5 w-2.5 rounded-full shrink-0" style={{ background: s.color }} />
+                                        {s.label}
+                                    </span>
+                                ))}
+                            </div>
                         </div>
                     </div>
                 )}
-                    </div>
 
                 {submissions.length === 0 ? (
                     <div className="text-center py-16">
@@ -255,9 +301,8 @@ function Submissions() {
                                     </div>
                                     <div className="flex flex-col items-end gap-2 shrink-0">
                                         <span
-                                            className={`badge rounded-full text-xs ${
-                                                s.status === "SUBMITTED" ? "bg-done/10 text-done border-none" : "badge-ghost text-tinted"
-                                            }`}
+                                            className={`badge rounded-full text-xs ${s.status === "SUBMITTED" ? "bg-done/10 text-done border-none" : "badge-ghost text-tinted"
+                                                }`}
                                         >
                                             {statusLabel(s.status)}
                                         </span>

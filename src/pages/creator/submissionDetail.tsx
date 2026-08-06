@@ -133,7 +133,7 @@ function SubmissionDetail() {
 
     return (
         <div className="flex flex-col items-center px-4 py-10">
-            <div className="w-full max-w-5xl">
+            <div className="w-full xl:max-w-7xl lg:max-w-5xl">
                 <button
                     onClick={() => navigate(`/creator/forms/${id}/submissions`)}
                     className="flex items-center gap-2 text-sm text-tinted hover:text-darks mb-4 transition-colors"

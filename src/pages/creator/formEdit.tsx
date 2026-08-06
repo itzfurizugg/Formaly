@@ -1,7 +1,7 @@
 import Loading from "../../components/loading"
 import { useEffect, useState, useCallback } from "react"
 import { useNavigate, useParams } from "react-router-dom"
-import { ArrowLeft, Save, Loader2, ClipboardList, KeyRound, QrCode, X } from "lucide-react"
+import { ArrowLeft, Save, Loader2, ClipboardList, KeyRound, Share2, X } from "lucide-react"
 import { supabase } from "../../lib/supabase"
 import { useAuth } from "../../lib/auth-context"
 import { alertSaveError, alertSaveSuccess } from "../../lib/alerts"
@@ -161,7 +161,7 @@ function FormEdit() {
 
     return (
         <div className="flex flex-col items-center px-4 pt-10 lg:h-screen lg:overflow-hidden">
-            <div className="w-full max-w-7xl lg:h-full lg:flex lg:flex-col">
+            <div className="w-full xl:max-w-7xl lg:max-w-5xl lg:h-full lg:flex lg:flex-col">
                 <button
                     onClick={() => navigate("/creator")}
                     className="flex items-center gap-2 text-sm text-tinted hover:text-darks mb-4 transition-colors"
@@ -180,7 +180,7 @@ function FormEdit() {
                         onClick={() => navigate(`/creator/forms/${id}/shared`)}
                         className="btn btn-sm bg-base text-darks border border-second hover:bg-second"
                     >
-                        <QrCode className="h-3.5 w-3.5" /> Shared
+                        <Share2 className="h-3.5 w-3.5" /> Shared
                     </button>
                     <button
                         onClick={() => navigate(`/creator/forms/${id}/tokens`)}
