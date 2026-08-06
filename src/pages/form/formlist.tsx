@@ -1,13 +1,12 @@
 import { useNavigate, useLocation } from "react-router-dom"
 
 interface Question {
-    id: number
-    text: string
-    options: string[]
+    id: string
+    is_required?: boolean
 }
 
 interface Answer {
-    [key: number]: number
+    [key: string]: string | string[]
 }
 
 interface LocationState {
@@ -57,6 +56,7 @@ function FormList() {
                     {questions.map((q, index) => {
                         const isCurrent = current === index
                         const isAnsweredQuestion = answers[q.id] !== undefined
+                        const needsRequired = !!q.is_required && !isAnsweredQuestion
 
                         return (
                             <button
@@ -64,7 +64,7 @@ function FormList() {
                                 onClick={() => {
                                     backToForm(index)
                                 }}
-                                className={`aspect-square p-3 rounded-sm transition-all flex items-center justify-center text-xl lg:text-sm font-medium
+                                className={`relative aspect-square p-3 rounded-sm transition-all flex items-center justify-center text-xl lg:text-sm font-medium
                                     ${isCurrent
                                         ? "ring-2 ring-done ring-offset-1 bg-darks text-white"
                                         : isAnsweredQuestion
@@ -74,6 +74,9 @@ function FormList() {
                                 `}
                             >
                                 {index + 1}
+                                {needsRequired && (
+                                    <span className="absolute top-0.5 right-1.5 text-red-600 font-bold text-sm">*</span>
+                                )}
                             </button>
                         )
                     })}

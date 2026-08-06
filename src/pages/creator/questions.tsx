@@ -22,6 +22,7 @@ interface Question {
     score_value: number
     order_index: number
     image_question: string | null
+    is_required: boolean
     question_options: Option[]
 }
 
@@ -41,6 +42,7 @@ function Questions({ embedded = false }: { embedded?: boolean }) {
     const [scoreValue, setScoreValue] = useState(0)
     const [orderIndex, setOrderIndex] = useState(0)
     const [imageQuestion, setImageQuestion] = useState("")
+    const [isRequired, setIsRequired] = useState(false)
     const [options, setOptions] = useState<Option[]>([])
     const [removedOptionIds, setRemovedOptionIds] = useState<string[]>([])
     const [saving, setSaving] = useState(false)
@@ -61,7 +63,7 @@ function Questions({ embedded = false }: { embedded?: boolean }) {
         const { data: qs } = await supabase
             .from("questions")
             .select(`
-                id, question_text, question_type, score_value, order_index, image_question,
+                id, question_text, question_type, score_value, order_index, image_question, is_required,
                 question_options ( id, option_text, is_correct, order_index )
             `)
             .eq("form_id", id)
@@ -83,6 +85,7 @@ function Questions({ embedded = false }: { embedded?: boolean }) {
         setScoreValue(0)
         setOrderIndex(questions.length)
         setImageQuestion("")
+        setIsRequired(false)
         setOptions([])
         setRemovedOptionIds([])
         setShowEditor(false)
@@ -102,6 +105,7 @@ function Questions({ embedded = false }: { embedded?: boolean }) {
         setScoreValue(Number(q.score_value) || 0)
         setOrderIndex(q.order_index || 0)
         setImageQuestion(q.image_question || "")
+        setIsRequired(!!q.is_required)
         setOptions((q.question_options || []).map((o) => ({ id: o.id, option_text: o.option_text, is_correct: o.is_correct })))
         setShowEditor(true)
     }
@@ -142,6 +146,7 @@ function Questions({ embedded = false }: { embedded?: boolean }) {
             p_score_value: scoreValue,
             p_order_index: orderIndex,
             p_image_question: imageQuestion || null,
+            p_is_required: isRequired,
             p_options: options.map((o, idx) => ({
                 id: o.id || null,
                 option_text: o.option_text,
@@ -339,6 +344,25 @@ function Questions({ embedded = false }: { embedded?: boolean }) {
                             </div>
                         </div>
 
+                        <div className="flex items-center gap-2">
+                            <button
+                                type="button"
+                                onClick={() => setIsRequired(!isRequired)}
+                                title="Tandai sebagai wajib dijawab"
+                                aria-label="Tandai sebagai wajib dijawab"
+                                className={`shrink-0 rounded-full border p-1.5 transition-colors ${
+                                    isRequired
+                                        ? "bg-darks text-base border-darks"
+                                        : "bg-base text-tinted border-second hover:border-darks hover:text-darks"
+                                }`}
+                            >
+                                <Check className="h-4 w-4" />
+                            </button>
+                            <span className="text-sm font-medium text-darks">
+                                Wajib dijawab <span className="text-red-600 font-bold">*</span>
+                            </span>
+                        </div>
+
                         {questionType !== "text" && (
                             <div>
                                 <div className="flex items-center justify-between mb-2">
@@ -429,6 +453,7 @@ function Questions({ embedded = false }: { embedded?: boolean }) {
                                         <div className="flex items-center gap-2 flex-wrap mb-1">
                                             <span className="text-sm font-bold text-darks">Soal {idx + 1}</span>
                                             <span className="badge badge-ghost text-tinted rounded-full text-xs">{typeLabel(q.question_type)}</span>
+                                            {q.is_required && <span className="badge badge-ghost text-wrong border-wrong/30 rounded-full text-xs">Wajib</span>}
                                             {Number(q.score_value) > 0 && <span className="badge badge-ghost text-tinted rounded-full text-xs">{q.score_value} poin</span>}
                                         </div>
                                         <div className="text-sm text-darks"><RichText html={q.question_text} /></div>

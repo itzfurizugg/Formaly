@@ -20,6 +20,7 @@ interface Question {
     question_type: string
     score_value: number
     image_question?: string | null
+    is_required?: boolean
     question_options: Option[]
 }
 
@@ -54,10 +55,26 @@ function FormPage() {
     const autoSubmitted = useRef(false)
     const deadlineRef = useRef<number | null>(null)
 
-    const handleSubmit = useCallback(async () => {
+    const handleSubmit = useCallback(async (allowRequiredSkip = false) => {
         if (!user || !formId) return
         setSubmitting(true)
         setError(null)
+
+        if (!allowRequiredSkip) {
+            const unanswered = questions.find((q) => {
+                if (!q.is_required) return false
+                const ans = answers[q.id]
+                if (ans === undefined) return true
+                if (Array.isArray(ans)) return ans.length === 0
+                return String(ans).trim() === ""
+            })
+            if (unanswered) {
+                setSubmitting(false)
+                setError("Masih ada soal wajib yang belum dijawab. Periksa soal bertanda *.")
+                setCurrent(questions.indexOf(unanswered))
+                return
+            }
+        }
 
         let totalScore = 0
         for (const q of questions) {
@@ -103,21 +120,21 @@ function FormPage() {
 
             let insertError
             if (q.question_type === "text") {
-                ;({ error: insertError } = await supabase.from("answers").insert({
+                ; ({ error: insertError } = await supabase.from("answers").insert({
                     submission_id: submissionId,
                     question_id: q.id,
                     answer_text: String(ans),
                     score_obtained: scoreObtained,
                 }))
             } else if (Array.isArray(ans)) {
-                ;({ error: insertError } = await supabase.from("answers").insert({
+                ; ({ error: insertError } = await supabase.from("answers").insert({
                     submission_id: submissionId,
                     question_id: q.id,
                     selected_options: ans,
                     score_obtained: scoreObtained,
                 }))
             } else {
-                ;({ error: insertError } = await supabase.from("answers").insert({
+                ; ({ error: insertError } = await supabase.from("answers").insert({
                     submission_id: submissionId,
                     question_id: q.id,
                     selected_option_id: ans,
@@ -179,6 +196,7 @@ function FormPage() {
                 question_type,
                 score_value,
                 image_question,
+                is_required,
                 question_options (
                     id,
                     option_text,
@@ -222,7 +240,7 @@ function FormPage() {
         if (autoSubmitted.current) return
         if (hasTimer && timeLeft === 0 && !submitting && questions.length > 0 && user && formId) {
             autoSubmitted.current = true
-            const id = window.setTimeout(() => handleSubmit(), 0)
+            const id = window.setTimeout(() => handleSubmit(true), 0)
             return () => window.clearTimeout(id)
         }
     }, [timeLeft, submitting, questions, user, formId, handleSubmit, hasTimer])
@@ -299,25 +317,28 @@ function FormPage() {
 
                 <div className="bg-base-300 lg:bg-white border border-second p-1 lg:p-6 lg:shadow-sm rounded-none">
                     <div className="flex items-center justify-between mb-3">
-                        <p className="text-sm text-tinted font-semibold">Soal {current + 1}</p>
-                        <span
-                            className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-semibold tabular-nums transition-colors ${
-                                !hasTimer
+                        <div className="flex gap-2">
+                            <p className="text-sm text-tinted font-semibold">Soal {current + 1}</p>
+                            {question.is_required && <span className="text-red-600 font-bold text-xl">*</span>}
+                        </div>
+                        <div className="flex items-center gap-2">
+                            <span
+                                className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-semibold tabular-nums transition-colors ${!hasTimer
                                     ? "bg-second text-tinted"
                                     : timeLeft <= 60
                                         ? "bg-red-500/10 text-red-600"
                                         : "bg-done/10 text-done"
-                            }`}
-                        >
-                            <Clock className="h-3.5 w-3.5" />
-                            {hasTimer ? formattedTime : "Tanpa Waktu Pengerjaan"}
-                        </span>
+                                    }`}
+                            >
+                                <Clock className="h-3.5 w-3.5" />
+                                {hasTimer ? formattedTime : "Tanpa Waktu Pengerjaan"}
+                            </span>
+                        </div>
                     </div>
 
                     <div className="text-base font-medium text-darks leading-relaxed">
                         <RichText html={question.question_text} />
                     </div>
-
                     {/* Menampilkan Gambar Soal menggunakan field image_question */}
                     {question.image_question && (
                         <div className="mt-4 relative group rounded-lg overflow-hidden border border-second bg-base w-fit">
@@ -355,22 +376,20 @@ function FormPage() {
                                     <button
                                         key={option.id}
                                         onClick={() => selectOption(option.id)}
-                                        className={`w-full text-left px-4 py-3 rounded-lg border text-sm transition-colors ${
-                                            selected
-                                                ? "bg-darks border-darks text-white font-medium"
-                                                : "bg-white border-second text-darks hover:border-darks/50"
-                                        }`}
+                                        className={`w-full text-left px-4 py-3 rounded-lg border text-sm transition-colors ${selected
+                                            ? "bg-darks border-darks text-white font-medium"
+                                            : "bg-white border-second text-darks hover:border-darks/50"
+                                            }`}
                                     >
-                                            <span className="flex items-center gap-3">
-                                                <span
-                                                    className={`shrink-0 w-5 h-5 rounded-full border-2 flex items-center justify-center ${
-                                                        isMulti ? "rounded-md" : "rounded-full"
+                                        <span className="flex items-center gap-3">
+                                            <span
+                                                className={`shrink-0 w-5 h-5 rounded-full border-2 flex items-center justify-center ${isMulti ? "rounded-md" : "rounded-full"
                                                     } ${selected ? "border-darks bg-darks" : "border-tinted"}`}
-                                                >
-                                                    {selected && <Check className="h-3 w-3 text-white" strokeWidth={3} />}
-                                                </span>
-                                                <RichText as="span" html={option.option_text} />
+                                            >
+                                                {selected && <Check className="h-3 w-3 text-white" strokeWidth={3} />}
                                             </span>
+                                            <RichText as="span" html={option.option_text} />
+                                        </span>
                                     </button>
                                 )
                             })
@@ -383,7 +402,7 @@ function FormPage() {
                     <PageIndicator total={total} current={current} onPrev={prev} onNext={next} onListClick={goToList} />
                     {current === total - 1 && (
                         <button
-                            onClick={handleSubmit}
+                            onClick={() => handleSubmit()}
                             disabled={submitting}
                             className="btn text-white h-12 min-h-0 px-4 bg-done border-none rounded-none hover:opacity-90 disabled:opacity-25"
                         >
@@ -410,7 +429,7 @@ function FormPage() {
                     <PageIndicator total={total} current={current} onPrev={prev} onNext={next} onListClick={goToList} />
                     {current === total - 1 && (
                         <button
-                            onClick={handleSubmit}
+                            onClick={() => handleSubmit()}
                             disabled={submitting}
                             className="btn text-white h-12 min-h-0 px-4 bg-done border-none rounded-none hover:opacity-90 disabled:opacity-25"
                         >
