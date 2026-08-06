@@ -1,75 +1,140 @@
-# React + TypeScript + Vite
+# Formaly
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Aplikasi pembuat formulir yang dikembangkan sebagai tugas akhir kelompok. Mendukung pembuatan form/kuis umum maupun ujian, dengan editor soal berbasis rich text yang juga mendukung notasi matematika (formula/KaTeX).
 
-Currently, two official plugins are available:
+## Fitur
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+- Pembuatan form/soal secara umum, tidak terikat ke kelas tertentu — bisa dipakai untuk survei biasa maupun ujian
+- Editor soal WYSIWYG dengan dukungan:
+  - Formatting teks standar (bold, italic, underline, strikethrough, list, code, link, gambar)
+  - Formula matematika (KaTeX) via tombol `fx`
+- Manajemen soal: tipe soal, skor, urutan, pilihan jawaban, gambar pendukung
+- Role-based access: **User**, **Creator**, **Admin**
 
-## React Compiler
+## Tech Stack
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+| Layer | Teknologi |
+|---|---|
+| Mobile | Flutter |
+| Web | React (TypeScript) |
+| Backend & Database | Supabase (PostgreSQL) |
+| Auth | Supabase Auth |
+| Rich Text Editor (Web) | Quill (`react-quill-new`) |
+| Formula Rendering | KaTeX |
 
-## Expanding the ESLint configuration
+<!-- > Catatan migrasi: rich text editor sebelumnya menggunakan Tiptap, kemudian dimigrasikan ke Quill (`react-quill-new`). Auth juga telah dimigrasikan dari sistem custom (tabel `users` + `password_hash` sendiri) ke Supabase Auth. -->
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+## Role & Hak Akses
 
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+- **User** — mengisi/mengerjakan form
+- **Creator** — membuat dan mengelola form/soal
+- **Admin** — mengelola sistem secara keseluruhan
 
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
+## Struktur Proyek
 
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+Repo ini (`formaly-web`) merupakan bagian web (React TypeScript) dari Formaly. Aplikasi mobile (Flutter) berada di branch terpisah.
 
 ```
+formaly-web/
+└── src/
+    ├── assets/
+    ├── components/
+    │   ├── charts/
+    │   ├── creator/
+    │   │   ├── formList.tsx
+    │   │   ├── navbar.tsx
+    │   │   └── QuestionImportModal.tsx
+    │   ├── card.tsx
+    │   ├── filter.tsx
+    │   ├── form.tsx
+    │   ├── historyCard.tsx
+    │   ├── loading.tsx
+    │   ├── navbar.tsx
+    │   ├── pageindicator.tsx
+    │   ├── richtext.tsx
+    │   └── search.tsx
+    ├── lib/
+    │   ├── parsers/
+    │   ├── alerts.ts
+    │   ├── auth-context.ts
+    │   ├── auth.ts
+    │   ├── colorbase.tsx
+    │   ├── exportForm.ts
+    │   ├── redirect.ts
+    │   ├── richtext.ts
+    │   └── supabase.ts
+    ├── pages/
+    │   ├── admin/
+    │   │   └── forms.tsx
+    │   ├── auth/
+    │   │   ├── forgotPassword.tsx
+    │   │   ├── login.tsx
+    │   │   ├── otp.tsx
+    │   │   ├── register.tsx
+    │   │   └── resetPassword.tsx
+    │   ├── creator/
+    │   │   ├── dashboard.tsx
+    │   │   ├── formEdit.tsx
+    │   │   ├── formNew.tsx
+    │   │   ├── guard.tsx
+    │   │   ├── layout.tsx
+    │   │   ├── questions.tsx
+    │   │   ├── shared.tsx
+    │   │   ├── submissionDetail.tsx
+    │   │   ├── submissions.tsx
+    │   │   └── tokens.tsx
+    │   └── form/
+    │       ├── description.tsx
+    │       ├── form.tsx
+    │       ├── formlist.tsx
+    │       ├── resolver.tsx
+    │       ├── result.tsx
+    │       ├── available.tsx
+    │       ├── history.tsx
+    │       ├── home.tsx
+    │       └── profile.tsx
+    ├── App.css
+    └── App.tsx
+```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+## Instalasi & Setup
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+### Prasyarat
 
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+- Flutter SDK
+- Node.js & npm/yarn
+- Akun & project Supabase
+
+### Web (`formaly-web`)
+
+```bash
+npm install
+npm run dev
+```
+
+### Mobile (Flutter, repo terpisah)
+
+```bash
+flutter pub get
+flutter run
+```
+
+### Environment Variables
+
+Buat file `.env` di root project dengan isi:
 
 ```
+SUPABASE_URL=your_supabase_url
+SUPABASE_ANON_KEY=your_supabase_anon_key
+```
+
+## Kontributor
+
+| Nama | Peran |
+|---|---|
+| Rizki Syahrul Ramadhan | Project Manager |
+| Aurellia Tri Azhara | Database Engineer |
+| Muhammad Dzaki Rafif Helmiansyah | Front-end Web |
+| Ladya Shafa Kamila | Web UI/UX Designer |
+| Chintia Claudia | Mobile UI/UX Designer |
+| Ariq Hafizh Al Bariqi | Mobile Dev |
