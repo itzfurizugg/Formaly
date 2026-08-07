@@ -57,91 +57,94 @@ function App() {
       <div className="bg-second min-h-screen">
         {!hideNav && <Navbar />}
         <Suspense fallback={<Loading />}>
-          <Routes>
-          <Route path="/" element={<Home />} />
-          <Route path="/history" element={<History />} />
-          <Route path="/profile" element={<Profile />} />
-          <Route path="/admin/forms" element={<AdminForms />} />
-          <Route path="/form/description" element={<FormDescription />} />
-          <Route path="/form/:formId" element={<FormResolver />} />
-          <Route path="/form/list" element={<FormList />} />
-          <Route path="/form/result/:submissionId" element={<ResultPage />} />
-          <Route element={<CreatorLayout />}>
-            <Route
-              path="/creator"
-              element={
-                <CreatorGuard>
-                  <CreatorDashboard />
-                </CreatorGuard>
-              }
-            />
-            <Route
-              path="/creator/forms"
-              element={<Navigate to="/creator" replace />}
-            />
-            <Route
-              path="/creator/forms/new"
-              element={
-                <CreatorGuard>
-                  <CreatorFormNew />
-                </CreatorGuard>
-              }
-            />
-            <Route
-              path="/creator/forms/:id"
-              element={
-                <CreatorGuard>
-                  <CreatorFormEdit />
-                </CreatorGuard>
-              }
-            />
-            <Route
-              path="/creator/forms/:id/questions"
-              element={
-                <CreatorGuard>
-                  <CreatorQuestions />
-                </CreatorGuard>
-              }
-            />
-            <Route
-              path="/creator/forms/:id/tokens"
-              element={
-                <CreatorGuard>
-                  <CreatorTokens />
-                </CreatorGuard>
-              }
-            />
-            <Route
-              path="/creator/forms/:id/submissions"
-              element={
-                <CreatorGuard>
-                  <CreatorSubmissions />
-                </CreatorGuard>
-              }
-            />
-            <Route
-              path="/creator/forms/:id/shared"
-              element={
-                <CreatorGuard>
-                  <CreatorShared />
-                </CreatorGuard>
-              }
-            />
-            <Route
-              path="/creator/forms/:id/submissions/:submissionId"
-              element={
-                <CreatorGuard>
-                  <CreatorSubmissionDetail />
-                </CreatorGuard>
-              }
-            />
-          </Route>
-          <Route path="/login" element={<Login />} />
-          <Route path="/register" element={<Register />} />
-          <Route path="/auth" element={<Otp />} />
-          <Route path="/forgot-password" element={<ForgotPassword />} />
-          <Route path="/reset-password" element={<ResetPassword />} />
-        </Routes>
+          {/* Key = pathname agar tiap pindah halaman me-replay animasi pembukaan halaman */}
+          <div key={location.pathname} className="min-h-screen animate-page-enter">
+            <Routes>
+            <Route path="/" element={<Home />} />
+            <Route path="/history" element={<History />} />
+            <Route path="/profile" element={<Profile />} />
+            <Route path="/admin/forms" element={<AdminForms />} />
+            <Route path="/form/description" element={<FormDescription />} />
+            <Route path="/form/:formId" element={<FormResolver />} />
+            <Route path="/form/list" element={<FormList />} />
+            <Route path="/form/result/:submissionId" element={<ResultPage />} />
+            <Route element={<CreatorLayout />}>
+              <Route
+                path="/creator"
+                element={
+                  <CreatorGuard>
+                    <CreatorDashboard />
+                  </CreatorGuard>
+                }
+              />
+              <Route
+                path="/creator/forms"
+                element={<Navigate to="/creator" replace />}
+              />
+              <Route
+                path="/creator/forms/new"
+                element={
+                  <CreatorGuard>
+                    <CreatorFormNew />
+                  </CreatorGuard>
+                }
+              />
+              <Route
+                path="/creator/forms/:id"
+                element={
+                  <CreatorGuard>
+                    <CreatorFormEdit />
+                  </CreatorGuard>
+                }
+              />
+              <Route
+                path="/creator/forms/:id/questions"
+                element={
+                  <CreatorGuard>
+                    <CreatorQuestions />
+                  </CreatorGuard>
+                }
+              />
+              <Route
+                path="/creator/forms/:id/tokens"
+                element={
+                  <CreatorGuard>
+                    <CreatorTokens />
+                  </CreatorGuard>
+                }
+              />
+              <Route
+                path="/creator/forms/:id/submissions"
+                element={
+                  <CreatorGuard>
+                    <CreatorSubmissions />
+                  </CreatorGuard>
+                }
+              />
+              <Route
+                path="/creator/forms/:id/shared"
+                element={
+                  <CreatorGuard>
+                    <CreatorShared />
+                  </CreatorGuard>
+                }
+              />
+              <Route
+                path="/creator/forms/:id/submissions/:submissionId"
+                element={
+                  <CreatorGuard>
+                    <CreatorSubmissionDetail />
+                  </CreatorGuard>
+                }
+              />
+            </Route>
+            <Route path="/login" element={<Login />} />
+            <Route path="/register" element={<Register />} />
+            <Route path="/auth" element={<Otp />} />
+            <Route path="/forgot-password" element={<ForgotPassword />} />
+            <Route path="/reset-password" element={<ResetPassword />} />
+          </Routes>
+          </div>
         </Suspense>
       </div>
       <AlertToaster />

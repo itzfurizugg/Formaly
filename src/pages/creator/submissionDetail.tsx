@@ -129,10 +129,6 @@ function SubmissionDetail() {
     const correctPct = scoredCount > 0 ? Math.round((correctCount / scoredCount) * 100) : 0
     const wrongPct = scoredCount > 0 ? Math.round((wrongCount / scoredCount) * 100) : 0
 
-    if (loading) {
-        return <Loading />
-    }
-
     if (error) {
         return (
             <div className="flex flex-col items-center px-4 py-10">
@@ -144,6 +140,9 @@ function SubmissionDetail() {
     }
 
     return (
+        <>
+            <Loading show={loading} />
+            {!loading && (
         <div className="flex flex-col items-center px-4 py-10">
             <div className="w-full xl:max-w-7xl lg:max-w-5xl">
                 <button
@@ -293,6 +292,8 @@ function SubmissionDetail() {
                 )}
             </div>
         </div>
+            )}
+        </>
     )
 }
 

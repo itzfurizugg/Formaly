@@ -8,6 +8,7 @@ import { DistributionChart, type BarDatum } from "../../components/charts"
 import { colors } from "../../lib/colorbase"
 import FormList from "../../components/creator/formList"
 import Loading from "../../components/loading"
+import { pageGet, pageSet } from "../../lib/pageCache"
 
 interface Stats {
     total: number
@@ -32,13 +33,16 @@ interface SubmissionRow {
 function CreatorDashboard() {
     const { user } = useAuth()
     const navigate = useNavigate()
-    const [stats, setStats] = useState<Stats>({ total: 0, active: 0, submissions: 0, score: 0 })
-    const [loading, setLoading] = useState(true)
-    const [barData, setBarData] = useState<BarDatum[]>([])
+    // Cache ringkasan dashboard supaya kembali dari halaman lain cukup fade-in
+    // tanpa overlay loading; data di-refresh diam-diam di background.
+    const cached = user ? pageGet<{ stats: Stats; barData: BarDatum[] }>(`dashboard:${user.id}`) : undefined
+    const [stats, setStats] = useState<Stats>(cached?.stats ?? { total: 0, active: 0, submissions: 0, score: 0 })
+    const [loading, setLoading] = useState(!cached)
+    const [barData, setBarData] = useState<BarDatum[]>(cached?.barData ?? [])
 
     const loadStats = useCallback(async () => {
         if (!user) return
-        setLoading(true)
+        if (!cached) setLoading(true)
 
         const { data: forms } = await supabase
             .from("forms")
@@ -80,9 +84,21 @@ function CreatorDashboard() {
                 }))
                 .filter((d) => d.value > 0)
         )
+        if (user) {
+            pageSet(`dashboard:${user.id}`, {
+                stats: { total, active, submissions: subs.count || 0, score },
+                barData: formRows
+                    .map((f) => ({
+                        name: f.title.length > 14 ? f.title.slice(0, 14) + "…" : f.title,
+                        value: subRows.filter((s) => s.form_id === f.id).length,
+                        formId: f.id,
+                    }))
+                    .filter((d) => d.value > 0),
+            })
+        }
 
         setLoading(false)
-    }, [user])
+    }, [user, cached])
 
     useEffect(() => {
         if (!user) return
@@ -103,9 +119,8 @@ function CreatorDashboard() {
                 </div>
                 <p className="text-sm text-tinted mb-6">Ringkasan formulir milik kamu.</p>
 
-                {loading ? (
-                    <Loading />
-                ) : (
+                <Loading show={loading} />
+                {!loading && (
                     <div className="flex flex-col flex-1 min-h-0">
                     <div className="grid grid-cols-3 gap-2 sm:gap-0 sm:stats sm:stats-horizontal shadow w-full bg-white border border-second rounded-none divide-x divide-second">
                         <div className="stat p-3 sm:p-4 min-w-0">

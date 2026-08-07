@@ -41,9 +41,10 @@ function AdminForms() {
         fetchForms()
     }, [fetchForms])
 
-    if (loading) return <Loading />
-
     return (
+        <>
+            <Loading show={loading} />
+            {!loading && (
         <div className="flex flex-col items-center px-4 py-10 rounded-none">
             <div className="max-w-4xl w-full rounded-none">
                 <div className="flex items-center justify-between mb-1">
@@ -110,6 +111,8 @@ function AdminForms() {
                 )}
             </div>
         </div>
+            )}
+        </>
     )
 }
 

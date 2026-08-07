@@ -7,6 +7,7 @@ import { confirmDelete } from "../../lib/alerts"
 import Loading from "../loading"
 import { RichText } from "../richText"
 import { colors } from "../../lib/colorbase"
+import { pageGet, pageSet } from "../../lib/pageCache"
 
 interface FormRow {
     id: string
@@ -23,14 +24,17 @@ interface FormRow {
 function FormList() {
     const navigate = useNavigate()
     const { user } = useAuth()
-    const [forms, setForms] = useState<FormRow[]>([])
-    const [loading, setLoading] = useState(true)
+    // Cache daftar form supaya kembali ke dashboard tidak memunculkan
+    // overlay loading lagi; di-refresh diam-diam saat mount.
+    const cached = user ? pageGet<FormRow[]>(`formList:${user.id}`) : undefined
+    const [forms, setForms] = useState<FormRow[]>(cached ?? [])
+    const [loading, setLoading] = useState(!cached)
     const [deleting, setDeleting] = useState<string | null>(null)
     const [error, setError] = useState<string | null>(null)
 
     const loadForms = useCallback(async () => {
         if (!user) return
-        setLoading(true)
+        if (!cached) setLoading(true)
         const { data, error: err } = await supabase
             .from("forms")
             .select(`
@@ -42,9 +46,13 @@ function FormList() {
             .order("created_at", { ascending: false })
 
         if (err) setError(err.message)
-        else setForms((data as FormRow[]) || [])
+        else {
+            const rows = (data as FormRow[]) || []
+            setForms(rows)
+            if (user) pageSet(`formList:${user.id}`, rows)
+        }
         setLoading(false)
-    }, [user])
+    }, [user, cached])
 
     useEffect(() => {
         if (!user) return
@@ -75,31 +83,23 @@ function FormList() {
         return <span className="badge badge-ghost text-tinted rounded-full">Draft</span>
     }
 
-    if (loading) {
-        return <Loading />
-    }
-
-    if (error) {
-        return (
-            <div role="alert" className="text-sm text-wrong bg-wrong/5 border border-wrong/20 rounded-lg px-4 py-3">
-                {error}
-            </div>
-        )
-    }
-
-    if (forms.length === 0) {
-        return (
-            <div className="text-center py-20">
-                <FileText className="h-12 w-12 text-tinted/40 mx-auto mb-3" />
-                <p className="text-tinted mb-4">Belum ada form. Buat form pertamamu!</p>
-                <button onClick={() => navigate("/creator/forms/new")} className="btn bg-darks text-base border-none">
-                    Buat Form
-                </button>
-            </div>
-        )
-    }
-
     return (
+        <>
+            <Loading show={loading} />
+            {!loading && (
+                error ? (
+                    <div role="alert" className="text-sm text-wrong bg-wrong/5 border border-wrong/20 rounded-lg px-4 py-3">
+                        {error}
+                    </div>
+                ) : forms.length === 0 ? (
+                    <div className="text-center py-20">
+                        <FileText className="h-12 w-12 text-tinted/40 mx-auto mb-3" />
+                        <p className="text-tinted mb-4">Belum ada form. Buat form pertamamu!</p>
+                        <button onClick={() => navigate("/creator/forms/new")} className="btn bg-darks text-base border-none">
+                            Buat Form
+                        </button>
+                    </div>
+                ) : (
         <div className="space-y-3">
             {forms.map((form) => (
                 <div key={form.id} className="card bg-white border border-second rounded-none">
@@ -162,6 +162,9 @@ function FormList() {
                 </div>
             ))}
         </div>
+                )
+            )}
+        </>
     )
 }
 

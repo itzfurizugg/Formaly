@@ -75,7 +75,7 @@ function Modal({
                 className="absolute inset-0 bg-darks/50"
                 onClick={onClose}
             />
-            <div className="relative bg-white border border-second rounded-none w-full max-w-md p-5 shadow-xl animate-in fade-in zoom-in-95 duration-150">
+            <div className="relative bg-white border border-second rounded-none w-full max-w-md p-5 shadow-xl animate-scale-in">
                 <div className="flex items-center justify-between mb-4">
                     <div className="flex items-center gap-2.5">
                         <div className="w-9 h-9 shrink-0 rounded-full bg-base flex items-center justify-center">

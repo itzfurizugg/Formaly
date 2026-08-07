@@ -2,6 +2,7 @@ import { useEffect, useState, type ReactNode } from "react"
 import { supabase } from "./supabase"
 import type { User, EmailOtpType } from "@supabase/supabase-js"
 import { AuthContext, type Profile } from "./auth-context"
+import { pageClear } from "./pageCache"
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null)
@@ -121,6 +122,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   async function logout() {
     await supabase.auth.signOut()
+    pageClear()
   }
 
   return (

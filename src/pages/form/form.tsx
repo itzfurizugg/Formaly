@@ -249,38 +249,11 @@ function FormPage() {
     const seconds = timeLeft % 60
     const formattedTime = `${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`
 
-    if (authLoading || loading) {
-        return (
-            <Loading />
-        )
-    }
-
-    if (notFound) {
-        return (
-            <div className="flex flex-col items-center justify-center min-h-screen px-4">
-                <p className="text-tinted mb-4">Form tidak ditemukan atau belum dipublikasikan.</p>
-                <button onClick={() => navigate("/")} className="btn bg-darks text-white border-none">
-                    Kembali
-                </button>
-            </div>
-        )
-    }
-
     const question = questions[current]
     const total = questions.length
 
-    if (!question || total === 0) {
-        return (
-            <div className="flex flex-col items-center justify-center min-h-screen px-4">
-                <p className="text-tinted mb-4">Form tidak memiliki soal.</p>
-                <button onClick={() => navigate("/")} className="btn bg-darks text-white border-none">
-                    Kembali
-                </button>
-            </div>
-        )
-    }
-
     const selectOption = (optionId: string) => {
+        if (!question) return
         if (question.question_type === "multiple_choice") {
             const current = answers[question.id]
             const selected = Array.isArray(current) ? current : []
@@ -306,6 +279,24 @@ function FormPage() {
     }
 
     return (
+        <>
+            <Loading show={authLoading || loading} />
+            {!authLoading && !loading && (
+            notFound ? (
+                <div className="flex flex-col items-center justify-center min-h-screen px-4">
+                    <p className="text-tinted mb-4">Form tidak ditemukan atau belum dipublikasikan.</p>
+                    <button onClick={() => navigate("/")} className="btn bg-darks text-white border-none">
+                        Kembali
+                    </button>
+                </div>
+            ) : !question || total === 0 ? (
+                <div className="flex flex-col items-center justify-center min-h-screen px-4">
+                    <p className="text-tinted mb-4">Form tidak memiliki soal.</p>
+                    <button onClick={() => navigate("/")} className="btn bg-darks text-white border-none">
+                        Kembali
+                    </button>
+                </div>
+            ) : (
         <div className="flex flex-col items-center px-4 pt-6 pb-28 md:pb-6">
             <div className="w-full max-w-3xl xl:mt-15">
                 <div className="p-2 mb-3 hidden sm:block">
@@ -315,7 +306,8 @@ function FormPage() {
                     </p>
                 </div>
 
-                <div className="bg-base-300 lg:bg-white border border-second p-1 lg:p-6 lg:shadow-sm rounded-none">
+                {/* key=current agar animasi diulang tiap pindah soal */}
+                <div key={current} className="bg-base-300 lg:bg-white border border-second p-1 lg:p-6 lg:shadow-sm rounded-none animate-slide-up">
                     <div className="flex items-center justify-between mb-3">
                         <div className="flex gap-2">
                             <p className="text-sm text-tinted font-semibold">Soal {current + 1}</p>
@@ -469,6 +461,9 @@ function FormPage() {
                 </div>
             )}
         </div>
+            )
+            )}
+        </>
     )
 }
 

@@ -8,6 +8,7 @@ import QuestionImportModal from "../../components/creator/QuestionImportModal"
 import RichTextEditor, { RichText } from "../../components/richText"
 import { richTextToPlain } from "../../lib/richtext"
 import { alertSaveSuccess, confirmDelete, showAlert } from "../../lib/alerts"
+import { pageGet, pageSet } from "../../lib/pageCache"
 
 interface Option {
     id: string | null
@@ -31,9 +32,12 @@ function Questions({ embedded = false }: { embedded?: boolean }) {
     const navigate = useNavigate()
     const { user } = useAuth()
 
-    const [formTitle, setFormTitle] = useState("")
-    const [questions, setQuestions] = useState<Question[]>([])
-    const [loading, setLoading] = useState(true)
+    // Cache daftar soal per form supaya kembali ke halaman ini cukup fade-in
+    // tanpa overlay loading lagi; data tetap di-refresh diam-diam.
+    const cached = user && id ? pageGet<{ formTitle: string; questions: Question[] }>(`questions:${user.id}:${id}`) : undefined
+    const [formTitle, setFormTitle] = useState(cached?.formTitle ?? "")
+    const [questions, setQuestions] = useState<Question[]>(cached?.questions ?? [])
+    const [loading, setLoading] = useState(!cached)
 
     const [showEditor, setShowEditor] = useState(false)
     const [editingId, setEditingId] = useState<string | null>(null)
@@ -51,6 +55,10 @@ function Questions({ embedded = false }: { embedded?: boolean }) {
 
     const loadAll = useCallback(async () => {
         if (!user || !id) return
+        if (!cached) setLoading(true)
+
+        let newTitle = ""
+        let newQuestions: Question[] = []
 
         const { data: form } = await supabase
             .from("forms")
@@ -58,7 +66,10 @@ function Questions({ embedded = false }: { embedded?: boolean }) {
             .eq("id", id)
             .eq("creator_id", user.id)
             .single()
-        if (form) setFormTitle(form.title)
+        if (form) {
+            setFormTitle(form.title)
+            newTitle = form.title
+        }
 
         const { data: qs } = await supabase
             .from("questions")
@@ -68,10 +79,16 @@ function Questions({ embedded = false }: { embedded?: boolean }) {
             `)
             .eq("form_id", id)
             .order("order_index", { ascending: true })
-        if (qs) setQuestions(qs as unknown as Question[])
+        if (qs) {
+            setQuestions(qs as unknown as Question[])
+            newQuestions = qs as unknown as Question[]
+        }
 
+        if (user && id) {
+            pageSet(`questions:${user.id}:${id}`, { formTitle: newTitle, questions: newQuestions })
+        }
         setLoading(false)
-    }, [user, id])
+    }, [user, id, cached])
 
     useEffect(() => {
         if (!user || !id) return
@@ -389,12 +406,10 @@ function Questions({ embedded = false }: { embedded?: boolean }) {
         </div>
     )
 
-    if (loading) {
-        return <Loading />
-    }
-
     return (
         <div className={embedded ? "w-full min-w-0 pb-8" : "flex flex-col items-center px-4 py-10"}>
+            {embedded ? <Loading inline show={loading} /> : <Loading show={loading} />}
+            {!loading && (
             <div className={embedded ? "" : "w-full max-w-5xl"}>
                 {!embedded && (
                     <>
@@ -493,18 +508,19 @@ function Questions({ embedded = false }: { embedded?: boolean }) {
                         )))}
                     </div>
                 )}
+                {showImport && id && (
+                    <QuestionImportModal
+                        formId={id}
+                        startingOrder={questions.length}
+                        onClose={() => setShowImport(false)}
+                        onImported={(summary) => {
+                            setShowImport(false)
+                            showAlert(summary, "success")
+                            loadAll()
+                        }}
+                    />
+                )}
             </div>
-            {showImport && id && (
-                <QuestionImportModal
-                    formId={id}
-                    startingOrder={questions.length}
-                    onClose={() => setShowImport(false)}
-                    onImported={(summary) => {
-                        setShowImport(false)
-                        showAlert(summary, "success")
-                        loadAll()
-                    }}
-                />
             )}
         </div>
     )

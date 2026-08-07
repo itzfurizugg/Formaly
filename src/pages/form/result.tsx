@@ -123,26 +123,6 @@ function ResultPage() {
         return q.question_options.some((o) => o.is_correct)
     }
 
-    if (authLoading || loading) return <Loading />
-
-    if (error) {
-        return (
-            <div className="flex flex-col items-center px-4 py-10">
-                <div className="w-full max-w-2xl">
-                    <button
-                        onClick={() => navigate("/history")}
-                        className="flex items-center gap-2 text-sm text-tinted hover:text-darks mb-4 transition-colors"
-                    >
-                        <ArrowLeft className="h-4 w-4" /> Kembali ke Riwayat
-                    </button>
-                    <div role="alert" className="text-sm text-wrong bg-wrong/5 border border-wrong/20 rounded-lg px-4 py-3">
-                        {error}
-                    </div>
-                </div>
-            </div>
-        )
-    }
-
     const correctCount = answers.filter(isCorrect).length
     const textCount = answers.filter((a) => a.question?.question_type === "text").length
     const noAnswerCount = answers.filter((a) => a.question?.question_type !== "text" && !hasCorrectAnswer(a)).length
@@ -166,6 +146,24 @@ function ResultPage() {
     const textAnswers = filteredAnswers.filter((a) => a.question?.question_type === "text")
 
     return (
+        <>
+            <Loading show={authLoading || loading} />
+            {!authLoading && !loading && (
+            error ? (
+                <div className="flex flex-col items-center px-4 py-10">
+                    <div className="w-full max-w-2xl">
+                        <button
+                            onClick={() => navigate("/history")}
+                            className="flex items-center gap-2 text-sm text-tinted hover:text-darks mb-4 transition-colors"
+                        >
+                            <ArrowLeft className="h-4 w-4" /> Kembali ke Riwayat
+                        </button>
+                        <div role="alert" className="text-sm text-wrong bg-wrong/5 border border-wrong/20 rounded-lg px-4 py-3">
+                            {error}
+                        </div>
+                    </div>
+                </div>
+            ) : (
         <div className="flex flex-col items-center px-4 py-10">
             <div className="w-full max-w-4xl">
                 <button
@@ -346,6 +344,9 @@ function ResultPage() {
                 )}
             </div>
         </div>
+            )
+            )}
+        </>
     )
 }
 

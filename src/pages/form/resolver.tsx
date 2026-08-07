@@ -90,18 +90,23 @@ function FormResolver() {
         }
     }, [formId, user, authLoading, navigate, location.pathname, location.search])
 
-    if (mode === "exam") return <FormPage />
-    if (mode === "notFound") {
-        return (
-            <div className="flex flex-col items-center justify-center min-h-screen px-4">
-                <p className="text-tinted mb-4">Form tidak ditemukan atau belum dipublikasikan.</p>
-                <button onClick={() => navigate("/")} className="btn bg-darks text-white border-none">
-                    Kembali
-                </button>
-            </div>
-        )
-    }
-    return <Loading />
+    return (
+        <>
+            <Loading show={mode === "loading"} />
+            {mode !== "loading" && (
+            mode === "exam" ? (
+                <FormPage />
+            ) : (
+                <div className="flex flex-col items-center justify-center min-h-screen px-4">
+                    <p className="text-tinted mb-4">Form tidak ditemukan atau belum dipublikasikan.</p>
+                    <button onClick={() => navigate("/")} className="btn bg-darks text-white border-none">
+                        Kembali
+                    </button>
+                </div>
+            )
+            )}
+        </>
+    )
 }
 
 export default FormResolver

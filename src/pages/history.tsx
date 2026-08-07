@@ -81,6 +81,9 @@ function History() {
     if (authLoading || !user) return <Loading />
 
     return (
+        <>
+            <Loading show={authLoading || !user || loading} />
+            {!authLoading && user && !loading && (
         <div className="flex flex-col items-center px-4 py-5">
             <div className="max-w-4xl grid w-full lg:mt-10">
                 <div className="flex items-center gap-2 mb-1">
@@ -105,9 +108,7 @@ function History() {
                     </div>
                 )} */}
 
-                {loading ? (
-                    <Loading />
-                ) : filtered.length === 0 ? (
+                {filtered.length === 0 ? (
                     <div className="text-center py-20">
                         <FileText className="h-12 w-12 text-tinted/40 mx-auto mb-3" />
                         <p className="text-tinted">Belum ada histori formulir.</p>
@@ -131,6 +132,8 @@ function History() {
                 )}
             </div>
         </div>
+            )}
+        </>
     )
 }
 

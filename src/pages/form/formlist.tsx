@@ -64,7 +64,8 @@ function FormList() {
                                 onClick={() => {
                                     backToForm(index)
                                 }}
-                                className={`relative aspect-square p-3 rounded-sm transition-all flex items-center justify-center text-xl lg:text-sm font-medium
+                                style={{ animationDelay: `${Math.min(index * 20, 240)}ms` }}
+                                className={`animate-fade-in relative aspect-square p-3 rounded-sm transition-all flex items-center justify-center text-xl lg:text-sm font-medium
                                     ${isCurrent
                                         ? "ring-2 ring-done ring-offset-1 bg-darks text-white"
                                         : isAnsweredQuestion

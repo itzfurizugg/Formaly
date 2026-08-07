@@ -7,24 +7,38 @@ import { useAuth } from "../../lib/auth-context"
 import { alertSaveError, alertSaveSuccess } from "../../lib/alerts"
 import RichTextEditor from "../../components/richText"
 import Questions from "./questions"
+import { pageGet, pageSet } from "../../lib/pageCache"
+
+interface FormEditCache {
+    title: string
+    description: string
+    duration: number | ""
+    passingScore: number | ""
+    status: string
+    tags: string[]
+}
 
 function FormEdit() {
     const { id } = useParams()
     const navigate = useNavigate()
     const { user } = useAuth()
 
-    const [title, setTitle] = useState("")
-    const [description, setDescription] = useState("")
-    const [duration, setDuration] = useState<number | "">(0)
-    const [passingScore, setPassingScore] = useState<number | "">(70)
-    const [status, setStatus] = useState("draft")
-    const [loading, setLoading] = useState(true)
+    // Cache data form supaya navigasi "kembali" cukup fade-in tanpa overlay loading.
+    const cached = user && id ? pageGet<FormEditCache>(`formEdit:${user.id}:${id}`) : undefined
+
+    const [title, setTitle] = useState(cached?.title ?? "")
+    const [description, setDescription] = useState(cached?.description ?? "")
+    const [duration, setDuration] = useState<number | "">(cached?.duration ?? 0)
+    const [passingScore, setPassingScore] = useState<number | "">(cached?.passingScore ?? 70)
+    const [status, setStatus] = useState(cached?.status ?? "draft")
+    const [loading, setLoading] = useState(!cached)
     const [saving, setSaving] = useState(false)
-    const [tags, setTags] = useState<string[]>([])
+    const [tags, setTags] = useState<string[]>(cached?.tags ?? [])
     const [tagInput, setTagInput] = useState("")
 
     const loadForm = useCallback(async () => {
         if (!user || !id) return
+        if (!cached) setLoading(true)
         const { data, error: err } = await supabase
             .from("forms")
             .select("*")
@@ -41,16 +55,27 @@ function FormEdit() {
         setDuration(data.duration || 0)
         setPassingScore(data.passing_score || 0)
         setStatus(String(data.status))
-        setLoading(false)
 
         const { data: rel } = await supabase
             .from("form_tags")
             .select("tag:tags ( name )")
             .eq("form_id", id)
+        let newTags: string[] = []
         if (rel) {
-            setTags(rel.map((r) => (r.tag as unknown as { name: string } | null)?.name).filter((n): n is string => !!n))
+            newTags = rel.map((r) => (r.tag as unknown as { name: string } | null)?.name).filter((n): n is string => !!n)
+            setTags(newTags)
         }
-    }, [user, id, navigate])
+
+        pageSet<FormEditCache>(`formEdit:${user.id}:${id}`, {
+            title: data.title,
+            description: data.description || "",
+            duration: data.duration || 0,
+            passingScore: data.passing_score || 0,
+            status: String(data.status),
+            tags: newTags,
+        })
+        setLoading(false)
+    }, [user, id, navigate, cached])
 
     useEffect(() => {
         if (!user || !id) return
@@ -142,6 +167,16 @@ function FormEdit() {
         try {
             await saveFormData()
             await syncTags()
+            if (user && id) {
+                pageSet<FormEditCache>(`formEdit:${user.id}:${id}`, {
+                    title,
+                    description,
+                    duration,
+                    passingScore,
+                    status,
+                    tags,
+                })
+            }
             alertSaveSuccess()
         } catch (err) {
             alertSaveError(err instanceof Error ? err.message : "Gagal menyimpan perubahan.")
@@ -153,13 +188,10 @@ function FormEdit() {
     const inputCls = "input w-full bg-white text-xl lg:text-3xl h-auto p-2 border-second focus:border-done focus:outline-none transition-colors"
     const inputWithVal = "input w-full bg-base text-sm lg:text-xl border-second focus:border-done focus:outline-none transition-colors"
 
-    if (loading) {
-        return (
-            <Loading />
-        )
-    }
-
     return (
+        <>
+            <Loading show={loading} />
+            {!loading && (
         <div className="flex flex-col items-center px-4 pt-10 lg:h-screen lg:overflow-hidden">
             <div className="w-full xl:max-w-7xl lg:max-w-5xl lg:h-full lg:flex lg:flex-col">
                 <button
@@ -320,8 +352,10 @@ function FormEdit() {
                     </div>
                 </div>
             </div>
-        </div>
-    </div>
+            </div>
+            </div>
+            )}
+        </>
     )
 }
 

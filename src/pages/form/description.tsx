@@ -106,19 +106,16 @@ function FormDescriptionPage() {
             })
     }, [formId, user, authLoading])
 
-    if (!form) {
-        return loading ? (
-            <Loading />
-        ) : null
-    }
-
     const handleStartExam = () => {
         setLoading(true)
         // Navigasi ke halaman pengerjaan soal (FormPage) dengan membawa formId di URL
-        navigate(`/form/${form.id}`)
+        navigate(`/form/${form?.id}`)
     }
 
     return (
+        <>
+            <Loading show={loading && !form} />
+            {!loading && form && (
         <div className="flex flex-col items-center min-h-screen sm:min-h-[80vh] sm:justify-center px-0 pt-6 pb-28 sm:px-4 sm:py-10 bg-white sm:bg-transparent">
             <div className="w-full max-w-4xl bg-white sm:border sm:border-second p-4 sm:p-8 sm:shadow-sm sm:rounded-lg relative">
 
@@ -218,6 +215,8 @@ function FormDescriptionPage() {
                 </div>
             </div>
         </div>
+            )}
+        </>
     )
 }
 

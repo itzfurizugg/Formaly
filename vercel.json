@@ -1,6 +1,11 @@
 {
   "rewrites": [
     {
+      "source": "/:path*",
+      "has": [{ "type": "host", "value": "creator-formaly.vercel.app" }],
+      "destination": "/creator/:path*"
+    },
+    {
       "source": "/(.*)",
       "destination": "/index.html"
     }
