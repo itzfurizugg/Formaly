@@ -139,4 +139,4 @@ SUPABASE_ANON_KEY=your_supabase_anon_key
 | Muhammad Dzaki Rafif Helmiansyah | Front-end Web |
 | Ladya Shafa Kamila | Web UI/UX Designer |
 | Chintia Claudia | Mobile UI/UX Designer |
-| Ariq Hafizh Al Bariqi | Mobile Dev |
+<!-- | Ariq Hafizh Al Bariqi | Mobile Dev | -->
