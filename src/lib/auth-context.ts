@@ -4,6 +4,8 @@ import type { User, EmailOtpType } from "@supabase/supabase-js"
 export interface Profile {
   name: string
   email: string
+  role?: string
+  created_at?: string
 }
 
 export interface AuthContextType {
