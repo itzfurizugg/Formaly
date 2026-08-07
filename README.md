@@ -1,8 +1,4 @@
-<<<<<<< HEAD
 ![alt text](src/assets/banner.png)
-=======
-<img width="2293" height="720" alt="Frame 7" src="https://github.com/user-attachments/assets/a8f83054-9a7f-40c8-99ae-29b02ab21bb5" />
->>>>>>> 4a253de90bd3864ad4c4f844e55b728f3171cb0d
 
 # Formaly
 

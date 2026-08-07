@@ -8,6 +8,20 @@ import type { EmailOtpType } from "@supabase/supabase-js"
 
 const OTP_LENGTH = 6
 
+function friendlyOtpError(err: unknown): string {
+    const msg = err instanceof Error ? err.message : String(err)
+    if (/token has expired or is invalid|invalid otp|otp expired|expired token/i.test(msg)) {
+        return "Kode OTP salah atau sudah kedaluwarsa. Tekan 'Kirim ulang' untuk mendapatkan kode baru."
+    }
+    if (/rate limit|too many requests|over rate|429/i.test(msg)) {
+        return "Terlalu banyak percobaan. Tunggu beberapa saat lalu coba lagi."
+    }
+    if (/signups not allowed|no user found/i.test(msg)) {
+        return "Email belum terdaftar. Silakan daftar terlebih dahulu."
+    }
+    return msg || "Terjadi kesalahan, coba lagi."
+}
+
 function Otp() {
     const location = useLocation()
     const navigate = useNavigate()
@@ -23,7 +37,7 @@ function Otp() {
     const [loading, setLoading] = useState(false)
     const [resendLoading, setResendLoading] = useState(false)
     const [resendSuccess, setResendSuccess] = useState<string | null>(null)
-    const [resendCountdown, setResendCountdown] = useState(0)
+    const [resendCountdown, setResendCountdown] = useState(otpType === "email" ? 30 : 0)
     const [error, setError] = useState<string | null>(null)
     const inputsRef = useRef<(HTMLInputElement | null)[]>([])
 
@@ -82,10 +96,16 @@ function Otp() {
         setLoading(true)
         try {
             await verifyOtp(email, code, otpType)
-            await logout()
-            navigate(`/login${nextQuery}`, { state: { verified: true, email } })
+            if (otpType === "email") {
+                // Login via OTP: session sudah aktif, arahkan langsung ke tujuan.
+                navigate(nextPath, { replace: true })
+            } else {
+                // Verifikasi email (signup): logout lalu user masuk dengan password.
+                await logout()
+                navigate(`/login${nextQuery}`, { state: { verified: true, email } })
+            }
         } catch (err) {
-            setError(err instanceof Error ? err.message : "Verifikasi gagal, coba lagi.")
+            setError(friendlyOtpError(err))
         } finally {
             setLoading(false)
         }
@@ -108,7 +128,7 @@ function Otp() {
             setResendSuccess("Kode OTP baru telah dikirim ke email kamu.")
             setResendCountdown(60)
         } catch (err) {
-            setError(err instanceof Error ? err.message : "Gagal mengirim ulang OTP.")
+            setError(friendlyOtpError(err))
         } finally {
             setResendLoading(false)
         }

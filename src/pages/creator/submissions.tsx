@@ -7,8 +7,9 @@ import { useAuth } from "../../lib/auth-context"
 import { confirmDelete } from "../../lib/alerts"
 import { richTextToPlain } from "../../lib/richtext"
 import { colors } from "../../lib/colorbase"
+import { getOptionColor } from "../../lib/optionColors"
 import { DonutChart } from "../../components/charts"
-import { Bar, BarChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts"
+import { Bar, BarChart, ResponsiveContainer, Tooltip, XAxis, YAxis, type TooltipContentProps } from "recharts"
 
 interface Submission {
     id: string
@@ -24,15 +25,18 @@ interface AnswerRow {
     submission_id: string
     selected_option_id: string | null
     selected_options: string[] | null
-question: {
-            id: string
-            question_type: string
-            question_options: { id: string; option_text: string; is_correct: boolean }[]
-        } | null
+    question: {
+        id: string
+        question_text: string | null
+        question_type: string
+        order_index: number
+        question_options: { id: string; option_text: string; is_correct: boolean }[]
+    } | null
 }
 
-interface StackDatum {
-    question: string
+interface StackBarDatum {
+    name: string
+    soal_text: string
     [key: string]: string | number
 }
 
@@ -41,8 +45,6 @@ interface OptionSeries {
     label: string
     color: string
 }
-
-const OPTION_COLORS = ["#007DCC", "#2FA084", "#D90000", "#929AAB", "#7A3D6C", "#E67E22", "#16A085", "#8E44AD", "#C0392B", "#2C3E50"]
 
 function Submissions() {
     const { id } = useParams()
@@ -53,8 +55,8 @@ function Submissions() {
     const [loading, setLoading] = useState(true)
     const [error, setError] = useState<string | null>(null)
     const [deletingId, setDeletingId] = useState<string | null>(null)
-    const [stackData, setStackData] = useState<StackDatum[]>([])
-    const [stackSeries, setStackSeries] = useState<OptionSeries[]>([])
+    const [barData, setBarData] = useState<StackBarDatum[]>([])
+    const [barSeries, setBarSeries] = useState<OptionSeries[]>([])
     const [totalCorrect, setTotalCorrect] = useState(0)
     const [totalWrong, setTotalWrong] = useState(0)
 
@@ -81,15 +83,24 @@ function Submissions() {
                 .from("answers")
                 .select(`
                     submission_id, selected_option_id, selected_options,
-                    question:question_id ( id, question_type, question_options ( id, option_text, is_correct ) )
+                    question:question_id ( id, question_text, question_type, order_index, question_options ( id, option_text, is_correct ) )
                 `)
                 .in("submission_id", subIds)
             answers = (ans as unknown as AnswerRow[]) || []
         }
 
+        // Urutkan jawaban berdasarkan order_index soal supaya bar chart
+        // "Distribusi Opsi Jawaban" urutannya sama persis dengan Question editor & Form.
+        // Jangan dihapus: tanpa ini, urutan soal mengikuti default tabel answers yang tidak pasti.
+        answers.sort(
+            (a, b) =>
+                (a.question?.order_index ?? Number.MAX_SAFE_INTEGER) -
+                (b.question?.order_index ?? Number.MAX_SAFE_INTEGER)
+        )
+
         // Kelompokkan jawaban per soal, lalu hitung berapa kali tiap opsi dipilih.
         const qOrder = new Map<string, number>()
-        const qMap = new Map<string, { options: { id: string; text: string; count: number }[] }>()
+        const qMap = new Map<string, { text: string; options: { id: string; text: string; count: number }[] }>()
         let order = 0
         for (const a of answers) {
             const q = a.question
@@ -97,6 +108,7 @@ function Submissions() {
             if (!qOrder.has(q.id)) {
                 qOrder.set(q.id, order++)
                 qMap.set(q.id, {
+                    text: richTextToPlain(q.question_text || ""),
                     options: q.question_options.map((o) => ({
                         id: o.id,
                         text: richTextToPlain(o.option_text || ""),
@@ -117,25 +129,34 @@ function Submissions() {
         }
 
         // Susun data stacked bar: satu bar per soal, segmen per opsi jawaban.
-        const data: StackDatum[] = []
+        // Opsi yang tidak ada pada suatu soal diberi nilai 0 agar stacking tetap konsisten.
+        let maxOptions = 0
+        for (const entry of qMap.values()) {
+            maxOptions = Math.max(maxOptions, entry.options.length)
+        }
+        const data: StackBarDatum[] = []
         const series: OptionSeries[] = []
         for (const [qid, entry] of qMap) {
             const qno = (qOrder.get(qid) ?? 0) + 1
-            const row: StackDatum = { question: `Soal ${qno}` }
-            entry.options.forEach((o, oi) => {
-                if (o.count === 0) return
-                const key = `opt_${o.id}`
-                row[key] = o.count
-                series.push({
-                    key,
-                    label: `Soal ${qno} - ${o.text || `Opsi ${oi + 1}`}`,
-                    color: OPTION_COLORS[oi % OPTION_COLORS.length],
-                })
-            })
+            const row: StackBarDatum = { name: `Soal ${qno}`, soal_text: entry.text }
+            for (let i = 0; i < maxOptions; i++) {
+                const key = `Opsi ${String.fromCharCode(65 + i)}`
+                const opt = entry.options[i]
+                row[key] = opt ? opt.count : 0
+                if (opt) row[`optText_${String.fromCharCode(65 + i)}`] = opt.text
+            }
             data.push(row)
         }
-        setStackData(data)
-        setStackSeries(series)
+        for (let i = 0; i < maxOptions; i++) {
+            const label = `Opsi ${String.fromCharCode(65 + i)}`
+            series.push({
+                key: label,
+                label,
+                color: getOptionColor(i),
+            })
+        }
+        setBarData(data)
+        setBarSeries(series)
 
         // Hitung jumlah jawaban benar vs salah (soal isian dan tanpa kunci tidak dihitung).
         let correctTotal = 0
@@ -176,6 +197,32 @@ function Submissions() {
     }
 
     const fmtDate = (d: string | null) => (d ? new Date(d).toLocaleString("id-ID") : "-")
+
+    const renderTooltip = ({ active, payload, label }: TooltipContentProps) => {
+        if (!active || !payload?.length) return null
+        const row = payload[0].payload as StackBarDatum
+        const title = row.soal_text ? `${label} - ${row.soal_text}` : String(label)
+        return (
+            <div style={{ background: "white", border: `1px solid ${colors.second}`, borderRadius: 12, padding: "8px 12px", fontSize: 12, maxWidth: 320 }}>
+                <p className="font-medium text-darks">{title}</p>
+                {barSeries.map((s) => {
+                    const count = Number(row[s.key]) || 0
+                    if (count === 0) return null
+                    const letter = s.key.replace("Opsi ", "")
+                    const text = row[`optText_${letter}`]
+                    return (
+                        <p key={s.key} className="flex items-center gap-1.5 text-tinted mt-1">
+                            <span className="h-2.5 w-2.5 rounded-full shrink-0" style={{ background: s.color }} />
+                            <span>
+                                {s.label}
+                                {text ? ` - ${text}` : ""}: <span className="font-medium text-darks">{count}</span> responden
+                            </span>
+                        </p>
+                    )
+                })}
+            </div>
+        )
+    }
 
     const handleDelete = async (s: Submission) => {
         confirmDelete({
@@ -257,20 +304,22 @@ function Submissions() {
                             <p className="text-xs text-tinted mb-4">
                                 Jumlah pilihan tiap opsi per soal dari seluruh submission (soal isian tidak dihitung).
                             </p>
-                            <div style={{ height: Math.max(200, stackData.length * 90) }}>
-                                <ResponsiveContainer width="100%" height="100%">
-                                    <BarChart data={stackData} margin={{ top: 8, right: 16, left: -14, bottom: 0 }}>
-                                        <XAxis dataKey="question" tick={{ fontSize: 11, fill: colors.tinted }} axisLine={false} tickLine={false} interval={0} />
-                                        <YAxis tick={{ fontSize: 11, fill: colors.tinted }} axisLine={false} tickLine={false} allowDecimals={false} />
-                                        <Tooltip cursor={{ fill: colors.second }} />
-                                        {stackSeries.map((s) => (
-                                            <Bar key={s.key} dataKey={s.key} stackId="opt" name={s.label} fill={s.color} />
-                                        ))}
-                                    </BarChart>
-                                </ResponsiveContainer>
+                            <div style={{ overflowX: "auto" }}>
+                                <div style={{ width: `max(100%, ${Math.max(1, barData.length) * 56}px)`, height: 280 }}>
+                                    <ResponsiveContainer width="100%" height="100%">
+                                        <BarChart data={barData} margin={{ top: 8, right: 16, left: -14, bottom: 0 }}>
+                                            <XAxis dataKey="name" tick={{ fontSize: 11, fill: colors.tinted }} axisLine={false} tickLine={false} interval={0} />
+                                            <YAxis tick={{ fontSize: 11, fill: colors.tinted }} axisLine={false} tickLine={false} allowDecimals={false} />
+                                            <Tooltip cursor={{ fill: colors.second }} content={renderTooltip} />
+                                            {barSeries.map((s) => (
+                                                <Bar key={s.key} dataKey={s.key} stackId="opt" name={s.label} fill={s.color} />
+                                            ))}
+                                        </BarChart>
+                                    </ResponsiveContainer>
+                                </div>
                             </div>
                             <div className="mt-3 flex flex-wrap gap-x-4 gap-y-1.5">
-                                {stackSeries.map((s) => (
+                                {barSeries.map((s) => (
                                     <span key={s.key} className="inline-flex items-center gap-1.5 text-xs text-tinted">
                                         <span className="h-2.5 w-2.5 rounded-full shrink-0" style={{ background: s.color }} />
                                         {s.label}

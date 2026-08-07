@@ -20,6 +20,7 @@ interface AnswerRow {
         question_type: string
         score_value: number
         image_question: string | null
+        order_index: number
         question_options: { id: string; option_text: string; is_correct: boolean }[]
     } | null
 }
@@ -69,12 +70,23 @@ function SubmissionDetail() {
             .select(`
                 id, selected_option_id, selected_options, answer_text, score_obtained,
                 question:question_id (
-                    id, question_text, question_type, score_value, image_question,
+                    id, question_text, question_type, score_value, image_question, order_index,
                     question_options ( id, option_text, is_correct )
                 )
             `)
             .eq("submission_id", submissionId)
-        setAnswers((ans as unknown as AnswerRow[]) || [])
+            // Urutkan soal sesuai order_index (sama dengan halaman Question editor & Form),
+            // bukan urutan default tabel answers yang tidak dijamin.
+            .order("question(order_index)", { ascending: true })
+
+        // Sort tambahan di sisi client sebagai jaminan, karena data diambil dari tabel
+        // answers (bukan questions) sehingga urutannya mengikuti baris jawaban.
+        const rows = ((ans as unknown as AnswerRow[]) || []).slice().sort(
+            (a, b) =>
+                (a.question?.order_index ?? Number.MAX_SAFE_INTEGER) -
+                (b.question?.order_index ?? Number.MAX_SAFE_INTEGER)
+        )
+        setAnswers(rows)
 
         setLoading(false)
     }, [user, id, submissionId])

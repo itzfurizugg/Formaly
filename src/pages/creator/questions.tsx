@@ -239,6 +239,156 @@ function Questions({ embedded = false }: { embedded?: boolean }) {
         return "Pilihan Tunggal"
     }
 
+    const renderEditor = () => (
+        <div className="bg-white border border-second p-6 shadow-sm rounded-none mb-6 overflow-block space-y-4">
+            <div className="flex items-center justify-between">
+                <h2 className="font-semibold text-darks">{editingId ? "Edit Soal" : "Tambah Soal"}</h2>
+                <button onClick={resetEditor} className="btn btn-sm btn-ghost text-tinted">
+                    <X className="h-4 w-4" />
+                </button>
+            </div>
+
+            <div>
+                <label className="block text-sm font-medium text-darks mb-1.5">Soal</label>
+                <RichTextEditor
+                    value={questionText}
+                    onChange={setQuestionText}
+                    placeholder="Tulis soal di sini..."
+                />
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+                <div>
+                    <label className="block text-sm font-medium text-darks mb-1.5">Tipe</label>
+                    <select
+                        className="select w-full bg-base border-second focus:border-done focus:outline-none rounded-full"
+                        value={questionType}
+                        onChange={(e) => setQuestionType(e.target.value)}
+                    >
+                        <option value="single_choice">Pilihan Tunggal</option>
+                        <option value="multiple_choice">Pilihan Ganda</option>
+                        <option value="text">Isian</option>
+                    </select>
+                </div>
+                <div>
+                    <label className="block text-sm font-medium text-darks mb-1.5">Skor</label>
+                    <input
+                        type="number"
+                        min={0}
+                        max={100}
+                        step={1}
+                        className="input w-full bg-base border-second focus:border-done focus:outline-none"
+                        value={scoreValue}
+                        onChange={(e) => setScoreValue(Number(e.target.value))}
+                        placeholder="0"
+                    />
+                </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+                <div>
+                    <label className="block text-sm font-medium text-darks mb-1.5">Urutan</label>
+                    <input
+                        type="number"
+                        min={0}
+                        className="input w-full bg-base border-second focus:border-done focus:outline-none"
+                        value={orderIndex}
+                        onChange={(e) => setOrderIndex(Number(e.target.value))}
+                    />
+                </div>
+                <div>
+                    <label className="block text-sm font-medium text-darks mb-1.5">
+                        <span className="inline-flex items-center gap-1"><ImageIcon className="h-3.5 w-3.5" /> URL Gambar</span>
+                    </label>
+                    <input
+                        type="text"
+                        className="input w-full bg-base border-second focus:border-done focus:outline-none"
+                        value={imageQuestion}
+                        onChange={(e) => setImageQuestion(e.target.value)}
+                        placeholder="https://..."
+                    />
+                </div>
+            </div>
+
+            <div className="flex items-center gap-2">
+                <button
+                    type="button"
+                    onClick={() => setIsRequired(!isRequired)}
+                    title="Tandai sebagai wajib dijawab"
+                    aria-label="Tandai sebagai wajib dijawab"
+                    className={`shrink-0 rounded-full border p-1.5 transition-colors ${
+                        isRequired
+                            ? "bg-darks text-base border-darks"
+                            : "bg-base text-tinted border-second hover:border-darks hover:text-darks"
+                    }`}
+                >
+                    <Check className="h-4 w-4" />
+                </button>
+                <span className="text-sm font-medium text-darks">
+                    Wajib dijawab <span className="text-red-600 font-bold">*</span>
+                </span>
+            </div>
+
+            {questionType !== "text" && (
+                <div>
+                    <div className="flex items-center justify-between mb-2">
+                        <label className="text-sm font-medium text-darks">Pilihan Jawaban</label>
+                        <button onClick={addOption} className="btn btn-sm bg-base text-darks border border-second hover:bg-second">
+                            <Plus className="h-3.5 w-3.5" /> Tambah Pilihan
+                        </button>
+                    </div>
+                    <div className="space-y-2">
+                        {options.map((opt, index) => (
+                            <div key={index} className="flex items-center gap-2">
+                                <RichTextEditor
+                                    compact
+                                    className="flex-1"
+                                    value={opt.option_text}
+                                    onChange={(v) => updateOption(index, { option_text: v })}
+                                    placeholder={`Pilihan ${index + 1}`}
+                                />
+                                <button
+                                    type="button"
+                                    onClick={() => {
+                                        const next = !opt.is_correct
+                                        if (questionType === "single_choice" && next) {
+                                            setOptions(
+                                                options.map((o, i) => (i === index ? { ...o, is_correct: true } : { ...o, is_correct: false }))
+                                            )
+                                        } else {
+                                            updateOption(index, { is_correct: next })
+                                        }
+                                    }}
+                                    title="Tandai jawaban benar"
+                                    aria-label="Tandai jawaban benar"
+                                    className={`shrink-0 rounded-full border p-1.5 transition-colors ${
+                                        opt.is_correct
+                                            ? "bg-darks text-base border-darks"
+                                            : "bg-base text-tinted border-second hover:border-darks hover:text-darks"
+                                    }`}
+                                >
+                                    <Check className="h-4 w-4" />
+                                </button>
+                                <button onClick={() => removeOption(index)} className="btn btn-sm btn-ghost text-wrong">
+                                    <X className="h-4 w-4" />
+                                </button>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            )}
+
+            <button
+                onClick={handleSave}
+                disabled={saving}
+                className="btn bg-darks text-base border-none w-full hover:opacity-90 transition-opacity disabled:opacity-60"
+            >
+                {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
+                Simpan Soal
+            </button>
+        </div>
+    )
+
     if (loading) {
         return <Loading />
     }
@@ -273,166 +423,19 @@ function Questions({ embedded = false }: { embedded?: boolean }) {
                     )}
                 </div>
 
-                {showEditor && (
-                    <div className="bg-white border border-second p-6 shadow-sm rounded-none mb-6 overflow-block space-y-4">
-                        <div className="flex items-center justify-between">
-                            <h2 className="font-semibold text-darks">{editingId ? "Edit Soal" : "Tambah Soal"}</h2>
-                            <button onClick={resetEditor} className="btn btn-sm btn-ghost text-tinted">
-                                <X className="h-4 w-4" />
-                            </button>
-                        </div>
+                {questions.length === 0 && showEditor && !editingId && renderEditor()}
 
-                        <div>
-                            <label className="block text-sm font-medium text-darks mb-1.5">Soal</label>
-                            <RichTextEditor
-                                value={questionText}
-                                onChange={setQuestionText}
-                                placeholder="Tulis soal di sini..."
-                            />
-                        </div>
-
-                        <div className="grid grid-cols-2 gap-4">
-                            <div>
-                                <label className="block text-sm font-medium text-darks mb-1.5">Tipe</label>
-                                <select
-                                    className="select w-full bg-base border-second focus:border-done focus:outline-none rounded-full"
-                                    value={questionType}
-                                    onChange={(e) => setQuestionType(e.target.value)}
-                                >
-                                    <option value="single_choice">Pilihan Tunggal</option>
-                                    <option value="multiple_choice">Pilihan Ganda</option>
-                                    <option value="text">Isian</option>
-                                </select>
-                            </div>
-                            <div>
-                                <label className="block text-sm font-medium text-darks mb-1.5">Skor</label>
-                                <input
-                                    type="number"
-                                    min={0}
-                                    max={100}
-                                    step={1}
-                                    className="input w-full bg-base border-second focus:border-done focus:outline-none"
-                                    value={scoreValue}
-                                    onChange={(e) => setScoreValue(Number(e.target.value))}
-                                    placeholder="0"
-                                />
-                            </div>
-                        </div>
-
-                        <div className="grid grid-cols-2 gap-4">
-                            <div>
-                                <label className="block text-sm font-medium text-darks mb-1.5">Urutan</label>
-                                <input
-                                    type="number"
-                                    min={0}
-                                    className="input w-full bg-base border-second focus:border-done focus:outline-none"
-                                    value={orderIndex}
-                                    onChange={(e) => setOrderIndex(Number(e.target.value))}
-                                />
-                            </div>
-                            <div>
-                                <label className="block text-sm font-medium text-darks mb-1.5">
-                                    <span className="inline-flex items-center gap-1"><ImageIcon className="h-3.5 w-3.5" /> URL Gambar</span>
-                                </label>
-                                <input
-                                    type="text"
-                                    className="input w-full bg-base border-second focus:border-done focus:outline-none"
-                                    value={imageQuestion}
-                                    onChange={(e) => setImageQuestion(e.target.value)}
-                                    placeholder="https://..."
-                                />
-                            </div>
-                        </div>
-
-                        <div className="flex items-center gap-2">
-                            <button
-                                type="button"
-                                onClick={() => setIsRequired(!isRequired)}
-                                title="Tandai sebagai wajib dijawab"
-                                aria-label="Tandai sebagai wajib dijawab"
-                                className={`shrink-0 rounded-full border p-1.5 transition-colors ${
-                                    isRequired
-                                        ? "bg-darks text-base border-darks"
-                                        : "bg-base text-tinted border-second hover:border-darks hover:text-darks"
-                                }`}
-                            >
-                                <Check className="h-4 w-4" />
-                            </button>
-                            <span className="text-sm font-medium text-darks">
-                                Wajib dijawab <span className="text-red-600 font-bold">*</span>
-                            </span>
-                        </div>
-
-                        {questionType !== "text" && (
-                            <div>
-                                <div className="flex items-center justify-between mb-2">
-                                    <label className="text-sm font-medium text-darks">Pilihan Jawaban</label>
-                                    <button onClick={addOption} className="btn btn-sm bg-base text-darks border border-second hover:bg-second">
-                                        <Plus className="h-3.5 w-3.5" /> Tambah Pilihan
-                                    </button>
-                                </div>
-                                <div className="space-y-2">
-                                    {options.map((opt, index) => (
-                                        <div key={index} className="flex items-center gap-2">
-                                            <RichTextEditor
-                                                compact
-                                                className="flex-1"
-                                                value={opt.option_text}
-                                                onChange={(v) => updateOption(index, { option_text: v })}
-                                                placeholder={`Pilihan ${index + 1}`}
-                                            />
-                                            <button
-                                                type="button"
-                                                onClick={() => {
-                                                    const next = !opt.is_correct
-                                                    if (questionType === "single_choice" && next) {
-                                                        setOptions(
-                                                            options.map((o, i) => (i === index ? { ...o, is_correct: true } : { ...o, is_correct: false }))
-                                                        )
-                                                    } else {
-                                                        updateOption(index, { is_correct: next })
-                                                    }
-                                                }}
-                                                title="Tandai jawaban benar"
-                                                aria-label="Tandai jawaban benar"
-                                                className={`shrink-0 rounded-full border p-1.5 transition-colors ${
-                                                    opt.is_correct
-                                                        ? "bg-darks text-base border-darks"
-                                                        : "bg-base text-tinted border-second hover:border-darks hover:text-darks"
-                                                }`}
-                                            >
-                                                <Check className="h-4 w-4" />
-                                            </button>
-                                            <button onClick={() => removeOption(index)} className="btn btn-sm btn-ghost text-wrong">
-                                                <X className="h-4 w-4" />
-                                            </button>
-                                        </div>
-                                    ))}
-                                </div>
-                            </div>
-                        )}
-
-                        <button
-                            onClick={handleSave}
-                            disabled={saving}
-                            className="btn bg-darks text-base border-none w-full hover:opacity-90 transition-opacity disabled:opacity-60"
-                        >
-                            {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
-                            Simpan Soal
-                        </button>
-                    </div>
-                )}
-
-                {questions.length === 0 ? (
+                {questions.length === 0 && !showEditor ? (
                     <div className="text-center py-16">
                         <p className="text-tinted mb-4">Belum ada soal.</p>
                         {/* <button onClick={startAdd} className="btn bg-darks text-base border-none">
                             <Plus className="h-4 w-4" /> Tambah Soal
                         </button> */}
                     </div>
-                ) : (
+                ) : questions.length > 0 && (
                     <div className="space-y-3 pb-8">
                         {questions.map((q, idx) => (
+                            showEditor && editingId === q.id ? renderEditor() : (
                             <div
                                 key={q.id}
                                 draggable
@@ -487,7 +490,7 @@ function Questions({ embedded = false }: { embedded?: boolean }) {
                                     </div>
                                 </div>
                             </div>
-                        ))}
+                        )))}
                     </div>
                 )}
             </div>

@@ -74,7 +74,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const { data: { user: u } } = await supabase.auth.getUser()
     if (u) {
       const name = (u.user_metadata?.name as string) || "User"
-      await supabase.from("users").upsert({ id: u.id, name, email: u.email, role: "user" })
+      // Jangan timpa role yang sudah ada (creator/admin) saat login via OTP.
+      // Hanya insert role "user" bila baris users belum ada.
+      const { data: existing } = await supabase.from("users").select("role").eq("id", u.id).maybeSingle()
+      const role = existing?.role ?? "user"
+      await supabase.from("users").upsert({ id: u.id, name, email: u.email, role })
+      setUser(u)
       setProfile({ name, email: u.email || "" })
     }
   }
