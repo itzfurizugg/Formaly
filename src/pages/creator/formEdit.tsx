@@ -1,5 +1,5 @@
 import Loading from "../../components/loading"
-import { useEffect, useState, useCallback } from "react"
+import { useEffect, useState, useCallback, useRef } from "react"
 import { useNavigate, useParams } from "react-router-dom"
 import { ArrowLeft, Save, Loader2, ClipboardList, KeyRound, Share2, X } from "lucide-react"
 import { supabase } from "../../lib/supabase"
@@ -24,7 +24,14 @@ function FormEdit() {
     const { user } = useAuth()
 
     // Cache data form supaya navigasi "kembali" cukup fade-in tanpa overlay loading.
-    const cached = user && id ? pageGet<FormEditCache>(`formEdit:${user.id}:${id}`) : undefined
+    // Dibaca sekali ke ref supaya identitasnya stabil; membaca langsung dari
+    // pageGet tiap render membuat loadForm (useCallback) selalu baru dan
+    // useEffect akan memicu fetch terus-menerus.
+    const cachedRef = useRef<FormEditCache | undefined>(undefined)
+    if (!cachedRef.current && user && id) {
+        cachedRef.current = pageGet<FormEditCache>(`formEdit:${user.id}:${id}`)
+    }
+    const cached = cachedRef.current
 
     const [title, setTitle] = useState(cached?.title ?? "")
     const [description, setDescription] = useState(cached?.description ?? "")
@@ -38,7 +45,7 @@ function FormEdit() {
 
     const loadForm = useCallback(async () => {
         if (!user || !id) return
-        if (!cached) setLoading(true)
+        if (!cachedRef.current) setLoading(true)
         const { data, error: err } = await supabase
             .from("forms")
             .select("*")
@@ -75,7 +82,7 @@ function FormEdit() {
             tags: newTags,
         })
         setLoading(false)
-    }, [user, id, navigate, cached])
+    }, [user, id, navigate])
 
     useEffect(() => {
         if (!user || !id) return
