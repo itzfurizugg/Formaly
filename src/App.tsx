@@ -4,7 +4,6 @@ import { AuthProvider } from "./lib/auth"
 import Loading from "./components/loading"
 import Navbar from "./components/navbar"
 import { AlertToaster } from "./lib/alerts"
-import { isCreatorSubdomain } from "./lib/redirect"
 
 const Login = lazy(() => import("./pages/auth/login"))
 const Register = lazy(() => import("./pages/auth/register"))
@@ -47,9 +46,6 @@ function useIsMobile() {
 function App() {
   const location = useLocation()
   const isMobile = useIsMobile()
-  // Di subdomain creator (creator-formaly.vercel.app), halaman "/" diarahkan
-  // otomatis ke /creator. /creator tetap bisa diakses normal dari domain utama.
-  const creatorSubdomain = isCreatorSubdomain()
   const hideNav =
     hideNavPaths.includes(location.pathname) ||
     /^\/form\/[^/]+$/.test(location.pathname) ||
@@ -64,10 +60,7 @@ function App() {
           {/* Key = pathname agar tiap pindah halaman me-replay animasi pembukaan halaman */}
           <div key={location.pathname} className="min-h-screen animate-page-enter">
             <Routes>
-            <Route
-              path="/"
-              element={creatorSubdomain ? <Navigate to="/creator" replace /> : <Home />}
-            />
+            <Route path="/" element={<Home />} />
             <Route path="/history" element={<History />} />
             <Route path="/profile" element={<Profile />} />
             <Route path="/admin/forms" element={<AdminForms />} />
