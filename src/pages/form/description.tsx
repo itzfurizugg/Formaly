@@ -6,7 +6,6 @@ import { RichText } from "../../components/richText"
 import { supabase } from "../../lib/supabase"
 import { useAuth } from "../../lib/auth-context"
 import { loginUrl } from "../../lib/redirect"
-import { useCachedData } from "../../lib/useCachedData"
 
 interface FormItem {
     id: string
@@ -31,16 +30,22 @@ function FormDescriptionPage() {
     const formIdParam = params.get("formId")
     const [form, setForm] = useState<FormItem | null>(locationState?.form || null)
     const [alreadySubmitted, setAlreadySubmitted] = useState(false)
+
     const [loading, setLoading] = useState(false)
 
     const formId = form?.id || formIdParam
 
-    // Cache data form (tanpa state navigasi) agar tidak fetch tiap mount.
-    const { data: cachedForm, loading: formLoading } = useCachedData<FormItem | null>(
-        formIdParam ? `form:${formIdParam}` : null,
-        async () => {
-            if (!formIdParam) return null
-            const { data } = await supabase
+    useEffect(() => {
+        if (authLoading) return
+
+        if (!user) {
+            navigate(loginUrl(location.pathname + location.search))
+            return
+        }
+
+        if (!form && formIdParam) {
+            setLoading(true)
+            supabase
                 .from("forms")
                 .select(`
                     id,
@@ -53,56 +58,31 @@ function FormDescriptionPage() {
                 `)
                 .eq("id", formIdParam)
                 .single()
-            if (!data) return null
-            return {
-                id: data.id,
-                title: data.title,
-                description: data.description || "",
-                author_name: (data.users as unknown as { name: string } | null)?.name || "Creator",
-                duration: data.duration || 0,
-                question_count: data.questions ? (data.questions as { id: string }[]).length : 0,
-                status: data.status,
-            }
-        },
-        { enabled: !!formIdParam && !!user, ttlMs: 60_000 }
-    )
-
-    // Cache status "sudah pernah mengerjakan".
-    const { data: cachedSubmitted } = useCachedData<boolean>(
-        user && formId ? `alreadySubmitted:${user.id}:${formId}` : null,
-        async () => {
-            if (!user || !formId) return false
-            const { data } = await supabase
-                .from("submissions")
-                .select("id")
-                .eq("user_id", user.id)
-                .eq("form_id", formId)
-                .single()
-            return !!data
-        },
-        { enabled: !!user && !!formId, ttlMs: 30_000 }
-    )
-
-    useEffect(() => {
-        if (authLoading) return
-
-        if (!user) {
-            navigate(loginUrl(location.pathname + location.search))
-            return
-        }
-
-        // Ambil form dari cache bila dibuka langsung via URL.
-        if (!form && formIdParam && cachedForm) {
-            if (String(cachedForm.status).toLowerCase() !== "published") {
-                navigate("/")
-                return
-            }
-            setForm(cachedForm)
+                .then(({ data }) => {
+                    if (data) {
+                        if (String(data.status).toLowerCase() !== "published") {
+                            navigate("/")
+                            return
+                        }
+                        setForm({
+                            id: data.id,
+                            title: data.title,
+                            description: data.description || "",
+                            author_name: (data.users as unknown as { name: string } | null)?.name || "Creator",
+                            duration: data.duration || 0,
+                            question_count: data.questions ? data.questions.length : 0,
+                            status: data.status,
+                        })
+                    } else {
+                        navigate("/")
+                    }
+                    setLoading(false)
+                })
             return
         }
 
         // Jika user mengakses halaman ini langsung via URL tanpa lewat Home (state kosong)
-        if (!form && !formIdParam) {
+        if (!form) {
             navigate("/")
         }
 
@@ -110,14 +90,21 @@ function FormDescriptionPage() {
         if (form?.status && String(form.status).toLowerCase() !== "published") {
             navigate("/")
         }
-    }, [form, formIdParam, cachedForm, user, authLoading, navigate, location])
+    }, [form, formIdParam, user, authLoading, navigate, location])
 
     // Cek apakah user sudah pernah mengerjakan form ini
     useEffect(() => {
-        if (cachedSubmitted !== undefined) {
-            setAlreadySubmitted(cachedSubmitted)
-        }
-    }, [cachedSubmitted])
+        if (authLoading || !user || !formId) return
+        supabase
+            .from("submissions")
+            .select("id")
+            .eq("user_id", user.id)
+            .eq("form_id", formId)
+            .single()
+            .then(({ data }) => {
+                setAlreadySubmitted(!!data)
+            })
+    }, [formId, user, authLoading])
 
     const handleStartExam = () => {
         setLoading(true)
@@ -127,8 +114,8 @@ function FormDescriptionPage() {
 
     return (
         <>
-            <Loading show={formLoading && !form} />
-            {!formLoading && form && (
+            <Loading show={loading && !form} />
+            {!loading && form && (
         <div className="flex flex-col items-center min-h-screen sm:min-h-[80vh] sm:justify-center px-0 pt-6 pb-28 sm:px-4 sm:py-10 bg-white sm:bg-transparent">
             <div className="w-full max-w-4xl bg-white sm:border sm:border-second p-4 sm:p-8 sm:shadow-sm sm:rounded-lg relative">
 

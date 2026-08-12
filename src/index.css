@@ -3,7 +3,6 @@
 
 @theme {
   --font-sans: "DM Sans", sans-serif;
-  --font-display: "Funnel Display", "DM Sans", sans-serif;
   --color-base: #F7F7F7;
   --color-second: #EEEEEE;
   --color-tinted: #929AAB;
@@ -24,13 +23,6 @@
   0% { left: -35%; right: 100%; }
   50% { left: 0%; right: 0%; }
   100% { left: 100%; right: -35%; }
-}
-
-/* Heading pakai Funnel Display (display font), body tetap DM Sans */
-@layer base {
-  h1, h2, h3, h4, h5, h6 {
-    font-family: var(--font-display);
-  }
 }
 
 /* ---- Animasi halaman & elemen (pembukaan halaman, transisi, dll.) ---- */

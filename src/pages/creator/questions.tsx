@@ -55,6 +55,7 @@ function Questions({ embedded = false }: { embedded?: boolean }) {
 
     const loadAll = useCallback(async () => {
         if (!user || !id) return
+        if (!cached) setLoading(true)
 
         let newTitle = ""
         let newQuestions: Question[] = []
@@ -87,7 +88,7 @@ function Questions({ embedded = false }: { embedded?: boolean }) {
             pageSet(`questions:${user.id}:${id}`, { formTitle: newTitle, questions: newQuestions })
         }
         setLoading(false)
-    }, [user, id])
+    }, [user, id, cached])
 
     useEffect(() => {
         if (!user || !id) return

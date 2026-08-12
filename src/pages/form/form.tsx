@@ -7,9 +7,6 @@ import { RichText } from "../../components/richText"
 import { supabase } from "../../lib/supabase"
 import { useAuth } from "../../lib/auth-context"
 import { loginUrl } from "../../lib/redirect"
-import { showAlert } from "../../lib/alerts"
-
-const DUPLICATE_SUBMISSION_RE = /duplicate key value violates unique constraint "unique_user_form_submission"/i
 
 interface Option {
     id: string
@@ -103,10 +100,6 @@ function FormPage() {
 
         if (subErr) {
             setSubmitting(false)
-            if (DUPLICATE_SUBMISSION_RE.test(subErr.message)) {
-                showAlert("Kamu sudah pernah mengerjakan form ini.", "error")
-                return
-            }
             setError(subErr.message || "Gagal mengirim jawaban. Coba lagi.")
             return
         }
@@ -290,7 +283,7 @@ function FormPage() {
             <Loading show={authLoading || loading} />
             {!authLoading && !loading && (
             notFound ? (
-                <div className="flex flex-col items-center text-center justify-center min-h-screen px-4">
+                <div className="flex flex-col items-center justify-center min-h-screen px-4">
                     <p className="text-tinted mb-4">Form tidak ditemukan atau belum dipublikasikan.</p>
                     <button onClick={() => navigate("/")} className="btn bg-darks text-white border-none">
                         Kembali

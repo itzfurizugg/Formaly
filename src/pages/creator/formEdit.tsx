@@ -38,6 +38,7 @@ function FormEdit() {
 
     const loadForm = useCallback(async () => {
         if (!user || !id) return
+        if (!cached) setLoading(true)
         const { data, error: err } = await supabase
             .from("forms")
             .select("*")
@@ -74,7 +75,7 @@ function FormEdit() {
             tags: newTags,
         })
         setLoading(false)
-    }, [user, id, navigate])
+    }, [user, id, navigate, cached])
 
     useEffect(() => {
         if (!user || !id) return

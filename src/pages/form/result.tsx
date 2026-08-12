@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react"
+import { useEffect, useState, useCallback } from "react"
 import { useNavigate, useParams } from "react-router-dom"
 import { ArrowLeft, Check, X, Clock } from "lucide-react"
 import { supabase } from "../../lib/supabase"
@@ -6,7 +6,6 @@ import { useAuth } from "../../lib/auth-context"
 import Loading from "../../components/loading"
 import Filter from "../../components/filter"
 import { RichText } from "../../components/richText"
-import { useCachedData } from "../../lib/useCachedData"
 
 interface AnswerRow {
     id: string
@@ -40,52 +39,52 @@ function ResultPage() {
     const navigate = useNavigate()
     const { user, loading: authLoading } = useAuth()
 
+    const [info, setInfo] = useState<SubmissionInfo | null>(null)
+    const [answers, setAnswers] = useState<AnswerRow[]>([])
+    const [loading, setLoading] = useState(true)
     const [error, setError] = useState<string | null>(null)
     const [filter, setFilter] = useState("")
 
-    const { data, loading } = useCachedData<{ info: SubmissionInfo | null; answers: AnswerRow[] }>(
-        user && submissionId ? `result:${user.id}:${submissionId}` : null,
-        async () => {
-            if (!user || !submissionId) return { info: null, answers: [] }
-            const { data: sub } = await supabase
-                .from("submissions")
-                .select("id, total_score, status, started_at, submitted_at, form:form_id ( id, title, duration, passing_score ), user:user_id ( name )")
-                .eq("id", submissionId)
-                .eq("user_id", user.id)
-                .single()
+    const loadAll = useCallback(async () => {
+        if (!user || !submissionId) return
 
-            if (!sub) {
-                setError("Submission tidak ditemukan.")
-                return { info: null, answers: [] }
-            }
+        const { data: sub } = await supabase
+            .from("submissions")
+            .select("id, total_score, status, started_at, submitted_at, form:form_id ( id, title, duration, passing_score ), user:user_id ( name )")
+            .eq("id", submissionId)
+            .eq("user_id", user.id)
+            .single()
 
-            const { data: ans } = await supabase
-                .from("answers")
-                .select(`
-                    id, selected_option_id, selected_options, answer_text, score_obtained,
-                    question:question_id (
-                        id, question_text, question_type, score_value, image_question, order_index,
-                        question_options ( id, option_text, is_correct )
-                    )
-                `)
-                .eq("submission_id", submissionId)
-                // Urutkan soal sesuai order_index (sama dengan Question editor & Form).
-                .order("question(order_index)", { ascending: true })
+        if (!sub) {
+            setError("Submission tidak ditemukan.")
+            setLoading(false)
+            return
+        }
 
-            // Sort tambahan di sisi client sebagai jaminan urutan soal.
-            const rows = ((ans as unknown as AnswerRow[]) || []).slice().sort(
-                (a, b) =>
-                    (a.question?.order_index ?? Number.MAX_SAFE_INTEGER) -
-                    (b.question?.order_index ?? Number.MAX_SAFE_INTEGER)
-            )
-            setError(null)
-            return { info: sub as unknown as SubmissionInfo, answers: rows }
-        },
-        { enabled: !!user && !!submissionId, ttlMs: 30_000 }
-    )
+        setInfo(sub as unknown as SubmissionInfo)
 
-    const info = data?.info ?? null
-    const answers = data?.answers ?? []
+        const { data: ans } = await supabase
+            .from("answers")
+            .select(`
+                id, selected_option_id, selected_options, answer_text, score_obtained,
+                question:question_id (
+                    id, question_text, question_type, score_value, image_question, order_index,
+                    question_options ( id, option_text, is_correct )
+                )
+            `)
+            .eq("submission_id", submissionId)
+            // Urutkan soal sesuai order_index (sama dengan Question editor & Form).
+            .order("question(order_index)", { ascending: true })
+
+        // Sort tambahan di sisi client sebagai jaminan urutan soal.
+        const rows = ((ans as unknown as AnswerRow[]) || []).slice().sort(
+            (a, b) =>
+                (a.question?.order_index ?? Number.MAX_SAFE_INTEGER) -
+                (b.question?.order_index ?? Number.MAX_SAFE_INTEGER)
+        )
+        setAnswers(rows)
+        setLoading(false)
+    }, [user, submissionId])
 
     useEffect(() => {
         if (authLoading) return
@@ -97,7 +96,8 @@ function ResultPage() {
             navigate("/history")
             return
         }
-    }, [user, authLoading, submissionId, navigate])
+        loadAll()
+    }, [user, authLoading, submissionId, navigate, loadAll])
 
     const typeLabel = (t: string) => {
         if (t === "multiple_choice") return "Pilihan Ganda"
