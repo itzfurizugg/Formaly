@@ -1,8 +1,9 @@
-import { useEffect, useState, useCallback } from "react"
+import { useState, useCallback } from "react"
 import { FileText, RefreshCw } from "lucide-react"
 import Loading from "../../components/loading"
 import { RichText } from "../../components/richText"
 import { supabase } from "../../lib/supabase"
+import { useCachedData } from "../../lib/useCachedData"
 
 type FormStatus = "draft" | "published"
 
@@ -17,29 +18,26 @@ interface Form {
 }
 
 function AdminForms() {
-    const [forms, setForms] = useState<Form[]>([])
-    const [loading, setLoading] = useState(true)
     const [error, setError] = useState<string | null>(null)
 
-    const fetchForms = useCallback(async () => {
-        setLoading(true)
-        setError(null)
-        const { data, error: err } = await supabase
-            .from("forms")
-            .select("*")
-            .order("created_at", { ascending: false })
+    const { data: forms = [], loading, refresh } = useCachedData<Form[]>(
+        "admin:forms",
+        async () => {
+            const { data, error: err } = await supabase
+                .from("forms")
+                .select("*")
+                .order("created_at", { ascending: false })
+            if (err) {
+                setError(err.message)
+                return []
+            }
+            setError(null)
+            return data || []
+        },
+        { ttlMs: 60_000 }
+    )
 
-        if (err) {
-            setError(err.message)
-        } else {
-            setForms(data || [])
-        }
-        setLoading(false)
-    }, [])
-
-    useEffect(() => {
-        fetchForms()
-    }, [fetchForms])
+    const fetchForms = useCallback(() => refresh(), [refresh])
 
     return (
         <>

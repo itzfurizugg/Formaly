@@ -1,10 +1,11 @@
-import { useEffect, useState, useCallback } from "react"
+import { useEffect } from "react"
 import { useNavigate } from "react-router-dom"
 import { FileText } from "lucide-react"
 import HistoryCard from "../components/historyCard"
 import { supabase } from "../lib/supabase"
 import { useAuth } from "../lib/auth-context"
 import Loading from "../components/loading"
+import { useCachedData } from "../lib/useCachedData"
 
 interface HistoryItem {
     id: string
@@ -28,27 +29,24 @@ interface HistoryRow {
 function History() {
     const navigate = useNavigate()
     const { user, loading: authLoading } = useAuth()
-    const [items, setItems] = useState<HistoryItem[]>([])
-    const [loading, setLoading] = useState(true)
 
-    const loadHistory = useCallback(async () => {
-        if (!user) return
-        setLoading(true)
-        const { data } = await supabase
-            .from("submissions")
-            .select(`
-                id, form_id, total_score,
-                forms (
-                    id, title, duration, passing_score,
-                    users:creator_id ( name ),
-                    questions ( id )
-                )
-            `)
-            .eq("user_id", user.id)
-            .order("submitted_at", { ascending: false })
+    const { data: items = [], loading: historyLoading } = useCachedData<HistoryItem[]>(
+        user ? `history:${user.id}` : null,
+        async () => {
+            const { data } = await supabase
+                .from("submissions")
+                .select(`
+                    id, form_id, total_score,
+                    forms (
+                        id, title, duration, passing_score,
+                        users:creator_id ( name ),
+                        questions ( id )
+                    )
+                `)
+                .eq("user_id", user!.id)
+                .order("submitted_at", { ascending: false })
 
-        if (data) {
-            setItems((data as unknown as HistoryRow[]).map((item) => {
+            return ((data as unknown as HistoryRow[]) || []).map((item) => {
                 const f = item.forms as unknown as { title: string; duration: number; passing_score?: number | null; users?: { name: string } | null; questions?: { id: string }[] | null }
                 return {
                     id: item.id,
@@ -62,10 +60,10 @@ function History() {
                         passing_score: f?.passing_score ?? null,
                     },
                 }
-            }))
-        }
-        setLoading(false)
-    }, [user])
+            })
+        },
+        { enabled: !!user, ttlMs: 30_000 }
+    )
 
     useEffect(() => {
         if (authLoading) return
@@ -73,12 +71,10 @@ function History() {
             navigate("/login")
             return
         }
-        loadHistory()
-    }, [user, authLoading, navigate, loadHistory])
-
-    const filtered = items
+    }, [user, authLoading, navigate])
 
     if (authLoading || !user) return <Loading />
+    const loading = authLoading || !user || historyLoading
 
     return (
         <>
@@ -87,35 +83,20 @@ function History() {
         <div className="flex flex-col items-center px-4 py-5">
             <div className="max-w-4xl grid w-full lg:mt-10">
                 <div className="flex items-center gap-2 mb-1">
-                    <h1 className="text-2xl lg:text-4xl font-bold text-darks">Histori</h1>
+                    <h1 className="text-2xl lg:text-4xl font-display font-bold text-darks tracking-tight">Histori</h1>
                 </div>
                 <p className="text-sm text-tinted mb-6">
                     Formulir yang pernah kamu kerjakan.
                 </p>
 
-                {/* {!loading && (
-                    <div className="join w-full mb-6">
-                        <div className="join-item flex-1 relative">
-                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-tinted pointer-events-none" />
-                            <input
-                                type="text"
-                                placeholder="Memuat..."
-                                className="input w-full pl-5 bg-base focus:outline-none transition-colors"
-                                value={search}
-                                onChange={(e) => setSearch(e.target.value)}
-                            />
-                        </div>
-                    </div>
-                )} */}
-
-                {filtered.length === 0 ? (
+                {items.length === 0 ? (
                     <div className="text-center py-20">
                         <FileText className="h-12 w-12 text-tinted/40 mx-auto mb-3" />
                         <p className="text-tinted">Belum ada histori formulir.</p>
                     </div>
                 ) : (
                     <div className="space-y-3">
-                        {filtered.map((item) => (
+                        {items.map((item) => (
                             <HistoryCard
                                 key={item.id}
                                 title={item.forms?.title || "Form"}

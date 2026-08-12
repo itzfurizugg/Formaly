@@ -1,9 +1,9 @@
-import { useState, useRef, useEffect } from "react"
+import { useState, useEffect } from "react"
 import { Link, useLocation, useNavigate } from "react-router-dom"
+import { motion, AnimatePresence } from "motion/react"
 import logo from "../assets/logo.svg"
 import { House, RotateCcwClock, UserRound, LayoutDashboard, X, LogOut } from "lucide-react"
 import { useAuth } from "../lib/auth-context"
-import { supabase } from "../lib/supabase"
 
 const baseLinks = [
     { to: "/", label: "Beranda", icon: House },
@@ -15,65 +15,29 @@ function Navbar() {
     const { pathname } = useLocation()
     const navigate = useNavigate()
     const { user, profile, logout } = useAuth()
-    const [role, setRole] = useState("")
     const [open, setOpen] = useState(false)
     const [avatarOpen, setAvatarOpen] = useState(false)
-    const [closing, setClosing] = useState(false)
-    const navRef = useRef<HTMLDivElement>(null)
-    const [navHeight, setNavHeight] = useState(0)
 
     useEffect(() => {
-        if (!user) return
-        supabase
-            .from("users")
-            .select("role")
-            .eq("id", user.id)
-            .single()
-            .then(({ data }) => {
-                if (data) setRole(String(data.role).toLowerCase())
-            })
-    }, [user])
+        setOpen(false)
+    }, [pathname])
 
     const navLinks = [...baseLinks]
-    if (role === "creator" || role === "admin") {
-        navLinks.push({ to: "/creator", label: "Creator", icon: LayoutDashboard })
-    }
-
-    const showContent = open || closing
-
-    useEffect(() => {
-        if (navRef.current) {
-            setNavHeight(navRef.current.offsetHeight)
-        }
-    }, [open, closing])
-
-    const closeNav = () => {
-        if (closing) return
-        setClosing(true)
-        setOpen(false)
-        setTimeout(() => setClosing(false), 300)
-    }
 
     const handleLogout = async () => {
         await logout()
         navigate("/login")
     }
 
-    const toggle = () => {
-        if (open) {
-            closeNav()
-        } else {
-            setOpen(true)
-        }
-    }
+    const toggle = () => setOpen((v) => !v)
 
     const linkClass = (to: string, mobile = false) => {
         const isActive = pathname === to
         if (mobile) {
-            return `flex items-center gap-2 w-full h-11 px-3 rounded-lg text-sm font-medium transition-colors ${
+            return `flex items-center gap-3 w-full h-14 px-4 rounded-none text-base font-medium transition-colors ${
                 isActive
-                    ? "bg-darks text-base"
-                    : "bg-base-200 text-darks hover:bg-base-300"
+                    ? "bg-darks text-base rounded-none"
+                    : "bg-base-100 text-darks hover:bg-base-300"
             }`
         }
         return `btn ${isActive ? "bg-darks text-base border-none hover:bg-darks" : "btn-ghost text-darks"}`
@@ -81,50 +45,23 @@ function Navbar() {
 
     if (!user) return null
 
+    const sidebarVariants = {
+        hidden: { x: "100%" },
+        visible: { x: 0 },
+        exit: { x: "100%" },
+    }
+
     return (
         <>
-            <div
-                ref={navRef}
-                className="navbar shadow-sm bg-base px-4 lg:px-4 sticky top-0 z-50 flex-col items-stretch !py-0"
-            >
+            <div className="navbar shadow-sm bg-base px-4 lg:px-4 sticky top-0 z-50 flex-col items-stretch !py-0">
                 <div className="flex items-center justify-between w-full py-2 gap-2 relative min-h-[44px]">
-                    <div className="flex-1 relative min-h-[44px] flex items-center">
-                        <div
-                            className={`absolute inset-0 flex items-center transition-all duration-300 ease-out ${
-                                open ? "opacity-0 pointer-events-none" : "opacity-100"
-                            }`}
-                        >
-                            <Link to="/" onClick={() => open && closeNav()}>
-                                <img src={logo} alt="Formaly" className="h-6 w-auto ml-3 mt-2 lg:ml-10 lg:mt-2" />
-                            </Link>
-                        </div>
-
-                        <div
-                            className={`absolute inset-0 flex items-center transition-all duration-300 ease-out lg:hidden ${
-                                open
-                                    ? "opacity-100 translate-y-0"
-                                    : "opacity-0 translate-y-1 pointer-events-none"
-                            }`}
-                        >
-                            <Link
-                                to={navLinks[0].to}
-                                className={linkClass(navLinks[0].to, true)}
-                                onClick={closeNav}
-                            >
-                                {(() => {
-                                    const Icon = navLinks[0].icon
-                                    return <Icon className="h-4 w-4" />
-                                })()}
-                                {navLinks[0].label}
-                            </Link>
-                        </div>
+                    <div className="flex-1 flex items-center">
+                        <Link to="/">
+                            <img src={logo} alt="Formaly" className="h-6 w-auto ml-3 mt-2 lg:ml-10 lg:mt-2" />
+                        </Link>
                     </div>
 
-                    <div
-                        className={`hidden lg:flex flex-1 justify-center transition-all duration-300 ease-out mt-1 ${
-                            open ? "opacity-0" : "opacity-100"
-                        }`}
-                    >
+                    <div className="hidden lg:flex flex-1 justify-center mt-1">
                         {navLinks.map(({ to, label, icon: Icon }) => (
                             <Link key={to} to={to} className={linkClass(to)}>
                                 <Icon className="h-4 w-auto" />
@@ -148,10 +85,7 @@ function Navbar() {
                         </div>
                     </button>
 
-                    <div className={`hidden lg:flex flex-1 mt-1 justify-end items-center gap-2 transition-all duration-300 ease-out ${
-                            open ? "opacity-0" : "opacity-100"
-                        }`}
-                    >
+                    <div className="hidden lg:flex flex-1 mt-1 justify-end items-center gap-2">
                         <div className="relative">
                             <button
                                 onClick={() => setAvatarOpen((v) => !v)}
@@ -201,43 +135,71 @@ function Navbar() {
                         </div>
                     </div>
                 </div>
+            </div>
 
-                <div
-                    className={`overflow-hidden transition-all duration-300 ease-out lg:hidden ${
-                        open ? "max-h-64" : "max-h-0"
-                    }`}
-                >
-                    <div className={`transition-all duration-300 ease-out ${
-                        open
-                            ? "translate-y-0 opacity-100"
-                            : "translate-y-3 opacity-0"
-                    }`}>
-                        <div className="flex flex-col gap-1.5 pb-2">
-                            {navLinks.slice(1).map(({ to, label, icon: Icon }) => (
+            <AnimatePresence>
+                {open && (
+                    <motion.div
+                        key="sidebar-backdrop"
+                        className="fixed inset-0 z-40 bg-black/40 lg:hidden"
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        transition={{ duration: 0.25 }}
+                        onClick={() => setOpen(false)}
+                        aria-hidden="true"
+                    />
+                )}
+                {open && (
+                    <motion.aside
+                        key="sidebar"
+                        className="fixed right-0 top-0 z-50 flex h-full w-72 max-w-[85vw] flex-col bg-white shadow-xl lg:hidden"
+                        role="dialog"
+                        aria-modal="true"
+                        aria-label="Menu navigasi"
+                        initial="hidden"
+                        animate="visible"
+                        exit="exit"
+                        variants={sidebarVariants}
+                        transition={{ type: "tween", duration: 0.3, ease: "easeOut" }}
+                    >
+                        <div className="flex items-center justify-between p-4 border-b border-second">
+                            {/* <img src={logo} alt="Formaly" className="h-6 w-auto" /> */}
+                            <button
+                                onClick={() => setOpen(false)}
+                                className="btn btn-square btn-ghost btn-sm text-darks"
+                                aria-label="Tutup menu"
+                            >
+                                <X className="h-5 w-5" />
+                            </button>
+                        </div>
+
+                        <nav className="flex-1 overflow-y-auto p-3 flex flex-col gap-1.5">
+                            {navLinks.map(({ to, label, icon: Icon }) => (
                                 <Link
                                     key={to}
                                     to={to}
                                     className={linkClass(to, true)}
-                                    onClick={closeNav}
+                                    onClick={() => setOpen(false)}
                                 >
-                                    <Icon className="h-4 w-4" />
+                                    <Icon className="h-5 w-5" />
                                     {label}
                                 </Link>
                             ))}
-                        </div>
-                    </div>
-                </div>
-            </div>
+                        </nav>
 
-            {showContent && (
-                <div
-                    className={`fixed inset-x-0 bottom-0 z-40 lg:hidden transition-all duration-300 ease-out ${
-                        open ? "opacity-100" : "opacity-0"
-                    }`}
-                    style={{ top: navHeight, backgroundColor: "rgba(0,0,0,0.4)" }}
-                    onClick={closeNav}
-                />
-            )}
+                        <div className="p-4 border-t border-second">
+                            <Link
+                                to="/creator"
+                                onClick={() => setOpen(false)}
+                                className="w-full flex items-center gap-2 px-3 py-2.5 text-sm text-darks hover:bg-base transition-colors text-left rounded-lg"
+                            >
+                                <LayoutDashboard className="h-4 w-4" /> Creator
+                            </Link>
+                        </div>
+                    </motion.aside>
+                )}
+            </AnimatePresence>
         </>
     )
 }
