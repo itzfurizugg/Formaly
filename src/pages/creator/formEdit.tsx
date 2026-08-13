@@ -24,7 +24,12 @@ function FormEdit() {
     const { user } = useAuth()
 
     // Cache data form supaya navigasi "kembali" cukup fade-in tanpa overlay loading.
-    const cached = user && id ? pageGet<FormEditCache>(`formEdit:${user.id}:${id}`) : undefined
+    // Dibaca sekali lewat state initializer supaya identitasnya stabil; membaca
+    // langsung dari pageGet tiap render membuat loadForm (useCallback) selalu
+    // baru dan useEffect akan memicu fetch terus-menerus.
+    const [cached] = useState<FormEditCache | undefined>(() =>
+        user && id ? pageGet<FormEditCache>(`formEdit:${user.id}:${id}`) : undefined
+    )
 
     const [title, setTitle] = useState(cached?.title ?? "")
     const [description, setDescription] = useState(cached?.description ?? "")

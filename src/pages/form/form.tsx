@@ -7,6 +7,7 @@ import { RichText } from "../../components/richText"
 import { supabase } from "../../lib/supabase"
 import { useAuth } from "../../lib/auth-context"
 import { loginUrl } from "../../lib/redirect"
+import ModalPortal from "../../components/modalPortal"
 
 interface Option {
     id: string
@@ -444,6 +445,7 @@ function FormPage() {
 
             {/* Modal Zoom Gambar */}
             {modalImage && (
+                <ModalPortal>
                 <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4">
                     <div className="relative max-w-4xl max-h-[90vh] w-full flex items-center justify-center">
                         <button
@@ -459,6 +461,7 @@ function FormPage() {
                         />
                     </div>
                 </div>
+                </ModalPortal>
             )}
         </div>
             )

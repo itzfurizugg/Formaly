@@ -2,6 +2,7 @@ import { useRef, useState } from "react"
 import { CheckCircle2, FileUp, Loader2, Pencil, Upload, X } from "lucide-react"
 import { type ParsedQuestion, validateParsedQuestion } from "../../lib/parsers/types"
 import { supabase } from "../../lib/supabase"
+import ModalPortal from "../modalPortal"
 
 interface QuestionImportModalProps {
     formId: string
@@ -109,6 +110,7 @@ export default function QuestionImportModal({ formId, startingOrder, onClose, on
     }
 
     return (
+        <ModalPortal>
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-darks/40 p-4" role="dialog" aria-modal="true" aria-labelledby="import-title">
             <div className="w-full max-w-6xl max-h-[90vh] overflow-hidden bg-white border border-second shadow-xl rounded-none flex flex-col">
                 <div className="flex items-start justify-between gap-4 p-5 border-b border-second">
@@ -162,5 +164,6 @@ export default function QuestionImportModal({ formId, startingOrder, onClose, on
                 </div>
             </div>
         </div>
+        </ModalPortal>
     )
 }

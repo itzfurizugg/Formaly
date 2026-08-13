@@ -16,6 +16,7 @@ import {
 } from "lucide-react"
 import { useAuth } from "../lib/auth-context"
 import { supabase } from "../lib/supabase" // sesuaikan path kalau beda
+import ModalPortal from "../components/modalPortal"
 
 const ROLE_LABEL: Record<string, string> = {
     admin: "Admin",
@@ -66,6 +67,7 @@ function Modal({
     if (!open) return null
 
     return (
+        <ModalPortal>
         <div
             className="fixed inset-0 z-50 flex items-center justify-center px-4"
             role="dialog"
@@ -94,6 +96,7 @@ function Modal({
                 {children}
             </div>
         </div>
+        </ModalPortal>
     )
 }
 
@@ -231,7 +234,7 @@ function Profile() {
     const role = (profile?.role as string | undefined) || "user"
 
     return (
-        <div className="flex flex-col items-center px-4 py-5">
+        <div className="flex flex-col items-center px-2 py-5">
             <div className="max-w-4xl w-full">
                 {/* Header */}
                 <div className="bg-white border border-second p-5 rounded-none mb-3">

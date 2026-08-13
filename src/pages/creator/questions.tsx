@@ -34,7 +34,12 @@ function Questions({ embedded = false }: { embedded?: boolean }) {
 
     // Cache daftar soal per form supaya kembali ke halaman ini cukup fade-in
     // tanpa overlay loading lagi; data tetap di-refresh diam-diam.
-    const cached = user && id ? pageGet<{ formTitle: string; questions: Question[] }>(`questions:${user.id}:${id}`) : undefined
+    // Dibaca sekali lewat state initializer supaya identitasnya stabil; membaca
+    // langsung dari pageGet tiap render membuat loadAll (useCallback) selalu
+    // baru dan useEffect akan memicu fetch terus-menerus.
+    const [cached] = useState<{ formTitle: string; questions: Question[] } | undefined>(() =>
+        user && id ? pageGet<{ formTitle: string; questions: Question[] }>(`questions:${user.id}:${id}`) : undefined
+    )
     const [formTitle, setFormTitle] = useState(cached?.formTitle ?? "")
     const [questions, setQuestions] = useState<Question[]>(cached?.questions ?? [])
     const [loading, setLoading] = useState(!cached)
@@ -443,9 +448,9 @@ function Questions({ embedded = false }: { embedded?: boolean }) {
                 {questions.length === 0 && !showEditor ? (
                     <div className="text-center py-16">
                         <p className="text-tinted mb-4">Belum ada soal.</p>
-                        {/* <button onClick={startAdd} className="btn bg-darks text-base border-none">
+                        <button onClick={startAdd} className="btn bg-darks text-base border-none">
                             <Plus className="h-4 w-4" /> Tambah Soal
-                        </button> */}
+                        </button>
                     </div>
                 ) : questions.length > 0 && (
                     <div className="space-y-3 pb-8">

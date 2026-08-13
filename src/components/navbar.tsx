@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from "react"
+import { useState, useEffect } from "react"
 import { Link, useLocation, useNavigate } from "react-router-dom"
 import logo from "../assets/logo.svg"
 import { House, RotateCcwClock, UserRound, LayoutDashboard, X, LogOut } from "lucide-react"
@@ -19,8 +19,10 @@ function Navbar() {
     const [open, setOpen] = useState(false)
     const [avatarOpen, setAvatarOpen] = useState(false)
     const [closing, setClosing] = useState(false)
-    const navRef = useRef<HTMLDivElement>(null)
-    const [navHeight, setNavHeight] = useState(0)
+
+    useEffect(() => {
+        setOpen(false)
+    }, [pathname])
 
     useEffect(() => {
         if (!user) return
@@ -41,11 +43,16 @@ function Navbar() {
 
     const showContent = open || closing
 
+    // Kunci scroll halaman selama sidebar terbuka (termasuk saat animasi tutup).
     useEffect(() => {
-        if (navRef.current) {
-            setNavHeight(navRef.current.offsetHeight)
+        if (showContent) {
+            const prev = document.body.style.overflow
+            document.body.style.overflow = "hidden"
+            return () => {
+                document.body.style.overflow = prev
+            }
         }
-    }, [open, closing])
+    }, [showContent])
 
     const closeNav = () => {
         if (closing) return
@@ -70,10 +77,10 @@ function Navbar() {
     const linkClass = (to: string, mobile = false) => {
         const isActive = pathname === to
         if (mobile) {
-            return `flex items-center gap-2 w-full h-11 px-3 rounded-lg text-sm font-medium transition-colors ${
+            return `flex items-center gap-3 w-full h-14 px-4 text-base font-medium transition-colors ${
                 isActive
                     ? "bg-darks text-base"
-                    : "bg-base-200 text-darks hover:bg-base-300"
+                    : "text-darks hover:bg-base-200"
             }`
         }
         return `btn ${isActive ? "bg-darks text-base border-none hover:bg-darks" : "btn-ghost text-darks"}`
@@ -84,47 +91,16 @@ function Navbar() {
     return (
         <>
             <div
-                ref={navRef}
-                className="navbar shadow-sm bg-base px-4 lg:px-4 sticky top-0 z-50 flex-col items-stretch !py-0"
+                className="navbar bg-base-300 px-4 lg:px-4 sticky top-0 z-50 flex-col items-stretch !py-0"
             >
                 <div className="flex items-center justify-between w-full py-2 gap-2 relative min-h-[44px]">
                     <div className="flex-1 relative min-h-[44px] flex items-center">
-                        <div
-                            className={`absolute inset-0 flex items-center transition-all duration-300 ease-out ${
-                                open ? "opacity-0 pointer-events-none" : "opacity-100"
-                            }`}
-                        >
-                            <Link to="/" onClick={() => open && closeNav()}>
-                                <img src={logo} alt="Formaly" className="h-6 w-auto ml-3 mt-2 lg:ml-10 lg:mt-2" />
-                            </Link>
-                        </div>
-
-                        <div
-                            className={`absolute inset-0 flex items-center transition-all duration-300 ease-out lg:hidden ${
-                                open
-                                    ? "opacity-100 translate-y-0"
-                                    : "opacity-0 translate-y-1 pointer-events-none"
-                            }`}
-                        >
-                            <Link
-                                to={navLinks[0].to}
-                                className={linkClass(navLinks[0].to, true)}
-                                onClick={closeNav}
-                            >
-                                {(() => {
-                                    const Icon = navLinks[0].icon
-                                    return <Icon className="h-4 w-4" />
-                                })()}
-                                {navLinks[0].label}
-                            </Link>
-                        </div>
+                        <Link to="/" onClick={() => open && closeNav()}>
+                            <img src={logo} alt="Formaly" className="h-6 w-auto ml-3 mt-2 lg:ml-10 lg:mt-2" />
+                        </Link>
                     </div>
 
-                    <div
-                        className={`hidden lg:flex flex-1 justify-center transition-all duration-300 ease-out mt-1 ${
-                            open ? "opacity-0" : "opacity-100"
-                        }`}
-                    >
+                    <div className="hidden lg:flex flex-1 justify-center mt-1">
                         {navLinks.map(({ to, label, icon: Icon }) => (
                             <Link key={to} to={to} className={linkClass(to)}>
                                 <Icon className="h-4 w-auto" />
@@ -148,10 +124,7 @@ function Navbar() {
                         </div>
                     </button>
 
-                    <div className={`hidden lg:flex flex-1 mt-1 justify-end items-center gap-2 transition-all duration-300 ease-out ${
-                            open ? "opacity-0" : "opacity-100"
-                        }`}
-                    >
+                    <div className="hidden lg:flex flex-1 justify-end items-center gap-2">
                         <div className="relative">
                             <button
                                 onClick={() => setAvatarOpen((v) => !v)}
@@ -201,43 +174,87 @@ function Navbar() {
                         </div>
                     </div>
                 </div>
-
-                <div
-                    className={`overflow-hidden transition-all duration-300 ease-out lg:hidden ${
-                        open ? "max-h-64" : "max-h-0"
-                    }`}
-                >
-                    <div className={`transition-all duration-300 ease-out ${
-                        open
-                            ? "translate-y-0 opacity-100"
-                            : "translate-y-3 opacity-0"
-                    }`}>
-                        <div className="flex flex-col gap-1.5 pb-2">
-                            {navLinks.slice(1).map(({ to, label, icon: Icon }) => (
-                                <Link
-                                    key={to}
-                                    to={to}
-                                    className={linkClass(to, true)}
-                                    onClick={closeNav}
-                                >
-                                    <Icon className="h-4 w-4" />
-                                    {label}
-                                </Link>
-                            ))}
-                        </div>
-                    </div>
-                </div>
             </div>
 
+            {/* Backdrop untuk sidebar mobile: menutup seluruh layar termasuk navbar */}
             {showContent && (
                 <div
-                    className={`fixed inset-x-0 bottom-0 z-40 lg:hidden transition-all duration-300 ease-out ${
+                    className={`fixed inset-0 z-[60] lg:hidden transition-opacity duration-300 ease-out ${
                         open ? "opacity-100" : "opacity-0"
                     }`}
-                    style={{ top: navHeight, backgroundColor: "rgba(0,0,0,0.4)" }}
+                    style={{ backgroundColor: "rgba(0,0,0,0.4)" }}
                     onClick={closeNav}
                 />
             )}
+
+            {/* Sidebar mobile: muncul dari kanan ke kiri */}
+            <aside
+                className={`fixed top-0 right-0 z-[70] h-full w-72 max-w-[85vw] bg-white shadow-xl lg:hidden flex flex-col transition-transform duration-300 ease-out ${
+                    showContent ? "translate-x-0" : "translate-x-full"
+                }`}
+                role="dialog"
+                aria-modal="true"
+                aria-label="Menu navigasi"
+            >
+                <div className="flex items-center justify-between p-4 border-b border-second">
+                    <div className="flex items-center gap-3 min-w-0 ml-2">
+                        <div className="w-7 h-7 rounded-full bg-done overflow-hidden flex items-center justify-center shrink-0">
+                            <span className="text-base font-bold text-white">
+                                {(profile?.name || "U").charAt(0).toUpperCase()}
+                            </span>
+                        </div>
+                        <div className="min-w-0">
+                            <p className="text-sm font-semibold text-darks">{profile?.name || "User"}</p>
+                            {/* <p className="text-xs text-tinted truncate">{profile?.email}</p> */}
+                        </div>
+                    </div>
+                    <button
+                        onClick={closeNav}
+                        className="btn btn-square btn-ghost btn-sm text-darks shrink-0"
+                        aria-label="Tutup menu"
+                    >
+                        <X className="h-5 w-5" />
+                    </button>
+                </div>
+
+                <nav className="flex-1 overflow-y-auto p-3 flex flex-col gap-1.5">
+                    {navLinks
+                        .filter(({ to }) => to !== "/creator")
+                        .map(({ to, label, icon: Icon }) => (
+                            <Link
+                                key={to}
+                                to={to}
+                                className={linkClass(to, true)}
+                                onClick={closeNav}
+                            >
+                                <Icon className="h-5 w-5" />
+                                {label}
+                            </Link>
+                        ))}
+                </nav>
+
+                <div className="p-3 border-t border-second flex flex-col gap-1.5">
+                    {navLinks
+                        .filter(({ to }) => to === "/creator")
+                        .map(({ to, label, icon: Icon }) => (
+                            <Link
+                                key={to}
+                                to={to}
+                                className={linkClass(to, true)}
+                                onClick={closeNav}
+                            >
+                                <Icon className="h-5 w-5" />
+                                {label}
+                            </Link>
+                        ))}
+                    <button
+                        onClick={handleLogout}
+                        className="w-full flex items-center gap-3 h-14 px-4 text-base font-medium text-wrong hover:bg-wrong/10 transition-colors text-left rounded-none"
+                    >
+                        <LogOut className="h-5 w-5" /> Keluar
+                    </button>
+                </div>
+            </aside>
         </>
     )
 }
