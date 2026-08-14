@@ -324,7 +324,7 @@ function FormPage() {
                                     }`}
                             >
                                 <Clock className="h-3.5 w-3.5" />
-                                {hasTimer ? formattedTime : "Tanpa Waktu Pengerjaan"}
+                                {hasTimer ? formattedTime : "Tanpa Waktu"}
                             </span>
                         </div>
                     </div>

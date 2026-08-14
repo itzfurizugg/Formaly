@@ -197,7 +197,7 @@ function FormEdit() {
         <>
             <Loading show={loading} />
             {!loading && (
-        <div className="flex flex-col items-center px-4 pt-10 lg:h-screen lg:overflow-hidden">
+        <div className="flex flex-col items-center px-3 pt-10 lg:h-screen lg:overflow-hidden">
             <div className="w-full xl:max-w-7xl lg:max-w-5xl lg:h-full lg:flex lg:flex-col">
                 <button
                     onClick={() => navigate("/creator")}
@@ -235,13 +235,13 @@ function FormEdit() {
 
                 <div className="flex flex-col lg:flex-row items-start gap-6 lg:flex-1 lg:min-h-0 lg:overflow-hidden lg:mt-2">
                     <div className="w-full lg:w-[45%] lg:min-h-0 lg:overflow-y-auto">
-                        <form onSubmit={handleSave} className="space-y-4 bg-white border border-second p-3 lg:p-6 sm:p-4 shadow-sm rounded-none">
+                        <form onSubmit={handleSave} className="space-y-3 bg-white border border-second p-3 lg:p-6 sm:p-4 shadow-sm rounded-none">
                     <div>
                         <input type="text" required className={inputCls} value={title} onChange={(e) => setTitle(e.target.value)} />
                     </div>
 
                     <div>
-                        <label className="block text-sm font-medium text-darks mb-1.5">Deskripsi</label>
+                        {/* <label className="block text-sm font-medium text-darks mb-1.5">Deskripsi</label> */}
                         <RichTextEditor
                             value={description}
                             onChange={setDescription}
@@ -267,7 +267,7 @@ function FormEdit() {
                             />
                         </div>
                         <div>
-                            <label className="block text-sm font-medium text-darks mb-1.5">Passing Score</label>
+                            <label className="block text-sm font-medium text-darks mb-1.5">Nilai Minimum</label>
                             <input
                                 type="number"
                                 min={0}
@@ -291,7 +291,7 @@ function FormEdit() {
                             <option value="draft">Draft</option>
                             <option value="published">Public</option>
                         </select>
-                        <p className="text-xs text-tinted mt-1.5">
+                        <p className="text-xs text-tinted mt-1.5 hidden sm:block">
                             Hanya form berstatus <span className="font-medium text-darks">Public</span> yang bisa diakses orang lain, termasuk lewat tag.
                         </p>
                     </div>
@@ -335,7 +335,7 @@ function FormEdit() {
                                 ))}
                             </div>
                         )}
-                        <p className="text-xs text-tinted mt-2">
+                        <p className="text-xs text-tinted mt-2 hidden sm-block">
                             Tag pertama dipakai sebagai link singkat form, contoh: <span className="font-medium text-darks">/form/CODEVERSE</span>.
                         </p>
                     </div>

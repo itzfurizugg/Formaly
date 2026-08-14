@@ -108,19 +108,19 @@ function Home() {
         <>
             <Loading show={authLoading || !user} />
             {!authLoading && user && (
-        <div className="flex flex-col items-center justify-center min-h-[70vh] px-4 py-10 text-left lg:text-center">
-            <div className="w-full max-w-xl">
-                <h1 className="w-full text-4xl md:text-5xl font-bold text-darks animate-slide-up">
-                    Mulai mengerjakan!
-                </h1>
-                <p className="w-full text-tinted mt-3 animate-fade-in" style={{ animationDelay: "100ms" }}>
-                    Cari formulir berdasarkan tag yang kamu ketahui, lalu kerjakan.
-                </p>
+                <div className="flex flex-col items-center justify-center min-h-[70vh] px-4 py-10 text-left lg:text-center">
+                    <div className="w-full max-w-xl">
+                        <h1 className="w-full text-4xl md:text-7xl font-display font-bold uppercase text-darks animate-slide-up">
+                            Mulai mengerjakan!
+                        </h1>
+                        <p className="w-full text-tinted mt-3 animate-fade-in" style={{ animationDelay: "100ms" }}>
+                            Cari formulir berdasarkan tag yang kamu ketahui, lalu kerjakan.
+                        </p>
 
-                <div className="mt-8 animate-fade-in" style={{ animationDelay: "200ms" }}>
-                    <Search onSearch={handleTagSearch} loading={searching} />
-                    {error && <p className="text-sm text-wrong mt-3">{error}</p>}
-                    {/* {activeTag && !error && (
+                        <div className="mt-8 animate-fade-in" style={{ animationDelay: "200ms" }}>
+                            <Search onSearch={handleTagSearch} loading={searching} />
+                            {error && <p className="text-sm text-wrong mt-3">{error}</p>}
+                            {/* {activeTag && !error && (
                         <div className="flex items-center justify-start lg:justify-center gap-2 mt-3">
                             <span className="text-sm text-tinted">Tag:</span>
                             <button
@@ -132,9 +132,9 @@ function Home() {
                             </button>
                         </div>
                     )} */}
+                        </div>
+                    </div>
                 </div>
-            </div>
-        </div>
             )}
         </>
     )

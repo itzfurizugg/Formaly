@@ -46,6 +46,15 @@ interface OptionSeries {
     color: string
 }
 
+interface PerQuestionStat {
+    name: string
+    soal_text: string
+    benar: number
+    salah: number
+    kosong: number
+    total: number
+}
+
 function Submissions() {
     const { id } = useParams()
     const navigate = useNavigate()
@@ -59,6 +68,10 @@ function Submissions() {
     const [barSeries, setBarSeries] = useState<OptionSeries[]>([])
     const [totalCorrect, setTotalCorrect] = useState(0)
     const [totalWrong, setTotalWrong] = useState(0)
+    const [avgCorrect, setAvgCorrect] = useState(0)
+    const [avgWrong, setAvgWrong] = useState(0)
+    const [perQuestionStats, setPerQuestionStats] = useState<PerQuestionStat[]>([])
+    const [chartView, setChartView] = useState<"statistik" | "distribusi">("statistik")
 
     const loadAll = useCallback(async () => {
         if (!user || !id) return
@@ -158,9 +171,11 @@ function Submissions() {
         setBarData(data)
         setBarSeries(series)
 
-        // Hitung jumlah jawaban benar vs salah (soal isian dan tanpa kunci tidak dihitung).
+        // Hitung jumlah jawaban benar vs salah (soal isian dan tanpa kunci tidak dihitung),
+        // sekaligus rata-rata benar/salah per responden.
         let correctTotal = 0
         let wrongTotal = 0
+        const perSubmission = new Map<string, { benar: number; salah: number }>()
         for (const a of answers) {
             const q = a.question
             if (!q || q.question_type === "text") continue
@@ -178,9 +193,70 @@ function Submissions() {
             } else {
                 wrongTotal++
             }
+            const sub = perSubmission.get(a.submission_id) ?? { benar: 0, salah: 0 }
+            if (isCorrect) sub.benar++
+            else sub.salah++
+            perSubmission.set(a.submission_id, sub)
         }
         setTotalCorrect(correctTotal)
         setTotalWrong(wrongTotal)
+
+        // Rata-rata benar/salah per responden (hanya responden yang punya jawaban terhitung).
+        let sumCorrect = 0
+        let sumWrong = 0
+        perSubmission.forEach((s) => {
+            sumCorrect += s.benar
+            sumWrong += s.salah
+        })
+        const n = perSubmission.size
+        setAvgCorrect(n ? Math.round((sumCorrect / n) * 10) / 10 : 0)
+        setAvgWrong(n ? Math.round((sumWrong / n) * 10) / 10 : 0)
+
+        // Statistik per soal: jumlah benar, salah, dan kosong (tidak dijawab)
+        // dihitung terhadap seluruh submission. Soal isian tanpa kunci diabaikan.
+        const totalSubs = subIds.length
+        const qStatsMap = new Map<
+            string,
+            { text: string; benar: number; salah: number }
+        >()
+        for (const a of answers) {
+            const q = a.question
+            if (!q || q.question_type === "text") continue
+            const correct = q.question_options.filter((o) => o.is_correct).map((o) => o.id)
+            if (correct.length === 0) continue
+            if (!qStatsMap.has(q.id)) {
+                qStatsMap.set(q.id, {
+                    text: richTextToPlain(q.question_text || ""),
+                    benar: 0,
+                    salah: 0,
+                })
+            }
+            const selected =
+                q.question_type === "multiple_choice"
+                    ? a.selected_options || []
+                    : a.selected_option_id
+                        ? [a.selected_option_id]
+                        : []
+            const isCorrect = selected.length === correct.length && selected.every((id) => correct.includes(id))
+            const entry = qStatsMap.get(q.id)!
+            if (isCorrect) entry.benar++
+            else entry.salah++
+        }
+
+        const perQuestion: PerQuestionStat[] = []
+        qStatsMap.forEach((entry, qid) => {
+            const qno = (qOrder.get(qid) ?? 0) + 1
+            const answered = entry.benar + entry.salah
+            perQuestion.push({
+                name: `Soal ${qno}`,
+                soal_text: entry.text,
+                benar: entry.benar,
+                salah: entry.salah,
+                kosong: Math.max(0, totalSubs - answered),
+                total: totalSubs,
+            })
+        })
+        setPerQuestionStats(perQuestion)
 
         setLoading(false)
     }, [user, id])
@@ -224,6 +300,31 @@ function Submissions() {
         )
     }
 
+    const renderPerQuestionTooltip = ({ active, payload, label }: TooltipContentProps) => {
+        if (!active || !payload?.length) return null
+        const row = payload[0].payload as PerQuestionStat
+        const title = row.soal_text ? `${label} - ${row.soal_text}` : String(label)
+        return (
+            <div style={{ background: "white", border: `1px solid ${colors.second}`, borderRadius: 12, padding: "8px 12px", fontSize: 12, maxWidth: 320 }}>
+                <p className="font-medium text-darks">{title}</p>
+                <p className="flex items-center gap-1.5 text-tinted mt-1">
+                    <span className="h-2.5 w-2.5 rounded-full shrink-0" style={{ background: colors.pass }} />
+                    Benar: <span className="font-medium text-darks">{row.benar}</span> responden
+                </p>
+                <p className="flex items-center gap-1.5 text-tinted mt-1">
+                    <span className="h-2.5 w-2.5 rounded-full shrink-0" style={{ background: colors.wrong }} />
+                    Salah: <span className="font-medium text-darks">{row.salah}</span> responden
+                </p>
+                {row.kosong > 0 && (
+                    <p className="flex items-center gap-1.5 text-tinted mt-1">
+                        <span className="h-2.5 w-2.5 rounded-full shrink-0" style={{ background: colors.tinted }} />
+                        Kosong: <span className="font-medium text-darks">{row.kosong}</span> responden
+                    </p>
+                )}
+            </div>
+        )
+    }
+
     const handleDelete = async (s: Submission) => {
         confirmDelete({
             title: "Hapus submission ini?",
@@ -246,7 +347,7 @@ function Submissions() {
         <>
             <Loading show={loading} />
             {!loading && (
-        <div className="flex flex-col items-center px-4 py-10">
+        <div className="flex flex-col items-center px-3 py-10">
             <div className="w-full xl:max-w-7xl lg:max-w-5xl">
                 <button
                     onClick={() => navigate("/creator")}
@@ -279,53 +380,151 @@ function Submissions() {
                     </div>
                 )}
 
-                {totalCorrect + totalWrong > 0 && (
-                    <div className="flex flex-col lg:flex-row gap-4 mb-6">
-                        <div className="bg-white border border-second p-5 shadow-sm rounded-none lg:flex-none lg:w-64">
-                            <p className="font-semibold text-darks mb-0.5">Benar vs Salah</p>
-                            <p className="text-xs text-tinted mb-2">
-                                Jawaban benar dan salah dari seluruh submission.
-                            </p>
-                            <div className="h-[180px]">
-                                <DonutChart
-                                    bare
-                                    showLegend
-                                    height={190}
-                                    data={[
-                                        { name: "Benar", value: totalCorrect, color: colors.pass },
-                                        { name: "Salah", value: totalWrong, color: colors.wrong },
-                                    ]}
-                                />
-                            </div>
-                        </div>
-                        <div className="bg-white border border-second p-5 shadow-sm rounded-none w-full lg:flex-1 lg:col-span-2">
-                            <p className="font-semibold text-darks mb-0.5">Distribusi Opsi Jawaban</p>
-                            <p className="text-xs text-tinted mb-4">
-                                Jumlah pilihan tiap opsi per soal dari seluruh submission (soal isian tidak dihitung).
-                            </p>
-                            <div style={{ overflowX: "auto" }}>
-                                <div style={{ width: `max(100%, ${Math.max(1, barData.length) * 56}px)`, height: 280 }}>
-                                    <ResponsiveContainer width="100%" height="100%">
-                                        <BarChart data={barData} margin={{ top: 8, right: 16, left: -14, bottom: 0 }}>
-                                            <XAxis dataKey="name" tick={{ fontSize: 11, fill: colors.tinted }} axisLine={false} tickLine={false} interval={0} />
-                                            <YAxis tick={{ fontSize: 11, fill: colors.tinted }} axisLine={false} tickLine={false} allowDecimals={false} />
-                                            <Tooltip cursor={{ fill: colors.second }} content={renderTooltip} />
-                                            {barSeries.map((s) => (
-                                                <Bar key={s.key} dataKey={s.key} stackId="opt" name={s.label} fill={s.color} />
-                                            ))}
-                                        </BarChart>
-                                    </ResponsiveContainer>
+                {submissions.length > 0 && (
+                    <div className="space-y-4 mb-6">
+                        {/* Baris 1: Total Responded + Rata-rata Benar/Salah + Benar vs Salah */}
+                        <div className="flex flex-col lg:flex-row gap-4">
+                            <div className="bg-white border border-second p-5 shadow-sm rounded-none lg:flex-none lg:w-64 flex flex-col">
+                                <p className="font-semibold text-darks mb-0.5">Total Responded</p>
+                                <p className="text-xs text-tinted mb-3">
+                                    Jumlah submission yang masuk.
+                                </p>
+                                <div className="flex-1 flex flex-col items-center justify-center text-center">
+                                    <p className="text-5xl font-bold text-darks leading-none">{submissions.length}</p>
+                                    <p className="text-xs text-tinted mt-2">responden</p>
                                 </div>
                             </div>
-                            <div className="mt-3 flex flex-wrap gap-x-4 gap-y-1.5">
-                                {barSeries.map((s) => (
-                                    <span key={s.key} className="inline-flex items-center gap-1.5 text-xs text-tinted">
-                                        <span className="h-2.5 w-2.5 rounded-full shrink-0" style={{ background: s.color }} />
-                                        {s.label}
-                                    </span>
-                                ))}
+                            <div className="bg-white border border-second p-5 shadow-sm rounded-none lg:flex-1">
+                                <p className="font-semibold text-darks mb-0.5">Rata-rata Benar vs Salah</p>
+                                <p className="text-xs text-tinted mb-2">
+                                    Rata-rata jawaban benar dan salah per responden (soal isian tanpa kunci tidak dihitung).
+                                </p>
+                                <div className="h-[190px]">
+                                    <DonutChart
+                                        bare
+                                        showLegend
+                                        height={200}
+                                        data={[
+                                            { name: "Rata-rata Benar", value: avgCorrect, color: colors.pass },
+                                            { name: "Rata-rata Salah", value: avgWrong, color: colors.wrong },
+                                        ]}
+                                    />
+                                </div>
+                            </div>
+                            <div className="bg-white border border-second p-5 shadow-sm rounded-none lg:flex-1">
+                                <p className="font-semibold text-darks mb-0.5">Total Benar vs Salah</p>
+                                <p className="text-xs text-tinted mb-2">
+                                    Jumlah jawaban benar dan salah dari seluruh submission.
+                                </p>
+                                <div className="h-[190px]">
+                                    <DonutChart
+                                        bare
+                                        showLegend
+                                        height={200}
+                                        data={[
+                                            { name: "Benar", value: totalCorrect, color: colors.pass },
+                                            { name: "Salah", value: totalWrong, color: colors.wrong },
+                                        ]}
+                                    />
+                                </div>
                             </div>
                         </div>
+
+                        {/* Baris 2+3: Statistik per Soal & Distribusi Opsi (switch) */}
+                        {(perQuestionStats.length > 0 || barData.length > 0) && (
+                            <div className="bg-white border border-second p-5 shadow-sm rounded-none">
+                                <div className="flex items-start justify-between gap-3 flex-wrap mb-4">
+                                    <div>
+                                        <p className="font-semibold text-darks mb-0.5">
+                                            {chartView === "statistik" ? "Statistik Jawaban per Soal" : "Distribusi Opsi Jawaban"}
+                                        </p>
+                                        <p className="text-xs text-tinted">
+                                            {chartView === "statistik"
+                                                ? "Jumlah jawaban benar, salah, dan kosong (tidak dijawab) untuk tiap soal dari seluruh submission."
+                                                : "Jumlah pilihan tiap opsi per soal dari seluruh submission (soal isian tidak dihitung)."}
+                                        </p>
+                                    </div>
+                                    <div className="flex items-center gap-1 p-1 bg-base border border-second rounded-none shrink-0">
+                                        <button
+                                            onClick={() => setChartView("statistik")}
+                                            className={`px-2 py-1.5 text-xs font-medium rounded-none transition-colors ${
+                                                chartView === "statistik" ? "bg-darks text-base" : "text-tinted hover:text-darks"
+                                            }`}
+                                        >
+                                            Statistik
+                                        </button>
+                                        <button
+                                            onClick={() => setChartView("distribusi")}
+                                            className={`px-2 py-1.5 text-xs font-medium rounded-none transition-colors ${
+                                                chartView === "distribusi" ? "bg-darks text-base" : "text-tinted hover:text-darks"
+                                            }`}
+                                        >
+                                            Distribusi
+                                        </button>
+                                    </div>
+                                </div>
+
+                                {chartView === "statistik" && perQuestionStats.length > 0 && (
+                                    <>
+                                        <div style={{ overflowX: "auto" }}>
+                                            <div style={{ width: `max(100%, ${Math.max(1, perQuestionStats.length) * 64}px)`, height: 280 }}>
+                                                <ResponsiveContainer width="100%" height="100%">
+                                                    <BarChart data={perQuestionStats} margin={{ top: 8, right: 16, left: -14, bottom: 0 }}>
+                                                        <XAxis dataKey="name" tick={{ fontSize: 11, fill: colors.tinted }} axisLine={false} tickLine={false} interval={0} />
+                                                        <YAxis tick={{ fontSize: 11, fill: colors.tinted }} axisLine={false} tickLine={false} allowDecimals={false} />
+                                                        <Tooltip cursor={{ fill: colors.second }} content={renderPerQuestionTooltip} />
+                                                        <Bar dataKey="benar" stackId="q" name="Benar" fill={colors.pass} />
+                                                        <Bar dataKey="salah" stackId="q" name="Salah" fill={colors.wrong} />
+                                                        <Bar dataKey="kosong" stackId="q" name="Kosong" fill={colors.tinted} radius={[4, 4, 0, 0]} />
+                                                    </BarChart>
+                                                </ResponsiveContainer>
+                                            </div>
+                                        </div>
+                                        <div className="mt-3 flex flex-wrap gap-x-4 gap-y-1.5">
+                                            <span className="inline-flex items-center gap-1.5 text-xs text-tinted">
+                                                <span className="h-2.5 w-2.5 rounded-full shrink-0" style={{ background: colors.pass }} />
+                                                Benar
+                                            </span>
+                                            <span className="inline-flex items-center gap-1.5 text-xs text-tinted">
+                                                <span className="h-2.5 w-2.5 rounded-full shrink-0" style={{ background: colors.wrong }} />
+                                                Salah
+                                            </span>
+                                            <span className="inline-flex items-center gap-1.5 text-xs text-tinted">
+                                                <span className="h-2.5 w-2.5 rounded-full shrink-0" style={{ background: colors.tinted }} />
+                                                Kosong
+                                            </span>
+                                        </div>
+                                    </>
+                                )}
+
+                                {chartView === "distribusi" && barData.length > 0 && (
+                                    <>
+                                        <div style={{ overflowX: "auto" }}>
+                                            <div style={{ width: `max(100%, ${Math.max(1, barData.length) * 56}px)`, height: 280 }}>
+                                                <ResponsiveContainer width="100%" height="100%">
+                                                    <BarChart data={barData} margin={{ top: 8, right: 16, left: -14, bottom: 0 }}>
+                                                        <XAxis dataKey="name" tick={{ fontSize: 11, fill: colors.tinted }} axisLine={false} tickLine={false} interval={0} />
+                                                        <YAxis tick={{ fontSize: 11, fill: colors.tinted }} axisLine={false} tickLine={false} allowDecimals={false} />
+                                                        <Tooltip cursor={{ fill: colors.second }} content={renderTooltip} />
+                                                        {barSeries.map((s) => (
+                                                            <Bar key={s.key} dataKey={s.key} stackId="opt" name={s.label} fill={s.color} />
+                                                        ))}
+                                                    </BarChart>
+                                                </ResponsiveContainer>
+                                            </div>
+                                        </div>
+                                        <div className="mt-3 flex flex-wrap gap-x-4 gap-y-1.5">
+                                            {barSeries.map((s) => (
+                                                <span key={s.key} className="inline-flex items-center gap-1.5 text-xs text-tinted">
+                                                    <span className="h-2.5 w-2.5 rounded-full shrink-0" style={{ background: s.color }} />
+                                                    {s.label}
+                                                </span>
+                                            ))}
+                                        </div>
+                                    </>
+                                )}
+                            </div>
+                        )}
                     </div>
                 )}
 

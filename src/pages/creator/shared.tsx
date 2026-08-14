@@ -38,7 +38,7 @@ function Shared() {
     }
 
     return (
-        <div className="flex flex-col items-center px-4 py-10">
+        <div className="flex flex-col items-center px-3 py-10">
             <div className="w-full xl:max-w-7xl lg:max-w-5xl">
                 <button
                     onClick={() => navigate("/creator")}

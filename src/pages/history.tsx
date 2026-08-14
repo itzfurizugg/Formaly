@@ -88,7 +88,7 @@ function History() {
                     <div className="max-w-4xl grid w-full lg:mt-10">
                         <div className="ml-3 sm:ml-0">
                             <div className="flex items-center gap-2 mb-1">
-                                <h1 className="text-2xl lg:text-4xl font-bold text-darks">Histori</h1>
+                                <h1 className="text-2xl lg:text-4xl text-darks font-bold font-display uppercase">Riwayat</h1>
                             </div>
                             <p className="text-sm text-tinted mb-6">
                                 Formulir yang pernah kamu kerjakan.

@@ -35,7 +35,9 @@ function CreatorDashboard() {
     const navigate = useNavigate()
     // Cache ringkasan dashboard supaya kembali dari halaman lain cukup fade-in
     // tanpa overlay loading; data di-refresh diam-diam di background.
-    const cached = user ? pageGet<{ stats: Stats; barData: BarDatum[] }>(`dashboard:${user.id}`) : undefined
+    const [cached] = useState<{ stats: Stats; barData: BarDatum[] } | undefined>(() =>
+        user ? pageGet<{ stats: Stats; barData: BarDatum[] }>(`dashboard:${user.id}`) : undefined
+    )
     const [stats, setStats] = useState<Stats>(cached?.stats ?? { total: 0, active: 0, submissions: 0, score: 0 })
     const [loading, setLoading] = useState(!cached)
     const [barData, setBarData] = useState<BarDatum[]>(cached?.barData ?? [])
@@ -98,7 +100,7 @@ function CreatorDashboard() {
         }
 
         setLoading(false)
-    }, [user, cached])
+    }, [user])
 
     useEffect(() => {
         if (!user) return
@@ -106,7 +108,7 @@ function CreatorDashboard() {
     }, [user, loadStats])
 
     return (
-        <div className="flex flex-col items-center px-4 py-10 lg:h-screen lg:overflow-hidden">
+        <div className="flex flex-col items-center px-3 py-10 lg:h-screen lg:overflow-hidden">
             <div className="xl:max-w-7xl lg:max-w-5xl w-full lg:h-full lg:flex lg:flex-col lg:min-h-0">
                 <button
                     onClick={() => navigate("/")}
@@ -115,7 +117,7 @@ function CreatorDashboard() {
                     <ArrowLeft className="h-4 w-4" /> Kembali
                 </button>
                 <div className="flex items-center justify-between mb-1">
-                    <h1 className="text-2xl lg:text-4xl font-bold text-darks">Dashboard Creator</h1>
+                    <h1 className="text-2xl lg:text-4xl font-bold font-display uppercase text-darks">Dashboard Creator</h1>
                 </div>
                 <p className="text-sm text-tinted mb-6">Ringkasan formulir milik kamu.</p>
 

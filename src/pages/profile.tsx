@@ -13,6 +13,7 @@ import {
     KeyRound,
     X,
     ChevronRight,
+    Info,
 } from "lucide-react"
 import { useAuth } from "../lib/auth-context"
 import { supabase } from "../lib/supabase" // sesuaikan path kalau beda
@@ -68,34 +69,34 @@ function Modal({
 
     return (
         <ModalPortal>
-        <div
-            className="fixed inset-0 z-50 flex items-center justify-center px-4"
-            role="dialog"
-            aria-modal="true"
-        >
             <div
-                className="absolute inset-0 bg-darks/50"
-                onClick={onClose}
-            />
-            <div className="relative bg-white border border-second rounded-none w-full max-w-md p-5 shadow-xl animate-scale-in">
-                <div className="flex items-center justify-between mb-4">
-                    <div className="flex items-center gap-2.5">
-                        <div className="w-9 h-9 shrink-0 rounded-full bg-base flex items-center justify-center">
-                            {icon}
+                className="fixed inset-0 z-50 flex items-center justify-center px-4"
+                role="dialog"
+                aria-modal="true"
+            >
+                <div
+                    className="absolute inset-0 bg-darks/50"
+                    onClick={onClose}
+                />
+                <div className="relative bg-white border border-second rounded-none w-full max-w-md p-5 shadow-xl animate-scale-in">
+                    <div className="flex items-center justify-between mb-4">
+                        <div className="flex items-center gap-2.5">
+                            <div className="w-9 h-9 shrink-0 rounded-full bg-base flex items-center justify-center">
+                                {icon}
+                            </div>
+                            <h3 className="text-base font-bold text-darks">{title}</h3>
                         </div>
-                        <h3 className="text-base font-bold text-darks">{title}</h3>
+                        <button
+                            onClick={onClose}
+                            className="text-tinted hover:text-darks transition-colors p-1"
+                            aria-label="Tutup"
+                        >
+                            <X className="h-4 w-4" />
+                        </button>
                     </div>
-                    <button
-                        onClick={onClose}
-                        className="text-tinted hover:text-darks transition-colors p-1"
-                        aria-label="Tutup"
-                    >
-                        <X className="h-4 w-4" />
-                    </button>
+                    {children}
                 </div>
-                {children}
             </div>
-        </div>
         </ModalPortal>
     )
 }
@@ -234,36 +235,35 @@ function Profile() {
     const role = (profile?.role as string | undefined) || "user"
 
     return (
-        <div className="flex flex-col items-center px-2 py-5">
+        <div className="flex flex-col items-center px-2 py-2">
             <div className="max-w-4xl w-full">
                 {/* Header */}
                 <div className="bg-white border border-second p-5 rounded-none mb-3">
-                    <div className="flex flex-col sm:flex-row sm:items-center gap-5">
+                    <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-5">
                         <div className="w-20 h-20 shrink-0 rounded-full bg-done flex items-center justify-center">
                             <span className="text-4xl font-bold text-base">
                                 {(profile?.name || "U").charAt(0).toUpperCase()}
                             </span>
                         </div>
                         <div className="flex flex-col min-w-0 gap-1.5">
-                            <h2 className="text-xl font-bold text-darks truncate">{profile?.name || "User"}</h2>
+                            <div className="flex flex-wrap items-center gap-2 mt-1">
+                                <h2 className="text-xl font-bold text-darks truncate">{profile?.name || "User"}</h2>
+                                <span
+                                    className={`inline-flex items-center gap-1 text-xs font-semibold px-2.5 py-1 rounded-full ${ROLE_STYLE[role] || ROLE_STYLE.user
+                                        }`}
+                                >
+                                    {/* <ShieldCheck className="h-3 w-3" /> */}
+                                    {ROLE_LABEL[role] || "User"}
+                                </span>
+                            </div>
                             <p className="text-sm text-tinted truncate flex items-center gap-1.5">
                                 <Mail className="h-3.5 w-3.5 shrink-0" />
                                 {profile?.email}
                             </p>
-                            <div className="flex flex-wrap items-center gap-2 mt-1">
-                                <span
-                                    className={`inline-flex items-center gap-1 text-xs font-semibold px-2.5 py-1 rounded-full ${
-                                        ROLE_STYLE[role] || ROLE_STYLE.user
-                                    }`}
-                                >
-                                    <ShieldCheck className="h-3 w-3" />
-                                    {ROLE_LABEL[role] || "User"}
-                                </span>
-                                <span className="inline-flex items-center gap-1 text-xs text-tinted">
-                                    <CalendarDays className="h-3 w-3" />
-                                    Bergabung {formatJoinDate(profile?.created_at)}
-                                </span>
-                            </div>
+                            <span className="inline-flex items-center gap-1 text-xs text-tinted">
+                                {/* <CalendarDays className="h-3 w-3" /> */}
+                                Bergabung pada {formatJoinDate(profile?.created_at)}
+                            </span>
                         </div>
 
                         <button
@@ -307,6 +307,20 @@ function Profile() {
                         <div className="flex-1 min-w-0">
                             <p className="text-sm font-bold text-darks">Ubah Kata Sandi</p>
                             <p className="text-xs text-tinted">Perbarui kata sandi akun kamu</p>
+                        </div>
+                        <ChevronRight className="h-4 w-4 text-tinted shrink-0" />
+                    </button>
+
+                    <button
+                        onClick={() => setShowPasswordModal(true)}
+                        className="w-full flex items-center gap-3 p-4 hover:bg-base transition-colors text-left"
+                    >
+                        <div className="w-9 h-9 shrink-0 rounded-full bg-base flex items-center justify-center">
+                            <Info className="h-4 w-4 text-darks" />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                            <p className="text-sm font-bold text-darks">Tentang Kami</p>
+                            <p className="text-xs text-tinted">Kenalan dengan yang membuat Formaly.</p>
                         </div>
                         <ChevronRight className="h-4 w-4 text-tinted shrink-0" />
                     </button>

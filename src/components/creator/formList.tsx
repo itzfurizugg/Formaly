@@ -1,12 +1,11 @@
 import { useEffect, useState, useCallback } from "react"
 import { useNavigate } from "react-router-dom"
-import { FileText, Pencil, Trash2, ClipboardList, KeyRound, Loader2, Share } from "lucide-react"
+import { FileText, Pencil, Trash2, ClipboardList, KeyRound, Loader2, Share, ListChecks, Users, Timer, Target, CalendarDays } from "lucide-react"
 import { supabase } from "../../lib/supabase"
 import { useAuth } from "../../lib/auth-context"
 import { confirmDelete } from "../../lib/alerts"
 import Loading from "../loading"
 import { RichText } from "../richText"
-import { colors } from "../../lib/colorbase"
 import { pageGet, pageSet } from "../../lib/pageCache"
 
 interface FormRow {
@@ -26,7 +25,9 @@ function FormList() {
     const { user } = useAuth()
     // Cache daftar form supaya kembali ke dashboard tidak memunculkan
     // overlay loading lagi; di-refresh diam-diam saat mount.
-    const cached = user ? pageGet<FormRow[]>(`formList:${user.id}`) : undefined
+    const [cached] = useState<FormRow[] | undefined>(() =>
+        user ? pageGet<FormRow[]>(`formList:${user.id}`) : undefined
+    )
     const [forms, setForms] = useState<FormRow[]>(cached ?? [])
     const [loading, setLoading] = useState(!cached)
     const [deleting, setDeleting] = useState<string | null>(null)
@@ -52,7 +53,7 @@ function FormList() {
             if (user) pageSet(`formList:${user.id}`, rows)
         }
         setLoading(false)
-    }, [user, cached])
+    }, [user])
 
     useEffect(() => {
         if (!user) return
@@ -79,8 +80,16 @@ function FormList() {
 
     const statusBadge = (status: string) => {
         const s = String(status).toLowerCase()
-        if (s === "published") return <span className="badge text-white rounded-none" style={{ backgroundColor: colors.done }}>Public</span>
-        return <span className="badge badge-ghost text-tinted rounded-full">Draft</span>
+        if (s === "published") return (
+            <span className="badge rounded-full text-done text-xs font-medium px-2 bg-done/10 border-none">
+                Public
+            </span>
+        )
+        return (
+            <span className="badge rounded-full border border-second bg-transparent text-tinted text-xs font-medium px-2">
+                Draft
+            </span>
+        )
     }
 
     return (
@@ -88,71 +97,84 @@ function FormList() {
             <Loading show={loading} />
             {!loading && (
                 error ? (
-                    <div role="alert" className="text-sm text-wrong bg-wrong/5 border border-wrong/20 rounded-lg px-4 py-3">
+                    <div role="alert" className="text-sm text-wrong bg-wrong/5 border border-wrong/20 rounded-none px-4 py-3">
                         {error}
                     </div>
                 ) : forms.length === 0 ? (
                     <div className="text-center py-20">
                         <FileText className="h-12 w-12 text-tinted/40 mx-auto mb-3" />
                         <p className="text-tinted mb-4">Belum ada form. Buat form pertamamu!</p>
-                        <button onClick={() => navigate("/creator/forms/new")} className="btn bg-darks text-base border-none">
+                        <button onClick={() => navigate("/creator/forms/new")} className="btn rounded-none bg-darks text-base border-none">
                             Buat Form
                         </button>
                     </div>
                 ) : (
         <div className="space-y-3">
             {forms.map((form) => (
-                <div key={form.id} className="card bg-white border border-second rounded-none">
-                    <div className="card-body">
-                        <div className="flex items-start justify-between gap-2">
+                <div key={form.id} className="card bg-white border border-second rounded-none transition-colors hover:bg-base-200">
+                    <div className="card-body gap-3 p-4">
+                        <div className="flex items-start justify-between gap-3">
                             <div className="min-w-0">
-                                <h2 className="card-title text-darks break-words">{form.title}</h2>
-                                <p className="text-sm text-tinted mt-1 line-clamp-2">
+                                <h2 className="card-title text-darks break-words leading-snug text-base">{form.title}</h2>
+                                <div className="text-sm text-tinted mt-1 line-clamp-2">
                                     {form.description ? <RichText html={form.description} className="line-clamp-2" /> : "Tidak ada deskripsi"}
-                                </p>
+                                </div>
                             </div>
-                            <div className="flex items-center gap-2 shrink-0">
+                            <div className="shrink-0">
                                 {statusBadge(form.status)}
                             </div>
                         </div>
 
-                        <div className="flex flex-wrap items-center gap-4 mt-2 text-xs text-tinted/70">
-                            <span>{form.questions?.length || 0} soal</span>
-                            <span>{form.submissions?.length || 0} submission</span>
-                            <span>Durasi {form.duration || 0} menit</span>
-                            {form.passing_score != null && <span>Passing {form.passing_score}</span>}
-                            <span>{new Date(form.created_at).toLocaleDateString("id-ID", { day: "numeric", month: "short", year: "numeric" })}</span>
+                        <div className="flex flex-wrap items-center gap-x-5 gap-y-1.5 text-xs text-tinted/80 border-t border-second pt-2.5">
+                            <span className="inline-flex items-center gap-1.5">
+                                <ListChecks className="h-3.5 w-3.5" /> {form.questions?.length || 0} soal
+                            </span>
+                            {/* <span className="inline-flex items-center gap-1.5">
+                                <Users className="h-3.5 w-3.5" /> {form.submissions?.length || 0} submission
+                            </span> */}
+                            <span className="inline-flex items-center gap-1.5">
+                                <Timer className="h-3.5 w-3.5" /> {form.duration || 0} menit
+                            </span>
+                            {form.passing_score != null && (
+                                <span className="inline-flex items-center gap-1.5">
+                                    <Target className="h-3.5 w-3.5" /> Nilai Minimum: {form.passing_score}
+                                </span>
+                            )}
+                            <span className="inline-flex items-center gap-1.5">
+                                {/* <CalendarDays className="h-3.5 w-3.5" /> */}
+                                {new Date(form.created_at).toLocaleDateString("id-ID", { day: "numeric", month: "short", year: "numeric" })}
+                            </span>
                         </div>
 
-                        <div className="card-actions justify-end mt-3 flex-wrap">
+                        <div className="card-actions justify-end flex-wrap gap-2">
                             <button
                                 onClick={() => navigate(`/creator/forms/${form.id}/submissions`)}
-                                className="btn btn-sm bg-base text-darks border border-second hover:bg-second"
+                                className="btn btn-sm rounded-none bg-base text-darks border border-second hover:bg-second hover:border-second"
                             >
                                 <ClipboardList className="h-3.5 w-3.5" /> Submission
                             </button>
                             <button
                                 onClick={() => navigate(`/creator/forms/${form.id}/shared`)}
-                                className="btn btn-sm bg-base text-darks border border-second hover:bg-second"
+                                className="btn btn-sm rounded-none bg-base text-darks border border-second hover:bg-second hover:border-second"
                             >
                                 <Share className="h-3.5 w-3.5" /> Bagikan
                             </button>
                             <button
                                 onClick={() => navigate(`/creator/forms/${form.id}/tokens`)}
-                                className="btn btn-sm bg-base text-darks border border-second hover:bg-second"
+                                className="btn btn-sm rounded-none bg-base text-darks border border-second hover:bg-second hover:border-second"
                             >
                                 <KeyRound className="h-3.5 w-3.5" /> Token
                             </button>
                             <button
                                 onClick={() => navigate(`/creator/forms/${form.id}`)}
-                                className="btn btn-sm bg-base text-darks border border-second hover:bg-second"
+                                className="btn btn-sm rounded-none bg-base text-darks border border-second hover:bg-second hover:border-second"
                             >
                                 <Pencil className="h-3.5 w-3.5" /> Edit
                             </button>
                             <button
                                 onClick={() => handleDelete(form.id)}
                                 disabled={deleting === form.id}
-                                className="btn btn-sm bg-wrong/10 text-wrong border-none"
+                                className="btn btn-sm rounded-none bg-wrong/10 text-wrong border border-wrong/20 hover:bg-wrong/20"
                             >
                                 {deleting === form.id ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Trash2 className="h-3.5 w-3.5" />}
                                 Hapus

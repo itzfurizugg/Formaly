@@ -443,7 +443,7 @@ function Questions({ embedded = false }: { embedded?: boolean }) {
                     )}
                 </div>
 
-                {questions.length === 0 && showEditor && !editingId && renderEditor()}
+                {showEditor && !editingId && renderEditor()}
 
                 {questions.length === 0 && !showEditor ? (
                     <div className="text-center py-16">

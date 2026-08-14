@@ -6,6 +6,7 @@ import katex from "katex"
 import "katex/dist/katex.min.css"
 import { sanitizeRichText, inlineRichText } from "../lib/richtext"
 import { promptText } from "../lib/alerts"
+import { enhanceVideoIframes } from "../lib/videoGui"
 
 // Quill v2 module "formula" membutuhkan KaTeX pada window.
 ;(window as unknown as { katex: typeof katex }).katex = katex
@@ -18,9 +19,19 @@ function RichText({ html, as = "div", className = "" }: { html?: string | null; 
         () => (html ? { __html: as === "span" ? inlineRichText(html) : sanitizeRichText(html) } : null),
         [html, as]
     )
+    const ref = useRef<HTMLElement>(null)
+
+    // Tingkatkan iframe video YouTube menjadi player dengan GUI auto-hide.
+    // Dijalankan setelah innerHTML diterapkan; dibersihkan saat konten berganti.
+    useEffect(() => {
+        if (!inner || !ref.current) return
+        const enhancer = enhanceVideoIframes(ref.current)
+        return () => enhancer.destroy()
+    }, [inner])
+
     if (!inner) return null
     const Tag = as
-    return <Tag className={`rich-content ${className}`} dangerouslySetInnerHTML={inner} />
+    return <Tag ref={ref as React.Ref<HTMLDivElement>} className={`rich-content ${className}`} dangerouslySetInnerHTML={inner} />
 }
 
 const fullFormats = ["bold", "italic", "underline", "strike", "list", "link", "formula", "video", "code-block"]

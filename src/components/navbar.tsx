@@ -7,7 +7,7 @@ import { supabase } from "../lib/supabase"
 
 const baseLinks = [
     { to: "/", label: "Beranda", icon: House },
-    { to: "/history", label: "Histori", icon: RotateCcwClock },
+    { to: "/history", label: "Riwayat", icon: RotateCcwClock },
     { to: "/profile", label: "Profil", icon: UserRound },
 ]
 
@@ -42,6 +42,7 @@ function Navbar() {
     }
 
     const showContent = open || closing
+
 
     // Kunci scroll halaman selama sidebar terbuka (termasuk saat animasi tutup).
     useEffect(() => {
