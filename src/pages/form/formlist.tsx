@@ -1,4 +1,5 @@
 import { useNavigate, useLocation } from "react-router-dom"
+import { motion } from "motion/react"
 
 interface Question {
     id: string
@@ -59,13 +60,15 @@ function FormList() {
                         const needsRequired = !!q.is_required && !isAnsweredQuestion
 
                         return (
-                            <button
+                            <motion.button
                                 key={q.id}
                                 onClick={() => {
                                     backToForm(index)
                                 }}
-                                style={{ animationDelay: `${Math.min(index * 20, 240)}ms` }}
-                                className={`animate-fade-in relative aspect-square p-3 rounded-sm transition-all flex items-center justify-center text-xl lg:text-sm font-medium
+                                initial={{ opacity: 0 }}
+                                animate={{ opacity: 1 }}
+                                transition={{ duration: 0.4, ease: "easeOut", delay: Math.min(index * 20, 240) / 1000 }}
+                                className={`relative aspect-square p-3 rounded-sm flex items-center justify-center text-xl lg:text-sm font-medium
                                     ${isCurrent
                                         ? "ring-2 ring-done ring-offset-1 bg-darks text-white"
                                         : isAnsweredQuestion
@@ -78,7 +81,7 @@ function FormList() {
                                 {needsRequired && (
                                     <span className="absolute top-0.5 right-1.5 text-red-600 font-bold text-sm">*</span>
                                 )}
-                            </button>
+                            </motion.button>
                         )
                     })}
                 </div>

@@ -1,5 +1,6 @@
 import Loading from "../../components/loading"
 import { useState, useEffect, useRef, useCallback } from "react"
+import { motion } from "motion/react"
 import { useNavigate, useParams, useLocation } from "react-router-dom"
 import { Check, Clock, ZoomIn, X } from "lucide-react"
 import PageIndicator from "../../components/pageindicator"
@@ -308,7 +309,13 @@ function FormPage() {
                 </div>
 
                 {/* key=current agar animasi diulang tiap pindah soal */}
-                <div key={current} className="bg-base-300 lg:bg-white border border-second p-1 lg:p-6 lg:shadow-sm rounded-none animate-slide-up">
+                <motion.div
+                    key={current}
+                    initial={{ opacity: 0, y: 16 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.45, ease: [0.22, 1, 0.36, 1] }}
+                    className="bg-base-300 lg:bg-white border border-second p-1 lg:p-6 lg:shadow-sm rounded-none"
+                >
                     <div className="flex items-center justify-between mb-3">
                         <div className="flex gap-2">
                             <p className="text-sm text-tinted font-semibold">Soal {current + 1}</p>
@@ -388,7 +395,7 @@ function FormPage() {
                             })
                         )}
                     </div>
-                </div>
+                </motion.div>
 
                 {/* NOTE: LAYOUT DESKTOP (>= md) — PageIndicator & tombol Kirim inline di bawah konten */}
                 <div className="hidden md:flex items-center justify-between mt-4">

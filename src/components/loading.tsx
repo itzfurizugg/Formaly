@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react"
+import { motion } from "motion/react"
 
 interface LoadingProps {
     show?: boolean
@@ -49,17 +50,25 @@ function Loading({ show = true, label = "Memuat...", inline = false }: LoadingPr
     if (!mounted) return null
 
     return (
-        <div
+        <motion.div
             aria-hidden
-            className={`flex flex-col items-center justify-center gap-3 px-4 transition-opacity duration-500 ease-out ${
-                opaque ? "opacity-100" : "opacity-0 pointer-events-none"
+            className={`flex flex-col items-center justify-center gap-3 px-4 ${
+                opaque ? "" : "pointer-events-none"
             } ${inline ? "py-14" : "fixed inset-0 z-50 bg-base-300"}`}
+            initial={false}
+            animate={{ opacity: opaque ? 1 : 0 }}
+            transition={{ duration: FADE_MS / 1000, ease: "easeOut" }}
         >
             <div className="relative h-1 w-44 max-w-full overflow-hidden rounded-full bg-white/70">
-                <div className="absolute h-full w-1/3 rounded-full bg-darks animate-loadingbar" />
+                <motion.div
+                    className="absolute h-full w-1/3 rounded-full bg-darks"
+                    initial={{ left: "-35%", right: "100%" }}
+                    animate={{ left: ["-35%", "0%", "100%"], right: ["100%", "0%", "-35%"] }}
+                    transition={{ duration: 1.2, ease: "easeInOut", repeat: Infinity }}
+                />
             </div>
             <p className="text-xs text-tinted">{label}</p>
-        </div>
+        </motion.div>
     )
 }
 

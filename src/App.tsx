@@ -1,5 +1,6 @@
 import { Routes, Route, Navigate, useLocation } from "react-router-dom"
 import { lazy, Suspense, useEffect, useState } from "react"
+import { MotionConfig, motion } from "motion/react"
 import { AuthProvider } from "./lib/auth"
 import Loading from "./components/loading"
 import Navbar from "./components/navbar"
@@ -54,11 +55,18 @@ function App() {
 
   return (
     <AuthProvider>
+      <MotionConfig reducedMotion="user">
       <div className="bg-second min-h-screen">
         {!hideNav && <Navbar />}
         <Suspense fallback={<Loading />}>
           {/* Key = pathname agar tiap pindah halaman me-replay animasi pembukaan halaman */}
-          <div key={location.pathname} className="min-h-screen animate-page-enter">
+          <motion.div
+            key={location.pathname}
+            className="min-h-screen"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
+          >
             <Routes>
             <Route path="/" element={<Home />} />
             <Route path="/history" element={<History />} />
@@ -144,9 +152,10 @@ function App() {
             <Route path="/forgot-password" element={<ForgotPassword />} />
             <Route path="/reset-password" element={<ResetPassword />} />
           </Routes>
-          </div>
+          </motion.div>
         </Suspense>
       </div>
+      </MotionConfig>
       <AlertToaster />
     </AuthProvider>
   )

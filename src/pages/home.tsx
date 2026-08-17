@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react"
 import { useNavigate, useLocation } from "react-router-dom"
+import { motion } from "motion/react"
 import Search from "../components/search"
 import { supabase } from "../lib/supabase"
 import { useAuth } from "../lib/auth-context"
@@ -110,14 +111,29 @@ function Home() {
             {!authLoading && user && (
                 <div className="flex flex-col items-center justify-center min-h-[70vh] px-4 py-10 text-left lg:text-center">
                     <div className="w-full max-w-xl">
-                        <h1 className="w-full text-4xl md:text-7xl font-display font-bold uppercase text-darks animate-slide-up">
+                        <motion.h1
+                            initial={{ opacity: 0, y: 16 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ duration: 0.45, ease: [0.22, 1, 0.36, 1] }}
+                            className="w-full text-4xl md:text-7xl font-display font-bold uppercase text-darks"
+                        >
                             Mulai mengerjakan!
-                        </h1>
-                        <p className="w-full text-tinted mt-3 animate-fade-in" style={{ animationDelay: "100ms" }}>
+                        </motion.h1>
+                        <motion.p
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            transition={{ duration: 0.4, ease: "easeOut", delay: 0.1 }}
+                            className="w-full text-tinted mt-3"
+                        >
                             Cari formulir berdasarkan tag yang kamu ketahui, lalu kerjakan.
-                        </p>
+                        </motion.p>
 
-                        <div className="mt-8 animate-fade-in" style={{ animationDelay: "200ms" }}>
+                        <motion.div
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            transition={{ duration: 0.4, ease: "easeOut", delay: 0.2 }}
+                            className="mt-8"
+                        >
                             <Search onSearch={handleTagSearch} loading={searching} />
                             {error && <p className="text-sm text-wrong mt-3">{error}</p>}
                             {/* {activeTag && !error && (
@@ -132,7 +148,7 @@ function Home() {
                             </button>
                         </div>
                     )} */}
-                        </div>
+                        </motion.div>
                     </div>
                 </div>
             )}

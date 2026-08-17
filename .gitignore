@@ -26,3 +26,5 @@ supabase/migrations/
 *.njsproj
 *.sln
 *.sw?
+*.jks
+keystore.properties

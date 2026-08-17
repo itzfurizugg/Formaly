@@ -5,8 +5,6 @@ import {
     Save,
     UserRound,
     Mail,
-    ShieldCheck,
-    CalendarDays,
     Lock,
     Eye,
     EyeOff,
@@ -18,6 +16,7 @@ import {
 import { useAuth } from "../lib/auth-context"
 import { supabase } from "../lib/supabase" // sesuaikan path kalau beda
 import ModalPortal from "../components/modalPortal"
+import { motion } from "motion/react"
 
 const ROLE_LABEL: Record<string, string> = {
     admin: "Admin",
@@ -78,7 +77,12 @@ function Modal({
                     className="absolute inset-0 bg-darks/50"
                     onClick={onClose}
                 />
-                <div className="relative bg-white border border-second rounded-none w-full max-w-md p-5 shadow-xl animate-scale-in">
+                <motion.div
+                    initial={{ opacity: 0, scale: 0.95 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }}
+                    className="relative bg-white border border-second rounded-none w-full max-w-md p-5 shadow-xl"
+                >
                     <div className="flex items-center justify-between mb-4">
                         <div className="flex items-center gap-2.5">
                             <div className="w-9 h-9 shrink-0 rounded-full bg-base flex items-center justify-center">
@@ -95,7 +99,7 @@ function Modal({
                         </button>
                     </div>
                     {children}
-                </div>
+                </motion.div>
             </div>
         </ModalPortal>
     )

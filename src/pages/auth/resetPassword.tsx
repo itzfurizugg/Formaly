@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react"
 import { Link, useNavigate } from "react-router-dom"
+import { motion } from "motion/react"
 import { KeyRound, CheckCircle2 } from "lucide-react"
 import logo from "../../assets/logo.svg"
 import { supabase } from "../../lib/supabase"
@@ -104,7 +105,12 @@ function ResetPassword() {
                             <div className="flex flex-col items-center justify-center py-16 px-6">
                                 <div className="w-full max-w-xs">
                                     <div className="relative h-1.5 w-full bg-second rounded-full overflow-hidden">
-                                        <div className="absolute h-full bg-darks rounded-full animate-loadingbar" />
+                                        <motion.div
+                                            className="absolute h-full bg-darks rounded-full"
+                                            initial={{ left: "-35%", right: "100%" }}
+                                            animate={{ left: ["-35%", "0%", "100%"], right: ["100%", "0%", "-35%"] }}
+                                            transition={{ duration: 1.2, ease: "easeInOut", repeat: Infinity }}
+                                        />
                                     </div>
                                 </div>
                                 <p className="text-sm text-tinted mt-4">Memeriksa tautan...</p>

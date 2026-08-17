@@ -1,5 +1,17 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!--
+  NOTE: This file is overwritten by `npx capacitor-assets generate`.
+  The <monochrome> layer below (Android 13+ themed icon) must be re-added after
+  each regeneration, or adjust/script the generation step to preserve it.
+-->
 <adaptive-icon xmlns:android="http://schemas.android.com/apk/res/android">
-    <background android:drawable="@color/ic_launcher_background"/>
-    <foreground android:drawable="@mipmap/ic_launcher_foreground"/>
+    <background>
+        <inset android:drawable="@mipmap/ic_launcher_background" android:inset="16.7%" />
+    </background>
+    <foreground>
+        <inset android:drawable="@mipmap/ic_launcher_foreground" android:inset="16.7%" />
+    </foreground>
+    <monochrome>
+        <inset android:drawable="@drawable/ic_launcher_monochrome" android:inset="16.7%" />
+    </monochrome>
 </adaptive-icon>

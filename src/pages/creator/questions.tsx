@@ -1,10 +1,11 @@
 import Loading from "../../components/loading"
 import { useEffect, useState, useCallback, type DragEvent } from "react"
 import { useNavigate, useParams } from "react-router-dom"
-import { ArrowLeft, Plus, Pencil, Trash2, Save, X, Loader2, Check, Image as ImageIcon, FileUp, GripVertical } from "lucide-react"
+import { ArrowLeft, Plus, Pencil, Trash2, Save, X, Loader2, Check, Image as ImageIcon, GripVertical } from "lucide-react"
 import { supabase } from "../../lib/supabase"
 import { useAuth } from "../../lib/auth-context"
 import QuestionImportModal from "../../components/creator/QuestionImportModal"
+import CreateButton from "../../components/creator/createButton"
 import RichTextEditor, { RichText } from "../../components/richText"
 import { richTextToPlain } from "../../lib/richtext"
 import { alertSaveSuccess, confirmDelete, showAlert } from "../../lib/alerts"
@@ -432,14 +433,7 @@ function Questions({ embedded = false }: { embedded?: boolean }) {
 
                 <div className={`flex justify-end gap-2 ${embedded ? "mb-3" : "mb-4"}`}>
                     {!showEditor && (
-                        <>
-                            <button onClick={() => setShowImport(true)} className="btn bg-base text-darks border border-second h-9 min-h-0">
-                                <FileUp className="h-4 w-4" /> Impor Soal
-                            </button>
-                            <button onClick={startAdd} className="btn bg-darks text-base border-none h-9 min-h-0">
-                                <Plus className="h-4 w-4" /> Tambah Soal
-                            </button>
-                        </>
+                        <CreateButton onCreate={startAdd} onImport={() => setShowImport(true)} />
                     )}
                 </div>
 
