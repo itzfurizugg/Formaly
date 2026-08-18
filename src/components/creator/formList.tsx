@@ -116,7 +116,7 @@ function FormList() {
                         <div className="flex items-start justify-between gap-3">
                             <div className="min-w-0">
                                 <h2 className="card-title text-darks break-words leading-snug text-base">{form.title}</h2>
-                                <div className="text-sm text-tinted mt-1 line-clamp-2">
+                                <div className="text-sm text-tinted line-clamp-2">
                                     {form.description ? <RichText html={form.description} className="line-clamp-2" /> : "Tidak ada deskripsi"}
                                 </div>
                             </div>
@@ -125,7 +125,7 @@ function FormList() {
                             </div>
                         </div>
 
-                        <div className="flex flex-wrap items-center gap-x-5 gap-y-1.5 text-xs text-tinted/80 border-t border-second pt-2.5">
+                        <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5 text-xs text-tinted/80 border-t border-second pt-1">
                             <span className="inline-flex items-center gap-1.5">
                                 <ListChecks className="h-3.5 w-3.5" /> {form.questions?.length || 0} soal
                             </span>
@@ -136,14 +136,14 @@ function FormList() {
                                 <Timer className="h-3.5 w-3.5" /> {form.duration || 0} menit
                             </span>
                             {form.passing_score != null && (
-                                <span className="inline-flex items-center gap-1.5">
+                                <span className="hidden sm:inline-flex items-center gap-1.5">
                                     <Target className="h-3.5 w-3.5" /> Nilai Minimum: {form.passing_score}
                                 </span>
                             )}
-                            <span className="inline-flex items-center gap-1.5">
-                                {/* <CalendarDays className="h-3.5 w-3.5" /> */}
+                            {/* <span className="inline-flex items-center gap-1.5">
+                                <CalendarDays className="h-3.5 w-3.5" />
                                 {new Date(form.created_at).toLocaleDateString("id-ID", { day: "numeric", month: "short", year: "numeric" })}
-                            </span>
+                            </span> */}
                         </div>
 
                         <div className="card-actions justify-end flex-wrap gap-2">
@@ -151,25 +151,25 @@ function FormList() {
                                 onClick={() => navigate(`/creator/forms/${form.id}/submissions`)}
                                 className="btn btn-sm rounded-none bg-base text-darks border border-second hover:bg-second hover:border-second"
                             >
-                                <ClipboardList className="h-3.5 w-3.5" /> Submission
+                                <ClipboardList className="h-3.5 w-3.5" /> <span className="hidden sm:inline">Submission</span>
                             </button>
                             <button
                                 onClick={() => navigate(`/creator/forms/${form.id}/shared`)}
                                 className="btn btn-sm rounded-none bg-base text-darks border border-second hover:bg-second hover:border-second"
                             >
-                                <Share className="h-3.5 w-3.5" /> Bagikan
+                                <Share className="h-3.5 w-3.5" /> <span className="hidden sm:inline">Bagikan</span>
                             </button>
                             <button
                                 onClick={() => navigate(`/creator/forms/${form.id}/tokens`)}
                                 className="btn btn-sm rounded-none bg-base text-darks border border-second hover:bg-second hover:border-second"
                             >
-                                <KeyRound className="h-3.5 w-3.5" /> Token
+                                <KeyRound className="h-3.5 w-3.5" /> <span className="hidden sm:inline">Token</span>
                             </button>
                             <button
                                 onClick={() => navigate(`/creator/forms/${form.id}`)}
                                 className="btn btn-sm rounded-none bg-base text-darks border border-second hover:bg-second hover:border-second"
                             >
-                                <Pencil className="h-3.5 w-3.5" /> Edit
+                                <Pencil className="h-3.5 w-3.5" /> <span className="hidden sm:inline">Edit</span>
                             </button>
                             <button
                                 onClick={() => handleDelete(form.id)}
@@ -177,7 +177,7 @@ function FormList() {
                                 className="btn btn-sm rounded-none bg-wrong/10 text-wrong border border-wrong/20 hover:bg-wrong/20"
                             >
                                 {deleting === form.id ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Trash2 className="h-3.5 w-3.5" />}
-                                Hapus
+                                <span className="hidden sm:inline">Hapus</span>
                             </button>
                         </div>
                     </div>

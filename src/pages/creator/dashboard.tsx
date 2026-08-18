@@ -100,7 +100,7 @@ function CreatorDashboard() {
         }
 
         setLoading(false)
-    }, [user])
+    }, [user, cached])
 
     useEffect(() => {
         if (!user) return
@@ -108,7 +108,7 @@ function CreatorDashboard() {
     }, [user, loadStats])
 
     return (
-        <div className="flex flex-col items-center px-3 py-10 lg:h-screen lg:overflow-hidden">
+        <div className="flex flex-col items-center px-3 py-10 sm:py-23 lg:h-[100dvh] lg:overflow-hidden">
             <div className="xl:max-w-7xl lg:max-w-5xl w-full lg:h-full lg:flex lg:flex-col lg:min-h-0">
                 <button
                     onClick={() => navigate("/")}
@@ -117,20 +117,20 @@ function CreatorDashboard() {
                     <ArrowLeft className="h-4 w-4" /> Kembali
                 </button>
                 <div className="flex items-center justify-between mb-1">
-                    <h1 className="text-2xl lg:text-4xl font-bold font-display uppercase text-darks">Dashboard Creator</h1>
+                    <h1 className="text-5xl lg:text-6xl font-bold font-display text-darks">Dashboard Creator</h1>
                 </div>
                 <p className="text-sm text-tinted mb-6">Ringkasan formulir milik kamu.</p>
 
                 <Loading show={loading} />
                 {!loading && (
                     <div className="flex flex-col flex-1 min-h-0">
-                    <div className="grid grid-cols-3 gap-2 sm:gap-0 sm:stats sm:stats-horizontal shadow w-full bg-white border border-second rounded-none divide-x divide-second">
+                    <div className="grid grid-cols-2 sm:grid-cols-3 mt-1 gap-2 sm:gap-0 shadow w-full bg-white border border-second rounded-lg overflow-hidden">
                         <div className="stat p-3 sm:p-4 min-w-0">
-                            <div className="stat-figure text-darks hidden sm:block">
+                            <div className="stat-figure text-darks hidden xl:block">
                                 <FileText className="h-8 w-8" />
                             </div>
                             <div className="stat-title text-tinted text-[11px] sm:text-sm leading-tight">Total Form</div>
-                            <div className="stat-value text-darks text-2xl sm:text-4xl break-words">{stats.total}</div>
+                            <div className="stat-value text-darks text-4xl sm:text-4xl break-words">{stats.total}</div>
                             <div className="stat-desc text-tinted hidden sm:block">Semua formulir kamu</div>
                         </div>
 
@@ -139,16 +139,16 @@ function CreatorDashboard() {
                                 <CheckCircle2 className="h-8 w-8" />
                             </div>
                             <div className="stat-title text-tinted text-[11px] sm:text-sm leading-tight">Form Aktif</div>
-                            <div className="stat-value text-darks text-2xl sm:text-4xl break-words">{stats.active}</div>
+                            <div className="stat-value text-darks text-4xl sm:text-4xl break-words">{stats.active}</div>
                             <div className="stat-desc text-tinted hidden sm:block">Status public</div>
                         </div>
 
-                        <div className="stat p-3 sm:p-4 min-w-0">
+                        <div className="stat p-3 sm:p-4 min-w-0 hidden sm:block">
                             <div className="stat-figure text-tinted hidden sm:block">
                                 <ClipboardList className="h-8 w-8" />
                             </div>
                             <div className="stat-title text-tinted text-[11px] sm:text-sm leading-tight">Total Submission</div>
-                            <div className="stat-value text-darks text-2xl sm:text-4xl break-words">{stats.submissions}</div>
+                            <div className="stat-value text-darks text-4xl sm:text-4xl break-words">{stats.submissions}</div>
                             <div className="stat-desc text-tinted hidden sm:block">Jumlah pengerjaan</div>
                         </div>
                     </div>
@@ -172,8 +172,8 @@ function CreatorDashboard() {
 
                         <div className="lg:flex lg:flex-col lg:min-h-0 lg:overflow-hidden min-w-0">
                             <div className="flex flex-wrap items-center justify-between gap-2 mb-4 shrink-0">
-                                <h2 className="text-xl lg:text-2xl font-bold text-darks">Kelola Form</h2>
-                                <Link to="/creator/forms/new" className="btn bg-darks text-base border-none h-9 min-h-0">
+                                <h2 className="text-xl lg:text-2xl font-bold text-darks ml-3 sm:ml-1">Kelola Form</h2>
+                                <Link to="/creator/forms/new" className="btn bg-darks text-base border-none h-9 min-h-0 mr-3 sm:mr-1">
                                     <Plus className="h-4 w-4" /> Buat Form
                                 </Link>
                             </div>

@@ -16,6 +16,7 @@ interface FormEditCache {
     passingScore: number | ""
     status: string
     tags: string[]
+    createdAt: string
 }
 
 function FormEdit() {
@@ -36,6 +37,7 @@ function FormEdit() {
     const [duration, setDuration] = useState<number | "">(cached?.duration ?? 0)
     const [passingScore, setPassingScore] = useState<number | "">(cached?.passingScore ?? 70)
     const [status, setStatus] = useState(cached?.status ?? "draft")
+    const [createdAt, setCreatedAt] = useState(cached?.createdAt ?? "")
     const [loading, setLoading] = useState(!cached)
     const [saving, setSaving] = useState(false)
     const [tags, setTags] = useState<string[]>(cached?.tags ?? [])
@@ -60,6 +62,7 @@ function FormEdit() {
         setDuration(data.duration || 0)
         setPassingScore(data.passing_score || 0)
         setStatus(String(data.status))
+        setCreatedAt(data.created_at || "")
 
         const { data: rel } = await supabase
             .from("form_tags")
@@ -78,6 +81,7 @@ function FormEdit() {
             passingScore: data.passing_score || 0,
             status: String(data.status),
             tags: newTags,
+            createdAt: data.created_at || "",
         })
         setLoading(false)
     }, [user, id, navigate, cached])
@@ -180,6 +184,7 @@ function FormEdit() {
                     passingScore,
                     status,
                     tags,
+                    createdAt,
                 })
             }
             alertSaveSuccess()
@@ -197,7 +202,7 @@ function FormEdit() {
         <>
             <Loading show={loading} />
             {!loading && (
-        <div className="flex flex-col items-center px-3 pt-10 lg:h-screen lg:overflow-hidden">
+        <div className="flex flex-col items-center px-3 pt-10 lg:h-[100dvh] lg:overflow-hidden">
             <div className="w-full xl:max-w-7xl lg:max-w-5xl lg:h-full lg:flex lg:flex-col">
                 <button
                     onClick={() => navigate("/creator")}
@@ -237,6 +242,9 @@ function FormEdit() {
                     <div className="w-full lg:w-[45%] lg:min-h-0 lg:overflow-y-auto">
                         <form onSubmit={handleSave} className="space-y-3 bg-white border border-second p-3 lg:p-6 sm:p-4 shadow-sm rounded-none">
                     <div>
+                        <span className="inline-flex items-center gap-1.5 text-xs text-tinted mb-3 sm:mb-5 ml-1">
+                                Dibuat pada {createdAt ? new Date(createdAt).toLocaleDateString("id-ID", { day: "numeric", month: "short", year: "numeric" }) : ""}
+                            </span>
                         <input type="text" required className={inputCls} value={title} onChange={(e) => setTitle(e.target.value)} />
                     </div>
 
@@ -335,7 +343,7 @@ function FormEdit() {
                                 ))}
                             </div>
                         )}
-                        <p className="text-xs text-tinted mt-2 hidden sm-block">
+                        <p className="text-xs text-tinted mt-2 hidden sm:block">
                             Tag pertama dipakai sebagai link singkat form, contoh: <span className="font-medium text-darks">/form/CODEVERSE</span>.
                         </p>
                     </div>
