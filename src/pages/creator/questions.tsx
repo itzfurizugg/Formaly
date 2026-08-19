@@ -1,7 +1,7 @@
 import Loading from "../../components/loading"
 import { useEffect, useState, useCallback, type DragEvent } from "react"
 import { useNavigate, useParams } from "react-router-dom"
-import { ArrowLeft, Plus, Pencil, Trash2, Save, X, Loader2, Check, Image as ImageIcon, GripVertical, ListChecks, KeyRound, Share2, ClipboardList } from "lucide-react"
+import { ArrowLeft, Plus, Pencil, Trash2, Save, X, Loader2, Check, GripVertical, ListChecks, KeyRound, Share2, ClipboardList } from "lucide-react"
 import { supabase } from "../../lib/supabase"
 import { useAuth } from "../../lib/auth-context"
 import QuestionImportModal from "../../components/creator/QuestionImportModal"
