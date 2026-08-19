@@ -196,11 +196,11 @@ function FormDescriptionPage() {
 
                     {/* Tombol Mulai sticky di bawah (mobile) */}
                     <div className="fixed bottom-0 left-0 right-0 pointer-events-none sm:hidden">
-                        <div className="bg-white px-4 pb-4 pt-3 border-t mb-3 border-second pointer-events-auto">
+                        <div className="bg-white px-4 pb-4 pt-3 border-t border-second pointer-events-auto">
                             <button
                                 onClick={alreadySubmitted ? () => navigate("/history") : handleStartExam}
                                 disabled={loading}
-                                className="w-full py-3 bg-darks text-white font-bold rounded-lg hover:opacity-90 transition-opacity flex items-center justify-center gap-2 text-sm"
+                                className="w-full py-3 bg-darks text-white font-bold rounded-lg hover:opacity-90 transition-opacity flex items-center justify-center gap-2 text-sm mb-4"
                             >
                                 {loading ? (
                                     <span className="loading loading-spinner loading-sm" />

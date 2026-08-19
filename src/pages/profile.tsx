@@ -184,14 +184,21 @@ function Profile() {
             return
         }
         setSaving(true)
+        const emailChanged = email.trim() !== (profile?.email ?? "")
         try {
             await updateProfile(name.trim(), email.trim())
-            setMessage("Profil berhasil diperbarui.")
+            setMessage(
+                emailChanged
+                    ? "Email kamu akan diubah. Periksa email baru untuk konfirmasi perubahan."
+                    : "Profil berhasil diperbarui."
+            )
             if (messageTimer.current) clearTimeout(messageTimer.current)
-            messageTimer.current = setTimeout(() => {
-                setMessage(null)
-                setShowAccountModal(false)
-            }, 1500)
+            if (!emailChanged) {
+                messageTimer.current = setTimeout(() => {
+                    setMessage(null)
+                    setShowAccountModal(false)
+                }, 1500)
+            }
         } catch (err) {
             setError(err instanceof Error ? err.message : "Gagal memperbarui profil.")
         } finally {

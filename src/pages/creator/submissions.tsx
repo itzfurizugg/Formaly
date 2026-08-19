@@ -1,7 +1,7 @@
 import Loading from "../../components/loading"
 import { useEffect, useState, useCallback } from "react"
 import { useNavigate, useParams } from "react-router-dom"
-import { ArrowLeft, Eye, Trash2, Loader2, ClipboardList, Share2, KeyRound, ListChecks } from "lucide-react"
+import { ArrowLeft, Eye, Trash2, Loader2, ClipboardList, Share2, KeyRound, ListChecks, Info } from "lucide-react"
 import { supabase } from "../../lib/supabase"
 import { useAuth } from "../../lib/auth-context"
 import { confirmDelete } from "../../lib/alerts"
@@ -358,19 +358,19 @@ function Submissions() {
 
                 <div className="flex flex-wrap gap-2 mb-6">
                     <button onClick={() => navigate(`/creator/forms/${id}`)} className="btn btn-sm bg-base text-darks border border-second hover:bg-second">
-                        Detail
+                        <Info className="h-3.5 w-3.5" /> <span className="hidden sm:block">Detail Form</span>
                     </button>
                     <button onClick={() => navigate(`/creator/forms/${id}/questions`)} className="btn btn-sm bg-base text-darks border border-second hover:bg-second lg:hidden">
                         <ListChecks className="h-3.5 w-3.5" /> <span className="hidden sm:block">Soal</span>
                     </button>
                     <button onClick={() => navigate(`/creator/forms/${id}/shared`)} className="btn btn-sm bg-base text-darks border border-second hover:bg-second">
-                        <Share2 className="h-3.5 w-3.5" /> <span className="hidden sm:block">Shared</span>
+                        <Share2 className="h-3.5 w-3.5" /> <span className="hidden sm:block">Bagikan</span>
                     </button>
                     <button onClick={() => navigate(`/creator/forms/${id}/tokens`)} className="btn btn-sm bg-base text-darks border border-second hover:bg-second">
                         <KeyRound className="h-3.5 w-3.5" /> <span className="hidden sm:block">Token</span>
                     </button>
                     <button onClick={() => navigate(`/creator/forms/${id}/submissions`)} className="btn btn-sm bg-darks text-base border-none">
-                        <ClipboardList className="h-3.5 w-3.5" /> <span className="hidden sm:block">Submission</span>
+                        <ClipboardList className="h-3.5 w-3.5" /> <span className="hidden sm:block">Responden</span>
                     </button>
                 </div>
 

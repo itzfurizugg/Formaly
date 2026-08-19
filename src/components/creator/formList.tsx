@@ -104,9 +104,6 @@ function FormList() {
                     <div className="text-center py-20">
                         <FileText className="h-12 w-12 text-tinted/40 mx-auto mb-3" />
                         <p className="text-tinted mb-4">Belum ada form. Buat form pertamamu!</p>
-                        <button onClick={() => navigate("/creator/forms/new")} className="btn rounded-none bg-darks text-base border-none">
-                            Buat Form
-                        </button>
                     </div>
                 ) : (
         <div className="space-y-3">
@@ -125,7 +122,7 @@ function FormList() {
                             </div>
                         </div>
 
-                        <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5 text-xs text-tinted/80 border-t border-second pt-1">
+                        <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5 text-xs text-tinted/80 mt-1 mb-2">
                             <span className="inline-flex items-center gap-1.5">
                                 <ListChecks className="h-3.5 w-3.5" /> {form.questions?.length || 0} soal
                             </span>
@@ -133,7 +130,7 @@ function FormList() {
                                 <Users className="h-3.5 w-3.5" /> {form.submissions?.length || 0} submission
                             </span> */}
                             <span className="inline-flex items-center gap-1.5">
-                                <Timer className="h-3.5 w-3.5" /> {form.duration || 0} menit
+                                <Timer className="h-3.5 w-3.5" /> {form.duration ? `${form.duration} menit` : "Tanpa Waktu"}
                             </span>
                             {form.passing_score != null && (
                                 <span className="hidden sm:inline-flex items-center gap-1.5">
