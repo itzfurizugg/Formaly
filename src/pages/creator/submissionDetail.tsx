@@ -1,12 +1,14 @@
 import Loading from "../../components/loading"
 import { useEffect, useState, useCallback } from "react"
 import { useNavigate, useParams } from "react-router-dom"
+import { motion } from "motion/react"
 import { ArrowLeft, Check, X } from "lucide-react"
 import { RichText } from "../../components/richText"
 import { DonutChart } from "../../components/charts"
 import { colors } from "../../lib/colorbase"
 import { supabase } from "../../lib/supabase"
 import { useAuth } from "../../lib/auth-context"
+import { easeOutExpo } from "../../lib/motion"
 
 interface AnswerRow {
     id: string
@@ -211,7 +213,13 @@ function SubmissionDetail() {
                 ) : (
                     <div className="space-y-3">
                         {answers.map((a, idx) => (
-                            <div key={a.id} className="bg-white border border-second p-5 shadow-sm rounded-none">
+                            <motion.div
+                                key={a.id}
+                                initial={{ opacity: 0, y: 12 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                transition={{ duration: 0.35, ease: easeOutExpo, delay: Math.min(idx * 0.06, 0.4) }}
+                            >
+                            <div className="bg-white border border-second p-5 shadow-sm rounded-none transition-colors hover:bg-base-200">
                                 <div className="flex items-center gap-2 flex-wrap mb-1">
                                     <span className="text-sm font-bold text-darks">Soal {idx + 1}</span>
                                     <span className="badge badge-ghost text-tinted rounded-full text-xs">{typeLabel(a.question?.question_type || "")}</span>
@@ -287,6 +295,7 @@ function SubmissionDetail() {
                                     </div>
                                 )}
                             </div>
+                            </motion.div>
                         ))}
                     </div>
                 )}

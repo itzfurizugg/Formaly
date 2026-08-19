@@ -1,9 +1,11 @@
 import { useEffect, useState, useCallback } from "react"
 import { useNavigate, useParams } from "react-router-dom"
+import { AnimatePresence, motion } from "motion/react"
 import { ArrowLeft, Plus, Trash2, X, Loader2, Copy, Check, Share2, KeyRound, ClipboardList, ListChecks, Info } from "lucide-react"
 import { supabase } from "../../lib/supabase"
 import { useAuth } from "../../lib/auth-context"
 import { confirmDelete } from "../../lib/alerts"
+import { easeOutExpo, alertPop, panelSlide } from "../../lib/motion"
 
 interface Token {
     id: string
@@ -150,11 +152,21 @@ function Tokens() {
                 {/* <h1 className="text-2xl lg:text-4xl font-bold text-darks mb-1">Token</h1>
                 <p className="text-sm text-tinted mb-6">Form: {formTitle}</p> */}
 
+                <AnimatePresence>
                 {error && (
-                    <div role="alert" className="text-sm text-wrong bg-wrong/5 border border-wrong/20 rounded-lg px-4 py-3 mb-4">
+                    <motion.div
+                        key="token-error"
+                        variants={alertPop}
+                        initial="hidden"
+                        animate="show"
+                        exit="exit"
+                        role="alert"
+                        className="text-sm text-wrong bg-wrong/5 border border-wrong/20 rounded-lg px-4 py-3 mb-4"
+                    >
                         {error}
-                    </div>
+                    </motion.div>
                 )}
+                </AnimatePresence>
 
                 <div className="flex justify-end mb-4">
                     {!showCreate && (
@@ -164,8 +176,16 @@ function Tokens() {
                     )}
                 </div>
 
+                <AnimatePresence>
                 {showCreate && (
-                    <div className="bg-white border border-second p-6 shadow-sm rounded-2xl mb-6 space-y-4">
+                    <motion.div
+                        key="create-token"
+                        variants={panelSlide}
+                        initial="hidden"
+                        animate="show"
+                        exit="exit"
+                        className="bg-white border border-second p-6 shadow-sm rounded-2xl mb-6 space-y-4"
+                    >
                         <div className="flex items-center justify-between">
                             <h2 className="font-semibold text-darks">Buat Token Baru</h2>
                             <button onClick={() => setShowCreate(false)} className="btn btn-sm btn-ghost text-tinted">
@@ -219,8 +239,9 @@ function Tokens() {
                             {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Plus className="h-4 w-4" />}
                             Simpan Token
                         </button>
-                    </div>
+                    </motion.div>
                 )}
+                </AnimatePresence>
 
                 {tokens.length === 0 ? (
                     <div className="text-center py-16">
@@ -228,10 +249,16 @@ function Tokens() {
                     </div>
                 ) : (
                     <div className="space-y-3">
-                        {tokens.map((t) => {
+                        {tokens.map((t, index) => {
                             const expired = t.expired
                             return (
-                                <div key={t.id} className="bg-white border border-second p-5 shadow-sm rounded-2xl">
+                                <motion.div
+                                    key={t.id}
+                                    initial={{ opacity: 0, y: 12 }}
+                                    animate={{ opacity: 1, y: 0 }}
+                                    transition={{ duration: 0.35, ease: easeOutExpo, delay: Math.min(index * 0.06, 0.4) }}
+                                >
+                                <div className="bg-white border border-second p-5 shadow-sm rounded-2xl transition-colors hover:bg-base-200">
                                     <div className="flex items-start justify-between gap-2">
                                         <div className="min-w-0">
                                             <div className="flex items-center gap-2 flex-wrap mb-1">
@@ -263,6 +290,7 @@ function Tokens() {
                                         </div>
                                     </div>
                                 </div>
+                                </motion.div>
                             )
                         })}
                     </div>

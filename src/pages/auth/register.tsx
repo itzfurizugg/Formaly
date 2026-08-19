@@ -1,10 +1,12 @@
 import { useState } from "react"
 import { Link, useLocation, useNavigate } from "react-router-dom"
+import { AnimatePresence, motion } from "motion/react"
 import { UserPlus } from "lucide-react"
 import logo from "../../assets/logo.svg"
 import { useAuth } from "../../lib/auth-context"
 import { safeNext } from "../../lib/redirect"
 import PasswordInput from "../../components/passwordInput"
+import { alertPop, fadeSlide } from "../../lib/motion"
 
 function Register() {
     const navigate = useNavigate()
@@ -68,17 +70,32 @@ function Register() {
                         <img src={logo} alt="Formaly" className="h-10 w-auto" />
                     </div>
 
-                    <div className="bg-white rounded-2xl border border-second p-4 lg:p-8 shadow-sm">
+                    <motion.div
+                        variants={fadeSlide}
+                        initial="hidden"
+                        animate="show"
+                        className="bg-white rounded-2xl border border-second p-4 lg:p-8 shadow-sm"
+                    >
                         <h2 className="text-2xl font-bold text-darks">Daftar</h2>
                         <p className="text-sm text-tinted mt-1 mb-6">
                             Daftar untuk mulai membuat form anda!
                         </p>
 
+                        <AnimatePresence>
                         {error && (
-                            <div role="alert" className="text-sm text-wrong bg-wrong/5 border border-wrong/20 rounded-lg px-4 py-3 mb-4">
+                            <motion.div
+                                key="register-error"
+                                variants={alertPop}
+                                initial="hidden"
+                                animate="show"
+                                exit="exit"
+                                role="alert"
+                                className="text-sm text-wrong bg-wrong/5 border border-wrong/20 rounded-lg px-4 py-3 mb-4"
+                            >
                                 {error}
-                            </div>
+                            </motion.div>
                         )}
+                        </AnimatePresence>
 
                         <form onSubmit={handleSubmit} className="space-y-4">
                             <div>
@@ -153,10 +170,10 @@ function Register() {
                             </button>
                         </form>
 
-                        <Link to={`/login${nextQuery}`} className="btn bg-base text-darks border border-second hover:bg-second w-full mt-2">
+                        <Link to={`/login${nextQuery}`} className="btn bg-base text-darks border border-second hover:bg-second transition-colors w-full mt-2">
                             Sudah punya akun? Masuk
                         </Link>
-                    </div>
+                    </motion.div>
                 </div>
             </div>
         </div>

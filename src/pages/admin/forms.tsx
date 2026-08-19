@@ -1,8 +1,10 @@
 import { useEffect, useState, useCallback } from "react"
+import { motion } from "motion/react"
 import { FileText, RefreshCw } from "lucide-react"
 import Loading from "../../components/loading"
 import { RichText } from "../../components/richText"
 import { supabase } from "../../lib/supabase"
+import { easeOutExpo } from "../../lib/motion"
 
 type FormStatus = "draft" | "published"
 
@@ -57,13 +59,18 @@ function AdminForms() {
                 <p className="text-sm text-tinted mb-6">Kelola semua formulir yang tersedia.</p>
 
                 {error && (
-                    <div className="text-sm text-wrong bg-wrong/5 border border-wrong/20 rounded-none px-4 py-3 mb-4">
+                    <motion.div
+                        initial={{ opacity: 0, y: -6 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ duration: 0.25, ease: "easeOut" }}
+                        className="text-sm text-wrong bg-wrong/5 border border-wrong/20 rounded-none px-4 py-3 mb-4"
+                    >
                         <p>{error}</p>
                         <button onClick={fetchForms} className="btn btn-sm bg-wrong text-base border-none mt-2 rounded-none">
                             <RefreshCw className="h-3 w-3" />
                             Coba lagi
                         </button>
-                    </div>
+                    </motion.div>
                 )}
 
                 {!error && forms.length === 0 && (
@@ -75,8 +82,14 @@ function AdminForms() {
 
                 {!error && forms.length > 0 && (
                     <div className="space-y-3 rounded-none">
-                        {forms.map((form) => (
-                            <div key={form.id} className="card bg-base border border-second rounded-none">
+                        {forms.map((form, index) => (
+                            <motion.div
+                                key={form.id}
+                                initial={{ opacity: 0, y: 12 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                transition={{ duration: 0.35, ease: easeOutExpo, delay: Math.min(index * 0.06, 0.4) }}
+                            >
+                                <div className="card bg-base border border-second rounded-none transition-colors hover:bg-base-200">
                                 <div className="card-body rounded-none">
                                     <div className="flex items-start justify-between gap-2">
                                         <div className="min-w-0">
@@ -105,7 +118,8 @@ function AdminForms() {
                                         <span>{new Date(form.created_at).toLocaleDateString("id-ID", { day: "numeric", month: "short", year: "numeric" })}</span>
                                     </div>
                                 </div>
-                            </div>
+                                </div>
+                            </motion.div>
                         ))}
                     </div>
                 )}

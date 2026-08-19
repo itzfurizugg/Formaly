@@ -1,11 +1,12 @@
 import { useEffect, useState } from "react"
 import { Link, useNavigate } from "react-router-dom"
-import { motion } from "motion/react"
+import { AnimatePresence, motion } from "motion/react"
 import { KeyRound, CheckCircle2 } from "lucide-react"
 import logo from "../../assets/logo.svg"
 import { supabase } from "../../lib/supabase"
 import { useAuth } from "../../lib/auth-context"
 import PasswordInput from "../../components/passwordInput"
+import { alertPop } from "../../lib/motion"
 
 function friendlyError(message: string): string {
     const msg = message.toLowerCase()
@@ -101,8 +102,16 @@ function ResetPassword() {
                     </div>
 
                     <div className="bg-white rounded-2xl border border-second p-8 shadow-sm">
+                        <AnimatePresence mode="wait">
                         {checking ? (
-                            <div className="flex flex-col items-center justify-center py-16 px-6">
+                            <motion.div
+                                key="checking"
+                                initial={{ opacity: 0, y: 12 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                exit={{ opacity: 0 }}
+                                transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }}
+                                className="flex flex-col items-center justify-center py-16 px-6"
+                            >
                                 <div className="w-full max-w-xs">
                                     <div className="relative h-1.5 w-full bg-second rounded-full overflow-hidden">
                                         <motion.div
@@ -114,9 +123,16 @@ function ResetPassword() {
                                     </div>
                                 </div>
                                 <p className="text-sm text-tinted mt-4">Memeriksa tautan...</p>
-                            </div>
+                            </motion.div>
                         ) : success ? (
-                            <div className="flex flex-col items-center text-center py-6">
+                            <motion.div
+                                key="success"
+                                initial={{ opacity: 0, y: 12 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                exit={{ opacity: 0, y: -8 }}
+                                transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }}
+                                className="flex flex-col items-center text-center py-6"
+                            >
                                 <CheckCircle2 className="h-12 w-12 text-done mb-4" />
                                 <h2 className="text-2xl font-bold text-darks">Password Diperbarui</h2>
                                 <p className="text-sm text-tinted mt-2 mb-6">
@@ -128,9 +144,15 @@ function ResetPassword() {
                                 >
                                     Masuk Sekarang
                                 </Link>
-                            </div>
+                            </motion.div>
                         ) : !sessionValid ? (
-                            <>
+                            <motion.div
+                                key="invalid"
+                                initial={{ opacity: 0, y: 12 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                exit={{ opacity: 0, y: -8 }}
+                                transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }}
+                            >
                                 <div className="flex items-center gap-2 mb-1">
                                     <KeyRound className="h-8 w-auto text-wrong" />
                                     <h2 className="text-3xl font-bold text-darks">Reset Password</h2>
@@ -151,12 +173,18 @@ function ResetPassword() {
                                     Request Link Baru
                                 </button>
 
-                                <Link to="/login" className="btn bg-base text-darks border border-second hover:bg-second w-full mt-2">
+                                <Link to="/login" className="btn bg-base text-darks border border-second hover:bg-second transition-colors w-full mt-2">
                                     Kembali ke Login
                                 </Link>
-                            </>
+                            </motion.div>
                         ) : (
-                            <>
+                            <motion.div
+                                key="form"
+                                initial={{ opacity: 0, y: 12 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                exit={{ opacity: 0, y: -8 }}
+                                transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }}
+                            >
                                 <div className="flex items-center gap-2 mb-1">
                                     <h2 className="text-3xl font-bold text-darks">Reset Password</h2>
                                 </div>
@@ -164,11 +192,21 @@ function ResetPassword() {
                                     Masukkan password baru untuk akun kamu.
                                 </p>
 
+                                <AnimatePresence>
                                 {error && (
-                                    <div role="alert" className="text-sm text-wrong bg-wrong/5 border border-wrong/20 rounded-lg px-4 py-3 mb-4">
+                                    <motion.div
+                                        key="reset-error"
+                                        variants={alertPop}
+                                        initial="hidden"
+                                        animate="show"
+                                        exit="exit"
+                                        role="alert"
+                                        className="text-sm text-wrong bg-wrong/5 border border-wrong/20 rounded-lg px-4 py-3 mb-4"
+                                    >
                                         {error}
-                                    </div>
+                                    </motion.div>
                                 )}
+                                </AnimatePresence>
 
                                 <form onSubmit={handleSubmit} className="space-y-4">
                                     <div>
@@ -213,8 +251,9 @@ function ResetPassword() {
                                         {loading ? "Menyimpan..." : "Simpan Password"}
                                     </button>
                                 </form>
-                            </>
+                            </motion.div>
                         )}
+                        </AnimatePresence>
                     </div>
                 </div>
             </div>

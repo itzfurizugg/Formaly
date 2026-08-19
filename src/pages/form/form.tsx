@@ -1,6 +1,6 @@
 import Loading from "../../components/loading"
 import { useState, useEffect, useRef, useCallback } from "react"
-import { motion } from "motion/react"
+import { AnimatePresence, motion } from "motion/react"
 import { useNavigate, useParams, useLocation } from "react-router-dom"
 import { Check, Clock, ZoomIn, X } from "lucide-react"
 import PageIndicator from "../../components/pageindicator"
@@ -9,6 +9,7 @@ import { supabase } from "../../lib/supabase"
 import { useAuth } from "../../lib/auth-context"
 import { loginUrl } from "../../lib/redirect"
 import ModalPortal from "../../components/modalPortal"
+import { alertPop, modalBackdrop, modalPanel } from "../../lib/motion"
 
 interface Option {
     id: string
@@ -416,11 +417,20 @@ function FormPage() {
                     )}
                 </div>
 
+                <AnimatePresence>
                 {error && (
-                    <div className="mt-4 flex items-start gap-3 bg-red-500/10 border border-red-500/20 rounded-lg px-4 py-3">
+                    <motion.div
+                        key="form-error-desktop"
+                        variants={alertPop}
+                        initial="hidden"
+                        animate="show"
+                        exit="exit"
+                        className="mt-4 flex items-start gap-3 bg-red-500/10 border border-red-500/20 rounded-lg px-4 py-3"
+                    >
                         <p className="text-sm text-red-600 font-medium">{error}</p>
-                    </div>
+                    </motion.div>
                 )}
+                </AnimatePresence>
             </div>
 
             {/* NOTE: LAYOUT MOBILE (< md) — Dock fixed di bawah, latar bg-second */}
@@ -443,18 +453,34 @@ function FormPage() {
                     )}
                 </div>
 
+                <AnimatePresence>
                 {error && (
-                    <div className="mt-3 flex flex-col items-stretch gap-2 bg-red-500/10 border border-red-500/20 rounded-lg px-4 py-3">
+                    <motion.div
+                        key="form-error-mobile"
+                        variants={alertPop}
+                        initial="hidden"
+                        animate="show"
+                        exit="exit"
+                        className="mt-3 flex flex-col items-stretch gap-2 bg-red-500/10 border border-red-500/20 rounded-lg px-4 py-3"
+                    >
                         <p className="text-sm text-red-600 font-medium">{error}</p>
-                    </div>
+                    </motion.div>
                 )}
+                </AnimatePresence>
             </div>
 
             {/* Modal Zoom Gambar */}
+            <AnimatePresence>
             {modalImage && (
                 <ModalPortal>
-                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4">
-                    <div className="relative max-w-4xl max-h-[90vh] w-full flex items-center justify-center">
+                <motion.div
+                    variants={modalBackdrop}
+                    initial="hidden"
+                    animate="show"
+                    exit="exit"
+                    className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4"
+                >
+                    <motion.div variants={modalPanel} className="relative max-w-4xl max-h-[90vh] w-full flex items-center justify-center">
                         <button
                             onClick={() => setModalImage(null)}
                             className="absolute -top-10 right-0 text-white hover:text-gray-300 bg-darks/50 p-2 rounded-full"
@@ -466,10 +492,11 @@ function FormPage() {
                             alt="Zoom Preview"
                             className="max-w-full max-h-[85vh] object-contain rounded-lg shadow-2xl bg-white"
                         />
-                    </div>
-                </div>
+                    </motion.div>
+                </motion.div>
                 </ModalPortal>
             )}
+            </AnimatePresence>
         </div>
             )
             )}

@@ -1,10 +1,12 @@
 import { useEffect, useState, useCallback } from "react"
 import { useNavigate } from "react-router-dom"
+import { motion } from "motion/react"
 import { Search, Library, FileText } from "lucide-react"
 import Card from "../components/card"
 import { supabase } from "../lib/supabase"
 import { useAuth } from "../lib/auth-context"
 import Loading from "../components/loading"
+import { easeOutExpo } from "../lib/motion"
 
 interface FormItem {
     id: string
@@ -108,17 +110,23 @@ function Available() {
                     </div>
                 ) : (
                     <div className="space-y-3">
-                        {filtered.map((f) => (
-                            <Card
+                        {filtered.map((f, index) => (
+                            <motion.div
                                 key={f.id}
-                                title={f.title}
-                                author={f.author_name}
-                                duration={f.duration ? `${f.duration} menit` : "Tanpa Waktu Pengerjaan"}
-                                questions={f.question_count}
-                                to="/form/description"
-                                buttonLabel="Kerjakan"
-                                state={{ form: f }}
-                            />
+                                initial={{ opacity: 0, y: 12 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                transition={{ duration: 0.35, ease: easeOutExpo, delay: Math.min(index * 0.06, 0.4) }}
+                            >
+                                <Card
+                                    title={f.title}
+                                    author={f.author_name}
+                                    duration={f.duration ? `${f.duration} menit` : "Tanpa Waktu Pengerjaan"}
+                                    questions={f.question_count}
+                                    to="/form/description"
+                                    buttonLabel="Kerjakan"
+                                    state={{ form: f }}
+                                />
+                            </motion.div>
                         ))}
                     </div>
                 )}

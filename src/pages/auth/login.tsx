@@ -1,10 +1,12 @@
 import { useState } from "react"
 import { Link, useLocation, useNavigate } from "react-router-dom"
+import { AnimatePresence, motion } from "motion/react"
 import { LogIn, CheckCircle2 } from "lucide-react"
 import logo from "../../assets/logo.svg"
 import { useAuth } from "../../lib/auth-context"
 import { safeNext } from "../../lib/redirect"
 import PasswordInput from "../../components/passwordInput"
+import { alertPop, fadeSlide } from "../../lib/motion"
 
 function Login() {
     const navigate = useNavigate()
@@ -58,24 +60,47 @@ function Login() {
                         <img src={logo} alt="Formaly" className="h-10 w-auto" />
                     </div>
 
-                    <div className="bg-white rounded-2xl border border-second p-4 lg:p-8 shadow-sm">
+                    <motion.div
+                        variants={fadeSlide}
+                        initial="hidden"
+                        animate="show"
+                        className="bg-white rounded-2xl border border-second p-4 lg:p-8 shadow-sm"
+                    >
                         <h2 className="text-2xl font-bold text-darks">Masuk</h2>
                         <p className="text-sm text-tinted mt-1 mb-6">
                             Masuk untuk melanjutkan ke akun kamu
                         </p>
 
+                        <AnimatePresence>
                         {stateData?.verified && (
-                            <div role="alert" className="flex items-center gap-2 text-sm text-done bg-done/10 border border-done/20 rounded-lg px-4 py-3 mb-4">
+                            <motion.div
+                                key="verified"
+                                variants={alertPop}
+                                initial="hidden"
+                                animate="show"
+                                exit="exit"
+                                role="alert"
+                                className="flex items-center gap-2 text-sm text-done bg-done/10 border border-done/20 rounded-lg px-4 py-3 mb-4"
+                            >
                                 <CheckCircle2 className="h-4 w-4 shrink-0" />
                                 <span>Email kamu berhasil diverifikasi! Silakan masuk ke akun kamu.</span>
-                            </div>
+                            </motion.div>
                         )}
 
                         {error && (
-                            <div role="alert" className="text-sm text-wrong bg-wrong/5 border border-wrong/20 rounded-lg px-4 py-3 mb-4">
+                            <motion.div
+                                key="login-error"
+                                variants={alertPop}
+                                initial="hidden"
+                                animate="show"
+                                exit="exit"
+                                role="alert"
+                                className="text-sm text-wrong bg-wrong/5 border border-wrong/20 rounded-lg px-4 py-3 mb-4"
+                            >
                                 {error}
-                            </div>
+                            </motion.div>
                         )}
+                        </AnimatePresence>
 
                         <form onSubmit={handleSubmit} className="space-y-4">
                             <div>
@@ -125,10 +150,10 @@ function Login() {
                             </button>
                         </form>
 
-                        <Link to={`/register${nextQuery}`} className="btn bg-base text-darks border border-second hover:bg-second w-full mt-2">
+                        <Link to={`/register${nextQuery}`} className="btn bg-base text-darks border border-second hover:bg-second transition-colors w-full mt-2">
                             Belum punya akun? Daftar
                         </Link>
-                    </div>
+                    </motion.div>
                 </div>
             </div>
         </div>

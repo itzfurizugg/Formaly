@@ -1,5 +1,6 @@
 import { useEffect, useState, useCallback } from "react"
 import { useNavigate } from "react-router-dom"
+import { motion } from "motion/react"
 import { FileText, Pencil, Trash2, ClipboardList, KeyRound, Loader2, ListChecks, Timer, Target, Share2 } from "lucide-react"
 import { supabase } from "../../lib/supabase"
 import { useAuth } from "../../lib/auth-context"
@@ -7,6 +8,7 @@ import { confirmDelete } from "../../lib/alerts"
 import Loading from "../loading"
 import { RichText } from "../richText"
 import { pageGet, pageSet } from "../../lib/pageCache"
+import { easeOutExpo } from "../../lib/motion"
 
 interface FormRow {
     id: string
@@ -107,8 +109,14 @@ function FormList() {
                     </div>
                 ) : (
         <div className="space-y-3">
-            {forms.map((form) => (
-                <div key={form.id} className="card bg-white border border-second rounded-none transition-colors hover:bg-base-200">
+            {forms.map((form, index) => (
+                <motion.div
+                    key={form.id}
+                    initial={{ opacity: 0, y: 12 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.35, ease: easeOutExpo, delay: Math.min(index * 0.06, 0.4) }}
+                >
+                <div className="card bg-white border border-second rounded-none transition-colors hover:bg-base-200">
                     <div className="card-body gap-3 p-4">
                         <div className="flex items-start justify-between gap-3">
                             <div className="min-w-0">
@@ -179,6 +187,7 @@ function FormList() {
                         </div>
                     </div>
                 </div>
+                </motion.div>
             ))}
         </div>
                 )
