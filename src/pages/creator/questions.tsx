@@ -261,16 +261,16 @@ function Questions({ embedded = false }: { embedded?: boolean }) {
     }
 
     const renderEditor = () => (
-        <div className="bg-white border border-second p-3 shadow-sm rounded-none mb-6 overflow-block space-y-4">
+        <div className="bg-white border border-second p-3 sm:p-5 shadow-sm rounded-none mb-6 overflow-block space-y-4">
             <div className="flex items-center justify-between">
-                <h2 className="font-semibold text-darks">{editingId ? "Edit Soal" : "Tambah Soal"}</h2>
-                <button onClick={resetEditor} className="btn btn-sm btn-ghost text-tinted">
+                <h2 className="font-semibold text-darks ml-2 sm:ml-1">{editingId ? "Edit Soal" : "Tambah Soal"}</h2>
+                <button onClick={resetEditor} className="btn btn-sm btn-ghost text-tinted mr-2">
                     <X className="h-4 w-4" />
                 </button>
             </div>
 
             <div>
-                <label className="block text-sm font-medium text-darks mb-1.5">Soal</label>
+                <label className="block text-sm font-medium text-darks mb-1.5 ml-1">Soal</label>
                 <RichTextEditor
                     value={questionText}
                     onChange={setQuestionText}
@@ -280,9 +280,9 @@ function Questions({ embedded = false }: { embedded?: boolean }) {
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
-                    <label className="block text-sm font-medium text-darks mb-1.5">Tipe</label>
+                    <label className="block text-sm font-medium text-darks mb-1.5 ml-1">Tipe</label>
                     <select
-                        className="select w-full bg-base border-second focus:border-done focus:outline-none rounded-full"
+                        className="select w-full bg-base border-second focus:border-done focus:outline-none rounded-none"
                         value={questionType}
                         onChange={(e) => setQuestionType(e.target.value)}
                     >
@@ -292,7 +292,7 @@ function Questions({ embedded = false }: { embedded?: boolean }) {
                     </select>
                 </div>
                 <div>
-                    <label className="block text-sm font-medium text-darks mb-1.5">Skor</label>
+                    <label className="block text-sm font-medium text-darks mb-1.5 ml-1">Skor</label>
                     <input
                         type="number"
                         min={0}
@@ -308,7 +308,7 @@ function Questions({ embedded = false }: { embedded?: boolean }) {
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
-                    <label className="block text-sm font-medium text-darks mb-1.5">Urutan</label>
+                    <label className="block text-sm font-medium text-darks mb-1.5 ml-1">Urutan</label>
                     <input
                         type="number"
                         min={0}
@@ -318,8 +318,8 @@ function Questions({ embedded = false }: { embedded?: boolean }) {
                     />
                 </div>
                 <div>
-                    <label className="block text-sm font-medium text-darks mb-1.5">
-                        <span className="inline-flex items-center gap-1"><ImageIcon className="h-3.5 w-3.5" /> URL Gambar</span>
+                    <label className="block text-sm font-medium text-darks mb-1.5 ml-1">
+                        <span className="inline-flex items-center gap-1"> URL Gambar</span>
                     </label>
                     <input
                         type="text"
@@ -331,13 +331,13 @@ function Questions({ embedded = false }: { embedded?: boolean }) {
                 </div>
             </div>
 
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 ml-2">
                 <button
                     type="button"
                     onClick={() => setIsRequired(!isRequired)}
                     title="Tandai sebagai wajib dijawab"
                     aria-label="Tandai sebagai wajib dijawab"
-                    className={`shrink-0 rounded-full border p-1.5 transition-colors ${
+                    className={`shrink-0 rounded-full border p-1 transition-colors ${
                         isRequired
                             ? "bg-darks text-base border-darks"
                             : "bg-base text-tinted border-second hover:border-darks hover:text-darks"
@@ -352,7 +352,7 @@ function Questions({ embedded = false }: { embedded?: boolean }) {
 
             {questionType !== "text" && (
                 <div>
-                    <div className="flex items-center justify-between mb-2">
+                    <div className="flex items-center justify-between mb-2 ml-2 mr-2">
                         <label className="text-sm font-medium text-darks">Pilihan Jawaban</label>
                         <button onClick={addOption} className="btn btn-sm bg-base text-darks border border-second hover:bg-second">
                             <Plus className="h-3.5 w-3.5" /> Tambah Pilihan
@@ -402,7 +402,7 @@ function Questions({ embedded = false }: { embedded?: boolean }) {
             <button
                 onClick={handleSave}
                 disabled={saving}
-                className="btn bg-darks text-base border-none w-full hover:opacity-90 transition-opacity disabled:opacity-60"
+                className="btn bg-darks text-base border-none w-full hover:opacity-90 transition-opacity disabled:opacity-60 mb-3 mt-2"
             >
                 {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
                 Simpan Soal
