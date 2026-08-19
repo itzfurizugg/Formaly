@@ -1,7 +1,7 @@
 import Loading from "../../components/loading"
 import { useEffect, useState, useCallback } from "react"
 import { useNavigate, useParams } from "react-router-dom"
-import { ArrowLeft, Eye, Trash2, Loader2, ClipboardList, Share2, KeyRound } from "lucide-react"
+import { ArrowLeft, Eye, Trash2, Loader2, ClipboardList, Share2, KeyRound, ListChecks } from "lucide-react"
 import { supabase } from "../../lib/supabase"
 import { useAuth } from "../../lib/auth-context"
 import { confirmDelete } from "../../lib/alerts"
@@ -360,14 +360,17 @@ function Submissions() {
                     <button onClick={() => navigate(`/creator/forms/${id}`)} className="btn btn-sm bg-base text-darks border border-second hover:bg-second">
                         Detail
                     </button>
+                    <button onClick={() => navigate(`/creator/forms/${id}/questions`)} className="btn btn-sm bg-base text-darks border border-second hover:bg-second lg:hidden">
+                        <ListChecks className="h-3.5 w-3.5" /> <span className="hidden sm:block">Soal</span>
+                    </button>
                     <button onClick={() => navigate(`/creator/forms/${id}/shared`)} className="btn btn-sm bg-base text-darks border border-second hover:bg-second">
-                        <Share2 className="h-3.5 w-3.5" /> Shared
+                        <Share2 className="h-3.5 w-3.5" /> <span className="hidden sm:block">Shared</span>
                     </button>
                     <button onClick={() => navigate(`/creator/forms/${id}/tokens`)} className="btn btn-sm bg-base text-darks border border-second hover:bg-second">
-                        <KeyRound className="h-3.5 w-3.5" /> Token
+                        <KeyRound className="h-3.5 w-3.5" /> <span className="hidden sm:block">Token</span>
                     </button>
                     <button onClick={() => navigate(`/creator/forms/${id}/submissions`)} className="btn btn-sm bg-darks text-base border-none">
-                        <ClipboardList className="h-3.5 w-3.5" /> Submission
+                        <ClipboardList className="h-3.5 w-3.5" /> <span className="hidden sm:block">Submission</span>
                     </button>
                 </div>
 
@@ -394,7 +397,7 @@ function Submissions() {
                                     <p className="text-xs text-tinted mt-2">responden</p>
                                 </div>
                             </div>
-                            <div className="bg-white border border-second p-5 shadow-sm rounded-none lg:flex-1">
+                            <div className="bg-white border border-second p-5 shadow-sm rounded-none lg:flex-1 hidden sm:block">
                                 <p className="font-semibold text-darks mb-0.5">Rata-rata Benar vs Salah</p>
                                 <p className="text-xs text-tinted mb-2">
                                     Rata-rata jawaban benar dan salah per responden (soal isian tanpa kunci tidak dihitung).
@@ -411,7 +414,7 @@ function Submissions() {
                                     />
                                 </div>
                             </div>
-                            <div className="bg-white border border-second p-5 shadow-sm rounded-none lg:flex-1">
+                            <div className="bg-white border border-second p-5 shadow-sm rounded-none lg:flex-1 hidden sm:block">
                                 <p className="font-semibold text-darks mb-0.5">Total Benar vs Salah</p>
                                 <p className="text-xs text-tinted mb-2">
                                     Jumlah jawaban benar dan salah dari seluruh submission.
@@ -432,7 +435,7 @@ function Submissions() {
 
                         {/* Baris 2+3: Statistik per Soal & Distribusi Opsi (switch) */}
                         {(perQuestionStats.length > 0 || barData.length > 0) && (
-                            <div className="bg-white border border-second p-5 shadow-sm rounded-none">
+                            <div className="bg-white border border-second p-5 shadow-sm rounded-none hidden sm:block">
                                 <div className="flex items-start justify-between gap-3 flex-wrap mb-4">
                                     <div>
                                         <p className="font-semibold text-darks mb-0.5">
@@ -539,12 +542,12 @@ function Submissions() {
                                 <div className="flex items-start justify-between gap-2">
                                     <div className="min-w-0">
                                         <p className="font-semibold text-darks">{s.user?.name || "Pengguna"}</p>
-                                        <p className="text-xs text-tinted mt-1">
-                                            Token: {s.token?.token_code || "-"} &middot; Dikirim: {fmtDate(s.submitted_at)}
-                                        </p>
                                         {s.total_score != null && (
                                             <p className="text-sm text-darks mt-1">Skor: <span className="font-bold">{s.total_score}</span></p>
                                         )}
+                                        <p className="text-xs text-tinted mt-1">
+                                            Token: {s.token?.token_code || "-"} &middot; Dikirim: {fmtDate(s.submitted_at)}
+                                        </p>
                                     </div>
                                     <div className="flex flex-col items-end gap-2 shrink-0">
                                         <span
@@ -558,7 +561,7 @@ function Submissions() {
                                                 onClick={() => navigate(`/creator/forms/${id}/submissions/${s.id}`)}
                                                 className="btn btn-sm bg-base text-darks border border-second hover:bg-second"
                                             >
-                                                <Eye className="h-3.5 w-3.5" /> Lihat
+                                                <Eye className="h-3.5 w-3.5" /> <span className="hidden sm:block">Lihat</span>
                                             </button>
                                             <button
                                                 onClick={() => handleDelete(s)}
@@ -570,7 +573,7 @@ function Submissions() {
                                                 ) : (
                                                     <Trash2 className="h-3.5 w-3.5" />
                                                 )}
-                                                Hapus
+                                                <span className="hidden sm:block">Hapus</span>
                                             </button>
                                         </div>
                                     </div>

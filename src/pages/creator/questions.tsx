@@ -1,7 +1,7 @@
 import Loading from "../../components/loading"
 import { useEffect, useState, useCallback, type DragEvent } from "react"
 import { useNavigate, useParams } from "react-router-dom"
-import { ArrowLeft, Plus, Pencil, Trash2, Save, X, Loader2, Check, Image as ImageIcon, GripVertical } from "lucide-react"
+import { ArrowLeft, Plus, Pencil, Trash2, Save, X, Loader2, Check, Image as ImageIcon, GripVertical, ListChecks, KeyRound, Share2, ClipboardList } from "lucide-react"
 import { supabase } from "../../lib/supabase"
 import { useAuth } from "../../lib/auth-context"
 import QuestionImportModal from "../../components/creator/QuestionImportModal"
@@ -41,7 +41,6 @@ function Questions({ embedded = false }: { embedded?: boolean }) {
     const [cached] = useState<{ formTitle: string; questions: Question[] } | undefined>(() =>
         user && id ? pageGet<{ formTitle: string; questions: Question[] }>(`questions:${user.id}:${id}`) : undefined
     )
-    const [formTitle, setFormTitle] = useState(cached?.formTitle ?? "")
     const [questions, setQuestions] = useState<Question[]>(cached?.questions ?? [])
     const [loading, setLoading] = useState(!cached)
 
@@ -73,7 +72,6 @@ function Questions({ embedded = false }: { embedded?: boolean }) {
             .eq("creator_id", user.id)
             .single()
         if (form) {
-            setFormTitle(form.title)
             newTitle = form.title
         }
 
@@ -263,7 +261,7 @@ function Questions({ embedded = false }: { embedded?: boolean }) {
     }
 
     const renderEditor = () => (
-        <div className="bg-white border border-second p-6 shadow-sm rounded-none mb-6 overflow-block space-y-4">
+        <div className="bg-white border border-second p-3 shadow-sm rounded-none mb-6 overflow-block space-y-4">
             <div className="flex items-center justify-between">
                 <h2 className="font-semibold text-darks">{editingId ? "Edit Soal" : "Tambah Soal"}</h2>
                 <button onClick={resetEditor} className="btn btn-sm btn-ghost text-tinted">
@@ -280,7 +278,7 @@ function Questions({ embedded = false }: { embedded?: boolean }) {
                 />
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                     <label className="block text-sm font-medium text-darks mb-1.5">Tipe</label>
                     <select
@@ -308,7 +306,7 @@ function Questions({ embedded = false }: { embedded?: boolean }) {
                 </div>
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                     <label className="block text-sm font-medium text-darks mb-1.5">Urutan</label>
                     <input
@@ -413,21 +411,51 @@ function Questions({ embedded = false }: { embedded?: boolean }) {
     )
 
     return (
-        <div className={embedded ? "w-full min-w-0 pb-8" : "flex flex-col items-center px-4 py-10"}>
+        <div className={embedded ? "w-full min-w-0 pb-8" : "flex flex-col items-center px-3 py-10"}>
             {embedded ? <Loading inline show={loading} /> : <Loading show={loading} />}
             {!loading && (
-            <div className={embedded ? "" : "w-full max-w-5xl"}>
+            <div className={embedded ? "" : "w-full xl:max-w-7xl lg:max-w-5xl"}>
                 {!embedded && (
                     <>
                         <button
-                            onClick={() => navigate(`/creator/forms/${id}`)}
+                            onClick={() => navigate("/creator")}
                             className="flex items-center gap-2 text-sm text-tinted hover:text-darks mb-4 transition-colors"
                         >
-                            <ArrowLeft className="h-4 w-4" /> Kembali ke Detail
+                            <ArrowLeft className="h-4 w-4" /> Kembali
                         </button>
 
-                        <h1 className="text-2xl lg:text-4xl font-bold text-darks mb-1">Soal</h1>
-                        <p className="text-sm text-tinted mb-6">Form: {formTitle}</p>
+                        <div className="flex flex-wrap gap-2 mb-6">
+                            <button
+                                onClick={() => navigate(`/creator/forms/${id}`)}
+                                className="btn btn-sm bg-base text-darks border border-second hover:bg-second"
+                            >
+                                Detail
+                            </button>
+                            <button
+                                onClick={() => navigate(`/creator/forms/${id}/questions`)}
+                                className="btn btn-sm bg-darks text-base border-none"
+                            >
+                                <ListChecks className="h-3.5 w-3.5" /> <span className="hidden sm:block">Soal</span>
+                            </button>
+                            <button
+                                onClick={() => navigate(`/creator/forms/${id}/shared`)}
+                                className="btn btn-sm bg-base text-darks border border-second hover:bg-second"
+                            >
+                                <Share2 className="h-3.5 w-3.5" /> <span className="hidden sm:block">Bagikan</span>
+                            </button>
+                            <button
+                                onClick={() => navigate(`/creator/forms/${id}/tokens`)}
+                                className="btn btn-sm bg-base text-darks border border-second hover:bg-second"
+                            >
+                                <KeyRound className="h-3.5 w-3.5" /> <span className="hidden sm:block">Token</span>
+                            </button>
+                            <button
+                                onClick={() => navigate(`/creator/forms/${id}/submissions`)}
+                                className="btn btn-sm bg-base text-darks border border-second hover:bg-second"
+                            >
+                                <ClipboardList className="h-3.5 w-3.5" /> <span className="hidden sm:block">Responden</span>
+                            </button>
+                        </div>
                     </>
                 )}
 
@@ -442,9 +470,6 @@ function Questions({ embedded = false }: { embedded?: boolean }) {
                 {questions.length === 0 && !showEditor ? (
                     <div className="text-center py-16">
                         <p className="text-tinted mb-4">Belum ada soal.</p>
-                        <button onClick={startAdd} className="btn bg-darks text-base border-none">
-                            <Plus className="h-4 w-4" /> Tambah Soal
-                        </button>
                     </div>
                 ) : questions.length > 0 && (
                     <div className="space-y-3 pb-8">

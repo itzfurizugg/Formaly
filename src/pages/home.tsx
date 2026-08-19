@@ -109,7 +109,7 @@ function Home() {
         <>
             <Loading show={authLoading || !user} />
             {!authLoading && user && (
-                <div className="flex flex-col items-center justify-center min-h-[70vh] px-4 py-10 text-left lg:text-center">
+                <div className="flex flex-col items-center justify-center min-h-[60vh] px-4 py-10 text-left lg:text-center">
                     <div className="w-full max-w-xl">
                         <motion.h1
                             initial={{ opacity: 0, y: 16 }}

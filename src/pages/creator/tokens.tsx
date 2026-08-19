@@ -1,6 +1,6 @@
 import { useEffect, useState, useCallback } from "react"
 import { useNavigate, useParams } from "react-router-dom"
-import { ArrowLeft, Plus, Trash2, X, Loader2, Copy, Check, Share2, KeyRound, ClipboardList } from "lucide-react"
+import { ArrowLeft, Plus, Trash2, X, Loader2, Copy, Check, Share2, KeyRound, ClipboardList, ListChecks } from "lucide-react"
 import { supabase } from "../../lib/supabase"
 import { useAuth } from "../../lib/auth-context"
 import { confirmDelete } from "../../lib/alerts"
@@ -133,14 +133,17 @@ function Tokens() {
                     <button onClick={() => navigate(`/creator/forms/${id}`)} className="btn btn-sm bg-base text-darks border border-second hover:bg-second">
                         Detail
                     </button>
+                    <button onClick={() => navigate(`/creator/forms/${id}/questions`)} className="btn btn-sm bg-base text-darks border border-second hover:bg-second lg:hidden">
+                        <ListChecks className="h-3.5 w-3.5" /> <span className="hidden sm:block">Soal</span>
+                    </button>
                     <button onClick={() => navigate(`/creator/forms/${id}/shared`)} className="btn btn-sm bg-base text-darks border border-second hover:bg-second">
-                        <Share2 className="h-3.5 w-3.5" /> Shared
+                        <Share2 className="h-3.5 w-3.5" /> <span className="hidden sm:block">Shared</span>
                     </button>
                     <button onClick={() => navigate(`/creator/forms/${id}/tokens`)} className="btn btn-sm bg-darks text-base border-none">
-                        <KeyRound className="h-3.5 w-3.5" /> Token
+                        <KeyRound className="h-3.5 w-3.5" /> <span className="hidden sm:block">Token</span>
                     </button>
                     <button onClick={() => navigate(`/creator/forms/${id}/submissions`)} className="btn btn-sm bg-base text-darks border border-second hover:bg-second">
-                        <ClipboardList className="h-3.5 w-3.5" /> Submission
+                        <ClipboardList className="h-3.5 w-3.5" /> <span className="hidden sm:block">Submission</span>
                     </button>
                 </div>
 

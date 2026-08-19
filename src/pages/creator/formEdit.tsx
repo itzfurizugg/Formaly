@@ -1,7 +1,7 @@
 import Loading from "../../components/loading"
 import { useEffect, useState, useCallback } from "react"
 import { useNavigate, useParams } from "react-router-dom"
-import { ArrowLeft, Save, Loader2, ClipboardList, KeyRound, Share2, X } from "lucide-react"
+import { ArrowLeft, Save, Loader2, ClipboardList, KeyRound, Share2, ListChecks, X, Info } from "lucide-react"
 import { supabase } from "../../lib/supabase"
 import { useAuth } from "../../lib/auth-context"
 import { alertSaveError, alertSaveSuccess } from "../../lib/alerts"
@@ -216,25 +216,31 @@ function FormEdit() {
                         onClick={() => navigate(`/creator/forms/${id}`)}
                         className="btn btn-sm bg-darks text-base border-none"
                     >
-                        Detail
+                        <Info className="h-3.5 w-3.5" /> <span className="hidden sm:block">Detail Form</span>
+                    </button>
+                    <button
+                        onClick={() => navigate(`/creator/forms/${id}/questions`)}
+                        className="btn btn-sm bg-base text-darks border border-second hover:bg-second lg:hidden"
+                    >
+                        <ListChecks className="h-3.5 w-3.5" /> <span className="hidden sm:block">Soal</span>
                     </button>
                     <button
                         onClick={() => navigate(`/creator/forms/${id}/shared`)}
                         className="btn btn-sm bg-base text-darks border border-second hover:bg-second"
                     >
-                        <Share2 className="h-3.5 w-3.5" /> Shared
+                        <Share2 className="h-3.5 w-3.5" /> <span className="hidden sm:block">Bagikan</span>
                     </button>
                     <button
                         onClick={() => navigate(`/creator/forms/${id}/tokens`)}
                         className="btn btn-sm bg-base text-darks border border-second hover:bg-second"
                     >
-                        <KeyRound className="h-3.5 w-3.5" /> Token
+                        <KeyRound className="h-3.5 w-3.5" /> <span className="hidden sm:block">Token</span>
                     </button>
                     <button
                         onClick={() => navigate(`/creator/forms/${id}/submissions`)}
                         className="btn btn-sm bg-base text-darks border border-second hover:bg-second"
                     >
-                        <ClipboardList className="h-3.5 w-3.5" /> Submission
+                        <ClipboardList className="h-3.5 w-3.5" /> <span className="hidden sm:block">Responden</span>
                     </button>
                 </div>
 
@@ -351,7 +357,7 @@ function FormEdit() {
                     <button
                         type="submit"
                         disabled={saving}
-                        className="btn bg-darks text-base border-none w-full hover:opacity-90 transition-opacity disabled:opacity-60"
+                        className="btn bg-darks text-base border-none w-full hover:opacity-90 transition-opacity disabled:opacity-60 mb-3 mt-5"
                     >
                         {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
                         Simpan Perubahan
@@ -360,7 +366,7 @@ function FormEdit() {
                 </div>
 
                 <div className="w-full lg:flex-1 min-w-0 lg:h-full lg:overflow-y-auto lg:overscroll-contain">
-                    <div className="pr-1">
+                    <div className="hidden lg:block pr-1">
                         <Questions embedded />
                     </div>
                 </div>

@@ -1,6 +1,6 @@
 import { useEffect, useState, useCallback } from "react"
 import { useNavigate } from "react-router-dom"
-import { FileText, Pencil, Trash2, ClipboardList, KeyRound, Loader2, Share, ListChecks, Timer, Target } from "lucide-react"
+import { FileText, Pencil, Trash2, ClipboardList, KeyRound, Loader2, ListChecks, Timer, Target, Share2 } from "lucide-react"
 import { supabase } from "../../lib/supabase"
 import { useAuth } from "../../lib/auth-context"
 import { confirmDelete } from "../../lib/alerts"
@@ -157,7 +157,7 @@ function FormList() {
                                 onClick={() => navigate(`/creator/forms/${form.id}/shared`)}
                                 className="btn btn-sm rounded-none bg-base text-darks border border-second hover:bg-second hover:border-second"
                             >
-                                <Share className="h-3.5 w-3.5" /> <span className="hidden sm:inline">Bagikan</span>
+                                <Share2 className="h-3.5 w-3.5" /> <span className="hidden sm:inline">Bagikan</span>
                             </button>
                             <button
                                 onClick={() => navigate(`/creator/forms/${form.id}/tokens`)}

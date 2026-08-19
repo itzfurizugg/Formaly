@@ -75,7 +75,7 @@ function Search({ onSearch, loading = false }: SearchProps) {
                 </div>
 
                 <button
-                    className="shrink-0 bg-darks text-base-100 px-6 font-medium hover:brightness-110 active:scale-95 transition-all duration-150 disabled:opacity-60"
+                    className="shrink-0 bg-done text-base-100 px-6 font-medium hover:brightness-110 active:scale-95 transition-all duration-150 disabled:opacity-60"
                     onClick={handleJoin}
                     disabled={loading || !tag.trim()}
                 >
