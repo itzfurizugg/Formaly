@@ -1,10 +1,11 @@
 import { useState } from "react"
 import { Link } from "react-router-dom"
 import { AnimatePresence, motion } from "motion/react"
-import { ArrowLeft, MailCheck, KeyRound } from "lucide-react"
+import { MailCheck, KeyRound } from "lucide-react"
 import logo from "../../assets/logo.svg"
 import { useAuth } from "../../lib/auth-context"
 import { alertPop, fadeSlide } from "../../lib/motion"
+import BackButton from "../../components/backButton"
 
 function ForgotPassword() {
     const { resetPassword } = useAuth()
@@ -55,15 +56,9 @@ function ForgotPassword() {
                         variants={fadeSlide}
                         initial="hidden"
                         animate="show"
-                        className="bg-white rounded-2xl border border-second p-8 shadow-sm"
+                        className="bg-white rounded-3xl lg:rounded-2xl border border-second p-8 shadow-sm"
                     >
-                        <Link
-                            to="/login"
-                            className="inline-flex items-center gap-1 text-xs text-tinted hover:text-darks transition-colors mb-4"
-                        >
-                            <ArrowLeft className="h-3 w-3" />
-                            Kembali
-                        </Link>
+                        <BackButton to="/login" />
 
                         <div className="flex items-center gap-2 mb-1">
                             <h2 className="text-3xl font-bold text-darks">Lupa Password</h2>
@@ -90,7 +85,7 @@ function ForgotPassword() {
                                 <button
                                     type="button"
                                     onClick={() => { setSent(false); setEmail("") }}
-                                    className="btn bg-base text-darks border border-second hover:bg-second transition-colors w-full"
+                                    className="btn bg-base text-darks border border-second hover:bg-second transition-colors w-full rounded-full lg:rounded-xl"
                                 >
                                     Kirim ulang
                                 </button>
@@ -112,7 +107,7 @@ function ForgotPassword() {
                                         animate="show"
                                         exit="exit"
                                         role="alert"
-                                        className="text-sm text-wrong bg-wrong/5 border border-wrong/20 rounded-lg px-4 py-3 mb-4"
+                                        className="text-sm text-wrong bg-wrong/5 border border-wrong/20 rounded-xl lg:rounded-lg px-4 py-3 mb-4"
                                     >
                                         {error}
                                     </motion.div>
@@ -139,7 +134,7 @@ function ForgotPassword() {
                                     <button
                                         type="submit"
                                         disabled={loading}
-                                        className="btn bg-darks text-base border-none w-full mt-2 hover:opacity-90 transition-opacity disabled:opacity-60"
+                                        className="btn bg-darks text-base border-none w-full mt-2 hover:opacity-90 transition-opacity disabled:opacity-60 rounded-full lg:rounded-xl"
                                     >
                                         {loading ? (
                                             <span className="loading loading-spinner loading-sm" />
@@ -150,7 +145,7 @@ function ForgotPassword() {
                                     </button>
                                 </form>
 
-                                <Link to="/login" className="btn bg-base text-darks border border-second hover:bg-second transition-colors w-full mt-2">
+                                <Link to="/login" className="btn bg-base text-darks border border-second hover:bg-second transition-colors w-full mt-2 rounded-full lg:rounded-xl">
                                     Sudah ingat? Masuk
                                 </Link>
                             </motion.div>

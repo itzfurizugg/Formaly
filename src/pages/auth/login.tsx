@@ -64,7 +64,7 @@ function Login() {
                         variants={fadeSlide}
                         initial="hidden"
                         animate="show"
-                        className="bg-white rounded-2xl border border-second p-4 lg:p-8 shadow-sm"
+                        className="bg-white rounded-3xl lg:rounded-2xl border border-second p-4 lg:p-8 shadow-sm"
                     >
                         <h2 className="text-2xl font-bold text-darks">Masuk</h2>
                         <p className="text-sm text-tinted mt-1 mb-6">
@@ -80,7 +80,7 @@ function Login() {
                                 animate="show"
                                 exit="exit"
                                 role="alert"
-                                className="flex items-center gap-2 text-sm text-done bg-done/10 border border-done/20 rounded-lg px-4 py-3 mb-4"
+                                className="flex items-center gap-2 text-sm text-done bg-done/10 border border-done/20 rounded-xl lg:rounded-lg px-4 py-3 mb-4"
                             >
                                 <CheckCircle2 className="h-4 w-4 shrink-0" />
                                 <span>Email kamu berhasil diverifikasi! Silakan masuk ke akun kamu.</span>
@@ -95,7 +95,7 @@ function Login() {
                                 animate="show"
                                 exit="exit"
                                 role="alert"
-                                className="text-sm text-wrong bg-wrong/5 border border-wrong/20 rounded-lg px-4 py-3 mb-4"
+                                className="text-sm text-wrong bg-wrong/5 border border-wrong/20 rounded-xl lg:rounded-lg px-4 py-3 mb-4"
                             >
                                 {error}
                             </motion.div>
@@ -139,7 +139,7 @@ function Login() {
                             <button
                                 type="submit"
                                 disabled={loading}
-                                className="btn bg-darks text-base border-none w-full mt-2 hover:opacity-90 transition-opacity disabled:opacity-60"
+                                className="btn bg-darks text-base border-none w-full mt-2 hover:opacity-90 transition-opacity disabled:opacity-60 rounded-full lg:rounded-xl"
                             >
                                 {loading ? (
                                     <span className="loading loading-spinner loading-sm" />
@@ -150,7 +150,7 @@ function Login() {
                             </button>
                         </form>
 
-                        <Link to={`/register${nextQuery}`} className="btn bg-base text-darks border border-second hover:bg-second transition-colors w-full mt-2">
+                        <Link to={`/register${nextQuery}`} className="btn bg-base text-darks border border-second hover:bg-second transition-colors w-full mt-2 rounded-full lg:rounded-xl">
                             Belum punya akun? Daftar
                         </Link>
                     </motion.div>

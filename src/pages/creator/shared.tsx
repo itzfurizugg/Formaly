@@ -1,8 +1,9 @@
 import { useParams, useNavigate } from "react-router-dom"
 import { useEffect, useState } from "react"
-import { ArrowLeft, Copy, QrCode, ClipboardList, KeyRound, Globe, Share2, ListChecks, Info } from "lucide-react"
+import { Copy, QrCode, ClipboardList, KeyRound, Globe, Share2, ListChecks, Info } from "lucide-react"
 import { showAlert } from "../../lib/alerts"
 import { supabase } from "../../lib/supabase"
+import BackButton from "../../components/backButton"
 
 function Shared() {
     const { id } = useParams()
@@ -40,12 +41,7 @@ function Shared() {
     return (
         <div className="flex flex-col items-center px-3 py-10">
             <div className="w-full xl:max-w-7xl lg:max-w-5xl">
-                <button
-                    onClick={() => navigate("/creator")}
-                    className="flex items-center gap-2 text-sm text-tinted hover:text-darks mb-4 transition-colors"
-                >
-                    <ArrowLeft className="h-4 w-4" /> Kembali
-                </button>
+                <BackButton to="/creator" />
 
                 <div className="flex flex-wrap gap-2 mb-6">
                     <button
@@ -80,7 +76,7 @@ function Shared() {
                     </button>
                 </div>
 
-                <div className="bg-white border border-second p-3 lg:p-6 sm:p-4 shadow-sm rounded-none">
+                <div className="bg-white border border-second p-3 lg:p-6 sm:p-4 shadow-sm rounded-xl">
                     <div className="flex items-center gap-2 mb-1">
                         <h2 className="font-semibold text-darks mt-2 ml-2">Bagikan Form</h2>
                     </div>

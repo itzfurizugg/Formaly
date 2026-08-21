@@ -101,7 +101,7 @@ function ResetPassword() {
                         <img src={logo} alt="Formaly" className="h-10 w-auto" />
                     </div>
 
-                    <div className="bg-white rounded-2xl border border-second p-8 shadow-sm">
+                    <div className="bg-white rounded-3xl lg:rounded-2xl border border-second p-8 shadow-sm">
                         <AnimatePresence mode="wait">
                         {checking ? (
                             <motion.div
@@ -140,7 +140,7 @@ function ResetPassword() {
                                 </p>
                                 <Link
                                     to="/login"
-                                    className="btn bg-darks text-base border-none w-full hover:opacity-90 transition-opacity"
+                                    className="btn bg-darks text-base border-none w-full hover:opacity-90 transition-opacity rounded-full lg:rounded-xl"
                                 >
                                     Masuk Sekarang
                                 </Link>
@@ -161,19 +161,19 @@ function ResetPassword() {
                                     Tautan reset password tidak valid atau sudah kedaluwarsa.
                                 </p>
 
-                                <div role="alert" className="text-sm text-wrong bg-wrong/5 border border-wrong/20 rounded-lg px-4 py-3 mb-4">
+                                <div role="alert" className="text-sm text-wrong bg-wrong/5 border border-wrong/20 rounded-xl lg:rounded-lg px-4 py-3 mb-4">
                                     Link reset password sudah kedaluwarsa. Silakan minta tautan baru untuk melanjutkan.
                                 </div>
 
                                 <button
                                     type="button"
                                     onClick={() => navigate("/forgot-password")}
-                                    className="btn bg-darks text-base border-none w-full hover:opacity-90 transition-opacity"
+                                    className="btn bg-darks text-base border-none w-full hover:opacity-90 transition-opacity rounded-full lg:rounded-xl"
                                 >
                                     Request Link Baru
                                 </button>
 
-                                <Link to="/login" className="btn bg-base text-darks border border-second hover:bg-second transition-colors w-full mt-2">
+                                <Link to="/login" className="btn bg-base text-darks border border-second hover:bg-second transition-colors w-full mt-2 rounded-full lg:rounded-xl">
                                     Kembali ke Login
                                 </Link>
                             </motion.div>
@@ -201,7 +201,7 @@ function ResetPassword() {
                                         animate="show"
                                         exit="exit"
                                         role="alert"
-                                        className="text-sm text-wrong bg-wrong/5 border border-wrong/20 rounded-lg px-4 py-3 mb-4"
+                                        className="text-sm text-wrong bg-wrong/5 border border-wrong/20 rounded-xl lg:rounded-lg px-4 py-3 mb-4"
                                     >
                                         {error}
                                     </motion.div>
@@ -241,7 +241,7 @@ function ResetPassword() {
                                     <button
                                         type="submit"
                                         disabled={loading}
-                                        className="btn bg-darks text-base border-none w-full mt-2 hover:opacity-90 transition-opacity disabled:opacity-60"
+                                        className="btn bg-darks text-base border-none w-full mt-2 hover:opacity-90 transition-opacity disabled:opacity-60 rounded-full lg:rounded-xl"
                                     >
                                         {loading ? (
                                             <span className="loading loading-spinner loading-sm" />

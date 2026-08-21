@@ -1,11 +1,12 @@
 import { useEffect, useState, useCallback } from "react"
 import { useNavigate, useParams } from "react-router-dom"
 import { AnimatePresence, motion } from "motion/react"
-import { ArrowLeft, Plus, Trash2, X, Loader2, Copy, Check, Share2, KeyRound, ClipboardList, ListChecks, Info } from "lucide-react"
+import { Plus, Trash2, X, Loader2, Copy, Check, Share2, KeyRound, ClipboardList, ListChecks, Info } from "lucide-react"
 import { supabase } from "../../lib/supabase"
 import { useAuth } from "../../lib/auth-context"
 import { confirmDelete } from "../../lib/alerts"
 import { easeOutExpo, alertPop, panelSlide } from "../../lib/motion"
+import BackButton from "../../components/backButton"
 
 interface Token {
     id: string
@@ -124,12 +125,7 @@ function Tokens() {
     return (
         <div className="flex flex-col items-center px-3 py-10">
             <div className="w-full xl:max-w-7xl lg:max-w-5xl">
-                <button
-                    onClick={() => navigate("/creator")}
-                    className="flex items-center gap-2 text-sm text-tinted hover:text-darks mb-4 transition-colors"
-                >
-                    <ArrowLeft className="h-4 w-4" /> Kembali
-                </button>
+                <BackButton to="/creator" />
 
                 <div className="flex flex-wrap gap-2 mb-6">
                     <button onClick={() => navigate(`/creator/forms/${id}`)} className="btn btn-sm bg-base text-darks border border-second hover:bg-second">

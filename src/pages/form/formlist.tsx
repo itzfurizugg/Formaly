@@ -88,7 +88,7 @@ function FormList() {
 
                 <button
                             onClick={() => backToForm(current)}
-                    className="hidden lg:block btn w-full h-12 min-h-0 bg-darks text-white rounded-none hover:opacity-90"
+                    className="hidden lg:block btn w-full h-12 min-h-0 bg-darks text-white rounded-xl hover:opacity-90"
                 >
                     Kembali ke soal
                 </button>
@@ -99,7 +99,7 @@ function FormList() {
                     <div className="w-full max-w-3xl mx-auto">
                         <button
                     onClick={() => backToForm(current)}
-                            className="btn w-full h-12 mb-3 min-h-0 bg-darks text-white rounded-none hover:opacity-90"
+                            className="btn w-full h-12 mb-3 min-h-0 bg-darks text-white rounded-xl hover:opacity-90"
                         >
                             Kembali ke soal
                         </button>

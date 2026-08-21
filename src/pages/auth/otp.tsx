@@ -1,12 +1,13 @@
 import { useState, useRef, useEffect, type KeyboardEvent } from "react"
-import { Link, useLocation, useNavigate } from "react-router-dom"
+import { useLocation, useNavigate } from "react-router-dom"
 import { AnimatePresence, motion } from "motion/react"
-import { ShieldCheck, ArrowLeft, RotateCcw, CheckCircle2 } from "lucide-react"
+import { ShieldCheck, RotateCcw, CheckCircle2 } from "lucide-react"
 import logo from "../../assets/logo.svg"
 import { useAuth } from "../../lib/auth-context"
 import { safeNext } from "../../lib/redirect"
 import type { EmailOtpType } from "@supabase/supabase-js"
 import { alertPop, easeOutExpo, fadeSlide } from "../../lib/motion"
+import BackButton from "../../components/backButton"
 
 const OTP_LENGTH = 6
 
@@ -166,16 +167,9 @@ function Otp() {
                         variants={fadeSlide}
                         initial="hidden"
                         animate="show"
-                        className="bg-white rounded-2xl border border-second p-4 lg:p-8 shadow-sm"
+                        className="bg-white rounded-3xl lg:rounded-2xl border border-second p-4 lg:p-8 shadow-sm"
                     >
-                        <Link
-                            to={`/login${nextQuery}`}
-                            className="inline-flex items-center gap-1 text-xs text-tinted hover:text-darks transition-colors mb-4"
-                        >
-                            <ArrowLeft className="h-3 w-3" />
-                            Kembali
-                        </Link>
-
+                        <BackButton to={`/login${nextQuery}`} />
                         <div className="flex items-center gap-2 mb-1">
                             <h2 className="text-2xl font-bold text-darks">Verifikasi OTP</h2>
                         </div>
@@ -209,7 +203,7 @@ function Otp() {
                                 animate="show"
                                 exit="exit"
                                 role="alert"
-                                className="text-sm text-wrong bg-wrong/5 border border-wrong/20 rounded-lg px-4 py-3 mb-4"
+                                className="text-sm text-wrong bg-wrong/5 border border-wrong/20 rounded-xl lg:rounded-lg px-4 py-3 mb-4"
                             >
                                 {error}
                             </motion.div>
@@ -223,7 +217,7 @@ function Otp() {
                                 animate="show"
                                 exit="exit"
                                 role="alert"
-                                className="flex items-center gap-2 text-sm text-done bg-done/10 border border-done/20 rounded-lg px-4 py-3 mb-4"
+                                className="flex items-center gap-2 text-sm text-done bg-done/10 border border-done/20 rounded-xl lg:rounded-lg px-4 py-3 mb-4"
                             >
                                 <CheckCircle2 className="h-4 w-4 shrink-0" />
                                 <span>{resendSuccess}</span>
@@ -255,7 +249,7 @@ function Otp() {
                             <button
                                 type="submit"
                                 disabled={loading || !isComplete}
-                                className="btn bg-darks text-base border-none w-full mt-6 hover:opacity-90 transition-opacity disabled:opacity-60"
+                                className="btn bg-darks text-base border-none w-full mt-6 hover:opacity-90 transition-opacity disabled:opacity-60 rounded-full lg:rounded-xl"
                             >
                                 {loading ? (
                                     <span className="loading loading-spinner loading-sm" />
@@ -270,7 +264,7 @@ function Otp() {
                             type="button"
                             onClick={handleResendOtp}
                             disabled={resendLoading || resendCountdown > 0 || !email}
-                            className="btn bg-base text-darks border border-second hover:bg-second transition-colors w-full mt-2 disabled:opacity-60"
+                            className="btn bg-base text-darks border border-second hover:bg-second transition-colors w-full mt-2 disabled:opacity-60 rounded-full lg:rounded-xl"
                         >
                             {resendLoading ? (
                                 <span className="loading loading-spinner loading-sm" />

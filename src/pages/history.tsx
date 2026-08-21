@@ -5,7 +5,6 @@ import { FileText } from "lucide-react"
 import HistoryCard from "../components/historyCard"
 import { supabase } from "../lib/supabase"
 import { useAuth } from "../lib/auth-context"
-import Loading from "../components/loading"
 import { easeOutExpo } from "../lib/motion"
 
 interface HistoryItem {
@@ -80,11 +79,10 @@ function History() {
 
     const filtered = items
 
-    if (authLoading || !user) return <Loading />
+    if (authLoading || !user) return null
 
     return (
         <>
-            <Loading show={authLoading || !user || loading} />
             {!authLoading && user && !loading && (
                 <div className="flex flex-col items-center px-2 py-5">
                     <div className="max-w-4xl grid w-full lg:mt-10">

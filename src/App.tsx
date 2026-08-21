@@ -2,7 +2,6 @@ import { Routes, Route, useLocation } from "react-router-dom"
 import { lazy, Suspense, useEffect, useState } from "react"
 import { AnimatePresence, MotionConfig, motion } from "motion/react"
 import { AuthProvider } from "./lib/auth"
-import Loading from "./components/loading"
 import Navbar from "./components/navbar"
 import Dock from "./components/dock"
 import CreatorSidebar from "./components/creator/sidebar"
@@ -16,6 +15,7 @@ const ResetPassword = lazy(() => import("./pages/auth/resetPassword"))
 const Home = lazy(() => import("./pages/home"))
 const History = lazy(() => import("./pages/history"))
 const Profile = lazy(() => import("./pages/profile"))
+const CreditPage = lazy(() => import("./pages/credit"))
 const AdminForms = lazy(() => import("./pages/admin/forms"))
 const FormDescription = lazy(() => import("./pages/form/description"))
 const FormResolver = lazy(() => import("./pages/form/resolver"))
@@ -34,7 +34,7 @@ const CreatorSubmissionDetail = lazy(() => import("./pages/creator/submissionDet
 const CreatorShared = lazy(() => import("./pages/creator/shared"))
 const CreatorLayout = lazy(() => import("./pages/creator/layout"))
 
-const hideNavPaths = ["/login", "/register", "/auth", "/forgot-password", "/reset-password", "/form/description", "/form", "/form/list", "/form/result"]
+const hideNavPaths = ["/login", "/register", "/auth", "/forgot-password", "/reset-password", "/form/description", "/form", "/form/list", "/form/result", "/credit"]
 
 function useIsMobile() {
   const [isMobile, setIsMobile] = useState(() =>
@@ -89,7 +89,7 @@ function App() {
             </motion.div>
           )}
         </AnimatePresence>
-        <Suspense fallback={<Loading />}>
+        <Suspense>
           {/* Key = pathname agar tiap pindah halaman me-replay animasi pembukaan halaman */}
           <motion.div
             key={location.pathname}
@@ -102,6 +102,7 @@ function App() {
             <Route path="/" element={<Home />} />
             <Route path="/history" element={<History />} />
             <Route path="/profile" element={<Profile />} />
+            <Route path="/credit" element={<CreditPage />} />
             <Route path="/admin/forms" element={<AdminForms />} />
             <Route path="/form/description" element={<FormDescription />} />
             <Route path="/form/:formId" element={<FormResolver />} />

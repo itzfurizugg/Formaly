@@ -14,7 +14,7 @@ function Filter({ options, value, onChange, name = "filter" }: FilterProps) {
     return (
         <div className="filter flex flex-wrap items-center">
             <input
-                className={`btn btn-square h-8 min-h-0 w-8 ${value === "" ? "hidden" : ""}`}
+                className={`btn btn-square h-8 min-h-0 w-8 rounded-full lg:rounded-lg ${value === "" ? "hidden" : ""}`}
                 type="reset"
                 value="×"
                 onClick={() => onChange("")}
@@ -22,7 +22,7 @@ function Filter({ options, value, onChange, name = "filter" }: FilterProps) {
             {options.map((opt) => (
                 <input
                     key={opt.value}
-                    className="btn h-8 min-h-0"
+                    className="btn h-8 min-h-0 rounded-full lg:rounded-lg"
                     type="radio"
                     name={name}
                     aria-label={opt.label}

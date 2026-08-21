@@ -72,11 +72,10 @@ function Available() {
             f.author_name.toLowerCase().includes(search.toLowerCase())
     )
 
-    if (authLoading || !user) return <Loading />
+    if (authLoading || !user) return null
 
     return (
         <>
-            <Loading show={authLoading || !user || loading} />
             {!authLoading && user && !loading && (
         <div className="flex flex-col items-center px-4 py-10">
             <div className="max-w-4xl w-full">

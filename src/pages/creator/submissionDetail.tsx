@@ -1,14 +1,14 @@
-import Loading from "../../components/loading"
 import { useEffect, useState, useCallback } from "react"
-import { useNavigate, useParams } from "react-router-dom"
+import { useParams } from "react-router-dom"
 import { motion } from "motion/react"
-import { ArrowLeft, Check, X } from "lucide-react"
+import { Check, X } from "lucide-react"
 import { RichText } from "../../components/richText"
 import { DonutChart } from "../../components/charts"
 import { colors } from "../../lib/colorbase"
 import { supabase } from "../../lib/supabase"
 import { useAuth } from "../../lib/auth-context"
 import { easeOutExpo } from "../../lib/motion"
+import BackButton from "../../components/backButton"
 
 interface AnswerRow {
     id: string
@@ -40,7 +40,6 @@ interface SubmissionInfo {
 
 function SubmissionDetail() {
     const { id, submissionId } = useParams()
-    const navigate = useNavigate()
     const { user } = useAuth()
 
     const [info, setInfo] = useState<SubmissionInfo | null>(null)
@@ -143,16 +142,10 @@ function SubmissionDetail() {
 
     return (
         <>
-            <Loading show={loading} />
             {!loading && (
         <div className="flex flex-col items-center px-4 py-10">
             <div className="w-full xl:max-w-7xl lg:max-w-5xl">
-                <button
-                    onClick={() => navigate(`/creator/forms/${id}/submissions`)}
-                    className="flex items-center gap-2 text-sm text-tinted hover:text-darks mb-4 transition-colors"
-                >
-                    <ArrowLeft className="h-4 w-4" /> Kembali
-                </button>
+                <BackButton to={`/creator/forms/${id}/submissions`} />
 
                 <h1 className="text-2xl lg:text-4xl font-bold text-darks mb-1">Detail Submission</h1>
                 <p className="text-sm text-tinted mb-6">
@@ -160,7 +153,7 @@ function SubmissionDetail() {
                 </p>
 
                 {info && info.total_score != null && (
-                    <div className="bg-white border border-second p-5 shadow-sm rounded-none mb-6">
+                    <div className="bg-white border border-second p-5 shadow-sm rounded-xl mb-6">
                         <div className="flex items-center justify-between gap-6">
                             <div className="flex-1">
                                 <p className="text-xs text-tinted">Total Skor</p>
@@ -219,7 +212,7 @@ function SubmissionDetail() {
                                 animate={{ opacity: 1, y: 0 }}
                                 transition={{ duration: 0.35, ease: easeOutExpo, delay: Math.min(idx * 0.06, 0.4) }}
                             >
-                            <div className="bg-white border border-second p-5 shadow-sm rounded-none transition-colors hover:bg-base-200">
+                            <div className="bg-white border border-second p-5 shadow-sm rounded-xl transition-colors hover:bg-base-200">
                                 <div className="flex items-center gap-2 flex-wrap mb-1">
                                     <span className="text-sm font-bold text-darks">Soal {idx + 1}</span>
                                     <span className="badge badge-ghost text-tinted rounded-full text-xs">{typeLabel(a.question?.question_type || "")}</span>

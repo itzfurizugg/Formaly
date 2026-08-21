@@ -14,7 +14,7 @@ function PageIndicator({ total, current, onPrev, onNext, onListClick }: PageIndi
     return (
         <div className="join">
             <button
-                className="join-item btn h-12 min-h-0 px-4 rounded-none"
+                className="join-item btn h-12 min-h-0 px-4 rounded-xl"
                 onClick={onPrev}
                 disabled={current === 0}
             >
@@ -22,13 +22,13 @@ function PageIndicator({ total, current, onPrev, onNext, onListClick }: PageIndi
             </button>
             <button
                 onClick={onListClick}
-                className="join-item btn h-12 min-h-0 px-4 bg-base-400 rounded-none"
+                className="join-item btn h-12 min-h-0 px-4 bg-base-400 rounded-xl"
             >
                 Soal {current + 1}
             </button>
             {!isLast && (
                 <button
-                    className="join-item btn h-12 min-h-0 px-4 rounded-none"
+                    className="join-item btn h-12 min-h-0 px-4 rounded-xl"
                     onClick={onNext}
                 >
                     <ChevronRight className="h-4 w-4" />

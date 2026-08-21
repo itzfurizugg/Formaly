@@ -5,8 +5,10 @@ import {
     House,
     LayoutDashboard,
     FileText,
-    ClipboardList,
     X,
+    Group,
+    ChartNoAxesColumn,
+    Form,
 } from "lucide-react"
 import logo from "../../assets/logo.svg"
 import { useAuth } from "../../lib/auth-context"
@@ -62,13 +64,13 @@ function CreatorSidebar() {
         {
             to: "/creator/forms",
             label: "Kelola Form",
-            icon: FileText,
+            icon: Form,
             active: pathname.startsWith("/creator/forms") && !pathname.includes("/submissions"),
         },
         {
             to: "/creator/responden",
             label: "Responden",
-            icon: ClipboardList,
+            icon: ChartNoAxesColumn,
             active: pathname.includes("/submissions") || pathname === "/creator/responden",
         },
     ]
@@ -112,7 +114,7 @@ function CreatorSidebar() {
             <aside className="hidden lg:flex fixed inset-y-0 left-0 z-40 w-64 flex-col bg-base-200 border-r border-second">
                 <div className="flex items-center h-16 px-5 border-b border-second shrink-0">
                     <Link to="/" onClick={() => open && closeNav()}>
-                        <img src={logo} alt="Formaly" className="h-6 w-auto" />
+                        <img src={logo} alt="Formaly" className="h-6 w-auto ml-2 mt-2" />
                     </Link>
                 </div>
 
