@@ -1,7 +1,8 @@
+import Loading from "../../components/loading"
 import { useEffect, useState, useCallback, type DragEvent } from "react"
 import { useNavigate, useParams } from "react-router-dom"
 import { AnimatePresence, motion } from "motion/react"
-import { Plus, Pencil, Trash2, Save, X, Loader2, Check, GripVertical, ListChecks, KeyRound, Share2, ClipboardList, Info } from "lucide-react"
+import { ArrowLeft, Plus, Pencil, Trash2, Save, X, Loader2, Check, GripVertical, ListChecks, KeyRound, Share2, ClipboardList, Info } from "lucide-react"
 import { supabase } from "../../lib/supabase"
 import { useAuth } from "../../lib/auth-context"
 import QuestionImportModal from "../../components/creator/QuestionImportModal"
@@ -11,7 +12,6 @@ import { richTextToPlain } from "../../lib/richtext"
 import { alertSaveSuccess, confirmDelete, showAlert } from "../../lib/alerts"
 import { pageGet, pageSet } from "../../lib/pageCache"
 import { easeOutExpo, panelSlide } from "../../lib/motion"
-import BackButton from "../../components/backButton"
 
 interface Option {
     id: string | null
@@ -269,7 +269,7 @@ function Questions({ embedded = false }: { embedded?: boolean }) {
             initial="hidden"
             animate="show"
             exit="exit"
-            className="bg-white border border-second p-3 sm:p-5 shadow-sm rounded-xl mb-6 overflow-block space-y-4"
+            className="bg-white border border-second p-3 sm:p-5 shadow-sm rounded-none mb-6 overflow-block space-y-4"
         >
             <div className="flex items-center justify-between">
                 <h2 className="font-semibold text-darks ml-2 sm:ml-1">{editingId ? "Edit Soal" : "Tambah Soal"}</h2>
@@ -291,7 +291,7 @@ function Questions({ embedded = false }: { embedded?: boolean }) {
                 <div>
                     <label className="block text-sm font-medium text-darks mb-1.5 ml-1">Tipe</label>
                     <select
-                        className="select w-full bg-base border-second focus:border-done focus:outline-none rounded-xl"
+                        className="select w-full bg-base border-second focus:border-done focus:outline-none rounded-none"
                         value={questionType}
                         onChange={(e) => setQuestionType(e.target.value)}
                     >
@@ -421,11 +421,17 @@ function Questions({ embedded = false }: { embedded?: boolean }) {
 
     return (
         <div className={embedded ? "w-full min-w-0 pb-8" : "flex flex-col items-center px-3 py-10"}>
+            {embedded ? <Loading inline show={loading} /> : <Loading show={loading} />}
             {!loading && (
             <div className={embedded ? "" : "w-full xl:max-w-7xl lg:max-w-5xl"}>
                 {!embedded && (
                     <>
-                        <BackButton to="/creator" />
+                        <button
+                            onClick={() => navigate("/creator")}
+                            className="flex items-center gap-2 text-sm text-tinted hover:text-darks mb-4 transition-colors"
+                        >
+                            <ArrowLeft className="h-4 w-4" /> Kembali
+                        </button>
 
                         <div className="flex flex-wrap gap-2 mb-6">
                             <button
@@ -493,7 +499,7 @@ function Questions({ embedded = false }: { embedded?: boolean }) {
                                 onDragOver={handleDragOver}
                                 onDrop={(e) => handleDrop(e, idx)}
                                 onDragEnd={handleDragEnd}
-                                className={`bg-white border p-5 shadow-sm rounded-xl cursor-grab active:cursor-grabbing transition-colors hover:bg-base-200 ${
+                                className={`bg-white border p-5 shadow-sm rounded-none cursor-grab active:cursor-grabbing transition-colors hover:bg-base-200 ${
                                     dragIndex === idx
                                         ? "border-done opacity-50"
                                         : "border-second"

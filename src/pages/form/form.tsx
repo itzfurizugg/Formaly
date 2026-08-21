@@ -1,3 +1,4 @@
+import Loading from "../../components/loading"
 import { useState, useEffect, useRef, useCallback } from "react"
 import { AnimatePresence, motion } from "motion/react"
 import { useNavigate, useParams, useLocation } from "react-router-dom"
@@ -282,6 +283,7 @@ function FormPage() {
 
     return (
         <>
+            <Loading show={authLoading || loading} />
             {!authLoading && !loading && (
             notFound ? (
                 <div className="flex flex-col items-center justify-center min-h-screen px-4">
@@ -313,7 +315,7 @@ function FormPage() {
                     initial={{ opacity: 0, y: 16 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.45, ease: [0.22, 1, 0.36, 1] }}
-                    className="bg-base-300 lg:bg-white border border-second p-1 lg:p-6 lg:shadow-sm rounded-xl"
+                    className="bg-base-300 lg:bg-white border border-second p-1 lg:p-6 lg:shadow-sm rounded-none"
                 >
                     <div className="flex items-center justify-between mb-3">
                         <div className="flex gap-2">
@@ -403,7 +405,7 @@ function FormPage() {
                         <button
                             onClick={() => handleSubmit()}
                             disabled={submitting}
-                            className="btn text-white h-12 min-h-0 px-4 bg-done border-none rounded-xl hover:opacity-90 disabled:opacity-25"
+                            className="btn text-white h-12 min-h-0 px-4 bg-done border-none rounded-none hover:opacity-90 disabled:opacity-25"
                         >
                             {submitting ? (
                                 <span className="loading loading-spinner loading-sm" />
@@ -439,7 +441,7 @@ function FormPage() {
                         <button
                             onClick={() => handleSubmit()}
                             disabled={submitting}
-                            className="btn text-white h-12 min-h-0 px-4 bg-done border-none rounded-xl hover:opacity-90 disabled:opacity-25"
+                            className="btn text-white h-12 min-h-0 px-4 bg-done border-none rounded-none hover:opacity-90 disabled:opacity-25"
                         >
                             {submitting ? (
                                 <span className="loading loading-spinner loading-sm" />

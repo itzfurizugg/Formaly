@@ -43,7 +43,7 @@ function Form({ title, author, duration, questions, to, buttonLabel = "Mulai", s
             </Link>
 
             {/* LAYOUT DESKTOP (>= md) — card */}
-            <div className="hidden md:block card bg-base border border-second rounded-xl">
+            <div className="hidden md:block card bg-base border border-second rounded-none">
                 <div className="card-body">
                     <h2 className="card-title text-darks">{title}</h2>
                     <p className="text-sm text-tinted">Oleh <span className="font-semibold text-accents">{author}</span></p>
@@ -61,7 +61,7 @@ function Form({ title, author, duration, questions, to, buttonLabel = "Mulai", s
                         <Link
                             to={to}
                             state={state}
-                            className="btn rounded-xl bg-darks text-base border-none h-9 min-h-0"
+                            className="btn rounded-none bg-darks text-base border-none h-9 min-h-0"
                         >
                             <Play className="h-3 w-auto" fill="currentColor" strokeWidth={0} />
                             {buttonLabel}

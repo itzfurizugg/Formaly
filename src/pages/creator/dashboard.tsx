@@ -1,14 +1,14 @@
 import { useEffect, useState, useCallback } from "react"
 import { useNavigate, Link } from "react-router-dom"
 import { motion } from "motion/react"
-import { FileText, CheckCircle2, ClipboardList, Target, ChevronRight, ChartNoAxesColumn } from "lucide-react"
+import { FileText, CheckCircle2, ClipboardList, Target, ArrowLeft, ChevronRight } from "lucide-react"
 import { supabase } from "../../lib/supabase"
 import { useAuth } from "../../lib/auth-context"
 import { DistributionChart, type BarDatum } from "../../components/charts"
 import { colors } from "../../lib/colorbase"
+import Loading from "../../components/loading"
 import { pageGet, pageSet } from "../../lib/pageCache"
 import { easeOutExpo } from "../../lib/motion"
-import BackButton from "../../components/backButton"
 
 interface Stats {
     total: number
@@ -138,15 +138,21 @@ function CreatorDashboard() {
     return (
         <div className="flex flex-col items-center px-3 py-10 sm:py-23">
             <div className="xl:max-w-7xl lg:max-w-5xl w-full">
-                <BackButton to="/" />
+                <button
+                    onClick={() => navigate("/")}
+                    className="flex items-center gap-2 text-xs sm:text-sm text-tinted hover:text-darks mb-4 sm:mb-6 lg:hidden transition-colors"
+                >
+                    <ArrowLeft className="h-4 w-4" /> Kembali
+                </button>
                 <div className="flex items-center justify-between mb-1">
                     <h1 className="text-3xl lg:text-6xl font-bold font-display text-darks">Dashboard Creator</h1>
                 </div>
                 <p className="text-sm text-tinted mb-3 sm:mb-6">Ringkasan formulir milik kamu.</p>
 
+                <Loading show={loading} />
                 {!loading && (
                     <div className="flex flex-col">
-                        <div className="grid grid-cols-2 lg:grid-cols-3 gap-2 sm:gap-3 w-full">
+                        <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-3 w-full">
                             <div className="relative overflow-hidden bg-white border border-second rounded-lg shadow-sm p-3 sm:p-4 min-w-0">
                                 <div className="absolute -right-3 -top-3 h-16 w-16 rounded-full bg-darks/5" />
                                 <div className="relative flex items-start justify-between">
@@ -189,7 +195,7 @@ function CreatorDashboard() {
                                 </div>
                             </div>
 
-                            {/* <div className="relative overflow-hidden bg-white border border-second rounded-lg shadow-sm p-3 sm:p-4 min-w-0">
+                            <div className="relative overflow-hidden bg-white border border-second rounded-lg shadow-sm p-3 sm:p-4 min-w-0">
                                 <div className="absolute -right-3 -top-3 h-16 w-16 rounded-full bg-pass/10" />
                                 <div className="relative flex items-start justify-between">
                                     <div className="min-w-0">
@@ -203,12 +209,12 @@ function CreatorDashboard() {
                                         <Target className="h-5 w-5" />
                                     </div>
                                 </div>
-                            </div> */}
+                            </div>
                         </div>
 
                         {/* Di mobile tidak ada sidebar, jadi akses halaman lewat dashboard. */}
                         <div className="lg:hidden flex flex-col gap-2 sm:gap-3 mt-8">
-                            {[{ to: "/creator/forms", label: "Kelola Form", icon: FileText }, { to: "/creator/responden", label: "Responden", icon: ChartNoAxesColumn }].map((item, index) => (
+                            {[{ to: "/creator/forms", label: "Kelola Form", icon: FileText }, { to: "/creator/responden", label: "Responden", icon: ClipboardList }].map((item, index) => (
                                 <motion.div
                                     key={item.to}
                                     initial={{ opacity: 0, y: 12 }}
@@ -230,7 +236,7 @@ function CreatorDashboard() {
 
 
                         <div className="grid gap-4 mt-8 lg:grid-cols-2">
-                            <div className="rounded-xl hidden sm:block">
+                            <div className="rounded-none hidden sm:block">
                                 {barData.length > 0 ? (
                                     <DistributionChart
                                         title="Submission per Form"

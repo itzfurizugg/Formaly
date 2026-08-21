@@ -74,7 +74,7 @@ function Register() {
                         variants={fadeSlide}
                         initial="hidden"
                         animate="show"
-                        className="bg-white rounded-3xl lg:rounded-2xl border border-second p-4 lg:p-8 shadow-sm"
+                        className="bg-white rounded-2xl border border-second p-4 lg:p-8 shadow-sm"
                     >
                         <h2 className="text-2xl font-bold text-darks">Daftar</h2>
                         <p className="text-sm text-tinted mt-1 mb-6">
@@ -90,7 +90,7 @@ function Register() {
                                 animate="show"
                                 exit="exit"
                                 role="alert"
-                                className="text-sm text-wrong bg-wrong/5 border border-wrong/20 rounded-xl lg:rounded-lg px-4 py-3 mb-4"
+                                className="text-sm text-wrong bg-wrong/5 border border-wrong/20 rounded-lg px-4 py-3 mb-4"
                             >
                                 {error}
                             </motion.div>
@@ -159,7 +159,7 @@ function Register() {
                             <button
                                 type="submit"
                                 disabled={loading}
-                                className="btn bg-darks text-base border-none w-full mt-2 hover:opacity-90 transition-opacity disabled:opacity-60 rounded-full lg:rounded-xl"
+                                className="btn bg-darks text-base border-none w-full mt-2 hover:opacity-90 transition-opacity disabled:opacity-60"
                             >
                                 {loading ? (
                                     <span className="loading loading-spinner loading-sm" />
@@ -170,7 +170,7 @@ function Register() {
                             </button>
                         </form>
 
-                        <Link to={`/login${nextQuery}`} className="btn bg-base text-darks border border-second hover:bg-second transition-colors w-full mt-2 rounded-full lg:rounded-xl">
+                        <Link to={`/login${nextQuery}`} className="btn bg-base text-darks border border-second hover:bg-second transition-colors w-full mt-2">
                             Sudah punya akun? Masuk
                         </Link>
                     </motion.div>

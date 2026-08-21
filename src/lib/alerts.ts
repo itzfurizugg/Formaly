@@ -5,7 +5,7 @@ import { Toaster, toast } from "sonner"
 type AlertType = "success" | "error" | "info"
 
 const toastClasses = {
-    base: "!rounded-xl !border !border-second !bg-white !font-sans !text-darks !shadow-lg",
+    base: "!rounded-none !border !border-second !bg-white !font-sans !text-darks !shadow-lg",
     success: "!border-done/30",
     error: "!border-wrong/30",
     info: "!border-second",
@@ -21,7 +21,7 @@ export function AlertToaster() {
                 toast: toastClasses.base,
                 title: "!font-sans !text-sm !text-darks",
                 description: "!font-sans !text-sm !text-tinted",
-                closeButton: "!rounded-xl !border-second !text-tinted hover:!text-darks",
+                closeButton: "!rounded-none !border-second !text-tinted hover:!text-darks",
             },
         },
     })
@@ -108,7 +108,7 @@ function DeleteDialog({ options, onClose }: { options: ConfirmDeleteOptions; onC
                 "aria-modal": true,
                 "aria-labelledby": "delete-dialog-title",
                 "aria-describedby": "delete-dialog-description",
-                className: "w-full max-w-md rounded-xl border border-second bg-white p-6 font-sans shadow-xl",
+                className: "w-full max-w-md rounded-none border border-second bg-white p-6 font-sans shadow-xl",
             },
             createElement("h2", { id: "delete-dialog-title", className: "text-lg font-semibold text-darks" }, options.title),
             createElement("p", { id: "delete-dialog-description", className: "mt-2 text-sm leading-relaxed text-tinted" }, options.description),
@@ -122,7 +122,7 @@ function DeleteDialog({ options, onClose }: { options: ConfirmDeleteOptions; onC
                         type: "button",
                         onClick: onClose,
                         disabled: isDeleting,
-                        className: "btn rounded-xl border border-second bg-base text-darks hover:bg-second disabled:opacity-60",
+                        className: "btn rounded-none border border-second bg-base text-darks hover:bg-second disabled:opacity-60",
                     },
                     "Batal"
                 ),
@@ -132,7 +132,7 @@ function DeleteDialog({ options, onClose }: { options: ConfirmDeleteOptions; onC
                         type: "button",
                         onClick: handleConfirm,
                         disabled: isDeleting,
-                        className: "btn rounded-xl border border-wrong bg-wrong text-base hover:bg-wrong/90 disabled:opacity-60",
+                        className: "btn rounded-none border border-wrong bg-wrong text-base hover:bg-wrong/90 disabled:opacity-60",
                     },
                     isDeleting ? "Menghapus..." : "Hapus"
                 )
@@ -204,7 +204,7 @@ function PromptDialog({ options, onClose }: { options: PromptTextOptions; onClos
                 role: "alertdialog",
                 "aria-modal": true,
                 "aria-labelledby": "prompt-dialog-title",
-                className: "w-full max-w-md rounded-xl border border-second bg-white p-6 font-sans shadow-xl",
+                className: "w-full max-w-md rounded-none border border-second bg-white p-6 font-sans shadow-xl",
             },
             createElement("h2", { id: "prompt-dialog-title", className: "text-lg font-semibold text-darks" }, options.title),
             options.description
@@ -216,19 +216,19 @@ function PromptDialog({ options, onClose }: { options: PromptTextOptions; onClos
                 value,
                 onChange: (e: React.ChangeEvent<HTMLInputElement>) => setValue(e.target.value),
                 placeholder: options.placeholder ?? "",
-                className: "input mt-4 w-full rounded-xl border border-second bg-base text-darks focus:border-done focus:outline-none",
+                className: "input mt-4 w-full rounded-none border border-second bg-base text-darks focus:border-done focus:outline-none",
             }),
             createElement(
                 "div",
                 { className: "mt-6 flex justify-end gap-3" },
                 createElement(
                     "button",
-                    { type: "button", onClick: () => onClose(null), className: "btn rounded-xl border border-second bg-base text-darks hover:bg-second" },
+                    { type: "button", onClick: () => onClose(null), className: "btn rounded-none border border-second bg-base text-darks hover:bg-second" },
                     options.cancelLabel ?? "Batal"
                 ),
                 createElement(
                     "button",
-                    { type: "button", onClick: () => onClose(value), className: "btn rounded-xl border-none bg-darks text-base hover:opacity-90" },
+                    { type: "button", onClick: () => onClose(value), className: "btn rounded-none border-none bg-darks text-base hover:opacity-90" },
                     options.confirmLabel ?? "OK"
                 )
             )

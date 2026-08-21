@@ -68,43 +68,43 @@ function Modal({
     return (
         <AnimatePresence>
             {open && (
-                <ModalPortal key="profile-modal">
-                    <motion.div
-                        variants={modalBackdrop}
-                        initial="hidden"
-                        animate="show"
-                        exit="exit"
-                        className="fixed inset-0 z-50 flex items-center justify-center px-4"
-                        role="dialog"
-                        aria-modal="true"
-                    >
-                        <div
-                            className="absolute inset-0 bg-darks/50"
-                            onClick={onClose}
-                        />
-                        <motion.div
-                            variants={modalPanel}
-                            className="relative bg-white border border-second rounded-2xl lg:rounded-xl w-full max-w-md p-5 shadow-xl"
-                        >
-                            <div className="flex items-center justify-between mb-4">
-                                <div className="flex items-center gap-2.5">
-                                    <div className="w-9 h-9 shrink-0 rounded-full bg-base flex items-center justify-center">
-                                        {icon}
-                                    </div>
-                                    <h3 className="text-base font-bold text-darks">{title}</h3>
-                                </div>
-                                <button
-                                    onClick={onClose}
-                                    className="text-tinted hover:text-darks transition-colors p-1"
-                                    aria-label="Tutup"
-                                >
-                                    <X className="h-4 w-4" />
-                                </button>
+            <ModalPortal key="profile-modal">
+            <motion.div
+                variants={modalBackdrop}
+                initial="hidden"
+                animate="show"
+                exit="exit"
+                className="fixed inset-0 z-50 flex items-center justify-center px-4"
+                role="dialog"
+                aria-modal="true"
+            >
+                <div
+                    className="absolute inset-0 bg-darks/50"
+                    onClick={onClose}
+                />
+                <motion.div
+                    variants={modalPanel}
+                    className="relative bg-white border border-second rounded-none w-full max-w-md p-5 shadow-xl"
+                >
+                    <div className="flex items-center justify-between mb-4">
+                        <div className="flex items-center gap-2.5">
+                            <div className="w-9 h-9 shrink-0 rounded-full bg-base flex items-center justify-center">
+                                {icon}
                             </div>
-                            {children}
-                        </motion.div>
-                    </motion.div>
-                </ModalPortal>
+                            <h3 className="text-base font-bold text-darks">{title}</h3>
+                        </div>
+                        <button
+                            onClick={onClose}
+                            className="text-tinted hover:text-darks transition-colors p-1"
+                            aria-label="Tutup"
+                        >
+                            <X className="h-4 w-4" />
+                        </button>
+                    </div>
+                    {children}
+                </motion.div>
+            </motion.div>
+            </ModalPortal>
             )}
         </AnimatePresence>
     )
@@ -251,10 +251,10 @@ function Profile() {
     const role = (profile?.role as string | undefined) || "user"
 
     return (
-        <div className="flex flex-col items-center px-3.5 py-2">
+        <div className="flex flex-col items-center px-2 py-2">
             <div className="max-w-4xl w-full">
                 {/* Header */}
-                <div className="bg-white border border-second p-5 rounded-2xl lg:rounded-xl mb-3">
+                <div className="bg-white border border-second p-5 rounded-none mb-3">
                     <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-5">
                         <div className="w-20 h-20 shrink-0 rounded-full bg-done flex items-center justify-center">
                             <span className="text-4xl font-bold text-base">
@@ -285,7 +285,7 @@ function Profile() {
                         <button
                             onClick={handleLogout}
                             disabled={loggingOut}
-                            className="btn bg-wrong/10 text-wrong border-none hidden lg:flex sm:ml-auto hover:opacity-90 transition-opacity shrink-0 rounded-full"
+                            className="btn bg-wrong/10 text-wrong border-none hidden lg:flex sm:ml-auto hover:opacity-90 transition-opacity shrink-0"
                         >
                             {loggingOut ? (
                                 <span className="loading loading-spinner loading-sm" />
@@ -298,7 +298,7 @@ function Profile() {
                 </div>
 
                 {/* Menu: buka modal */}
-                <div className="bg-white border border-second mb-3 divide-y divide-second rounded-2xl lg:rounded-xl overflow-hidden">
+                <div className="bg-white border border-second rounded-none mb-3 divide-y divide-second">
                     <button
                         onClick={() => setShowAccountModal(true)}
                         className="w-full flex items-center gap-3 p-4 hover:bg-base transition-colors text-left"
@@ -328,7 +328,7 @@ function Profile() {
                     </button>
 
                     <button
-                        onClick={() => navigate("/credit")}
+                        onClick={() => setShowPasswordModal(true)}
                         className="w-full flex items-center gap-3 p-4 hover:bg-base transition-colors text-left"
                     >
                         <div className="w-9 h-9 shrink-0 rounded-full bg-base flex items-center justify-center">
@@ -341,10 +341,11 @@ function Profile() {
                         <ChevronRight className="h-4 w-4 text-tinted shrink-0" />
                     </button>
                 </div>
+
                 <button
                     onClick={handleLogout}
                     disabled={loggingOut}
-                    className="btn bg-wrong/10 text-wrong border-none w-full mt-2 lg:hidden hover:opacity-90 transition-opacity rounded-full"
+                    className="btn bg-wrong/10 text-wrong border-none w-full mt-2 lg:hidden hover:opacity-90 transition-opacity"
                 >
                     {loggingOut ? (
                         <span className="loading loading-spinner loading-sm" />
@@ -415,7 +416,7 @@ function Profile() {
                     <button
                         type="submit"
                         disabled={saving}
-                        className="btn bg-darks text-base border-none w-full mt-2 hover:opacity-90 transition-opacity disabled:opacity-60 rounded-full lg:rounded-xl"
+                        className="btn bg-darks text-base border-none w-full mt-2 hover:opacity-90 transition-opacity disabled:opacity-60"
                     >
                         {saving ? (
                             <span className="loading loading-spinner loading-sm" />
@@ -493,7 +494,7 @@ function Profile() {
                     <button
                         type="submit"
                         disabled={pwSaving}
-                        className="btn bg-darks text-base border-none w-full hover:opacity-90 transition-opacity disabled:opacity-60 rounded-full lg:rounded-xl"
+                        className="btn bg-darks text-base border-none w-full hover:opacity-90 transition-opacity disabled:opacity-60"
                     >
                         {pwSaving ? (
                             <span className="loading loading-spinner loading-sm" />
