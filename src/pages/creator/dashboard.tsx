@@ -1,10 +1,12 @@
 import { useEffect, useState, useCallback } from "react"
-import { useNavigate, Link } from "react-router-dom"
-import { FileText, CheckCircle2, ClipboardList, Target, ArrowLeft, ChevronRight } from "lucide-react"
+import { useNavigate } from "react-router-dom"
+import { FileText, CheckCircle2, ClipboardList, ArrowLeft, Plus } from "lucide-react"
+import { Link } from "react-router-dom"
 import { supabase } from "../../lib/supabase"
 import { useAuth } from "../../lib/auth-context"
 import { DistributionChart, type BarDatum } from "../../components/charts"
 import { colors } from "../../lib/colorbase"
+import FormList from "../../components/creator/formList"
 import Loading from "../../components/loading"
 import { pageGet, pageSet } from "../../lib/pageCache"
 
@@ -28,32 +30,17 @@ interface SubmissionRow {
     form_id: string
 }
 
-interface RecentSubmission {
-    id: string
-    total_score: number | null
-    submitted_at: string | null
-    form: { id: string; title: string } | null
-    user: { name: string } | null
-}
-
-interface DashboardCache {
-    stats: Stats
-    barData: BarDatum[]
-    recent: RecentSubmission[]
-}
-
 function CreatorDashboard() {
     const { user } = useAuth()
     const navigate = useNavigate()
     // Cache ringkasan dashboard supaya kembali dari halaman lain cukup fade-in
     // tanpa overlay loading; data di-refresh diam-diam di background.
-    const [cached] = useState<DashboardCache | undefined>(() =>
-        user ? pageGet<DashboardCache>(`dashboard:${user.id}`) : undefined
+    const [cached] = useState<{ stats: Stats; barData: BarDatum[] } | undefined>(() =>
+        user ? pageGet<{ stats: Stats; barData: BarDatum[] }>(`dashboard:${user.id}`) : undefined
     )
     const [stats, setStats] = useState<Stats>(cached?.stats ?? { total: 0, active: 0, submissions: 0, score: 0 })
     const [loading, setLoading] = useState(!cached)
     const [barData, setBarData] = useState<BarDatum[]>(cached?.barData ?? [])
-    const [recent, setRecent] = useState<RecentSubmission[]>(cached?.recent ?? [])
 
     const loadStats = useCallback(async () => {
         if (!user) return
@@ -89,19 +76,7 @@ function CreatorDashboard() {
         const total = formRows.length
         const active = formRows.filter((f) => String(f.status).toLowerCase() === "published").length
 
-        let recent: RecentSubmission[] = []
-        if (formIds.length > 0) {
-            const { data: recentRes } = await supabase
-                .from("submissions")
-                .select("id, total_score, submitted_at, form:form_id ( id, title ), user:user_id ( name )")
-                .in("form_id", formIds)
-                .order("submitted_at", { ascending: false })
-                .limit(6)
-            recent = (recentRes as unknown as RecentSubmission[]) || []
-        }
-
         setStats({ total, active, submissions: subs.count || 0, score })
-        setRecent(recent)
         setBarData(
             formRows
                 .map((f) => ({
@@ -114,7 +89,6 @@ function CreatorDashboard() {
         if (user) {
             pageSet(`dashboard:${user.id}`, {
                 stats: { total, active, submissions: subs.count || 0, score },
-                recent,
                 barData: formRows
                     .map((f) => ({
                         name: f.title.length > 14 ? f.title.slice(0, 14) + "…" : f.title,
@@ -134,8 +108,8 @@ function CreatorDashboard() {
     }, [user, loadStats])
 
     return (
-        <div className="flex flex-col items-center px-3 py-10 sm:py-23">
-            <div className="xl:max-w-7xl lg:max-w-5xl w-full">
+        <div className="flex flex-col items-center px-3 py-10 sm:py-23 lg:h-[100dvh] lg:overflow-hidden">
+            <div className="xl:max-w-7xl lg:max-w-5xl w-full lg:h-full lg:flex lg:flex-col lg:min-h-0">
                 <button
                     onClick={() => navigate("/")}
                     className="flex items-center gap-2 text-xs sm:text-sm text-tinted hover:text-darks mb-4 sm:mb-6 lg:hidden transition-colors"
@@ -143,147 +117,71 @@ function CreatorDashboard() {
                     <ArrowLeft className="h-4 w-4" /> Kembali
                 </button>
                 <div className="flex items-center justify-between mb-1">
-                    <h1 className="text-3xl lg:text-6xl font-bold font-display text-darks">Dashboard Creator</h1>
+                    <h1 className="text-5xl lg:text-6xl font-bold font-display text-darks">Dashboard Creator</h1>
                 </div>
-                <p className="text-sm text-tinted mb-3 sm:mb-6">Ringkasan formulir milik kamu.</p>
+                <p className="text-sm text-tinted mb-6">Ringkasan formulir milik kamu.</p>
 
                 <Loading show={loading} />
                 {!loading && (
-                    <div className="flex flex-col">
-                        <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-3 w-full">
-                            <div className="relative overflow-hidden bg-white border border-second rounded-lg shadow-sm p-3 sm:p-4 min-w-0">
-                                <div className="absolute -right-3 -top-3 h-16 w-16 rounded-full bg-darks/5" />
-                                <div className="relative flex items-start justify-between">
-                                    <div className="min-w-0">
-                                        <div className="text-tinted text-[11px] sm:text-sm leading-tight">Total Form</div>
-                                        <div className="text-darks text-3xl sm:text-4xl font-bold mt-1 break-words">{stats.total}</div>
-                                        <div className="text-tinted text-xs mt-1 hidden sm:block">Semua formulir kamu</div>
-                                    </div>
-                                    <div className="shrink-0 rounded-full bg-darks/10 text-darks p-2 hidden xl:flex">
-                                        <FileText className="h-5 w-5" />
-                                    </div>
-                                </div>
+                    <div className="flex flex-col flex-1 min-h-0">
+                    <div className="grid grid-cols-2 sm:grid-cols-3 mt-1 gap-2 sm:gap-0 shadow w-full bg-white border border-second rounded-lg overflow-hidden">
+                        <div className="stat p-3 sm:p-4 min-w-0">
+                            <div className="stat-figure text-darks hidden xl:block">
+                                <FileText className="h-8 w-8" />
                             </div>
-
-                            <div className="relative overflow-hidden bg-white border border-second rounded-lg shadow-sm p-3 sm:p-4 min-w-0">
-                                <div className="absolute -right-3 -top-3 h-16 w-16 rounded-full bg-done/10" />
-                                <div className="relative flex items-start justify-between">
-                                    <div className="min-w-0">
-                                        <div className="text-tinted text-[11px] sm:text-sm leading-tight">Form Aktif</div>
-                                        <div className="text-darks text-3xl sm:text-4xl font-bold mt-1 break-words">{stats.active}</div>
-                                        <div className="text-tinted text-xs mt-1 hidden sm:block">Status public</div>
-                                    </div>
-                                    <div className="shrink-0 rounded-full bg-done/10 text-done p-2 hidden sm:flex">
-                                        <CheckCircle2 className="h-5 w-5" />
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div className="relative overflow-hidden bg-white border border-second rounded-lg shadow-sm p-3 sm:p-4 min-w-0">
-                                <div className="absolute -right-3 -top-3 h-16 w-16 rounded-full bg-second/40" />
-                                <div className="relative flex items-start justify-between">
-                                    <div className="min-w-0">
-                                        <div className="text-tinted text-[11px] sm:text-sm leading-tight">Total Submission</div>
-                                        <div className="text-darks text-3xl sm:text-4xl font-bold mt-1 break-words">{stats.submissions}</div>
-                                        <div className="text-tinted text-xs mt-1 hidden sm:block">Jumlah pengerjaan</div>
-                                    </div>
-                                    <div className="shrink-0 rounded-full bg-tinted/10 text-tinted p-2 hidden sm:flex">
-                                        <ClipboardList className="h-5 w-5" />
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div className="relative overflow-hidden bg-white border border-second rounded-lg shadow-sm p-3 sm:p-4 min-w-0">
-                                <div className="absolute -right-3 -top-3 h-16 w-16 rounded-full bg-pass/10" />
-                                <div className="relative flex items-start justify-between">
-                                    <div className="min-w-0">
-                                        <div className="text-tinted text-[11px] sm:text-sm leading-tight">Rata-rata Skor</div>
-                                        <div className="text-darks text-3xl sm:text-4xl font-bold mt-1 break-words">
-                                            {stats.submissions ? (stats.score / stats.submissions).toFixed(1) : 0}
-                                        </div>
-                                        <div className="text-tinted text-xs mt-1 hidden sm:block">Skor rata-rata pengerjaan</div>
-                                    </div>
-                                    <div className="shrink-0 rounded-full bg-pass/10 text-pass p-2 hidden sm:flex">
-                                        <Target className="h-5 w-5" />
-                                    </div>
-                                </div>
-                            </div>
+                            <div className="stat-title text-tinted text-[11px] sm:text-sm leading-tight">Total Form</div>
+                            <div className="stat-value text-darks text-4xl sm:text-4xl break-words">{stats.total}</div>
+                            <div className="stat-desc text-tinted hidden sm:block">Semua formulir kamu</div>
                         </div>
 
-                        {/* Di mobile tidak ada sidebar, jadi akses halaman lewat dashboard. */}
-                        <div className="lg:hidden flex flex-col gap-2 sm:gap-3 mt-8">
-                            <Link
-                                to="/creator/forms"
-                                className="flex items-center justify-between bg-white border border-second rounded-lg shadow-sm p-4"
-                            >
-                                <span className="flex items-center gap-2.5 text-darks font-medium">
-                                    <FileText className="h-4 w-4" /> Kelola Form
-                                </span>
-                                <ChevronRight className="h-4 w-4 text-tinted" />
-                            </Link>
-                            <Link
-                                to="/creator/responden"
-                                className="flex items-center justify-between bg-white border border-second rounded-lg shadow-sm p-4"
-                            >
-                                <span className="flex items-center gap-2.5 text-darks font-medium">
-                                    <ClipboardList className="h-4 w-4" /> Responden
-                                </span>
-                                <ChevronRight className="h-4 w-4 text-tinted" />
-                            </Link>
+                        <div className="stat p-3 sm:p-4 min-w-0">
+                            <div className="stat-figure text-done hidden sm:block">
+                                <CheckCircle2 className="h-8 w-8" />
+                            </div>
+                            <div className="stat-title text-tinted text-[11px] sm:text-sm leading-tight">Form Aktif</div>
+                            <div className="stat-value text-darks text-4xl sm:text-4xl break-words">{stats.active}</div>
+                            <div className="stat-desc text-tinted hidden sm:block">Status public</div>
                         </div>
 
-
-                        <div className="grid gap-4 mt-8 lg:grid-cols-2">
-                            <div className="rounded-none hidden sm:block">
-                                {barData.length > 0 ? (
-                                    <DistributionChart
-                                        title="Submission per Form"
-                                        subtitle="Jumlah submission tiap formulir."
-                                        data={barData}
-                                        barColor={colors.done}
-                                        onBarClick={(id) => navigate(`/creator/forms/${id}`)}
-                                    />
-                                ) : (
-                                    <div className="bg-white border border-second p-5 shadow-sm rounded-lg flex items-center justify-center h-[260px]">
-                                        <p className="text-sm text-tinted">Belum ada submission untuk ditampilkan.</p>
-                                    </div>
-                                )}
+                        <div className="stat p-3 sm:p-4 min-w-0 hidden sm:block">
+                            <div className="stat-figure text-tinted hidden sm:block">
+                                <ClipboardList className="h-8 w-8" />
                             </div>
+                            <div className="stat-title text-tinted text-[11px] sm:text-sm leading-tight">Total Submission</div>
+                            <div className="stat-value text-darks text-4xl sm:text-4xl break-words">{stats.submissions}</div>
+                            <div className="stat-desc text-tinted hidden sm:block">Jumlah pengerjaan</div>
+                        </div>
+                    </div>
 
-                            <div className="min-w-0">
-                                <h2 className="text-xl lg:text-2xl font-bold text-darks ml-3 sm:ml-1 mb-4">Submission Terbaru</h2>
-                                <div className="min-w-0 space-y-3">
-                                    {recent.length > 0 ? (
-                                        recent.map((s) => (
-                                            <button
-                                                key={s.id}
-                                                onClick={() => navigate(`/creator/forms/${s.form?.id}/submissions/${s.id}`)}
-                                                className="bg-white border border-second rounded-lg shadow-sm p-4 w-full text-left hover:bg-base-200 transition-colors"
-                                            >
-                                                <div className="flex items-start justify-between gap-2">
-                                                    <div className="min-w-0">
-                                                        <p className="font-semibold text-darks truncate">{s.user?.name || "Pengguna"}</p>
-                                                        <p className="text-xs text-tinted mt-0.5 truncate">{s.form?.title || "Form"}</p>
-                                                    </div>
-                                                    <div className="flex flex-col items-end shrink-0">
-                                                        {s.total_score != null && (
-                                                            <span className="text-darks font-bold">{s.total_score}</span>
-                                                        )}
-                                                        <span className="text-xs text-tinted mt-0.5">
-                                                            {s.submitted_at ? new Date(s.submitted_at).toLocaleString("id-ID", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" }) : "-"}
-                                                        </span>
-                                                    </div>
-                                                </div>
-                                            </button>
-                                        ))
-                                    ) : (
-                                        <div className="bg-white border border-second p-5 shadow-sm rounded-lg flex items-center justify-center h-[260px]">
-                                            <p className="text-sm text-tinted">Belum ada submission.</p>
-                                        </div>
-                                    )}
+                    <div className="grid gap-4 mt-8 lg:grid-cols-2 lg:flex-1 lg:min-h-0">
+                        <div className="lg:min-h-0 lg:overflow-y-auto rounded-none hidden sm:block">
+                            {barData.length > 0 ? (
+                                <DistributionChart
+                                    title="Submission per Form"
+                                    subtitle="Jumlah submission tiap formulir."
+                                    data={barData}
+                                    barColor={colors.done}
+                                    onBarClick={(id) => navigate(`/creator/forms/${id}`)}
+                                />
+                            ) : (
+                                <div className="bg-white border border-second p-5 shadow-sm rounded-none flex items-center justify-center h-[260px]">
+                                    <p className="text-sm text-tinted">Belum ada submission untuk ditampilkan.</p>
                                 </div>
+                            )}
+                        </div>
+
+                        <div className="lg:flex lg:flex-col lg:min-h-0 lg:overflow-hidden min-w-0">
+                            <div className="flex flex-wrap items-center justify-between gap-2 mb-4 shrink-0">
+                                <h2 className="text-xl lg:text-2xl font-bold text-darks ml-3 sm:ml-1">Kelola Form</h2>
+                                <Link to="/creator/forms/new" className="btn bg-darks text-base border-none h-9 min-h-0 mr-3 sm:mr-1">
+                                    <Plus className="h-4 w-4" /> Buat Form
+                                </Link>
+                            </div>
+                            <div className="lg:min-h-0 lg:overflow-y-auto min-w-0">
+                                <FormList />
                             </div>
                         </div>
+                    </div>
                     </div>
                 )}
             </div>

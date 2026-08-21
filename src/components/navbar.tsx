@@ -44,6 +44,7 @@ function Navbar() {
 
     const showContent = open || closing
 
+
     // Kunci scroll halaman selama sidebar terbuka (termasuk saat animasi tutup).
     useEffect(() => {
         if (showContent) {
@@ -92,7 +93,7 @@ function Navbar() {
     return (
         <>
             <div
-                className="navbar bg-base-300 px-4 lg:px-4 flex-col items-stretch !py-0"
+                className="navbar bg-base-300 px-4 lg:px-4 sticky top-0 z-50 flex-col items-stretch !py-0"
             >
                 <div className="flex items-center justify-between w-full py-2 gap-2 relative min-h-[44px]">
                     <div className="flex-1 relative min-h-[44px] flex items-center">
@@ -110,12 +111,9 @@ function Navbar() {
                         ))}
                     </div>
 
-                    {/* Hamburger & sidebar drawer di md (tablet/iPad) sampai sebelum lg.
-                        Di mobile (< md) navigasi memakai Dock (tanpa sidebar, biar tidak tumpang tindih);
-                        di lg ke atas memakai link horizontal. */}
                     <button
                         onClick={toggle}
-                        className="btn btn-square btn-ghost mt-1 text-darks relative overflow-hidden shrink-0 hidden md:flex lg:hidden ml-auto"
+                        className="btn btn-square btn-ghost mt-1 text-darks relative overflow-hidden shrink-0 lg:hidden ml-auto"
                         aria-label={open ? "Tutup menu" : "Buka menu"}
                     >
                         <motion.div
@@ -137,17 +135,16 @@ function Navbar() {
                         </motion.div>
                     </button>
 
-                    {/* Avatar profile disembunyikan hanya di md (tablet/iPad); di sm dan lg tetap tampil. */}
-                    <div className="flex flex-1 justify-end items-center gap-2 md:hidden lg:flex">
+                    <div className="hidden lg:flex flex-1 justify-end items-center gap-2">
                         <UserMenu />
                     </div>
                 </div>
             </div>
 
-            {/* Backdrop untuk sidebar (md sampai sebelum lg) */}
+            {/* Backdrop untuk sidebar mobile: menutup seluruh layar termasuk navbar */}
             {showContent && (
                 <motion.div
-                    className={`fixed inset-0 z-[60] hidden md:block lg:hidden ${open ? "" : "pointer-events-none"}`}
+                    className={`fixed inset-0 z-[60] lg:hidden ${open ? "" : "pointer-events-none"}`}
                     initial={false}
                     animate={{ opacity: open ? 1 : 0 }}
                     transition={{ duration: 0.3, ease: "easeOut" }}
@@ -156,13 +153,12 @@ function Navbar() {
                 />
             )}
 
-            {/* Sidebar drawer: di md (tablet/iPad) sampai sebelum lg.
-                Mobile (< md) memakai Dock; lg ke atas memakai link horizontal. */}
+            {/* Sidebar mobile: muncul dari kanan ke kiri */}
             <motion.aside
                 initial={false}
                 animate={{ x: open ? "0%" : "100%" }}
                 transition={{ duration: 0.3, ease: "easeOut" }}
-                className="fixed top-0 right-0 z-[70] h-full w-72 max-w-[85vw] bg-white shadow-xl hidden md:flex lg:hidden flex-col"
+                className="fixed top-0 right-0 z-[70] h-full w-72 max-w-[85vw] bg-white shadow-xl lg:hidden flex flex-col"
                 role="dialog"
                 aria-modal="true"
                 aria-label="Menu navigasi"

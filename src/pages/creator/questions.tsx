@@ -1,7 +1,7 @@
 import Loading from "../../components/loading"
 import { useEffect, useState, useCallback, type DragEvent } from "react"
 import { useNavigate, useParams } from "react-router-dom"
-import { ArrowLeft, Plus, Pencil, Trash2, Save, X, Loader2, Check, GripVertical, ListChecks, KeyRound, Share2, ClipboardList, Info } from "lucide-react"
+import { ArrowLeft, Plus, Pencil, Trash2, Save, X, Loader2, Check, GripVertical, ListChecks, KeyRound, Share2, ClipboardList } from "lucide-react"
 import { supabase } from "../../lib/supabase"
 import { useAuth } from "../../lib/auth-context"
 import QuestionImportModal from "../../components/creator/QuestionImportModal"
@@ -429,7 +429,7 @@ function Questions({ embedded = false }: { embedded?: boolean }) {
                                 onClick={() => navigate(`/creator/forms/${id}`)}
                                 className="btn btn-sm bg-base text-darks border border-second hover:bg-second"
                             >
-                                <Info className="h-3.5 w-3.5" /> <span className="hidden sm:block">Detail Form</span>
+                                Detail
                             </button>
                             <button
                                 onClick={() => navigate(`/creator/forms/${id}/questions`)}

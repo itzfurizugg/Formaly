@@ -4,7 +4,7 @@ import { useNavigate, useParams } from "react-router-dom"
 import { ArrowLeft, Save, Loader2, ClipboardList, KeyRound, Share2, ListChecks, X, Info } from "lucide-react"
 import { supabase } from "../../lib/supabase"
 import { useAuth } from "../../lib/auth-context"
-import { alertSaveError, alertSaveSuccess, showAlert } from "../../lib/alerts"
+import { alertSaveError, alertSaveSuccess } from "../../lib/alerts"
 import RichTextEditor from "../../components/richText"
 import Questions from "./questions"
 import { pageGet, pageSet } from "../../lib/pageCache"
@@ -123,21 +123,8 @@ function FormEdit() {
         setTagInput("")
     }
 
-    const removeTag = async (name: string) => {
-        if (!id) return
-        try {
-            // Tag bersifat master/shared (dipakai lintas form), jadi yang dihapus
-            // hanya relasi form_tags, bukan baris di tabel tags.
-            const { data: existing } = await supabase.from("tags").select("id").eq("name", name).maybeSingle()
-            if (existing?.id) {
-                const { error } = await supabase.from("form_tags").delete().eq("form_id", id).eq("tag_id", existing.id)
-                if (error) throw error
-            }
-            // Local state baru di-update SETELAH delete ke DB berhasil.
-            setTags((prev) => prev.filter((t) => t !== name))
-        } catch (err) {
-            showAlert(err instanceof Error ? err.message : "Gagal menghapus tag.", "error")
-        }
+    const removeTag = (name: string) => {
+        setTags((prev) => prev.filter((t) => t !== name))
     }
 
     const saveFormData = async () => {
@@ -270,7 +257,6 @@ function FormEdit() {
                     <div>
                         {/* <label className="block text-sm font-medium text-darks mb-1.5">Deskripsi</label> */}
                         <RichTextEditor
-                            compact
                             value={description}
                             onChange={setDescription}
                             placeholder="Deskripsi Form..."

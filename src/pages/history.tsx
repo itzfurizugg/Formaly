@@ -122,7 +122,7 @@ function History() {
                                         key={item.id}
                                         title={item.forms?.title || "Form"}
                                         author={item.forms?.author_name || "-"}
-                                        duration={item.forms?.duration ? `${item.forms.duration} menit` : "Tanpa Waktu"}
+                                        duration={item.forms?.duration ? `${item.forms.duration} menit` : "Tanpa Waktu Pengerjaan"}
                                         questions={item.forms?.question_count || 0}
                                         score={item.total_score || 0}
                                         passingScore={item.forms?.passing_score ?? null}
