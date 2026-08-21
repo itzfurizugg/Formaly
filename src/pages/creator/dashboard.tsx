@@ -1,6 +1,5 @@
 import { useEffect, useState, useCallback } from "react"
 import { useNavigate, Link } from "react-router-dom"
-import { motion } from "motion/react"
 import { FileText, CheckCircle2, ClipboardList, Target, ArrowLeft, ChevronRight } from "lucide-react"
 import { supabase } from "../../lib/supabase"
 import { useAuth } from "../../lib/auth-context"
@@ -8,7 +7,6 @@ import { DistributionChart, type BarDatum } from "../../components/charts"
 import { colors } from "../../lib/colorbase"
 import Loading from "../../components/loading"
 import { pageGet, pageSet } from "../../lib/pageCache"
-import { easeOutExpo } from "../../lib/motion"
 
 interface Stats {
     total: number
@@ -214,24 +212,24 @@ function CreatorDashboard() {
 
                         {/* Di mobile tidak ada sidebar, jadi akses halaman lewat dashboard. */}
                         <div className="lg:hidden flex flex-col gap-2 sm:gap-3 mt-8">
-                            {[{ to: "/creator/forms", label: "Kelola Form", icon: FileText }, { to: "/creator/responden", label: "Responden", icon: ClipboardList }].map((item, index) => (
-                                <motion.div
-                                    key={item.to}
-                                    initial={{ opacity: 0, y: 12 }}
-                                    animate={{ opacity: 1, y: 0 }}
-                                    transition={{ duration: 0.35, ease: easeOutExpo, delay: Math.min(index * 0.08, 0.3) }}
-                                >
-                                    <Link
-                                        to={item.to}
-                                        className="flex items-center justify-between bg-white border border-second rounded-lg shadow-sm p-4 transition-colors hover:bg-base-200"
-                                    >
-                                        <span className="flex items-center gap-2.5 text-darks font-medium">
-                                            <item.icon className="h-4 w-4" /> {item.label}
-                                        </span>
-                                        <ChevronRight className="h-4 w-4 text-tinted" />
-                                    </Link>
-                                </motion.div>
-                            ))}
+                            <Link
+                                to="/creator/forms"
+                                className="flex items-center justify-between bg-white border border-second rounded-lg shadow-sm p-4"
+                            >
+                                <span className="flex items-center gap-2.5 text-darks font-medium">
+                                    <FileText className="h-4 w-4" /> Kelola Form
+                                </span>
+                                <ChevronRight className="h-4 w-4 text-tinted" />
+                            </Link>
+                            <Link
+                                to="/creator/responden"
+                                className="flex items-center justify-between bg-white border border-second rounded-lg shadow-sm p-4"
+                            >
+                                <span className="flex items-center gap-2.5 text-darks font-medium">
+                                    <ClipboardList className="h-4 w-4" /> Responden
+                                </span>
+                                <ChevronRight className="h-4 w-4 text-tinted" />
+                            </Link>
                         </div>
 
 
@@ -252,18 +250,13 @@ function CreatorDashboard() {
                                 )}
                             </div>
 
-                            <div className="min-w-0 hidden sm:block">
+                            <div className="min-w-0">
                                 <h2 className="text-xl lg:text-2xl font-bold text-darks ml-3 sm:ml-1 mb-4">Submission Terbaru</h2>
                                 <div className="min-w-0 space-y-3">
                                     {recent.length > 0 ? (
-                                        recent.map((s, index) => (
-                                            <motion.div
-                                                key={s.id}
-                                                initial={{ opacity: 0, y: 12 }}
-                                                animate={{ opacity: 1, y: 0 }}
-                                                transition={{ duration: 0.35, ease: easeOutExpo, delay: Math.min(index * 0.06, 0.4) }}
-                                            >
+                                        recent.map((s) => (
                                             <button
+                                                key={s.id}
                                                 onClick={() => navigate(`/creator/forms/${s.form?.id}/submissions/${s.id}`)}
                                                 className="bg-white border border-second rounded-lg shadow-sm p-4 w-full text-left hover:bg-base-200 transition-colors"
                                             >
@@ -282,7 +275,6 @@ function CreatorDashboard() {
                                                     </div>
                                                 </div>
                                             </button>
-                                            </motion.div>
                                         ))
                                     ) : (
                                         <div className="bg-white border border-second p-5 shadow-sm rounded-lg flex items-center justify-center h-[260px]">

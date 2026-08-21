@@ -1,13 +1,11 @@
 import { useEffect, useState, useCallback } from "react"
 import { useNavigate, useParams } from "react-router-dom"
-import { motion } from "motion/react"
 import { ArrowLeft, Check, X, Clock } from "lucide-react"
 import { supabase } from "../../lib/supabase"
 import { useAuth } from "../../lib/auth-context"
 import Loading from "../../components/loading"
 import Filter from "../../components/filter"
 import { RichText } from "../../components/richText"
-import { listContainer, listItem } from "../../lib/motion"
 
 interface AnswerRow {
     id: string
@@ -235,13 +233,7 @@ function ResultPage() {
                                 <p className="text-tinted">Tidak ada jawaban yang cocok dengan filter ini.</p>
                             </div>
                         ) : (
-                            <motion.div
-                                key={filter}
-                                className="space-y-6"
-                                variants={listContainer}
-                                initial="hidden"
-                                animate="show"
-                            >
+                            <div className="space-y-6">
                                 {pgAnswers.length > 0 && (
                                     <div className="space-y-3">
                                         <div className="flex items-center gap-3">
@@ -251,7 +243,7 @@ function ResultPage() {
                                         {pgAnswers.map((a) => {
                                             const idx = answers.indexOf(a)
                                             return (
-                                                <motion.div key={a.id} variants={listItem} className="bg-white border border-second p-5 shadow-sm rounded-none transition-colors hover:bg-base-200">
+                                                <div key={a.id} className="bg-white border border-second p-5 shadow-sm rounded-none">
                                                     <div className="flex items-center gap-2 flex-wrap mb-1">
                                                         <span className="text-sm font-bold text-darks">Soal {idx + 1}</span>
                                                         <span className="badge badge-ghost text-tinted rounded-full text-xs">{typeLabel(a.question?.question_type || "")}</span>
@@ -315,7 +307,7 @@ function ResultPage() {
                                                             )
                                                         })}
                                                     </div>
-                                                </motion.div>
+                                                </div>
                                             )
                                         })}
                                     </div>
@@ -329,7 +321,7 @@ function ResultPage() {
                                         {textAnswers.map((a) => {
                                             const idx = answers.indexOf(a)
                                             return (
-                                                <motion.div key={a.id} variants={listItem} className="bg-white border border-second p-5 shadow-sm rounded-none transition-colors hover:bg-base-200">
+                                                <div key={a.id} className="bg-white border border-second p-5 shadow-sm rounded-none">
                                                     <div className="flex items-center gap-2 flex-wrap mb-1">
                                                         <span className="text-sm font-bold text-darks">Soal {idx + 1}</span>
                                                         <span className="badge badge-ghost text-tinted rounded-full text-xs">{typeLabel(a.question?.question_type || "")}</span>
@@ -341,12 +333,12 @@ function ResultPage() {
                                                     <div className="mt-3 text-sm text-darks bg-base border border-second rounded-lg px-3 py-2 whitespace-pre-wrap break-words">
                                                         {a.answer_text || "-"}
                                                     </div>
-                                                </motion.div>
+                                                </div>
                                             )
                                         })}
                                     </div>
                                 )}
-                            </motion.div>
+                            </div>
                         )}
                     </>
                 )}

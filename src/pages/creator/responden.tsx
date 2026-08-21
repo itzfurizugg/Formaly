@@ -1,6 +1,6 @@
 import { useEffect, useState, useCallback } from "react"
-import { Link, useNavigate } from "react-router-dom"
-import { ArrowLeft, ChevronRight, ClipboardList, FileText, ListChecks, Timer } from "lucide-react"
+import { useNavigate } from "react-router-dom"
+import { ChevronRight, ClipboardList, FileText, ListChecks, Timer } from "lucide-react"
 import { supabase } from "../../lib/supabase"
 import { useAuth } from "../../lib/auth-context"
 import Loading from "../../components/loading"
@@ -46,13 +46,10 @@ function CreatorResponden() {
     return (
         <div className="flex flex-col items-center px-3 py-10">
             <div className="w-full xl:max-w-7xl lg:max-w-5xl">
-                <div className="sm:hidden">
-                    <Link to="/creator" className="flex items-center gap-2 text-sm text-tinted hover:text-darks mb-4 transition-colors">
-                        <ArrowLeft className="h-4 w-4" /> Kembali
-                    </Link>
-                </div>
-                
-                <h1 className="text-3xl lg:text-4xl font-bold font-display text-darks mb-1">Responden</h1>
+                {/* <Link to="/creator" className="flex items-center gap-2 text-sm text-tinted hover:text-darks mb-4 transition-colors">
+                    <ArrowLeft className="h-4 w-4" /> Kembali
+                </Link> */}
+                <h1 className="text-3xl lg:text-4xl font-bold font-display text-darks mb-1 mt-4">Responden</h1>
                 <p className="text-sm text-tinted mb-6">Pilih form untuk melihat submission-nya.</p>
 
                 <Loading show={loading} />
@@ -79,8 +76,8 @@ function CreatorResponden() {
                                     <div className="flex items-start justify-between gap-3">
                                         <div className="min-w-0">
                                             <h2 className="card-title text-darks break-words leading-snug text-base">{form.title}</h2>
-                                            <div className="text-sm text-tinted line-clamp-2">
-                                                {form.description ? <RichText html={form.description} className="line-clamp-2" /> : "Tidak ada deskripsi"}
+                                            <div className="text-sm text-tinted">
+                                                {form.description ? <RichText html={form.description} /> : "Tidak ada deskripsi"}
                                             </div>
                                         </div>
                                         <ChevronRight className="h-5 w-5 text-tinted shrink-0" />

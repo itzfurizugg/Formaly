@@ -1,7 +1,6 @@
 import Loading from "../../components/loading"
 import { useEffect, useState, useCallback, type DragEvent } from "react"
 import { useNavigate, useParams } from "react-router-dom"
-import { AnimatePresence, motion } from "motion/react"
 import { ArrowLeft, Plus, Pencil, Trash2, Save, X, Loader2, Check, GripVertical, ListChecks, KeyRound, Share2, ClipboardList, Info } from "lucide-react"
 import { supabase } from "../../lib/supabase"
 import { useAuth } from "../../lib/auth-context"
@@ -11,7 +10,6 @@ import RichTextEditor, { RichText } from "../../components/richText"
 import { richTextToPlain } from "../../lib/richtext"
 import { alertSaveSuccess, confirmDelete, showAlert } from "../../lib/alerts"
 import { pageGet, pageSet } from "../../lib/pageCache"
-import { easeOutExpo, panelSlide } from "../../lib/motion"
 
 interface Option {
     id: string | null
@@ -263,14 +261,7 @@ function Questions({ embedded = false }: { embedded?: boolean }) {
     }
 
     const renderEditor = () => (
-        <motion.div
-            key="question-editor"
-            variants={panelSlide}
-            initial="hidden"
-            animate="show"
-            exit="exit"
-            className="bg-white border border-second p-3 sm:p-5 shadow-sm rounded-none mb-6 overflow-block space-y-4"
-        >
+        <div className="bg-white border border-second p-3 sm:p-5 shadow-sm rounded-none mb-6 overflow-block space-y-4">
             <div className="flex items-center justify-between">
                 <h2 className="font-semibold text-darks ml-2 sm:ml-1">{editingId ? "Edit Soal" : "Tambah Soal"}</h2>
                 <button onClick={resetEditor} className="btn btn-sm btn-ghost text-tinted mr-2">
@@ -416,7 +407,7 @@ function Questions({ embedded = false }: { embedded?: boolean }) {
                 {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
                 Simpan Soal
             </button>
-        </motion.div>
+        </div>
     )
 
     return (
@@ -474,9 +465,7 @@ function Questions({ embedded = false }: { embedded?: boolean }) {
                     )}
                 </div>
 
-                <AnimatePresence>
                 {showEditor && !editingId && renderEditor()}
-                </AnimatePresence>
 
                 {questions.length === 0 && !showEditor ? (
                     <div className="text-center py-16">
@@ -485,21 +474,15 @@ function Questions({ embedded = false }: { embedded?: boolean }) {
                 ) : questions.length > 0 && (
                     <div className="space-y-3 pb-8">
                         {questions.map((q, idx) => (
-                            <AnimatePresence key={q.id} initial={false}>
-                            {showEditor && editingId === q.id ? renderEditor() : (
-                            <motion.div
-                                initial={{ opacity: 0, y: 12 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                exit={{ opacity: 0, scale: 0.98 }}
-                                transition={{ duration: 0.3, ease: easeOutExpo, delay: Math.min(idx * 0.05, 0.3) }}
-                            >
+                            showEditor && editingId === q.id ? renderEditor() : (
                             <div
+                                key={q.id}
                                 draggable
                                 onDragStart={(e) => handleDragStart(e, idx)}
                                 onDragOver={handleDragOver}
                                 onDrop={(e) => handleDrop(e, idx)}
                                 onDragEnd={handleDragEnd}
-                                className={`bg-white border p-5 shadow-sm rounded-none cursor-grab active:cursor-grabbing transition-colors hover:bg-base-200 ${
+                                className={`bg-white border p-5 shadow-sm rounded-none cursor-grab active:cursor-grabbing ${
                                     dragIndex === idx
                                         ? "border-done opacity-50"
                                         : "border-second"
@@ -546,13 +529,9 @@ function Questions({ embedded = false }: { embedded?: boolean }) {
                                     </div>
                                 </div>
                             </div>
-                            </motion.div>
-                        )}
-                        </AnimatePresence>
-                    ))}
+                        )))}
                     </div>
                 )}
-                <AnimatePresence>
                 {showImport && id && (
                     <QuestionImportModal
                         formId={id}
@@ -565,7 +544,6 @@ function Questions({ embedded = false }: { embedded?: boolean }) {
                         }}
                     />
                 )}
-                </AnimatePresence>
             </div>
             )}
         </div>

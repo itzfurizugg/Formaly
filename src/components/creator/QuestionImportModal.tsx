@@ -1,10 +1,8 @@
 import { useRef, useState } from "react"
-import { motion } from "motion/react"
 import { CheckCircle2, FileUp, Loader2, Pencil, Upload, X } from "lucide-react"
 import { type ParsedQuestion, validateParsedQuestion } from "../../lib/parsers/types"
 import { supabase } from "../../lib/supabase"
 import ModalPortal from "../modalPortal"
-import { easeOutExpo, modalBackdrop, modalPanel } from "../../lib/motion"
 
 interface QuestionImportModalProps {
     formId: string
@@ -113,17 +111,8 @@ export default function QuestionImportModal({ formId, startingOrder, onClose, on
 
     return (
         <ModalPortal>
-        <motion.div
-            variants={modalBackdrop}
-            initial="hidden"
-            animate="show"
-            exit="exit"
-            className="fixed inset-0 z-50 flex items-center justify-center bg-darks/40 p-4"
-            role="dialog"
-            aria-modal="true"
-            aria-labelledby="import-title"
-        >
-            <motion.div variants={modalPanel} className="w-full max-w-6xl max-h-[90vh] overflow-hidden bg-white border border-second shadow-xl rounded-none flex flex-col">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-darks/40 p-4" role="dialog" aria-modal="true" aria-labelledby="import-title">
+            <div className="w-full max-w-6xl max-h-[90vh] overflow-hidden bg-white border border-second shadow-xl rounded-none flex flex-col">
                 <div className="flex items-start justify-between gap-4 p-5 border-b border-second">
                     <div>
                         <h2 id="import-title" className="font-semibold text-darks">Impor Soal</h2>
@@ -156,18 +145,12 @@ export default function QuestionImportModal({ formId, startingOrder, onClose, on
                                 <table className="table table-sm min-w-[900px]">
                                     <thead><tr className="text-tinted"><th>Status</th><th>Soal</th><th>Pilihan Jawaban</th><th></th></tr></thead>
                                     <tbody>{rows.map((row, index) => (
-                                        <motion.tr
-                                            key={index}
-                                            initial={{ opacity: 0, x: -8 }}
-                                            animate={{ opacity: 1, x: 0 }}
-                                            transition={{ duration: 0.3, ease: easeOutExpo, delay: Math.min(index * 0.04, 0.35) }}
-                                            className={row.parse_status === "error" ? "bg-wrong/5" : ""}
-                                        >
+                                        <tr key={index} className={row.parse_status === "error" ? "bg-wrong/5" : ""}>
                                             <td className="align-top w-32"><span className={`badge rounded-full text-xs ${row.parse_status === "ok" ? "badge-success" : "badge-error"}`}>{row.parse_status === "ok" ? "Siap" : "Perlu edit"}</span>{row.error_message && <p className="text-xs text-wrong mt-2 max-w-40">{row.error_message}</p>}</td>
                                             <td className="align-top whitespace-pre-line max-w-xs">{editing === index ? <textarea className="textarea textarea-sm w-full bg-base border-second" value={row.question_text} onChange={(e) => updateRow(index, { ...row, question_text: e.target.value })} /> : row.question_text || <span className="text-tinted">(kosong)</span>}</td>
                                             <td className="align-top"><div className="space-y-1">{row.options.map((option, optionIndex) => <label key={optionIndex} className={`flex gap-2 items-center text-xs ${option.is_correct ? "text-done font-medium" : "text-tinted"}`}><input type="radio" name={`answer-${index}`} checked={option.is_correct} disabled={editing !== index} onChange={() => updateRow(index, { ...row, options: row.options.map((item, itemIndex) => ({ ...item, is_correct: itemIndex === optionIndex })) })} />{editing === index ? <input className="input input-xs h-7 flex-1 bg-base border-second" value={option.text} onChange={(e) => updateRow(index, { ...row, options: row.options.map((item, itemIndex) => itemIndex === optionIndex ? { ...item, text: e.target.value } : item) })} /> : `${String.fromCharCode(65 + optionIndex)}. ${option.text || "(kosong)"}`}</label>)}</div></td>
                                             <td className="align-top"><button onClick={() => setEditing(editing === index ? null : index)} className="btn btn-sm btn-ghost text-darks"><Pencil className="h-4 w-4" />{editing === index ? "Selesai" : "Edit"}</button></td>
-                                        </motion.tr>
+                                        </tr>
                                     ))}</tbody>
                                 </table>
                             </div>
@@ -179,8 +162,8 @@ export default function QuestionImportModal({ formId, startingOrder, onClose, on
                     <button onClick={onClose} className="btn bg-base border border-second text-darks">{summary ? "Tutup" : "Batal"}</button>
                     {!summary && rows.length > 0 && <button onClick={saveImport} disabled={saving} className="btn bg-darks text-base border-none disabled:opacity-60">{saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Upload className="h-4 w-4" />} Impor soal yang valid</button>}
                 </div>
-            </motion.div>
-        </motion.div>
+            </div>
+        </div>
         </ModalPortal>
     )
 }

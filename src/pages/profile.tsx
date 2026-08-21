@@ -16,8 +16,7 @@ import {
 import { useAuth } from "../lib/auth-context"
 import { supabase } from "../lib/supabase" // sesuaikan path kalau beda
 import ModalPortal from "../components/modalPortal"
-import { AnimatePresence, motion } from "motion/react"
-import { modalBackdrop, modalPanel } from "../lib/motion"
+import { motion } from "motion/react"
 
 const ROLE_LABEL: Record<string, string> = {
     admin: "Admin",
@@ -65,15 +64,11 @@ function Modal({
         }
     }, [open, onClose])
 
+    if (!open) return null
+
     return (
-        <AnimatePresence>
-            {open && (
-            <ModalPortal key="profile-modal">
-            <motion.div
-                variants={modalBackdrop}
-                initial="hidden"
-                animate="show"
-                exit="exit"
+        <ModalPortal>
+            <div
                 className="fixed inset-0 z-50 flex items-center justify-center px-4"
                 role="dialog"
                 aria-modal="true"
@@ -83,7 +78,9 @@ function Modal({
                     onClick={onClose}
                 />
                 <motion.div
-                    variants={modalPanel}
+                    initial={{ opacity: 0, scale: 0.95 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }}
                     className="relative bg-white border border-second rounded-none w-full max-w-md p-5 shadow-xl"
                 >
                     <div className="flex items-center justify-between mb-4">
@@ -103,10 +100,8 @@ function Modal({
                     </div>
                     {children}
                 </motion.div>
-            </motion.div>
-            </ModalPortal>
-            )}
-        </AnimatePresence>
+            </div>
+        </ModalPortal>
     )
 }
 

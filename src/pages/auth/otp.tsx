@@ -1,12 +1,10 @@
 import { useState, useRef, useEffect, type KeyboardEvent } from "react"
 import { Link, useLocation, useNavigate } from "react-router-dom"
-import { AnimatePresence, motion } from "motion/react"
 import { ShieldCheck, ArrowLeft, RotateCcw, CheckCircle2 } from "lucide-react"
 import logo from "../../assets/logo.svg"
 import { useAuth } from "../../lib/auth-context"
 import { safeNext } from "../../lib/redirect"
 import type { EmailOtpType } from "@supabase/supabase-js"
-import { alertPop, easeOutExpo, fadeSlide } from "../../lib/motion"
 
 const OTP_LENGTH = 6
 
@@ -162,12 +160,7 @@ function Otp() {
                         <img src={logo} alt="Formaly" className="h-10 w-auto" />
                     </div>
 
-                    <motion.div
-                        variants={fadeSlide}
-                        initial="hidden"
-                        animate="show"
-                        className="bg-white rounded-2xl border border-second p-4 lg:p-8 shadow-sm"
-                    >
+                    <div className="bg-white rounded-2xl border border-second p-4 lg:p-8 shadow-sm">
                         <Link
                             to={`/login${nextQuery}`}
                             className="inline-flex items-center gap-1 text-xs text-tinted hover:text-darks transition-colors mb-4"
@@ -200,46 +193,25 @@ function Otp() {
                             </div>
                         )}
 
-                        <AnimatePresence>
                         {error && (
-                            <motion.div
-                                key="otp-error"
-                                variants={alertPop}
-                                initial="hidden"
-                                animate="show"
-                                exit="exit"
-                                role="alert"
-                                className="text-sm text-wrong bg-wrong/5 border border-wrong/20 rounded-lg px-4 py-3 mb-4"
-                            >
+                            <div role="alert" className="text-sm text-wrong bg-wrong/5 border border-wrong/20 rounded-lg px-4 py-3 mb-4">
                                 {error}
-                            </motion.div>
+                            </div>
                         )}
 
                         {resendSuccess && (
-                            <motion.div
-                                key="otp-resend"
-                                variants={alertPop}
-                                initial="hidden"
-                                animate="show"
-                                exit="exit"
-                                role="alert"
-                                className="flex items-center gap-2 text-sm text-done bg-done/10 border border-done/20 rounded-lg px-4 py-3 mb-4"
-                            >
+                            <div role="alert" className="flex items-center gap-2 text-sm text-done bg-done/10 border border-done/20 rounded-lg px-4 py-3 mb-4">
                                 <CheckCircle2 className="h-4 w-4 shrink-0" />
                                 <span>{resendSuccess}</span>
-                            </motion.div>
+                            </div>
                         )}
-                        </AnimatePresence>
 
                         <form onSubmit={handleSubmit}>
                             <div className="flex w-full max-w-xs gap-2 sm:gap-3 justify-center mx-auto" onPaste={handlePaste}>
                                 {otp.map((digit, i) => (
-                                    <motion.input
+                                    <input
                                         key={i}
                                         ref={(el) => { inputsRef.current[i] = el }}
-                                        initial={{ opacity: 0, y: 8 }}
-                                        animate={{ opacity: 1, y: 0 }}
-                                        transition={{ duration: 0.3, ease: easeOutExpo, delay: Math.min(i * 0.05, 0.3) }}
                                         type="text"
                                         inputMode="numeric"
                                         maxLength={1}
@@ -270,7 +242,7 @@ function Otp() {
                             type="button"
                             onClick={handleResendOtp}
                             disabled={resendLoading || resendCountdown > 0 || !email}
-                            className="btn bg-base text-darks border border-second hover:bg-second transition-colors w-full mt-2 disabled:opacity-60"
+                            className="btn bg-base text-darks border border-second hover:bg-second w-full mt-2 disabled:opacity-60"
                         >
                             {resendLoading ? (
                                 <span className="loading loading-spinner loading-sm" />
@@ -281,7 +253,7 @@ function Otp() {
                                 ? `Kirim ulang OTP dalam (${resendCountdown}s)`
                                 : "Tidak menerima kode? Kirim ulang"}
                         </button>
-                    </motion.div>
+                    </div>
                 </div>
             </div>
         </div>
