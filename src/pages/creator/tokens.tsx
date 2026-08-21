@@ -1,9 +1,12 @@
 import { useEffect, useState, useCallback } from "react"
 import { useNavigate, useParams } from "react-router-dom"
-import { ArrowLeft, Plus, Trash2, X, Loader2, Copy, Check, Share2, KeyRound, ClipboardList, ListChecks } from "lucide-react"
+import { AnimatePresence, motion } from "motion/react"
+import { Plus, Trash2, X, Loader2, Copy, Check, Share2, KeyRound, ClipboardList, ListChecks, Info } from "lucide-react"
 import { supabase } from "../../lib/supabase"
 import { useAuth } from "../../lib/auth-context"
 import { confirmDelete } from "../../lib/alerts"
+import { easeOutExpo, alertPop, panelSlide } from "../../lib/motion"
+import BackButton from "../../components/backButton"
 
 interface Token {
     id: string
@@ -122,39 +125,44 @@ function Tokens() {
     return (
         <div className="flex flex-col items-center px-3 py-10">
             <div className="w-full xl:max-w-7xl lg:max-w-5xl">
-                <button
-                    onClick={() => navigate("/creator")}
-                    className="flex items-center gap-2 text-sm text-tinted hover:text-darks mb-4 transition-colors"
-                >
-                    <ArrowLeft className="h-4 w-4" /> Kembali
-                </button>
+                <BackButton to="/creator" />
 
                 <div className="flex flex-wrap gap-2 mb-6">
                     <button onClick={() => navigate(`/creator/forms/${id}`)} className="btn btn-sm bg-base text-darks border border-second hover:bg-second">
-                        Detail
+                        <Info className="h-3.5 w-3.5" /> <span className="hidden sm:block">Detail Form</span>
                     </button>
                     <button onClick={() => navigate(`/creator/forms/${id}/questions`)} className="btn btn-sm bg-base text-darks border border-second hover:bg-second lg:hidden">
                         <ListChecks className="h-3.5 w-3.5" /> <span className="hidden sm:block">Soal</span>
                     </button>
                     <button onClick={() => navigate(`/creator/forms/${id}/shared`)} className="btn btn-sm bg-base text-darks border border-second hover:bg-second">
-                        <Share2 className="h-3.5 w-3.5" /> <span className="hidden sm:block">Shared</span>
+                        <Share2 className="h-3.5 w-3.5" /> <span className="hidden sm:block">Bagikan</span>
                     </button>
                     <button onClick={() => navigate(`/creator/forms/${id}/tokens`)} className="btn btn-sm bg-darks text-base border-none">
                         <KeyRound className="h-3.5 w-3.5" /> <span className="hidden sm:block">Token</span>
                     </button>
                     <button onClick={() => navigate(`/creator/forms/${id}/submissions`)} className="btn btn-sm bg-base text-darks border border-second hover:bg-second">
-                        <ClipboardList className="h-3.5 w-3.5" /> <span className="hidden sm:block">Submission</span>
+                        <ClipboardList className="h-3.5 w-3.5" /> <span className="hidden sm:block">Responden</span>
                     </button>
                 </div>
 
                 {/* <h1 className="text-2xl lg:text-4xl font-bold text-darks mb-1">Token</h1>
                 <p className="text-sm text-tinted mb-6">Form: {formTitle}</p> */}
 
+                <AnimatePresence>
                 {error && (
-                    <div role="alert" className="text-sm text-wrong bg-wrong/5 border border-wrong/20 rounded-lg px-4 py-3 mb-4">
+                    <motion.div
+                        key="token-error"
+                        variants={alertPop}
+                        initial="hidden"
+                        animate="show"
+                        exit="exit"
+                        role="alert"
+                        className="text-sm text-wrong bg-wrong/5 border border-wrong/20 rounded-lg px-4 py-3 mb-4"
+                    >
                         {error}
-                    </div>
+                    </motion.div>
                 )}
+                </AnimatePresence>
 
                 <div className="flex justify-end mb-4">
                     {!showCreate && (
@@ -164,8 +172,16 @@ function Tokens() {
                     )}
                 </div>
 
+                <AnimatePresence>
                 {showCreate && (
-                    <div className="bg-white border border-second p-6 shadow-sm rounded-2xl mb-6 space-y-4">
+                    <motion.div
+                        key="create-token"
+                        variants={panelSlide}
+                        initial="hidden"
+                        animate="show"
+                        exit="exit"
+                        className="bg-white border border-second p-6 shadow-sm rounded-2xl mb-6 space-y-4"
+                    >
                         <div className="flex items-center justify-between">
                             <h2 className="font-semibold text-darks">Buat Token Baru</h2>
                             <button onClick={() => setShowCreate(false)} className="btn btn-sm btn-ghost text-tinted">
@@ -219,8 +235,9 @@ function Tokens() {
                             {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Plus className="h-4 w-4" />}
                             Simpan Token
                         </button>
-                    </div>
+                    </motion.div>
                 )}
+                </AnimatePresence>
 
                 {tokens.length === 0 ? (
                     <div className="text-center py-16">
@@ -228,10 +245,16 @@ function Tokens() {
                     </div>
                 ) : (
                     <div className="space-y-3">
-                        {tokens.map((t) => {
+                        {tokens.map((t, index) => {
                             const expired = t.expired
                             return (
-                                <div key={t.id} className="bg-white border border-second p-5 shadow-sm rounded-2xl">
+                                <motion.div
+                                    key={t.id}
+                                    initial={{ opacity: 0, y: 12 }}
+                                    animate={{ opacity: 1, y: 0 }}
+                                    transition={{ duration: 0.35, ease: easeOutExpo, delay: Math.min(index * 0.06, 0.4) }}
+                                >
+                                <div className="bg-white border border-second p-5 shadow-sm rounded-2xl transition-colors hover:bg-base-200">
                                     <div className="flex items-start justify-between gap-2">
                                         <div className="min-w-0">
                                             <div className="flex items-center gap-2 flex-wrap mb-1">
@@ -263,6 +286,7 @@ function Tokens() {
                                         </div>
                                     </div>
                                 </div>
+                                </motion.div>
                             )
                         })}
                     </div>

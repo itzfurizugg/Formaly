@@ -1,7 +1,7 @@
-import Loading from "../../components/loading"
 import { useEffect, useState, useCallback, type DragEvent } from "react"
 import { useNavigate, useParams } from "react-router-dom"
-import { ArrowLeft, Plus, Pencil, Trash2, Save, X, Loader2, Check, GripVertical, ListChecks, KeyRound, Share2, ClipboardList } from "lucide-react"
+import { AnimatePresence, motion } from "motion/react"
+import { Plus, Pencil, Trash2, Save, X, Loader2, Check, GripVertical, ListChecks, KeyRound, Share2, ClipboardList, Info } from "lucide-react"
 import { supabase } from "../../lib/supabase"
 import { useAuth } from "../../lib/auth-context"
 import QuestionImportModal from "../../components/creator/QuestionImportModal"
@@ -10,6 +10,8 @@ import RichTextEditor, { RichText } from "../../components/richText"
 import { richTextToPlain } from "../../lib/richtext"
 import { alertSaveSuccess, confirmDelete, showAlert } from "../../lib/alerts"
 import { pageGet, pageSet } from "../../lib/pageCache"
+import { easeOutExpo, panelSlide } from "../../lib/motion"
+import BackButton from "../../components/backButton"
 
 interface Option {
     id: string | null
@@ -261,7 +263,14 @@ function Questions({ embedded = false }: { embedded?: boolean }) {
     }
 
     const renderEditor = () => (
-        <div className="bg-white border border-second p-3 sm:p-5 shadow-sm rounded-none mb-6 overflow-block space-y-4">
+        <motion.div
+            key="question-editor"
+            variants={panelSlide}
+            initial="hidden"
+            animate="show"
+            exit="exit"
+            className="bg-white border border-second p-3 sm:p-5 shadow-sm rounded-xl mb-6 overflow-block space-y-4"
+        >
             <div className="flex items-center justify-between">
                 <h2 className="font-semibold text-darks ml-2 sm:ml-1">{editingId ? "Edit Soal" : "Tambah Soal"}</h2>
                 <button onClick={resetEditor} className="btn btn-sm btn-ghost text-tinted mr-2">
@@ -282,7 +291,7 @@ function Questions({ embedded = false }: { embedded?: boolean }) {
                 <div>
                     <label className="block text-sm font-medium text-darks mb-1.5 ml-1">Tipe</label>
                     <select
-                        className="select w-full bg-base border-second focus:border-done focus:outline-none rounded-none"
+                        className="select w-full bg-base border-second focus:border-done focus:outline-none rounded-xl"
                         value={questionType}
                         onChange={(e) => setQuestionType(e.target.value)}
                     >
@@ -407,29 +416,23 @@ function Questions({ embedded = false }: { embedded?: boolean }) {
                 {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
                 Simpan Soal
             </button>
-        </div>
+        </motion.div>
     )
 
     return (
         <div className={embedded ? "w-full min-w-0 pb-8" : "flex flex-col items-center px-3 py-10"}>
-            {embedded ? <Loading inline show={loading} /> : <Loading show={loading} />}
             {!loading && (
             <div className={embedded ? "" : "w-full xl:max-w-7xl lg:max-w-5xl"}>
                 {!embedded && (
                     <>
-                        <button
-                            onClick={() => navigate("/creator")}
-                            className="flex items-center gap-2 text-sm text-tinted hover:text-darks mb-4 transition-colors"
-                        >
-                            <ArrowLeft className="h-4 w-4" /> Kembali
-                        </button>
+                        <BackButton to="/creator" />
 
                         <div className="flex flex-wrap gap-2 mb-6">
                             <button
                                 onClick={() => navigate(`/creator/forms/${id}`)}
                                 className="btn btn-sm bg-base text-darks border border-second hover:bg-second"
                             >
-                                Detail
+                                <Info className="h-3.5 w-3.5" /> <span className="hidden sm:block">Detail Form</span>
                             </button>
                             <button
                                 onClick={() => navigate(`/creator/forms/${id}/questions`)}
@@ -465,7 +468,9 @@ function Questions({ embedded = false }: { embedded?: boolean }) {
                     )}
                 </div>
 
+                <AnimatePresence>
                 {showEditor && !editingId && renderEditor()}
+                </AnimatePresence>
 
                 {questions.length === 0 && !showEditor ? (
                     <div className="text-center py-16">
@@ -474,15 +479,21 @@ function Questions({ embedded = false }: { embedded?: boolean }) {
                 ) : questions.length > 0 && (
                     <div className="space-y-3 pb-8">
                         {questions.map((q, idx) => (
-                            showEditor && editingId === q.id ? renderEditor() : (
+                            <AnimatePresence key={q.id} initial={false}>
+                            {showEditor && editingId === q.id ? renderEditor() : (
+                            <motion.div
+                                initial={{ opacity: 0, y: 12 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                exit={{ opacity: 0, scale: 0.98 }}
+                                transition={{ duration: 0.3, ease: easeOutExpo, delay: Math.min(idx * 0.05, 0.3) }}
+                            >
                             <div
-                                key={q.id}
                                 draggable
                                 onDragStart={(e) => handleDragStart(e, idx)}
                                 onDragOver={handleDragOver}
                                 onDrop={(e) => handleDrop(e, idx)}
                                 onDragEnd={handleDragEnd}
-                                className={`bg-white border p-5 shadow-sm rounded-none cursor-grab active:cursor-grabbing ${
+                                className={`bg-white border p-5 shadow-sm rounded-xl cursor-grab active:cursor-grabbing transition-colors hover:bg-base-200 ${
                                     dragIndex === idx
                                         ? "border-done opacity-50"
                                         : "border-second"
@@ -529,9 +540,13 @@ function Questions({ embedded = false }: { embedded?: boolean }) {
                                     </div>
                                 </div>
                             </div>
-                        )))}
+                            </motion.div>
+                        )}
+                        </AnimatePresence>
+                    ))}
                     </div>
                 )}
+                <AnimatePresence>
                 {showImport && id && (
                     <QuestionImportModal
                         formId={id}
@@ -544,6 +559,7 @@ function Questions({ embedded = false }: { embedded?: boolean }) {
                         }}
                     />
                 )}
+                </AnimatePresence>
             </div>
             )}
         </div>

@@ -1,13 +1,14 @@
-import Loading from "../../components/loading"
 import { useEffect, useState, useCallback } from "react"
 import { useNavigate, useParams } from "react-router-dom"
-import { ArrowLeft, Save, Loader2, ClipboardList, KeyRound, Share2, ListChecks, X, Info } from "lucide-react"
+import { Save, Loader2, ClipboardList, KeyRound, Share2, ListChecks, X, Info } from "lucide-react"
 import { supabase } from "../../lib/supabase"
 import { useAuth } from "../../lib/auth-context"
-import { alertSaveError, alertSaveSuccess } from "../../lib/alerts"
+import { alertSaveError, alertSaveSuccess, showAlert } from "../../lib/alerts"
 import RichTextEditor from "../../components/richText"
 import Questions from "./questions"
 import { pageGet, pageSet } from "../../lib/pageCache"
+import BackButton from "../../components/backButton"
+import Loading from "../../components/loading"
 
 interface FormEditCache {
     title: string
@@ -123,8 +124,21 @@ function FormEdit() {
         setTagInput("")
     }
 
-    const removeTag = (name: string) => {
-        setTags((prev) => prev.filter((t) => t !== name))
+    const removeTag = async (name: string) => {
+        if (!id) return
+        try {
+            // Tag bersifat master/shared (dipakai lintas form), jadi yang dihapus
+            // hanya relasi form_tags, bukan baris di tabel tags.
+            const { data: existing } = await supabase.from("tags").select("id").eq("name", name).maybeSingle()
+            if (existing?.id) {
+                const { error } = await supabase.from("form_tags").delete().eq("form_id", id).eq("tag_id", existing.id)
+                if (error) throw error
+            }
+            // Local state baru di-update SETELAH delete ke DB berhasil.
+            setTags((prev) => prev.filter((t) => t !== name))
+        } catch (err) {
+            showAlert(err instanceof Error ? err.message : "Gagal menghapus tag.", "error")
+        }
     }
 
     const saveFormData = async () => {
@@ -204,12 +218,7 @@ function FormEdit() {
             {!loading && (
         <div className="flex flex-col items-center px-3 pt-10 lg:h-[100dvh] lg:overflow-hidden">
             <div className="w-full xl:max-w-7xl lg:max-w-5xl lg:h-full lg:flex lg:flex-col">
-                <button
-                    onClick={() => navigate("/creator")}
-                    className="flex items-center gap-2 text-sm text-tinted hover:text-darks mb-4 transition-colors"
-                >
-                    <ArrowLeft className="h-4 w-4" /> Kembali
-                </button>
+                <BackButton to="/creator" />
 
                 <div className="flex flex-wrap gap-2 mb-6">
                     <button
@@ -246,7 +255,7 @@ function FormEdit() {
 
                 <div className="flex flex-col lg:flex-row items-start gap-6 lg:flex-1 lg:min-h-0 lg:overflow-hidden lg:mt-2">
                     <div className="w-full lg:w-[45%] lg:min-h-0 lg:overflow-y-auto">
-                        <form onSubmit={handleSave} className="space-y-3 bg-white border border-second p-3 lg:p-6 sm:p-4 shadow-sm rounded-none">
+                        <form onSubmit={handleSave} className="space-y-3 bg-white border border-second p-3 lg:p-6 sm:p-4 shadow-sm rounded-xl">
                     <div>
                         <span className="inline-flex items-center gap-1.5 text-xs text-tinted mb-3 sm:mb-5 ml-1">
                                 Dibuat pada {createdAt ? new Date(createdAt).toLocaleDateString("id-ID", { day: "numeric", month: "short", year: "numeric" }) : ""}
@@ -257,6 +266,7 @@ function FormEdit() {
                     <div>
                         {/* <label className="block text-sm font-medium text-darks mb-1.5">Deskripsi</label> */}
                         <RichTextEditor
+                            compact
                             value={description}
                             onChange={setDescription}
                             placeholder="Deskripsi Form..."

@@ -1,7 +1,6 @@
-import Loading from "../../components/loading"
 import { useEffect, useState, useCallback } from "react"
 import { useNavigate, useParams } from "react-router-dom"
-import { ArrowLeft, Eye, Trash2, Loader2, ClipboardList, Share2, KeyRound, ListChecks } from "lucide-react"
+import { Eye, Trash2, Loader2, ClipboardList, Share2, KeyRound, ListChecks, Info } from "lucide-react"
 import { supabase } from "../../lib/supabase"
 import { useAuth } from "../../lib/auth-context"
 import { confirmDelete } from "../../lib/alerts"
@@ -10,6 +9,7 @@ import { colors } from "../../lib/colorbase"
 import { getOptionColor } from "../../lib/optionColors"
 import { DonutChart } from "../../components/charts"
 import { Bar, BarChart, ResponsiveContainer, Tooltip, XAxis, YAxis, type TooltipContentProps } from "recharts"
+import BackButton from "../../components/backButton"
 
 interface Submission {
     id: string
@@ -345,32 +345,26 @@ function Submissions() {
 
     return (
         <>
-            <Loading show={loading} />
             {!loading && (
         <div className="flex flex-col items-center px-3 py-10">
             <div className="w-full xl:max-w-7xl lg:max-w-5xl">
-                <button
-                    onClick={() => navigate("/creator")}
-                    className="flex items-center gap-2 text-sm text-tinted hover:text-darks mb-4 transition-colors"
-                >
-                    <ArrowLeft className="h-4 w-4" /> Kembali
-                </button>
+                <BackButton to="/creator" />
 
                 <div className="flex flex-wrap gap-2 mb-6">
                     <button onClick={() => navigate(`/creator/forms/${id}`)} className="btn btn-sm bg-base text-darks border border-second hover:bg-second">
-                        Detail
+                        <Info className="h-3.5 w-3.5" /> <span className="hidden sm:block">Detail Form</span>
                     </button>
                     <button onClick={() => navigate(`/creator/forms/${id}/questions`)} className="btn btn-sm bg-base text-darks border border-second hover:bg-second lg:hidden">
                         <ListChecks className="h-3.5 w-3.5" /> <span className="hidden sm:block">Soal</span>
                     </button>
                     <button onClick={() => navigate(`/creator/forms/${id}/shared`)} className="btn btn-sm bg-base text-darks border border-second hover:bg-second">
-                        <Share2 className="h-3.5 w-3.5" /> <span className="hidden sm:block">Shared</span>
+                        <Share2 className="h-3.5 w-3.5" /> <span className="hidden sm:block">Bagikan</span>
                     </button>
                     <button onClick={() => navigate(`/creator/forms/${id}/tokens`)} className="btn btn-sm bg-base text-darks border border-second hover:bg-second">
                         <KeyRound className="h-3.5 w-3.5" /> <span className="hidden sm:block">Token</span>
                     </button>
                     <button onClick={() => navigate(`/creator/forms/${id}/submissions`)} className="btn btn-sm bg-darks text-base border-none">
-                        <ClipboardList className="h-3.5 w-3.5" /> <span className="hidden sm:block">Submission</span>
+                        <ClipboardList className="h-3.5 w-3.5" /> <span className="hidden sm:block">Responden</span>
                     </button>
                 </div>
 
@@ -387,7 +381,7 @@ function Submissions() {
                     <div className="space-y-4 mb-6">
                         {/* Baris 1: Total Responded + Rata-rata Benar/Salah + Benar vs Salah */}
                         <div className="flex flex-col lg:flex-row gap-4">
-                            <div className="bg-white border border-second p-5 shadow-sm rounded-none lg:flex-none lg:w-64 flex flex-col">
+                            <div className="bg-white border border-second p-5 shadow-sm rounded-xl lg:flex-none lg:w-64 flex flex-col">
                                 <p className="font-semibold text-darks mb-0.5">Total Responded</p>
                                 <p className="text-xs text-tinted mb-3">
                                     Jumlah submission yang masuk.
@@ -397,7 +391,7 @@ function Submissions() {
                                     <p className="text-xs text-tinted mt-2">responden</p>
                                 </div>
                             </div>
-                            <div className="bg-white border border-second p-5 shadow-sm rounded-none lg:flex-1 hidden sm:block">
+                            <div className="bg-white border border-second p-5 shadow-sm rounded-xl lg:flex-1 hidden sm:block">
                                 <p className="font-semibold text-darks mb-0.5">Rata-rata Benar vs Salah</p>
                                 <p className="text-xs text-tinted mb-2">
                                     Rata-rata jawaban benar dan salah per responden (soal isian tanpa kunci tidak dihitung).
@@ -414,7 +408,7 @@ function Submissions() {
                                     />
                                 </div>
                             </div>
-                            <div className="bg-white border border-second p-5 shadow-sm rounded-none lg:flex-1 hidden sm:block">
+                            <div className="bg-white border border-second p-5 shadow-sm rounded-xl lg:flex-1 hidden sm:block">
                                 <p className="font-semibold text-darks mb-0.5">Total Benar vs Salah</p>
                                 <p className="text-xs text-tinted mb-2">
                                     Jumlah jawaban benar dan salah dari seluruh submission.
@@ -435,7 +429,7 @@ function Submissions() {
 
                         {/* Baris 2+3: Statistik per Soal & Distribusi Opsi (switch) */}
                         {(perQuestionStats.length > 0 || barData.length > 0) && (
-                            <div className="bg-white border border-second p-5 shadow-sm rounded-none hidden sm:block">
+                            <div className="bg-white border border-second p-5 shadow-sm rounded-xl hidden sm:block">
                                 <div className="flex items-start justify-between gap-3 flex-wrap mb-4">
                                     <div>
                                         <p className="font-semibold text-darks mb-0.5">
@@ -447,10 +441,10 @@ function Submissions() {
                                                 : "Jumlah pilihan tiap opsi per soal dari seluruh submission (soal isian tidak dihitung)."}
                                         </p>
                                     </div>
-                                    <div className="flex items-center gap-1 p-1 bg-base border border-second rounded-none shrink-0">
+                                    <div className="flex items-center gap-1 p-1 bg-base border border-second rounded-xl shrink-0">
                                         <button
                                             onClick={() => setChartView("statistik")}
-                                            className={`px-2 py-1.5 text-xs font-medium rounded-none transition-colors ${
+                                            className={`px-2 py-1.5 text-xs font-medium rounded-xl transition-colors ${
                                                 chartView === "statistik" ? "bg-darks text-base" : "text-tinted hover:text-darks"
                                             }`}
                                         >
@@ -458,7 +452,7 @@ function Submissions() {
                                         </button>
                                         <button
                                             onClick={() => setChartView("distribusi")}
-                                            className={`px-2 py-1.5 text-xs font-medium rounded-none transition-colors ${
+                                            className={`px-2 py-1.5 text-xs font-medium rounded-xl transition-colors ${
                                                 chartView === "distribusi" ? "bg-darks text-base" : "text-tinted hover:text-darks"
                                             }`}
                                         >
@@ -538,7 +532,7 @@ function Submissions() {
                 ) : (
                     <div className="space-y-3">
                         {submissions.map((s) => (
-                            <div key={s.id} className="bg-white border border-second p-5 shadow-sm rounded-none">
+                            <div key={s.id} className="bg-white border border-second p-5 shadow-sm rounded-xl">
                                 <div className="flex items-start justify-between gap-2">
                                     <div className="min-w-0">
                                         <p className="font-semibold text-darks">{s.user?.name || "Pengguna"}</p>

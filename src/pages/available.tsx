@@ -1,10 +1,11 @@
 import { useEffect, useState, useCallback } from "react"
 import { useNavigate } from "react-router-dom"
+import { motion } from "motion/react"
 import { Search, Library, FileText } from "lucide-react"
 import Card from "../components/card"
 import { supabase } from "../lib/supabase"
 import { useAuth } from "../lib/auth-context"
-import Loading from "../components/loading"
+import { easeOutExpo } from "../lib/motion"
 
 interface FormItem {
     id: string
@@ -70,11 +71,10 @@ function Available() {
             f.author_name.toLowerCase().includes(search.toLowerCase())
     )
 
-    if (authLoading || !user) return <Loading />
+    if (authLoading || !user) return null
 
     return (
         <>
-            <Loading show={authLoading || !user || loading} />
             {!authLoading && user && !loading && (
         <div className="flex flex-col items-center px-4 py-10">
             <div className="max-w-4xl w-full">
@@ -108,17 +108,23 @@ function Available() {
                     </div>
                 ) : (
                     <div className="space-y-3">
-                        {filtered.map((f) => (
-                            <Card
+                        {filtered.map((f, index) => (
+                            <motion.div
                                 key={f.id}
-                                title={f.title}
-                                author={f.author_name}
-                                duration={f.duration ? `${f.duration} menit` : "Tanpa Waktu Pengerjaan"}
-                                questions={f.question_count}
-                                to="/form/description"
-                                buttonLabel="Kerjakan"
-                                state={{ form: f }}
-                            />
+                                initial={{ opacity: 0, y: 12 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                transition={{ duration: 0.35, ease: easeOutExpo, delay: Math.min(index * 0.06, 0.4) }}
+                            >
+                                <Card
+                                    title={f.title}
+                                    author={f.author_name}
+                                    duration={f.duration ? `${f.duration} menit` : "Tanpa Waktu Pengerjaan"}
+                                    questions={f.question_count}
+                                    to="/form/description"
+                                    buttonLabel="Kerjakan"
+                                    state={{ form: f }}
+                                />
+                            </motion.div>
                         ))}
                     </div>
                 )}

@@ -1,10 +1,11 @@
 import { useEffect, useState, useCallback } from "react"
 import { useNavigate } from "react-router-dom"
+import { motion } from "motion/react"
 import { FileText } from "lucide-react"
 import HistoryCard from "../components/historyCard"
 import { supabase } from "../lib/supabase"
 import { useAuth } from "../lib/auth-context"
-import Loading from "../components/loading"
+import { easeOutExpo } from "../lib/motion"
 
 interface HistoryItem {
     id: string
@@ -78,11 +79,10 @@ function History() {
 
     const filtered = items
 
-    if (authLoading || !user) return <Loading />
+    if (authLoading || !user) return null
 
     return (
         <>
-            <Loading show={authLoading || !user || loading} />
             {!authLoading && user && !loading && (
                 <div className="flex flex-col items-center px-2 py-5">
                     <div className="max-w-4xl grid w-full lg:mt-10">
@@ -117,18 +117,24 @@ function History() {
                             </div>
                         ) : (
                             <div className="space-y-3">
-                                {filtered.map((item) => (
-                                    <HistoryCard
+                                {filtered.map((item, index) => (
+                                    <motion.div
                                         key={item.id}
-                                        title={item.forms?.title || "Form"}
-                                        author={item.forms?.author_name || "-"}
-                                        duration={item.forms?.duration ? `${item.forms.duration} menit` : "Tanpa Waktu Pengerjaan"}
-                                        questions={item.forms?.question_count || 0}
-                                        score={item.total_score || 0}
-                                        passingScore={item.forms?.passing_score ?? null}
-                                        to={`/form/result/${item.id}`}
-                                        buttonLabel="Lihat"
-                                    />
+                                        initial={{ opacity: 0, y: 12 }}
+                                        animate={{ opacity: 1, y: 0 }}
+                                        transition={{ duration: 0.35, ease: easeOutExpo, delay: Math.min(index * 0.06, 0.4) }}
+                                    >
+                                        <HistoryCard
+                                            title={item.forms?.title || "Form"}
+                                            author={item.forms?.author_name || "-"}
+                                            duration={item.forms?.duration ? `${item.forms.duration} menit` : "Tanpa Waktu"}
+                                            questions={item.forms?.question_count || 0}
+                                            score={item.total_score || 0}
+                                            passingScore={item.forms?.passing_score ?? null}
+                                            to={`/form/result/${item.id}`}
+                                            buttonLabel="Lihat"
+                                        />
+                                    </motion.div>
                                 ))}
                             </div>
                         )}

@@ -1,9 +1,10 @@
-import { Routes, Route, Navigate, useLocation } from "react-router-dom"
+import { Routes, Route, useLocation } from "react-router-dom"
 import { lazy, Suspense, useEffect, useState } from "react"
-import { MotionConfig, motion } from "motion/react"
+import { AnimatePresence, MotionConfig, motion } from "motion/react"
 import { AuthProvider } from "./lib/auth"
-import Loading from "./components/loading"
 import Navbar from "./components/navbar"
+import Dock from "./components/dock"
+import CreatorSidebar from "./components/creator/sidebar"
 import { AlertToaster } from "./lib/alerts"
 
 const Login = lazy(() => import("./pages/auth/login"))
@@ -14,6 +15,7 @@ const ResetPassword = lazy(() => import("./pages/auth/resetPassword"))
 const Home = lazy(() => import("./pages/home"))
 const History = lazy(() => import("./pages/history"))
 const Profile = lazy(() => import("./pages/profile"))
+const CreditPage = lazy(() => import("./pages/credit"))
 const AdminForms = lazy(() => import("./pages/admin/forms"))
 const FormDescription = lazy(() => import("./pages/form/description"))
 const FormResolver = lazy(() => import("./pages/form/resolver"))
@@ -21,6 +23,8 @@ const FormList = lazy(() => import("./pages/form/formlist"))
 const ResultPage = lazy(() => import("./pages/form/result"))
 const CreatorGuard = lazy(() => import("./pages/creator/guard"))
 const CreatorDashboard = lazy(() => import("./pages/creator/dashboard"))
+const CreatorForms = lazy(() => import("./pages/creator/forms"))
+const CreatorResponden = lazy(() => import("./pages/creator/responden"))
 const CreatorFormNew = lazy(() => import("./pages/creator/formNew"))
 const CreatorFormEdit = lazy(() => import("./pages/creator/formEdit"))
 const CreatorQuestions = lazy(() => import("./pages/creator/questions"))
@@ -30,7 +34,7 @@ const CreatorSubmissionDetail = lazy(() => import("./pages/creator/submissionDet
 const CreatorShared = lazy(() => import("./pages/creator/shared"))
 const CreatorLayout = lazy(() => import("./pages/creator/layout"))
 
-const hideNavPaths = ["/login", "/register", "/auth", "/forgot-password", "/reset-password", "/form/description", "/form", "/form/list", "/form/result"]
+const hideNavPaths = ["/login", "/register", "/auth", "/forgot-password", "/reset-password", "/form/description", "/form", "/form/list", "/form/result", "/credit"]
 
 function useIsMobile() {
   const [isMobile, setIsMobile] = useState(() =>
@@ -47,22 +51,49 @@ function useIsMobile() {
 function App() {
   const location = useLocation()
   const isMobile = useIsMobile()
+  const isCreator = location.pathname.startsWith("/creator")
   const hideNav =
     hideNavPaths.includes(location.pathname) ||
     /^\/form\/[^/]+$/.test(location.pathname) ||
-    location.pathname.startsWith("/creator") ||
     (isMobile && location.pathname.startsWith("/form/result"))
+  // Dock bottom nav khusus mobile: sama seperti Navbar, tapi tidak tampil di creator
+  // dashboard maupun halaman yang menyembunyikan navigasi (auth, form resolver, dll).
+  const showDock = !hideNav && !isCreator
 
   return (
     <AuthProvider>
       <MotionConfig reducedMotion="user">
       <div className="bg-second min-h-screen">
-        {!hideNav && <Navbar />}
-        <Suspense fallback={<Loading />}>
+        <AnimatePresence mode="wait" initial={false}>
+          {!hideNav && !isCreator && (
+            <motion.div
+              key="nav-general"
+              className="sticky top-0 z-50"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.2, ease: "easeOut" }}
+            >
+              <Navbar />
+            </motion.div>
+          )}
+          {!hideNav && isCreator && (
+            <motion.div
+              key="nav-creator"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.2, ease: "easeOut" }}
+            >
+              <CreatorSidebar />
+            </motion.div>
+          )}
+        </AnimatePresence>
+        <Suspense>
           {/* Key = pathname agar tiap pindah halaman me-replay animasi pembukaan halaman */}
           <motion.div
             key={location.pathname}
-            className="min-h-screen"
+            className={`min-h-screen ${showDock ? "pb-24 md:pb-0" : ""}`}
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
@@ -71,6 +102,7 @@ function App() {
             <Route path="/" element={<Home />} />
             <Route path="/history" element={<History />} />
             <Route path="/profile" element={<Profile />} />
+            <Route path="/credit" element={<CreditPage />} />
             <Route path="/admin/forms" element={<AdminForms />} />
             <Route path="/form/description" element={<FormDescription />} />
             <Route path="/form/:formId" element={<FormResolver />} />
@@ -87,7 +119,19 @@ function App() {
               />
               <Route
                 path="/creator/forms"
-                element={<Navigate to="/creator" replace />}
+                element={
+                  <CreatorGuard>
+                    <CreatorForms />
+                  </CreatorGuard>
+                }
+              />
+              <Route
+                path="/creator/responden"
+                element={
+                  <CreatorGuard>
+                    <CreatorResponden />
+                  </CreatorGuard>
+                }
               />
               <Route
                 path="/creator/forms/new"
@@ -154,6 +198,7 @@ function App() {
           </Routes>
           </motion.div>
         </Suspense>
+        {showDock && <Dock />}
       </div>
       </MotionConfig>
       <AlertToaster />

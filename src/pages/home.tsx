@@ -5,7 +5,6 @@ import Search from "../components/search"
 import { supabase } from "../lib/supabase"
 import { useAuth } from "../lib/auth-context"
 import { loginUrl } from "../lib/redirect"
-import Loading from "../components/loading"
 
 interface FormData {
     id: string
@@ -103,11 +102,10 @@ function Home() {
         }
     }
 
-    if (authLoading || !user) return <Loading />
+    if (authLoading || !user) return null
 
     return (
         <>
-            <Loading show={authLoading || !user} />
             {!authLoading && user && (
                 <div className="flex flex-col items-center justify-center min-h-[60vh] px-4 py-10 text-left lg:text-center">
                     <div className="w-full max-w-xl">

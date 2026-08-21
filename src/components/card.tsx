@@ -13,7 +13,7 @@ interface CardProps {
 
 function Card({ title, author, duration, questions, to, buttonLabel = "Mulai", state }: CardProps) {
     return (
-        <div className="card bg-base border border-second rounded-none">
+        <div className="card bg-base border border-second rounded-2xl lg:rounded-xl transition-colors hover:bg-base-200">
             <div className="card-body">
                 <h2 className="card-title text-darks">{title}</h2>
                 <p className="text-sm text-tinted">Oleh <span className="font-semibold text-accents">{author}</span></p>
@@ -31,7 +31,7 @@ function Card({ title, author, duration, questions, to, buttonLabel = "Mulai", s
                     <Link
                         to={to}
                         state={state}
-                        className="btn rounded-none bg-darks text-base border-none h-9 min-h-0"
+                        className="btn rounded-full lg:rounded-xl bg-darks text-base border-none h-9 min-h-0"
                     >
                         <Play className="h-3 w-auto" fill="currentColor" strokeWidth={0} />
                         {buttonLabel}

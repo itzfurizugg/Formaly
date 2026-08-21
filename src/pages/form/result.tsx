@@ -1,11 +1,13 @@
 import { useEffect, useState, useCallback } from "react"
 import { useNavigate, useParams } from "react-router-dom"
-import { ArrowLeft, Check, X, Clock } from "lucide-react"
+import { motion } from "motion/react"
+import { Check, X, Clock } from "lucide-react"
 import { supabase } from "../../lib/supabase"
 import { useAuth } from "../../lib/auth-context"
-import Loading from "../../components/loading"
 import Filter from "../../components/filter"
 import { RichText } from "../../components/richText"
+import { listContainer, listItem } from "../../lib/motion"
+import BackButton from "../../components/backButton"
 
 interface AnswerRow {
     id: string
@@ -147,17 +149,11 @@ function ResultPage() {
 
     return (
         <>
-            <Loading show={authLoading || loading} />
             {!authLoading && !loading && (
             error ? (
                 <div className="flex flex-col items-center px-4 py-10">
                     <div className="w-full max-w-2xl">
-                        <button
-                            onClick={() => navigate("/history")}
-                            className="flex items-center gap-2 text-sm text-tinted hover:text-darks mb-4 transition-colors"
-                        >
-                            <ArrowLeft className="h-4 w-4" /> Kembali ke Riwayat
-                        </button>
+                        <BackButton to="/history" />
                         <div role="alert" className="text-sm text-wrong bg-wrong/5 border border-wrong/20 rounded-lg px-4 py-3">
                             {error}
                         </div>
@@ -166,19 +162,14 @@ function ResultPage() {
             ) : (
         <div className="flex flex-col items-center px-4 py-10">
             <div className="w-full max-w-4xl">
-                <button
-                    onClick={() => navigate("/history")}
-                    className="flex items-center gap-2 text-sm text-tinted hover:text-darks mb-4 transition-colors"
-                >
-                    <ArrowLeft className="h-4 w-4" /> Kembali
-                </button>
+                <BackButton to="/history" />
 
                 <h1 className="text-2xl lg:text-4xl font-bold text-darks mb-1">Hasil Pengerjaan</h1>
                 <p className="text-sm text-tinted mb-6">
                     {info?.form?.title || "Form"}
                 </p>
 
-                <div className="bg-white border border-second p-6 shadow-sm rounded-none mb-6">
+                <div className="bg-white border border-second p-6 shadow-sm rounded-xl mb-6">
                     <div className="flex items-center gap-4">
                         <div className="flex-1">
                             <p className="text-xs text-tinted">Total Skor</p>
@@ -233,7 +224,13 @@ function ResultPage() {
                                 <p className="text-tinted">Tidak ada jawaban yang cocok dengan filter ini.</p>
                             </div>
                         ) : (
-                            <div className="space-y-6">
+                            <motion.div
+                                key={filter}
+                                className="space-y-6"
+                                variants={listContainer}
+                                initial="hidden"
+                                animate="show"
+                            >
                                 {pgAnswers.length > 0 && (
                                     <div className="space-y-3">
                                         <div className="flex items-center gap-3">
@@ -243,7 +240,7 @@ function ResultPage() {
                                         {pgAnswers.map((a) => {
                                             const idx = answers.indexOf(a)
                                             return (
-                                                <div key={a.id} className="bg-white border border-second p-5 shadow-sm rounded-none">
+                                                <motion.div key={a.id} variants={listItem} className="bg-white border border-second p-5 shadow-sm rounded-xl transition-colors hover:bg-base-200">
                                                     <div className="flex items-center gap-2 flex-wrap mb-1">
                                                         <span className="text-sm font-bold text-darks">Soal {idx + 1}</span>
                                                         <span className="badge badge-ghost text-tinted rounded-full text-xs">{typeLabel(a.question?.question_type || "")}</span>
@@ -307,7 +304,7 @@ function ResultPage() {
                                                             )
                                                         })}
                                                     </div>
-                                                </div>
+                                                </motion.div>
                                             )
                                         })}
                                     </div>
@@ -321,7 +318,7 @@ function ResultPage() {
                                         {textAnswers.map((a) => {
                                             const idx = answers.indexOf(a)
                                             return (
-                                                <div key={a.id} className="bg-white border border-second p-5 shadow-sm rounded-none">
+                                                <motion.div key={a.id} variants={listItem} className="bg-white border border-second p-5 shadow-sm rounded-xl transition-colors hover:bg-base-200">
                                                     <div className="flex items-center gap-2 flex-wrap mb-1">
                                                         <span className="text-sm font-bold text-darks">Soal {idx + 1}</span>
                                                         <span className="badge badge-ghost text-tinted rounded-full text-xs">{typeLabel(a.question?.question_type || "")}</span>
@@ -333,12 +330,12 @@ function ResultPage() {
                                                     <div className="mt-3 text-sm text-darks bg-base border border-second rounded-lg px-3 py-2 whitespace-pre-wrap break-words">
                                                         {a.answer_text || "-"}
                                                     </div>
-                                                </div>
+                                                </motion.div>
                                             )
                                         })}
                                     </div>
                                 )}
-                            </div>
+                            </motion.div>
                         )}
                     </>
                 )}

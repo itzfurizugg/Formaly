@@ -1,4 +1,3 @@
-import Loading from "../../components/loading"
 import { useEffect, useState } from "react"
 import { useNavigate } from "react-router-dom"
 import type { ReactNode } from "react"
@@ -45,8 +44,6 @@ function RequireCreator({ children }: { children: ReactNode }) {
 
     return (
         <>
-            {/* show = belum diizinkan & role belum di-cache: overlay tampil saat cek role */}
-            <Loading show={!allowed && cachedRole === undefined} />
             {allowed && <>{children}</>}
         </>
     )

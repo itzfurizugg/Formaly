@@ -1,8 +1,8 @@
 import { useState } from "react"
 import { useNavigate } from "react-router-dom"
-import { ArrowLeft } from "lucide-react"
 import { supabase } from "../../lib/supabase"
 import { useAuth } from "../../lib/auth-context"
+import BackButton from "../../components/backButton"
 import { alertSaveError, alertSaveSuccess } from "../../lib/alerts"
 import RichTextEditor from "../../components/richText"
 
@@ -47,17 +47,12 @@ function FormNew() {
     return (
         <div className="flex flex-col items-center px-4 py-10">
             <div className="w-full max-w-5xl">
-                <button
-                    onClick={() => navigate("/creator")}
-                    className="flex items-center gap-2 text-sm text-tinted hover:text-darks mb-4 transition-colors"
-                >
-                    <ArrowLeft className="h-4 w-4" /> Kembali
-                </button>
+                <BackButton to="/creator" />
 
                 <h1 className="text-2xl font-bold text-darks mb-1">Buat Form Baru</h1>
                 <p className="text-sm text-tinted mb-6">Lengkapi informasi dasar form.</p>
 
-                <form onSubmit={handleSubmit} className="space-y-4 bg-white border border-second p-3 lg:p-6 shadow-sm rounded-none">
+                <form onSubmit={handleSubmit} className="space-y-4 bg-white border border-second p-3 lg:p-6 shadow-sm rounded-xl">
                     <div>
                         {/* <label className="block text-sm font-medium text-darks mb-1.5">Judul</label> */}
                         <input

@@ -1,6 +1,5 @@
 import { useState, useEffect } from "react"
 import { useNavigate, useParams, useLocation } from "react-router-dom"
-import Loading from "../../components/loading"
 import { supabase } from "../../lib/supabase"
 import { useAuth } from "../../lib/auth-context"
 import { loginUrl } from "../../lib/redirect"
@@ -92,7 +91,6 @@ function FormResolver() {
 
     return (
         <>
-            <Loading show={mode === "loading"} />
             {mode !== "loading" && (
             mode === "exam" ? (
                 <FormPage />

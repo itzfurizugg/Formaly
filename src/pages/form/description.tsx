@@ -1,11 +1,11 @@
-import Loading from "../../components/loading"
 import { useState, useEffect } from "react"
 import { useNavigate, useLocation } from "react-router-dom"
-import { Clock, FileText, ArrowLeft, AlertCircle } from "lucide-react"
+import { Clock, FileText, AlertCircle } from "lucide-react"
 import { RichText } from "../../components/richText"
 import { supabase } from "../../lib/supabase"
 import { useAuth } from "../../lib/auth-context"
 import { loginUrl } from "../../lib/redirect"
+import BackButton from "../../components/backButton"
 
 interface FormItem {
     id: string
@@ -114,20 +114,14 @@ function FormDescriptionPage() {
 
     return (
         <>
-            <Loading show={loading && !form} />
             {!loading && form && (
-                <div className="flex flex-col items-center min-h-screen sm:min-h-[80vh] sm:justify-center px-0 pt-6 pb-28 sm:px-4 sm:py-10 bg-white sm:bg-transparent">
-                    <div className="w-full max-w-4xl bg-white sm:border sm:border-second p-4 sm:p-8 sm:shadow-sm sm:rounded-lg relative">
-
+                <div className="flex flex-col items-center min-h-screen sm:min-h-[80vh] sm:justify-center px-0 pt-6 pb-28 sm:px-4 sm:py-10 bg-base-300 sm:bg-transparent">
+                    <div className="w-full max-w-4xl bg-base-300 md:bg-white sm:border sm:border-second p-4 sm:p-8 sm:shadow-sm sm:rounded-lg relative">
                         {/* Tombol Kembali */}
                         {locationState?.form && (
-                            <button
-                                onClick={() => navigate("/")}
-                                className="flex items-center gap-2 text-xs sm:text-sm text-tinted hover:text-darks mb-4 sm:mb-6 transition-colors"
-                            >
-                                <ArrowLeft className="h-4 w-4" /> Kembali
-                            </button>
+                            <BackButton to="/" />
                         )}
+
 
                         <div className="border-b border-second pb-3 sm:pb-4">
                             <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold text-darks leading-snug sm:leading-tight">
@@ -196,11 +190,11 @@ function FormDescriptionPage() {
 
                     {/* Tombol Mulai sticky di bawah (mobile) */}
                     <div className="fixed bottom-0 left-0 right-0 pointer-events-none sm:hidden">
-                        <div className="bg-white px-4 pb-4 pt-3 border-t mb-3 border-second pointer-events-auto">
+                        <div className="bg-base-300 px-4 pb-4 pt-3 border-t border-second pointer-events-auto">
                             <button
                                 onClick={alreadySubmitted ? () => navigate("/history") : handleStartExam}
                                 disabled={loading}
-                                className="w-full py-3 bg-darks text-white font-bold rounded-lg hover:opacity-90 transition-opacity flex items-center justify-center gap-2 text-sm"
+                                className="w-full py-3 bg-darks text-white font-bold rounded-lg hover:opacity-90 transition-opacity flex items-center justify-center gap-2 text-sm mb-4"
                             >
                                 {loading ? (
                                     <span className="loading loading-spinner loading-sm" />

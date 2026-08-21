@@ -1,8 +1,11 @@
 import { useState } from "react"
 import { Link } from "react-router-dom"
-import { ArrowLeft, MailCheck, KeyRound } from "lucide-react"
+import { AnimatePresence, motion } from "motion/react"
+import { MailCheck, KeyRound } from "lucide-react"
 import logo from "../../assets/logo.svg"
 import { useAuth } from "../../lib/auth-context"
+import { alertPop, fadeSlide } from "../../lib/motion"
+import BackButton from "../../components/backButton"
 
 function ForgotPassword() {
     const { resetPassword } = useAuth()
@@ -49,14 +52,13 @@ function ForgotPassword() {
                         <img src={logo} alt="Formaly" className="h-10 w-auto" />
                     </div>
 
-                    <div className="bg-white rounded-2xl border border-second p-8 shadow-sm">
-                        <Link
-                            to="/login"
-                            className="inline-flex items-center gap-1 text-xs text-tinted hover:text-darks transition-colors mb-4"
-                        >
-                            <ArrowLeft className="h-3 w-3" />
-                            Kembali
-                        </Link>
+                    <motion.div
+                        variants={fadeSlide}
+                        initial="hidden"
+                        animate="show"
+                        className="bg-white rounded-3xl lg:rounded-2xl border border-second p-8 shadow-sm"
+                    >
+                        <BackButton to="/login" />
 
                         <div className="flex items-center gap-2 mb-1">
                             <h2 className="text-3xl font-bold text-darks">Lupa Password</h2>
@@ -65,8 +67,16 @@ function ForgotPassword() {
                             Masukkan email kamu, dan kami akan mengirimkan tautan untuk mengatur ulang password.
                         </p>
 
+                        <AnimatePresence mode="wait">
                         {sent ? (
-                            <div className="flex flex-col items-center text-center py-6">
+                            <motion.div
+                                key="sent"
+                                initial={{ opacity: 0, y: 12 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                exit={{ opacity: 0, y: -8 }}
+                                transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }}
+                                className="flex flex-col items-center text-center py-6"
+                            >
                                 <MailCheck className="h-12 w-12 text-done mb-4" />
                                 <h3 className="text-lg font-bold text-darks">Email Terkirim</h3>
                                 <p className="text-sm text-tinted mt-2 mb-6">
@@ -75,18 +85,34 @@ function ForgotPassword() {
                                 <button
                                     type="button"
                                     onClick={() => { setSent(false); setEmail("") }}
-                                    className="btn bg-base text-darks border border-second hover:bg-second w-full"
+                                    className="btn bg-base text-darks border border-second hover:bg-second transition-colors w-full rounded-full lg:rounded-xl"
                                 >
                                     Kirim ulang
                                 </button>
-                            </div>
+                            </motion.div>
                         ) : (
-                            <>
+                            <motion.div
+                                key="form"
+                                initial={{ opacity: 0, y: 12 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                exit={{ opacity: 0, y: -8 }}
+                                transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }}
+                            >
+                                <AnimatePresence>
                                 {error && (
-                                    <div role="alert" className="text-sm text-wrong bg-wrong/5 border border-wrong/20 rounded-lg px-4 py-3 mb-4">
+                                    <motion.div
+                                        key="forgot-error"
+                                        variants={alertPop}
+                                        initial="hidden"
+                                        animate="show"
+                                        exit="exit"
+                                        role="alert"
+                                        className="text-sm text-wrong bg-wrong/5 border border-wrong/20 rounded-xl lg:rounded-lg px-4 py-3 mb-4"
+                                    >
                                         {error}
-                                    </div>
+                                    </motion.div>
                                 )}
+                                </AnimatePresence>
 
                                 <form onSubmit={handleSubmit} className="space-y-4">
                                     <div>
@@ -108,7 +134,7 @@ function ForgotPassword() {
                                     <button
                                         type="submit"
                                         disabled={loading}
-                                        className="btn bg-darks text-base border-none w-full mt-2 hover:opacity-90 transition-opacity disabled:opacity-60"
+                                        className="btn bg-darks text-base border-none w-full mt-2 hover:opacity-90 transition-opacity disabled:opacity-60 rounded-full lg:rounded-xl"
                                     >
                                         {loading ? (
                                             <span className="loading loading-spinner loading-sm" />
@@ -119,12 +145,13 @@ function ForgotPassword() {
                                     </button>
                                 </form>
 
-                                <Link to="/login" className="btn bg-base text-darks border border-second hover:bg-second w-full mt-2">
+                                <Link to="/login" className="btn bg-base text-darks border border-second hover:bg-second transition-colors w-full mt-2 rounded-full lg:rounded-xl">
                                     Sudah ingat? Masuk
                                 </Link>
-                            </>
+                            </motion.div>
                         )}
-                    </div>
+                        </AnimatePresence>
+                    </motion.div>
                 </div>
             </div>
         </div>
