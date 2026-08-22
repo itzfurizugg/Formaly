@@ -164,7 +164,7 @@ function CreatorDashboard() {
                                 </div>
                             </div>
 
-                            <div className="relative overflow-hidden bg-white border border-second rounded-lg shadow-sm p-3 sm:p-4 min-w-0">
+                            <div className="relative overflow-hidden bg-white border border-second rounded-lg shadow-sm p-3 sm:p-4 min-w-0 hidden lg:block">
                                 <div className="absolute -right-3 -top-3 h-16 w-16 rounded-full bg-second/40" />
                                 <div className="relative flex items-start justify-between">
                                     <div className="min-w-0">
@@ -194,10 +194,29 @@ function CreatorDashboard() {
                                 </div>
                             </div> */}
                         </div>
+                                                {/* Chart hanya tampil di rentang layar lg saja */}
+                        <div className="rounded-xl hidden lg:block mt-3">
+                            {barData.length > 0 ? (
+                                <DistributionChart
+                                    title="Responden per Form"
+                                    subtitle="Jumlah responden tiap formulir."
+                                    data={barData}
+                                    barColor={colors.done}
+                                    onBarClick={(id) => navigate(`/creator/forms/${id}`)}
+                                />
+                            ) : (
+                                <div className="bg-white border border-second p-5 shadow-sm rounded-lg flex items-center justify-center h-[260px]">
+                                    <p className="text-sm text-tinted">Belum ada submission untuk ditampilkan.</p>
+                                </div>
+                            )}
+                        </div>
 
                         {/* Di mobile tidak ada sidebar, jadi akses halaman lewat dashboard. */}
-                        <div className="lg:hidden flex flex-col gap-2 sm:gap-3 mt-8">
-                            {[{ to: "/creator/forms", label: "Kelola Form", icon: FileText }, { to: "/creator/responden", label: "Responden", icon: ChartNoAxesColumn }].map((item, index) => (
+                        <div className="lg:hidden flex flex-col gap-2 sm:gap-3 mt-3">
+                            {[
+                                { to: "/creator/forms", label: "Kelola Form", desc: "Buat dan atur form kamu", icon: FileText },
+                                { to: "/creator/responden", label: "Responden", desc: "Lihat hasil pengisian form", icon: ChartNoAxesColumn },
+                            ].map((item, index) => (
                                 <motion.div
                                     key={item.to}
                                     initial={{ opacity: 0, y: 12 }}
@@ -206,20 +225,24 @@ function CreatorDashboard() {
                                 >
                                     <Link
                                         to={item.to}
-                                        className="flex items-center justify-between bg-white border border-second rounded-lg shadow-sm p-4 transition-colors hover:bg-base-200"
+                                        className="flex items-center gap-3.5 bg-white border border-second rounded-2xl shadow-sm p-4 transition-all hover:bg-base-200 active:scale-[0.98]"
                                     >
-                                        <span className="flex items-center gap-2.5 text-darks font-medium">
-                                            <item.icon className="h-4 w-4" /> {item.label}
+                                        <span className="w-8 h-8 shrink-0 flex items-center justify-center">
+                                            <item.icon className="h-5 w-5 text-darks" />
                                         </span>
-                                        <ChevronRight className="h-4 w-4 text-tinted" />
+                                        <span className="flex-1 min-w-0">
+                                            <span className="block text-sm font-bold text-darks">{item.label}</span>
+                                            <span className="block text-xs text-tinted">{item.desc}</span>
+                                        </span>
+                                        <ChevronRight className="h-4 w-4 text-tinted shrink-0" />
                                     </Link>
                                 </motion.div>
                             ))}
                         </div>
 
 
-                        <div className="grid gap-4 mt-8 lg:grid-cols-2">
-                            <div className="rounded-xl hidden sm:block">
+                        {/* <div className="grid gap-4 mt-8 lg:grid-cols-2">
+                            <div className="rounded-xl hidden lg:block">
                                 {barData.length > 0 ? (
                                     <DistributionChart
                                         title="Submission per Form"
@@ -235,7 +258,7 @@ function CreatorDashboard() {
                                 )}
                             </div>
 
-                            <div className="min-w-0 hidden sm:block">
+                            <div className="min-w-0 hidden lg:block">
                                 <h2 className="text-xl lg:text-2xl font-bold text-darks ml-3 sm:ml-1 mb-4">Submission Terbaru</h2>
                                 <div className="min-w-0 space-y-3">
                                     {recent.length > 0 ? (
@@ -246,25 +269,25 @@ function CreatorDashboard() {
                                                 animate={{ opacity: 1, y: 0 }}
                                                 transition={{ duration: 0.35, ease: easeOutExpo, delay: Math.min(index * 0.06, 0.4) }}
                                             >
-                                            <button
-                                                onClick={() => navigate(`/creator/forms/${s.form?.id}/submissions/${s.id}`)}
-                                                className="bg-white border border-second rounded-lg shadow-sm p-4 w-full text-left hover:bg-base-200 transition-colors"
-                                            >
-                                                <div className="flex items-start justify-between gap-2">
-                                                    <div className="min-w-0">
-                                                        <p className="font-semibold text-darks truncate">{s.user?.name || "Pengguna"}</p>
-                                                        <p className="text-xs text-tinted mt-0.5 truncate">{s.form?.title || "Form"}</p>
+                                                <button
+                                                    onClick={() => navigate(`/creator/forms/${s.form?.id}/submissions/${s.id}`)}
+                                                    className="bg-white border border-second rounded-lg shadow-sm p-4 w-full text-left hover:bg-base-200 transition-colors"
+                                                >
+                                                    <div className="flex items-start justify-between gap-2">
+                                                        <div className="min-w-0">
+                                                            <p className="font-semibold text-darks truncate">{s.user?.name || "Pengguna"}</p>
+                                                            <p className="text-xs text-tinted mt-0.5 truncate">{s.form?.title || "Form"}</p>
+                                                        </div>
+                                                        <div className="flex flex-col items-end shrink-0">
+                                                            {s.total_score != null && (
+                                                                <span className="text-darks font-bold">{s.total_score}</span>
+                                                            )}
+                                                            <span className="text-xs text-tinted mt-0.5">
+                                                                {s.submitted_at ? new Date(s.submitted_at).toLocaleString("id-ID", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" }) : "-"}
+                                                            </span>
+                                                        </div>
                                                     </div>
-                                                    <div className="flex flex-col items-end shrink-0">
-                                                        {s.total_score != null && (
-                                                            <span className="text-darks font-bold">{s.total_score}</span>
-                                                        )}
-                                                        <span className="text-xs text-tinted mt-0.5">
-                                                            {s.submitted_at ? new Date(s.submitted_at).toLocaleString("id-ID", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" }) : "-"}
-                                                        </span>
-                                                    </div>
-                                                </div>
-                                            </button>
+                                                </button>
                                             </motion.div>
                                         ))
                                     ) : (
@@ -274,7 +297,7 @@ function CreatorDashboard() {
                                     )}
                                 </div>
                             </div>
-                        </div>
+                        </div> */}
                     </div>
                 )}
             </div>

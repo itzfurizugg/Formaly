@@ -1,20 +1,6 @@
 @import "tailwindcss";
 @plugin "daisyui";
 
-/* ---- Rounded design system (terinspirasi iOS 26, identitas Formaly) ---- */
-/* Mobile: sudut lebih lembut ala iOS 26 — Desktop: tetap subtle */
-@media (max-width: 1023px) {
-  .input,
-  .select,
-  .textarea {
-    border-radius: 0.875rem;
-  }
-
-  .btn:not(.btn-circle):not(.btn-square) {
-    border-radius: 0.875rem;
-  }
-}
-
 @theme {
   --font-sans: "Funnel Display", "DM Sans", ui-sans-serif, system-ui, sans-serif;
   --font-display: "Funnel Display", ui-sans-serif, system-ui, sans-serif;

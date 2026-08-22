@@ -95,11 +95,11 @@ function FormList() {
             </div>
 
             <div className="fixed bottom-0 left-0 right-0 pointer-events-none lg:hidden">
-                <div className="bg-base-300 px-4 pb-4 pointer-events-auto">
+                <div className="bg-base-300 px-13 pb-4 pointer-events-auto">
                     <div className="w-full max-w-3xl mx-auto">
                         <button
                     onClick={() => backToForm(current)}
-                            className="btn w-full h-12 mb-3 min-h-0 bg-darks text-white rounded-xl hover:opacity-90"
+                            className="btn w-full h-14 mb-3 min-h-0 bg-darks text-white rounded-xl hover:opacity-90 rounded-full!"
                         >
                             Kembali ke soal
                         </button>

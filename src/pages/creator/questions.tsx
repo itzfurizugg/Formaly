@@ -314,7 +314,7 @@ function Questions({ embedded = false }: { embedded?: boolean }) {
             initial="hidden"
             animate="show"
             exit="exit"
-            className="bg-white border border-second p-3 sm:p-5 shadow-sm rounded-xl mb-6 overflow-block space-y-4"
+            className="bg-white border border-second p-3 sm:p-5 shadow-sm rounded-xl overflow-block space-y-4"
         >
             <div className="flex items-center justify-between">
                 <h2 className="font-semibold text-darks ml-2 sm:ml-1">{editingId ? "Edit Soal" : "Tambah Soal"}</h2>

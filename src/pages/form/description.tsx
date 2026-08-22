@@ -116,7 +116,7 @@ function FormDescriptionPage() {
         <>
             {!loading && form && (
                 <div className="flex flex-col items-center min-h-screen sm:min-h-[80vh] sm:justify-center px-0 pt-6 pb-28 sm:px-4 sm:py-10 bg-base-300 sm:bg-transparent">
-                    <div className="w-full max-w-4xl bg-base-300 md:bg-white sm:border sm:border-second p-4 sm:p-8 sm:shadow-sm sm:rounded-lg relative">
+                    <div className="w-full max-w-4xl bg-base-300 md:bg-white sm:border sm:border-second p-3.5 sm:p-8 sm:shadow-sm sm:rounded-lg relative">
                         {/* Tombol Kembali */}
                         {locationState?.form && (
                             <BackButton to="/" />
@@ -124,16 +124,16 @@ function FormDescriptionPage() {
 
 
                         <div className="border-b border-second pb-3 sm:pb-4">
-                            <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold text-darks leading-snug sm:leading-tight">
+                            <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold text-darks leading-snug sm:leading-tight">
                                 {form.title}
                             </h1>
-                            <p className="text-xs sm:text-sm text-tinted mt-2">
+                            <p className="text-xs sm:text-sm text-tinted mt-1">
                                 Dibuat oleh: <span className="font-medium text-darks">{form.author_name}</span>
                             </p>
                         </div>
 
                         {/* Informasi Detail (Durasi & Jumlah Soal) */}
-                        <div className="grid grid-cols-2 gap-2 sm:gap-4 mb-4 sm:mb-6 mt-4 sm:mt-6">
+                        <div className="grid grid-cols-2 gap-2 sm:gap-4 mb-4 sm:mb-6 mt-2 sm:mt-6">
                             <div className="flex items-center gap-2 sm:gap-3 p-3 sm:p-4 bg-base border border-second rounded-lg">
                                 <Clock className="h-5 w-5 sm:h-6 sm:w-6 text-darks shrink-0" />
                                 <div className="min-w-0">
@@ -152,15 +152,15 @@ function FormDescriptionPage() {
 
                         {/* Deskripsi / Petunjuk Pengerjaan */}
                         <div className="mb-6 sm:mb-8">
+                            <h3 className="text-xs sm:text-sm font-semibold text-darks mb-2">Deskripsi & Petunjuk:</h3>
+                            <div className="p-3 sm:p-4 bg-base border border-second rounded-lg text-xs sm:text-sm text-darks leading-relaxed whitespace-pre-line mb-4">
+                                {form.description ? <RichText html={form.description} /> : "Tidak ada deskripsi tambahan untuk formulir ini. Silakan mulai mengerjakan jika sudah siap."}
+                            </div>
                             <div className="flex items-start gap-2 sm:gap-3 p-3 sm:p-4 bg-amber-500/10 border border-amber-500/20 rounded-lg mb-6 sm:mb-8 text-amber-800 text-xs sm:text-sm">
                                 {/* <AlertCircle className="h-4 w-4 sm:h-5 sm:w-5 shrink-0 mt-0.5 text-amber-600" /> */}
                                 <p>
                                     Pastikan koneksi internet stabil. Timer akan berjalan otomatis setelah Anda menekan tombol "Mulai Mengerjakan" di bawah ini.
                                 </p>
-                            </div>
-                            <h3 className="text-xs sm:text-sm font-semibold text-darks mb-2">Deskripsi & Petunjuk:</h3>
-                            <div className="p-3 sm:p-4 bg-base border border-second rounded-lg text-xs sm:text-sm text-darks leading-relaxed whitespace-pre-line">
-                                {form.description ? <RichText html={form.description} /> : "Tidak ada deskripsi tambahan untuk formulir ini. Silakan mulai mengerjakan jika sudah siap."}
                             </div>
                         </div>
 
@@ -190,11 +190,11 @@ function FormDescriptionPage() {
 
                     {/* Tombol Mulai sticky di bawah (mobile) */}
                     <div className="fixed bottom-0 left-0 right-0 pointer-events-none sm:hidden">
-                        <div className="bg-base-300 px-4 pb-4 pt-3 border-t border-second pointer-events-auto">
+                        <div className="bg-base-300 px-10 pb-4 pt-3 border-t border-second pointer-events-auto">
                             <button
                                 onClick={alreadySubmitted ? () => navigate("/history") : handleStartExam}
                                 disabled={loading}
-                                className="w-full py-3 bg-darks text-white font-bold rounded-lg hover:opacity-90 transition-opacity flex items-center justify-center gap-2 text-sm mb-4"
+                                className="w-full py-5 bg-darks text-white font-bold rounded-full hover:opacity-90 transition-opacity flex items-center justify-center gap-2 text-sm mb-4"
                             >
                                 {loading ? (
                                     <span className="loading loading-spinner loading-sm" />

@@ -225,7 +225,7 @@ function FormEdit() {
 
                 {/* Layout ala YouTube player: tiap panel punya tinggi layar sendiri
                     dan scroll action-nya terpisah dari panel sebelahnya. */}
-                <div className="flex flex-col lg:flex-row items-start gap-6 lg:flex-1 lg:min-h-0 lg:overflow-hidden lg:mt-2">
+                <div className="flex flex-col lg:flex-row items-start gap-6 lg:flex-1 lg:min-h-0 lg:overflow-hidden lg:mt-2 mb-5">
                     <div className="w-full lg:w-[45%] lg:h-full lg:min-h-0 lg:overflow-y-auto lg:overscroll-contain">
                         <form onSubmit={handleSave} className="space-y-3 bg-white border border-second p-3 lg:p-6 sm:p-4 shadow-sm rounded-xl">
                     <div>

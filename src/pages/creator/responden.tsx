@@ -48,8 +48,10 @@ function CreatorResponden() {
             <div className="w-full xl:max-w-7xl lg:max-w-5xl">
                 <BackButton to="/creator" />
 
-                <h1 className="text-3xl lg:text-4xl font-bold font-display text-darks mb-1">Responden</h1>
-                <p className="text-sm text-tinted mb-6">Pilih form untuk melihat submission-nya.</p>
+                <div className="ml-2">
+                    <h1 className="text-3xl lg:text-4xl font-bold font-display text-darks mb-1">Responden</h1>
+                    <p className="text-sm text-tinted mb-6">Pilih form untuk melihat submission-nya.</p>
+                </div>
 
                 {!loading && error && (
                     <div role="alert" className="text-sm text-wrong bg-wrong/5 border border-wrong/20 rounded-xl px-4 py-3 mb-4">
@@ -63,7 +65,7 @@ function CreatorResponden() {
                     </div>
                 )}
                 {!loading && forms.length > 0 && (
-                    <div className="grid grid-cols-2 gap-3">
+                    <div className="grid lg:grid-cols-2 gap-3">
                         {forms.map((form) => (
                             <button
                                 key={form.id}

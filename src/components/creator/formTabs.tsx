@@ -45,7 +45,7 @@ function FormTabs({ id, active }: { id?: string; active: FormTabKey }) {
                 <button
                     key={key}
                     onClick={() => navigate(path(id))}
-                    className={`btn btn-sm rounded-full! ${
+                    className={`btn btn-sm rounded-full ${
                         active === key
                             ? "bg-darks text-base border-none"
                             : "bg-base text-darks border border-second hover:bg-white hover:shadow-sm"
