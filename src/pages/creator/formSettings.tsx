@@ -1,22 +1,16 @@
 import { useCallback, useEffect, useState } from "react"
 import { useNavigate, useParams } from "react-router-dom"
 import {
-    ClipboardList,
+    BookOpenText,
     Eye,
-    EyeOff,
-    Info,
-    KeyRound,
-    ListChecks,
     Loader2,
-    Save,
-    Settings,
-    Share2,
     Shuffle,
 } from "lucide-react"
 import { supabase } from "../../lib/supabase"
 import { useAuth } from "../../lib/auth-context"
 import { alertSaveError, alertSaveSuccess, showAlert } from "../../lib/alerts"
 import BackButton from "../../components/backButton"
+import FormTabs from "../../components/creator/formTabs"
 import Loading from "../../components/loading"
 
 interface FormSettingsData {
@@ -47,7 +41,7 @@ const SETTING_ROWS: {
     },
     {
         key: "show_answers_to_respondent",
-        icon: EyeOff,
+        icon: BookOpenText,
         title: "Tampilkan jawaban kepada responden",
         description: "Responden bisa melihat rincian jawabannya beserta koreksi benar/salah di halaman hasil.",
         hint: "Cocok dimatikan untuk ujian agar kunci jawaban tidak tersebar.",
@@ -134,8 +128,6 @@ function FormSettings() {
         }
     }
 
-    const tabBtn = "btn btn-sm bg-base text-darks border border-second hover:bg-second"
-
     return (
         <>
             <Loading show={loading} />
@@ -144,28 +136,9 @@ function FormSettings() {
                     <div className="w-full xl:max-w-7xl lg:max-w-5xl">
                         <BackButton to="/creator" />
 
-                        <div className="flex flex-wrap gap-2 mb-6">
-                            <button onClick={() => navigate(`/creator/forms/${id}`)} className={tabBtn}>
-                                <Info className="h-3.5 w-3.5" /> <span className="hidden sm:block">Detail Form</span>
-                            </button>
-                            <button onClick={() => navigate(`/creator/forms/${id}/questions`)} className={`${tabBtn} lg:hidden`}>
-                                <ListChecks className="h-3.5 w-3.5" /> <span className="hidden sm:block">Soal</span>
-                            </button>
-                            <button onClick={() => navigate(`/creator/forms/${id}/shared`)} className={tabBtn}>
-                                <Share2 className="h-3.5 w-3.5" /> <span className="hidden sm:block">Bagikan</span>
-                            </button>
-                            <button onClick={() => navigate(`/creator/forms/${id}/tokens`)} className={tabBtn}>
-                                <KeyRound className="h-3.5 w-3.5" /> <span className="hidden sm:block">Token</span>
-                            </button>
-                            <button onClick={() => navigate(`/creator/forms/${id}/submissions`)} className={tabBtn}>
-                                <ClipboardList className="h-3.5 w-3.5" /> <span className="hidden sm:block">Responden</span>
-                            </button>
-                            <button className="btn btn-sm bg-darks text-base border-none">
-                                <Settings className="h-3.5 w-3.5" /> <span className="hidden sm:block">Pengaturan</span>
-                            </button>
-                        </div>
+                        <FormTabs id={id} active="settings" />
 
-                        <div className="bg-white border border-second p-3 lg:p-6 sm:p-4 shadow-sm rounded-xl max-w-3xl">
+                        <div className="bg-white border border-second p-3 lg:p-6 sm:p-4 shadow-sm rounded-xl max-w-8xl">
                             <div className="flex items-center gap-2 mb-1 mt-2 ml-2">
                                 <h2 className="font-semibold text-darks">Pengaturan Form</h2>
                             </div>
@@ -173,7 +146,7 @@ function FormSettings() {
                                 Atur apa yang dilihat responden dan bagaimana form dikerjakan.
                             </p>
 
-                            <div className="divide-y divide-base">
+                            <div className="px-3 sm:px-1">
                                 {SETTING_ROWS.map((row) => (
                                     <div key={row.key} className="flex items-start justify-between gap-4 py-4">
                                         <div className="flex items-start gap-3 min-w-0">
@@ -183,7 +156,7 @@ function FormSettings() {
                                             <div className="min-w-0">
                                                 <p className="text-sm font-medium text-darks">{row.title}</p>
                                                 <p className="text-xs text-tinted mt-1 leading-relaxed">{row.description}</p>
-                                                {row.hint && <p className="text-xs text-tinted/70 mt-1 italic">{row.hint}</p>}
+                                                {row.hint && <p className="text-xs text-tinted/70 mt-1 italic hidden sm:block">{row.hint}</p>}
                                             </div>
                                         </div>
                                         <input
@@ -203,8 +176,8 @@ function FormSettings() {
                                 disabled={saving}
                                 className="btn bg-darks text-base border-none w-full hover:opacity-90 transition-opacity disabled:opacity-60 mb-3 mt-2"
                             >
-                                {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
-                                Simpan Pengaturan
+                                {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <p>Simpan Pengaturan</p>}
+                                {/* Simpan Pengaturan */}
                             </button>
                         </div>
                     </div>

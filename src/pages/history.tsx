@@ -86,11 +86,11 @@ function History() {
     return (
         <>
             {!authLoading && user && !loading && (
-                <div className="flex flex-col items-center px-2 py-5">
+                <div className="flex flex-col items-center px-3 sm:px-6 py-5">
                     <div className="max-w-4xl grid w-full lg:mt-10">
-                        <div className="ml-3 sm:ml-0">
+                        <div className="ml-2 sm:ml-3 lg:ml-0">
                             <div className="flex items-center gap-2 mb-1">
-                                <h1 className="text-2xl lg:text-4xl text-darks font-bold font-display uppercase">Riwayat</h1>
+                                <h1 className="text-2xl lg:text-4xl text-darks font-bold font-display">Riwayat</h1>
                             </div>
                             <p className="text-sm text-tinted mb-6">
                                 Formulir yang pernah kamu kerjakan.

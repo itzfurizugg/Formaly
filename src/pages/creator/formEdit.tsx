@@ -1,6 +1,6 @@
 import { useEffect, useState, useCallback } from "react"
 import { useNavigate, useParams } from "react-router-dom"
-import { Save, Loader2, ClipboardList, KeyRound, Share2, ListChecks, X, Info, Settings } from "lucide-react"
+import { Save, Loader2, X } from "lucide-react"
 import { supabase } from "../../lib/supabase"
 import { useAuth } from "../../lib/auth-context"
 import { alertSaveError, alertSaveSuccess, showAlert } from "../../lib/alerts"
@@ -8,6 +8,7 @@ import RichTextEditor from "../../components/richText"
 import Questions from "./questions"
 import { pageGet, pageSet } from "../../lib/pageCache"
 import BackButton from "../../components/backButton"
+import FormTabs from "../../components/creator/formTabs"
 import Loading from "../../components/loading"
 
 interface FormEditCache {
@@ -220,44 +221,7 @@ function FormEdit() {
             <div className="w-full xl:max-w-7xl lg:max-w-5xl lg:h-full lg:flex lg:flex-col">
                 <BackButton to="/creator" />
 
-                <div className="flex flex-wrap gap-2 mb-6">
-                    <button
-                        onClick={() => navigate(`/creator/forms/${id}`)}
-                        className="btn btn-sm bg-darks text-base border-none"
-                    >
-                        <Info className="h-3.5 w-3.5" /> <span className="hidden sm:block">Detail Form</span>
-                    </button>
-                    <button
-                        onClick={() => navigate(`/creator/forms/${id}/questions`)}
-                        className="btn btn-sm bg-base text-darks border border-second hover:bg-second lg:hidden"
-                    >
-                        <ListChecks className="h-3.5 w-3.5" /> <span className="hidden sm:block">Soal</span>
-                    </button>
-                    <button
-                        onClick={() => navigate(`/creator/forms/${id}/shared`)}
-                        className="btn btn-sm bg-base text-darks border border-second hover:bg-second"
-                    >
-                        <Share2 className="h-3.5 w-3.5" /> <span className="hidden sm:block">Bagikan</span>
-                    </button>
-                    <button
-                        onClick={() => navigate(`/creator/forms/${id}/tokens`)}
-                        className="btn btn-sm bg-base text-darks border border-second hover:bg-second"
-                    >
-                        <KeyRound className="h-3.5 w-3.5" /> <span className="hidden sm:block">Token</span>
-                    </button>
-                    <button
-                        onClick={() => navigate(`/creator/forms/${id}/submissions`)}
-                        className="btn btn-sm bg-base text-darks border border-second hover:bg-second"
-                    >
-                        <ClipboardList className="h-3.5 w-3.5" /> <span className="hidden sm:block">Responden</span>
-                    </button>
-                    <button
-                        onClick={() => navigate(`/creator/forms/${id}/settings`)}
-                        className="btn btn-sm bg-base text-darks border border-second hover:bg-second"
-                    >
-                        <Settings className="h-3.5 w-3.5" /> <span className="hidden sm:block">Pengaturan</span>
-                    </button>
-                </div>
+                <FormTabs id={id} active="detail" />
 
                 {/* Layout ala YouTube player: tiap panel punya tinggi layar sendiri
                     dan scroll action-nya terpisah dari panel sebelahnya. */}

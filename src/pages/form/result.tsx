@@ -1,7 +1,7 @@
 import { useEffect, useState, useCallback } from "react"
 import { useNavigate, useParams } from "react-router-dom"
 import { motion } from "motion/react"
-import { Check, X, Clock, EyeOff } from "lucide-react"
+import { Check, X, Clock } from "lucide-react"
 import { supabase } from "../../lib/supabase"
 import { useAuth } from "../../lib/auth-context"
 import Filter from "../../components/filter"
@@ -182,7 +182,7 @@ function ResultPage() {
                     {info?.form?.title || "Form"}
                 </p>
 
-                <div className="bg-white border border-second p-6 shadow-sm rounded-xl mb-6">
+                <div className="bg-white border border-second p-6 shadow-sm rounded-xl mb-3 lg:mb-6">
                     <div className="flex items-center gap-4">
                         <div className="flex-1">
                             <p className="text-xs text-tinted">Total Skor</p>
@@ -192,7 +192,7 @@ function ResultPage() {
                                 </p>
                             ) : (
                                 <p className="text-sm text-tinted mt-2 flex items-center gap-2">
-                                    <EyeOff className="h-4 w-4 shrink-0" />
+                                    {/* <EyeOff className="h-4 w-4 shrink-0" /> */}
                                     Nilai tidak ditampilkan oleh pembuat form.
                                 </p>
                             )}
@@ -227,8 +227,8 @@ function ResultPage() {
                 </div>
 
                 {!showAnswers ? (
-                    <div className="bg-white border border-second p-6 shadow-sm rounded-xl text-center py-10">
-                        <EyeOff className="h-8 w-8 text-tinted/50 mx-auto mb-3" />
+                    <div className="bg-white border border-second p-6 shadow-sm rounded-xl text-center py-5">
+                        {/* <EyeOff className="h-8 w-8 text-tinted/50 mx-auto mb-3" /> */}
                         <p className="text-sm text-tinted">Rincian jawaban tidak ditampilkan untuk form ini.</p>
                     </div>
                 ) : answers.length === 0 ? (

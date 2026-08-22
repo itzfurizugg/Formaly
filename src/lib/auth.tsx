@@ -1,4 +1,4 @@
-import { useEffect, useState, type ReactNode } from "react"
+import { useEffect, useRef, useState, type ReactNode } from "react"
 import { supabase } from "./supabase"
 import type { User, EmailOtpType } from "@supabase/supabase-js"
 import { AuthContext, type Profile } from "./auth-context"
@@ -8,6 +8,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null)
   const [profile, setProfile] = useState<Profile | null>(null)
   const [loading, setLoading] = useState(true)
+  // Dedupe fetch profil: getSession() dan event INITIAL_SESSION sama-sama
+  // menembak query users saat load. Promise di-share per user id sehingga
+  // request hanya dikirim sekali per sesi (updateProfile memaksa refresh).
+  const profileReqRef = useRef<{ userId: string; promise: Promise<void> } | null>(null)
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -19,20 +23,37 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       setUser(session?.user ?? null)
       if (session?.user) fetchProfile(session.user)
-      else setProfile(null)
+      else {
+        setProfile(null)
+        profileReqRef.current = null
+      }
     })
 
     return () => subscription.unsubscribe()
   }, [])
 
-  async function fetchProfile(u: User) {
-    const { data } = await supabase
-      .from("users")
-      .select("name, email, role, created_at")
-      .eq("id", u.id)
-      .single()
-    if (data) setProfile(data)
-    else setProfile({ name: (u.user_metadata?.name as string) || "User", email: u.email || "" })
+  function fetchProfile(u: User, force = false): Promise<void> {
+    const existing = profileReqRef.current
+    if (!force && existing && existing.userId === u.id) return existing.promise
+
+    // Entry dibuat dulu supaya blok catch bisa mengidentifikasi request-nya.
+    const entry: { userId: string; promise: Promise<void> } = { userId: u.id, promise: Promise.resolve() }
+    entry.promise = (async () => {
+      try {
+        const { data } = await supabase
+          .from("users")
+          .select("name, email, role, created_at")
+          .eq("id", u.id)
+          .single()
+        if (data) setProfile(data)
+        else setProfile({ name: (u.user_metadata?.name as string) || "User", email: u.email || "" })
+      } catch {
+        // Gagal jaringan: reset agar event auth berikutnya bisa mencoba lagi.
+        if (profileReqRef.current === entry) profileReqRef.current = null
+      }
+    })()
+    profileReqRef.current = entry
+    return entry.promise
   }
 
   async function login(email: string, password: string) {
@@ -117,7 +138,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (error) throw error
 
     const { data: fresh } = await supabase.auth.getSession()
-    if (fresh.session?.user) await fetchProfile(fresh.session.user)
+    if (fresh.session?.user) await fetchProfile(fresh.session.user, true)
   }
 
   async function logout() {

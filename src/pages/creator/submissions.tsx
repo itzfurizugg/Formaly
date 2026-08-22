@@ -1,6 +1,6 @@
 import { useEffect, useState, useCallback } from "react"
 import { useNavigate, useParams } from "react-router-dom"
-import { Eye, Trash2, Loader2, ClipboardList, Share2, KeyRound, ListChecks, Info, Settings } from "lucide-react"
+import { Eye, Trash2, Loader2 } from "lucide-react"
 import { supabase } from "../../lib/supabase"
 import { useAuth } from "../../lib/auth-context"
 import { confirmDelete } from "../../lib/alerts"
@@ -10,6 +10,7 @@ import { getOptionColor } from "../../lib/optionColors"
 import { DonutChart } from "../../components/charts"
 import { Bar, BarChart, ResponsiveContainer, Tooltip, XAxis, YAxis, type TooltipContentProps } from "recharts"
 import BackButton from "../../components/backButton"
+import FormTabs from "../../components/creator/formTabs"
 
 interface Submission {
     id: string
@@ -350,26 +351,7 @@ function Submissions() {
             <div className="w-full xl:max-w-7xl lg:max-w-5xl">
                 <BackButton to="/creator" />
 
-                <div className="flex flex-wrap gap-2 mb-6">
-                    <button onClick={() => navigate(`/creator/forms/${id}`)} className="btn btn-sm bg-base text-darks border border-second hover:bg-second">
-                        <Info className="h-3.5 w-3.5" /> <span className="hidden sm:block">Detail Form</span>
-                    </button>
-                    <button onClick={() => navigate(`/creator/forms/${id}/questions`)} className="btn btn-sm bg-base text-darks border border-second hover:bg-second lg:hidden">
-                        <ListChecks className="h-3.5 w-3.5" /> <span className="hidden sm:block">Soal</span>
-                    </button>
-                    <button onClick={() => navigate(`/creator/forms/${id}/shared`)} className="btn btn-sm bg-base text-darks border border-second hover:bg-second">
-                        <Share2 className="h-3.5 w-3.5" /> <span className="hidden sm:block">Bagikan</span>
-                    </button>
-                    <button onClick={() => navigate(`/creator/forms/${id}/tokens`)} className="btn btn-sm bg-base text-darks border border-second hover:bg-second">
-                        <KeyRound className="h-3.5 w-3.5" /> <span className="hidden sm:block">Token</span>
-                    </button>
-                    <button onClick={() => navigate(`/creator/forms/${id}/submissions`)} className="btn btn-sm bg-darks text-base border-none">
-                        <ClipboardList className="h-3.5 w-3.5" /> <span className="hidden sm:block">Responden</span>
-                    </button>
-                    <button onClick={() => navigate(`/creator/forms/${id}/settings`)} className="btn btn-sm bg-base text-darks border border-second hover:bg-second">
-                        <Settings className="h-3.5 w-3.5" /> <span className="hidden sm:block">Pengaturan</span>
-                    </button>
-                </div>
+                <FormTabs id={id} active="submissions" />
 
                 {/* <h1 className="text-2xl lg:text-4xl font-bold text-darks mb-1">Submission</h1>
                 <p className="text-sm text-tinted mb-6">Form: {formTitle}</p> */}

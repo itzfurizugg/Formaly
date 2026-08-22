@@ -22,7 +22,10 @@ const FormResolver = lazy(() => import("./pages/form/resolver"))
 const FormList = lazy(() => import("./pages/form/formlist"))
 const ResultPage = lazy(() => import("./pages/form/result"))
 const CreatorGuard = lazy(() => import("./pages/creator/guard"))
-const CreatorDashboard = lazy(() => import("./pages/creator/dashboard"))
+// Loader dipisah agar bisa dipakai ulang untuk preload chunk saat guard
+// mengecek role (unduhan bundle paralel dengan query role, bukan menunggu).
+const loadCreatorDashboard = () => import("./pages/creator/dashboard")
+const CreatorDashboard = lazy(loadCreatorDashboard)
 const CreatorForms = lazy(() => import("./pages/creator/forms"))
 const CreatorResponden = lazy(() => import("./pages/creator/responden"))
 const CreatorFormNew = lazy(() => import("./pages/creator/formNew"))
@@ -113,12 +116,11 @@ function App() {
               <Route
                 path="/creator"
                 element={
-                  <CreatorGuard>
+                  <CreatorGuard preload={loadCreatorDashboard}>
                     <CreatorDashboard />
                   </CreatorGuard>
                 }
-              />
-              <Route
+              />              <Route
                 path="/creator/forms"
                 element={
                   <CreatorGuard>

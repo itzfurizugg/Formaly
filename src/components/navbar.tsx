@@ -4,7 +4,6 @@ import { motion } from "motion/react"
 import logo from "../assets/logo.svg"
 import { House, RotateCcwClock, UserRound, LayoutDashboard, X, LogOut } from "lucide-react"
 import { useAuth } from "../lib/auth-context"
-import { supabase } from "../lib/supabase"
 import UserMenu from "./userMenu"
 
 const baseLinks = [
@@ -17,7 +16,6 @@ function Navbar() {
     const { pathname } = useLocation()
     const navigate = useNavigate()
     const { user, profile, logout } = useAuth()
-    const [role, setRole] = useState("")
     const [open, setOpen] = useState(false)
     const [closing, setClosing] = useState(false)
 
@@ -25,17 +23,8 @@ function Navbar() {
         setOpen(false)
     }, [pathname])
 
-    useEffect(() => {
-        if (!user) return
-        supabase
-            .from("users")
-            .select("role")
-            .eq("id", user.id)
-            .single()
-            .then(({ data }) => {
-                if (data) setRole(String(data.role).toLowerCase())
-            })
-    }, [user])
+    // Role diambil dari AuthContext (satu fetch users per sesi), bukan query terpisah.
+    const role = String(profile?.role || "").toLowerCase()
 
     const navLinks = [...baseLinks]
     if (role === "creator" || role === "admin") {
@@ -78,7 +67,7 @@ function Navbar() {
     const linkClass = (to: string, mobile = false) => {
         const isActive = pathname === to
         if (mobile) {
-            return `flex items-center gap-3 w-full h-14 px-4 text-base font-medium transition-colors ${
+            return `flex items-center gap-3 w-full h-14 px-4 text-base font-medium transition-colors rounded-xl ${
                 isActive
                     ? "bg-darks text-base"
                     : "text-darks hover:bg-base-200"
@@ -162,21 +151,21 @@ function Navbar() {
                 initial={false}
                 animate={{ x: open ? "0%" : "100%" }}
                 transition={{ duration: 0.3, ease: "easeOut" }}
-                className="fixed top-0 right-0 z-[70] h-full w-72 max-w-[85vw] bg-white shadow-xl hidden md:flex lg:hidden flex-col rounded-l-3xl"
+                className="fixed top-0 right-0 z-[70] h-full w-72 max-w-[85vw] bg-white shadow-xl hidden md:flex lg:hidden flex-col"
                 role="dialog"
                 aria-modal="true"
                 aria-label="Menu navigasi"
             >
                 <div className="flex items-center justify-between p-4 border-b border-second">
                     <div className="flex items-center gap-3 min-w-0 ml-2">
-                        <div className="w-7 h-7 rounded-full bg-done overflow-hidden flex items-center justify-center shrink-0">
+                        <div className="w-8 h-8 rounded-full bg-done overflow-hidden flex items-center justify-center shrink-0">
                             <span className="text-base font-bold text-white">
                                 {(profile?.name || "U").charAt(0).toUpperCase()}
                             </span>
                         </div>
                         <div className="min-w-0">
                             <p className="text-sm font-semibold text-darks">{profile?.name || "User"}</p>
-                            {/* <p className="text-xs text-tinted truncate">{profile?.email}</p> */}
+                            <p className="text-xs text-tinted truncate">{profile?.email}</p>
                         </div>
                     </div>
                     <button

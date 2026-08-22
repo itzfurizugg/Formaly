@@ -1,13 +1,13 @@
-import { useParams, useNavigate } from "react-router-dom"
+import { useParams } from "react-router-dom"
 import { useEffect, useState } from "react"
-import { Copy, QrCode, ClipboardList, KeyRound, Globe, Share2, ListChecks, Info, Settings } from "lucide-react"
+import { Copy, QrCode, Globe } from "lucide-react"
 import { showAlert } from "../../lib/alerts"
 import { supabase } from "../../lib/supabase"
 import BackButton from "../../components/backButton"
+import FormTabs from "../../components/creator/formTabs"
 
 function Shared() {
     const { id } = useParams()
-    const navigate = useNavigate()
     const [tags, setTags] = useState<string[]>([])
     const [shortMode, setShortMode] = useState(false)
 
@@ -43,44 +43,7 @@ function Shared() {
             <div className="w-full xl:max-w-7xl lg:max-w-5xl">
                 <BackButton to="/creator" />
 
-                <div className="flex flex-wrap gap-2 mb-6">
-                    <button
-                        onClick={() => navigate(`/creator/forms/${id}`)}
-                        className="btn btn-sm bg-base text-darks border border-second hover:bg-second"
-                    >
-                        <Info className="h-3.5 w-3.5" /> <span className="hidden sm:block">Detail Form</span>
-                    </button>
-                    <button
-                        onClick={() => navigate(`/creator/forms/${id}/questions`)}
-                        className="btn btn-sm bg-base text-darks border border-second hover:bg-second lg:hidden"
-                    >
-                        <ListChecks className="h-3.5 w-3.5" /> <span className="hidden sm:block">Soal</span>
-                    </button>
-                    <button
-                        onClick={() => navigate(`/creator/forms/${id}/shared`)}
-                        className="btn btn-sm bg-darks text-base border-none"
-                    >
-                        <Share2 className="h-3.5 w-3.5" /> <span className="hidden sm:block">Bagikan</span>
-                    </button>
-                    <button
-                        onClick={() => navigate(`/creator/forms/${id}/tokens`)}
-                        className="btn btn-sm bg-base text-darks border border-second hover:bg-second"
-                    >
-                        <KeyRound className="h-3.5 w-3.5" /> <span className="hidden sm:block">Token</span>
-                    </button>
-                    <button
-                        onClick={() => navigate(`/creator/forms/${id}/submissions`)}
-                        className="btn btn-sm bg-base text-darks border border-second hover:bg-second"
-                    >
-                        <ClipboardList className="h-3.5 w-3.5" /> <span className="hidden sm:block">Responden</span>
-                    </button>
-                    <button
-                        onClick={() => navigate(`/creator/forms/${id}/settings`)}
-                        className="btn btn-sm bg-base text-darks border border-second hover:bg-second"
-                    >
-                        <Settings className="h-3.5 w-3.5" /> <span className="hidden sm:block">Pengaturan</span>
-                    </button>
-                </div>
+                <FormTabs id={id} active="shared" />
 
                 <div className="bg-white border border-second p-3 lg:p-6 sm:p-4 shadow-sm rounded-xl">
                     <div className="flex items-center gap-2 mb-1">

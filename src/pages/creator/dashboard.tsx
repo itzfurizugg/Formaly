@@ -61,69 +61,58 @@ function CreatorDashboard() {
         if (!user) return
         if (!cached) setLoading(true)
 
-        const { data: forms } = await supabase
-            .from("forms")
-            .select("id, title, status, passing_score")
-            .eq("creator_id", user.id)
+        // Keempat query dijalankan paralel (Promise.all): total waktu dibatasi
+        // query paling lambat, bukan jumlah semuanya. Submission difilter lewat
+        // relasi forms.creator_id sehingga tidak perlu menunggu daftar form
+        // selesai dulu — hasilnya identik dengan filter .in("form_id", ids).
+        const [formsRes, subCountRes, scoreRes, recentRes] = await Promise.all([
+            supabase
+                .from("forms")
+                .select("id, title, status, passing_score")
+                .eq("creator_id", user.id),
+            supabase
+                .from("submissions")
+                .select("id, forms!inner(creator_id)", { count: "exact", head: true })
+                .eq("forms.creator_id", user.id),
+            supabase
+                .from("submissions")
+                .select("id, total_score, form_id, forms!inner(creator_id)")
+                .eq("forms.creator_id", user.id),
+            supabase
+                .from("submissions")
+                .select(
+                    "id, total_score, submitted_at, form:form_id ( id, title ), user:user_id ( name ), forms!inner(creator_id)"
+                )
+                .eq("forms.creator_id", user.id)
+                .order("submitted_at", { ascending: false })
+                .limit(6),
+        ])
 
-        const formRows = (forms || []) as FormRow[]
-        const formIds = formRows.map((f) => f.id)
-
-        let subs = { count: 0 }
-        let score = 0
-        let subRows: SubmissionRow[] = []
-        if (formIds.length > 0) {
-            const [subRes, scoreRes] = await Promise.all([
-                supabase
-                    .from("submissions")
-                    .select("id", { count: "exact", head: true })
-                    .in("form_id", formIds),
-                supabase
-                    .from("submissions")
-                    .select("id, total_score, form_id")
-                    .in("form_id", formIds),
-            ])
-            subs = { count: subRes.count || 0 }
-            score = (scoreRes.data || []).reduce((s, r) => s + (Number(r.total_score) || 0), 0)
-            subRows = (scoreRes.data || []) as SubmissionRow[]
-        }
+        const formRows = (formsRes.data || []) as FormRow[]
+        const subsCount = subCountRes.count || 0
+        const score = (scoreRes.data || []).reduce((s, r) => s + (Number(r.total_score) || 0), 0)
+        const subRows = (scoreRes.data || []) as SubmissionRow[]
+        const recent = (recentRes.data as unknown as RecentSubmission[]) || []
 
         const total = formRows.length
         const active = formRows.filter((f) => String(f.status).toLowerCase() === "published").length
+        const nextBarData = formRows
+            .map((f) => ({
+                name: f.title.length > 14 ? f.title.slice(0, 14) + "…" : f.title,
+                value: subRows.filter((s) => s.form_id === f.id).length,
+                formId: f.id,
+            }))
+            .filter((d) => d.value > 0)
 
-        let recent: RecentSubmission[] = []
-        if (formIds.length > 0) {
-            const { data: recentRes } = await supabase
-                .from("submissions")
-                .select("id, total_score, submitted_at, form:form_id ( id, title ), user:user_id ( name )")
-                .in("form_id", formIds)
-                .order("submitted_at", { ascending: false })
-                .limit(6)
-            recent = (recentRes as unknown as RecentSubmission[]) || []
-        }
-
-        setStats({ total, active, submissions: subs.count || 0, score })
+        setStats({ total, active, submissions: subsCount, score })
         setRecent(recent)
-        setBarData(
-            formRows
-                .map((f) => ({
-                    name: f.title.length > 14 ? f.title.slice(0, 14) + "…" : f.title,
-                    value: subRows.filter((s) => s.form_id === f.id).length,
-                    formId: f.id,
-                }))
-                .filter((d) => d.value > 0)
-        )
+        setBarData(nextBarData)
+
         if (user) {
             pageSet(`dashboard:${user.id}`, {
-                stats: { total, active, submissions: subs.count || 0, score },
+                stats: { total, active, submissions: subsCount, score },
                 recent,
-                barData: formRows
-                    .map((f) => ({
-                        name: f.title.length > 14 ? f.title.slice(0, 14) + "…" : f.title,
-                        value: subRows.filter((s) => s.form_id === f.id).length,
-                        formId: f.id,
-                    }))
-                    .filter((d) => d.value > 0),
+                barData: nextBarData,
             })
         }
 

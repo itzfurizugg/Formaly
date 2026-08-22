@@ -1,7 +1,7 @@
 import { useEffect, useState, useCallback, useMemo, type DragEvent } from "react"
-import { useNavigate, useParams } from "react-router-dom"
+import { useParams } from "react-router-dom"
 import { AnimatePresence, motion } from "motion/react"
-import { Plus, Pencil, Trash2, Save, X, Loader2, Check, GripVertical, ListChecks, KeyRound, Share2, ClipboardList, Info, Settings } from "lucide-react"
+import { Plus, Pencil, Trash2, Save, X, Loader2, Check, GripVertical } from "lucide-react"
 import { supabase } from "../../lib/supabase"
 import { useAuth } from "../../lib/auth-context"
 import QuestionImportModal from "../../components/creator/QuestionImportModal"
@@ -12,6 +12,7 @@ import { alertSaveSuccess, confirmDelete, showAlert } from "../../lib/alerts"
 import { pageGet, pageSet } from "../../lib/pageCache"
 import { easeOutExpo, panelSlide } from "../../lib/motion"
 import BackButton from "../../components/backButton"
+import FormTabs from "../../components/creator/formTabs"
 
 interface Option {
     id: string | null
@@ -32,7 +33,6 @@ interface Question {
 
 function Questions({ embedded = false }: { embedded?: boolean }) {
     const { id } = useParams()
-    const navigate = useNavigate()
     const { user } = useAuth()
 
     // Cache daftar soal per form supaya kembali ke halaman ini cukup fade-in
@@ -472,44 +472,7 @@ function Questions({ embedded = false }: { embedded?: boolean }) {
                     <>
                         <BackButton to="/creator" />
 
-                        <div className="flex flex-wrap gap-2 mb-6">
-                            <button
-                                onClick={() => navigate(`/creator/forms/${id}`)}
-                                className="btn btn-sm bg-base text-darks border border-second hover:bg-second"
-                            >
-                                <Info className="h-3.5 w-3.5" /> <span className="hidden sm:block">Detail Form</span>
-                            </button>
-                            <button
-                                onClick={() => navigate(`/creator/forms/${id}/questions`)}
-                                className="btn btn-sm bg-darks text-base border-none"
-                            >
-                                <ListChecks className="h-3.5 w-3.5" /> <span className="hidden sm:block">Soal</span>
-                            </button>
-                            <button
-                                onClick={() => navigate(`/creator/forms/${id}/shared`)}
-                                className="btn btn-sm bg-base text-darks border border-second hover:bg-second"
-                            >
-                                <Share2 className="h-3.5 w-3.5" /> <span className="hidden sm:block">Bagikan</span>
-                            </button>
-                            <button
-                                onClick={() => navigate(`/creator/forms/${id}/tokens`)}
-                                className="btn btn-sm bg-base text-darks border border-second hover:bg-second"
-                            >
-                                <KeyRound className="h-3.5 w-3.5" /> <span className="hidden sm:block">Token</span>
-                            </button>
-                            <button
-                                onClick={() => navigate(`/creator/forms/${id}/submissions`)}
-                                className="btn btn-sm bg-base text-darks border border-second hover:bg-second"
-                            >
-                                <ClipboardList className="h-3.5 w-3.5" /> <span className="hidden sm:block">Responden</span>
-                            </button>
-                            <button
-                                onClick={() => navigate(`/creator/forms/${id}/settings`)}
-                                className="btn btn-sm bg-base text-darks border border-second hover:bg-second"
-                            >
-                                <Settings className="h-3.5 w-3.5" /> <span className="hidden sm:block">Pengaturan</span>
-                            </button>
-                        </div>
+                        <FormTabs id={id} active="questions" />
                     </>
                 )}
 

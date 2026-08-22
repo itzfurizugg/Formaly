@@ -1,5 +1,6 @@
 import { ArrowLeft } from "lucide-react"
-import { useNavigate } from "react-router-dom"
+import { useLocation, useNavigate } from "react-router-dom"
+import { isGeneralNavVisible, isMobileViewport } from "../lib/nav"
 
 interface BackButtonProps {
     to?: string
@@ -13,6 +14,11 @@ interface BackButtonProps {
 // Teks label disembunyikan; cukup lingkaran berisi ikon panah.
 function BackButton({ to, onClick, label = "Kembali", className = "" }: BackButtonProps) {
     const navigate = useNavigate()
+    const { pathname } = useLocation()
+
+    // Offset sticky menyesuaikan ada-tidaknya Navbar umum: kalau ada, berhenti
+    // sedikit di bawahnya; kalau tidak (creator/form/auth), tempel ke tepi atas.
+    const hasTopNav = isGeneralNavVisible(pathname, isMobileViewport())
 
     const handleClick = () => {
         if (onClick) onClick()
@@ -25,7 +31,8 @@ function BackButton({ to, onClick, label = "Kembali", className = "" }: BackButt
             onClick={handleClick}
             aria-label={label}
             title={label}
-            className={`group inline-flex items-center -mt-5 mb-4 lg:hidden text-darks ${className}`}
+            // Sticky saat halaman di-scroll; z-40 supaya melayang di atas konten.
+            className={`group inline-flex items-center -mt-5 mb-4 lg:hidden text-darks sticky ${hasTopNav ? "top-[68px]" : "top-3"} z-40 self-start ${className}`}
         >
             <span className="relative size-9 md:size-10 shrink-0 rounded-full flex items-center justify-center border border-white/70 bg-gradient-to-b from-white/70 to-white/30 backdrop-blur-xl shadow-[0_2px_12px_rgba(57,62,70,0.18)] transition-all duration-200 hover:from-white/80 hover:to-white/40 active:scale-95">
                 <ArrowLeft className="h-4 w-4 md:h-[18px] md:w-[18px] text-darks" strokeWidth={2.2} />

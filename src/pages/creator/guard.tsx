@@ -5,7 +5,7 @@ import { useAuth } from "../../lib/auth-context"
 import { supabase } from "../../lib/supabase"
 import { pageGet, pageSet } from "../../lib/pageCache"
 
-function RequireCreator({ children }: { children: ReactNode }) {
+function RequireCreator({ children, preload }: { children: ReactNode; preload?: () => Promise<unknown> }) {
     const navigate = useNavigate()
     const { user, loading: authLoading } = useAuth()
     // Cache role per user: kembali ke halaman creator tidak perlu menampilkan
@@ -17,12 +17,14 @@ function RequireCreator({ children }: { children: ReactNode }) {
     })
 
     useEffect(() => {
-        if (authLoading) return
         if (!user) {
-            navigate("/login")
+            if (!authLoading) navigate("/login")
             return
         }
-        if (allowed) return
+        // Mulai unduh chunk halaman sekarang juga (paralel dengan pengecekan
+        // role), supaya bundle tidak menunggu query role selesai dulu.
+        preload?.().catch(() => {})
+        if (authLoading || allowed) return
 
         supabase
             .from("users")
@@ -40,7 +42,7 @@ function RequireCreator({ children }: { children: ReactNode }) {
                 if (role === "creator" || role === "admin") setAllowed(true)
                 else navigate("/")
             })
-    }, [user, authLoading, navigate, allowed])
+    }, [user, authLoading, navigate, allowed, preload])
 
     return (
         <>
