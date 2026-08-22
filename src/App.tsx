@@ -28,6 +28,7 @@ const CreatorResponden = lazy(() => import("./pages/creator/responden"))
 const CreatorFormNew = lazy(() => import("./pages/creator/formNew"))
 const CreatorFormEdit = lazy(() => import("./pages/creator/formEdit"))
 const CreatorQuestions = lazy(() => import("./pages/creator/questions"))
+const CreatorFormSettings = lazy(() => import("./pages/creator/formSettings"))
 const CreatorTokens = lazy(() => import("./pages/creator/tokens"))
 const CreatorSubmissions = lazy(() => import("./pages/creator/submissions"))
 const CreatorSubmissionDetail = lazy(() => import("./pages/creator/submissionDetail"))
@@ -154,6 +155,14 @@ function App() {
                 element={
                   <CreatorGuard>
                     <CreatorQuestions />
+                  </CreatorGuard>
+                }
+              />
+              <Route
+                path="/creator/forms/:id/settings"
+                element={
+                  <CreatorGuard>
+                    <CreatorFormSettings />
                   </CreatorGuard>
                 }
               />

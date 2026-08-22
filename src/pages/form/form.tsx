@@ -44,7 +44,7 @@ function FormPage() {
     const locationState = location.state as LocationState | null
 
     const [questions, setQuestions] = useState<Question[]>([])
-    const [formMeta, setFormMeta] = useState<{ title: string; duration: number } | null>(null)
+    const [formMeta, setFormMeta] = useState<{ title: string; duration: number; randomize_questions?: boolean | null } | null>(null)
     const [current, setCurrent] = useState(locationState?.current || 0)
     const [answers, setAnswers] = useState<Answer>(locationState?.answers || {})
     const [timeLeft, setTimeLeft] = useState(300)
@@ -160,7 +160,7 @@ function FormPage() {
         setNotFound(false)
         const { data: formData } = await supabase
             .from("forms")
-            .select("title, duration, status")
+            .select("title, duration, status, randomize_questions")
             .eq("id", formId)
             .single()
 
@@ -208,8 +208,17 @@ function FormPage() {
             .eq("form_id", formId)
             .order("order_index", { ascending: true })
 
-        if (qData && qData.length > 0) {
-            setQuestions(qData as Question[])
+        // Pengaturan "acak urutan soal": di-shuffle sekali saat load, jadi urutan
+        // konsisten selama sesi pengerjaan (navigasi maju/mundur tidak berubah-ubah).
+        const nextQuestions = ((qData as Question[]) || []).slice()
+        if (formData.randomize_questions) {
+            for (let i = nextQuestions.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1))
+                ;[nextQuestions[i], nextQuestions[j]] = [nextQuestions[j], nextQuestions[i]]
+            }
+        }
+        if (nextQuestions.length > 0) {
+            setQuestions(nextQuestions)
         }
 
         setLoading(false)

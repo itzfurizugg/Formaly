@@ -1,6 +1,6 @@
 import { useEffect, useState, useCallback } from "react"
 import { useNavigate, useParams } from "react-router-dom"
-import { Save, Loader2, ClipboardList, KeyRound, Share2, ListChecks, X, Info } from "lucide-react"
+import { Save, Loader2, ClipboardList, KeyRound, Share2, ListChecks, X, Info, Settings } from "lucide-react"
 import { supabase } from "../../lib/supabase"
 import { useAuth } from "../../lib/auth-context"
 import { alertSaveError, alertSaveSuccess, showAlert } from "../../lib/alerts"
@@ -251,10 +251,18 @@ function FormEdit() {
                     >
                         <ClipboardList className="h-3.5 w-3.5" /> <span className="hidden sm:block">Responden</span>
                     </button>
+                    <button
+                        onClick={() => navigate(`/creator/forms/${id}/settings`)}
+                        className="btn btn-sm bg-base text-darks border border-second hover:bg-second"
+                    >
+                        <Settings className="h-3.5 w-3.5" /> <span className="hidden sm:block">Pengaturan</span>
+                    </button>
                 </div>
 
+                {/* Layout ala YouTube player: tiap panel punya tinggi layar sendiri
+                    dan scroll action-nya terpisah dari panel sebelahnya. */}
                 <div className="flex flex-col lg:flex-row items-start gap-6 lg:flex-1 lg:min-h-0 lg:overflow-hidden lg:mt-2">
-                    <div className="w-full lg:w-[45%] lg:min-h-0 lg:overflow-y-auto">
+                    <div className="w-full lg:w-[45%] lg:h-full lg:min-h-0 lg:overflow-y-auto lg:overscroll-contain">
                         <form onSubmit={handleSave} className="space-y-3 bg-white border border-second p-3 lg:p-6 sm:p-4 shadow-sm rounded-xl">
                     <div>
                         <span className="inline-flex items-center gap-1.5 text-xs text-tinted mb-3 sm:mb-5 ml-1">

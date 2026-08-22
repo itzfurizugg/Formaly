@@ -63,7 +63,7 @@ function CreatorResponden() {
                     </div>
                 )}
                 {!loading && forms.length > 0 && (
-                    <div className="space-y-3">
+                    <div className="grid grid-cols-2 gap-3">
                         {forms.map((form) => (
                             <button
                                 key={form.id}

@@ -1,7 +1,7 @@
 import { useEffect, useState, useCallback } from "react"
 import { useNavigate, useParams } from "react-router-dom"
 import { AnimatePresence, motion } from "motion/react"
-import { Plus, Trash2, X, Loader2, Copy, Check, Share2, KeyRound, ClipboardList, ListChecks, Info } from "lucide-react"
+import { Plus, Trash2, X, Loader2, Copy, Check, Share2, KeyRound, ClipboardList, ListChecks, Info, Settings } from "lucide-react"
 import { supabase } from "../../lib/supabase"
 import { useAuth } from "../../lib/auth-context"
 import { confirmDelete } from "../../lib/alerts"
@@ -142,6 +142,9 @@ function Tokens() {
                     </button>
                     <button onClick={() => navigate(`/creator/forms/${id}/submissions`)} className="btn btn-sm bg-base text-darks border border-second hover:bg-second">
                         <ClipboardList className="h-3.5 w-3.5" /> <span className="hidden sm:block">Responden</span>
+                    </button>
+                    <button onClick={() => navigate(`/creator/forms/${id}/settings`)} className="btn btn-sm bg-base text-darks border border-second hover:bg-second">
+                        <Settings className="h-3.5 w-3.5" /> <span className="hidden sm:block">Pengaturan</span>
                     </button>
                 </div>
 

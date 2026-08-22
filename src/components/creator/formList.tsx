@@ -106,15 +106,18 @@ function FormList() {
                         <p className="text-tinted mb-4">Belum ada form. Buat form pertamamu!</p>
                     </div>
                 ) : (
-        <div className="space-y-3">
+        <div className="grid lg:grid-cols-2 gap-3 items-stretch">
             {forms.map((form, index) => (
                 <motion.div
                     key={form.id}
+                    className="h-full"
                     initial={{ opacity: 0, y: 12 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.35, ease: easeOutExpo, delay: Math.min(index * 0.06, 0.4) }}
                 >
-                <div className="card bg-white border border-second rounded-xl transition-colors hover:bg-base-200">
+                {/* h-full agar kartu melar mengikuti tinggi baris grid — semua kartu
+                    satu baris jadi sama tinggi seperti tampilan di halaman Responden */}
+                <div className="card bg-white border border-second rounded-xl transition-colors hover:bg-base-200 h-full">
                     <div className="card-body gap-3 p-4">
                         <div className="flex items-start justify-between gap-3">
                             <div className="min-w-0">

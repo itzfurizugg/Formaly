@@ -1,6 +1,6 @@
 import { useParams, useNavigate } from "react-router-dom"
 import { useEffect, useState } from "react"
-import { Copy, QrCode, ClipboardList, KeyRound, Globe, Share2, ListChecks, Info } from "lucide-react"
+import { Copy, QrCode, ClipboardList, KeyRound, Globe, Share2, ListChecks, Info, Settings } from "lucide-react"
 import { showAlert } from "../../lib/alerts"
 import { supabase } from "../../lib/supabase"
 import BackButton from "../../components/backButton"
@@ -73,6 +73,12 @@ function Shared() {
                         className="btn btn-sm bg-base text-darks border border-second hover:bg-second"
                     >
                         <ClipboardList className="h-3.5 w-3.5" /> <span className="hidden sm:block">Responden</span>
+                    </button>
+                    <button
+                        onClick={() => navigate(`/creator/forms/${id}/settings`)}
+                        className="btn btn-sm bg-base text-darks border border-second hover:bg-second"
+                    >
+                        <Settings className="h-3.5 w-3.5" /> <span className="hidden sm:block">Pengaturan</span>
                     </button>
                 </div>
 

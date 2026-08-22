@@ -1,6 +1,6 @@
 import { useEffect, useState, useCallback } from "react"
 import { useNavigate, useParams } from "react-router-dom"
-import { Eye, Trash2, Loader2, ClipboardList, Share2, KeyRound, ListChecks, Info } from "lucide-react"
+import { Eye, Trash2, Loader2, ClipboardList, Share2, KeyRound, ListChecks, Info, Settings } from "lucide-react"
 import { supabase } from "../../lib/supabase"
 import { useAuth } from "../../lib/auth-context"
 import { confirmDelete } from "../../lib/alerts"
@@ -365,6 +365,9 @@ function Submissions() {
                     </button>
                     <button onClick={() => navigate(`/creator/forms/${id}/submissions`)} className="btn btn-sm bg-darks text-base border-none">
                         <ClipboardList className="h-3.5 w-3.5" /> <span className="hidden sm:block">Responden</span>
+                    </button>
+                    <button onClick={() => navigate(`/creator/forms/${id}/settings`)} className="btn btn-sm bg-base text-darks border border-second hover:bg-second">
+                        <Settings className="h-3.5 w-3.5" /> <span className="hidden sm:block">Pengaturan</span>
                     </button>
                 </div>
 

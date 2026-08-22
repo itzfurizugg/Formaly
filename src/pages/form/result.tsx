@@ -1,7 +1,7 @@
 import { useEffect, useState, useCallback } from "react"
 import { useNavigate, useParams } from "react-router-dom"
 import { motion } from "motion/react"
-import { Check, X, Clock } from "lucide-react"
+import { Check, X, Clock, EyeOff } from "lucide-react"
 import { supabase } from "../../lib/supabase"
 import { useAuth } from "../../lib/auth-context"
 import Filter from "../../components/filter"
@@ -32,7 +32,14 @@ interface SubmissionInfo {
     status: string
     started_at: string | null
     submitted_at: string | null
-    form: { id: string; title: string; duration: number; passing_score: number | null } | null
+    form: {
+        id: string
+        title: string
+        duration: number
+        passing_score: number | null
+        show_score_to_respondent?: boolean | null
+        show_answers_to_respondent?: boolean | null
+    } | null
     user: { name: string } | null
 }
 
@@ -52,7 +59,7 @@ function ResultPage() {
 
         const { data: sub } = await supabase
             .from("submissions")
-            .select("id, total_score, status, started_at, submitted_at, form:form_id ( id, title, duration, passing_score ), user:user_id ( name )")
+            .select("id, total_score, status, started_at, submitted_at, form:form_id ( id, title, duration, passing_score, show_score_to_respondent, show_answers_to_respondent ), user:user_id ( name )")
             .eq("id", submissionId)
             .eq("user_id", user.id)
             .single()
@@ -129,6 +136,12 @@ function ResultPage() {
     const textCount = answers.filter((a) => a.question?.question_type === "text").length
     const noAnswerCount = answers.filter((a) => a.question?.question_type !== "text" && !hasCorrectAnswer(a)).length
 
+    // Pengaturan form: kolom yang belum ada di DB (undefined) dianggap tampil
+    // supaya perilaku lama tidak berubah sebelum migrasi diterapkan.
+    const showScore = info?.form?.show_score_to_respondent !== false
+    const showAnswers = info?.form?.show_answers_to_respondent !== false
+    const failed = showScore && info?.form?.passing_score != null && (info?.total_score ?? 0) < info.form.passing_score
+
     const filterOptions = [
         { value: "correct", label: "Benar" },
         { value: "wrong", label: "Salah" },
@@ -173,44 +186,52 @@ function ResultPage() {
                     <div className="flex items-center gap-4">
                         <div className="flex-1">
                             <p className="text-xs text-tinted">Total Skor</p>
-                            <p
-                                className={`text-5xl font-bold ${info?.form?.passing_score != null && (info?.total_score ?? 0) < info.form.passing_score
-                                    ? "text-wrong"
-                                    : "text-pass"
-                                    }`}
-                            >
-                                {info?.total_score ?? 0}
-                            </p>
+                            {showScore ? (
+                                <p className={`text-5xl font-bold ${failed ? "text-wrong" : "text-pass"}`}>
+                                    {info?.total_score ?? 0}
+                                </p>
+                            ) : (
+                                <p className="text-sm text-tinted mt-2 flex items-center gap-2">
+                                    <EyeOff className="h-4 w-4 shrink-0" />
+                                    Nilai tidak ditampilkan oleh pembuat form.
+                                </p>
+                            )}
                         </div>
                         <div className="text-right">
                             <span
-                                className={`badge rounded-full text-xs ${info?.form?.passing_score != null && (info?.total_score ?? 0) < info.form.passing_score
-                                    ? "bg-wrong/10 text-wrong border-none"
-                                    : info?.status === "SUBMITTED"
-                                        ? "bg-pass/10 text-pass border-none"
-                                        : "badge-ghost text-tinted"
-                                    }`}
+                                className={`badge rounded-full text-xs ${
+                                    failed
+                                        ? "bg-wrong/10 text-wrong border-none"
+                                        : info?.status === "SUBMITTED"
+                                            ? "bg-pass/10 text-pass border-none"
+                                            : "badge-ghost text-tinted"
+                                }`}
                             >
-                                {info?.form?.passing_score != null && (info?.total_score ?? 0) < info.form.passing_score
-                                    ? "Gagal"
-                                    : info?.status}
+                                {failed ? "Gagal" : info?.status}
                             </span>
                             <p className="text-xs text-tinted mt-2 flex items-center gap-1 justify-end">
                                 <Clock className="h-3 w-3" /> {fmtDate(info?.submitted_at || info?.started_at || null)}
                             </p>
                         </div>
                     </div>
-                    <div className="mt-4 pt-4 border-t border-base text-sm text-tinted flex items-center justify-between">
-                        <span>{answers.length} soal</span>
-                        <span>
-                            <span className="text-pass font-semibold">{correctCount} benar</span> &middot;{" "}
-                            <span className="text-wrong font-semibold">{answers.length - correctCount - textCount - noAnswerCount} salah</span>
-                            {noAnswerCount > 0 && <>&nbsp;&middot;&nbsp;<span className="text-tinted">{noAnswerCount} tanpa penilaian</span></>}
-                        </span>
-                    </div>
+                    {showScore && showAnswers && (
+                        <div className="mt-4 pt-4 border-t border-base text-sm text-tinted flex items-center justify-between">
+                            <span>{answers.length} soal</span>
+                            <span>
+                                <span className="text-pass font-semibold">{correctCount} benar</span> &middot;{" "}
+                                <span className="text-wrong font-semibold">{answers.length - correctCount - textCount - noAnswerCount} salah</span>
+                                {noAnswerCount > 0 && <>&nbsp;&middot;&nbsp;<span className="text-tinted">{noAnswerCount} tanpa penilaian</span></>}
+                            </span>
+                        </div>
+                    )}
                 </div>
 
-                {answers.length === 0 ? (
+                {!showAnswers ? (
+                    <div className="bg-white border border-second p-6 shadow-sm rounded-xl text-center py-10">
+                        <EyeOff className="h-8 w-8 text-tinted/50 mx-auto mb-3" />
+                        <p className="text-sm text-tinted">Rincian jawaban tidak ditampilkan untuk form ini.</p>
+                    </div>
+                ) : answers.length === 0 ? (
                     <div className="text-center py-16">
                         <p className="text-tinted">Belum ada jawaban.</p>
                     </div>

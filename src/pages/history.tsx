@@ -17,6 +17,7 @@ interface HistoryItem {
         duration: number
         question_count: number
         passing_score: number | null
+        show_score: boolean
     }
 }
 
@@ -40,7 +41,7 @@ function History() {
             .select(`
                 id, form_id, total_score,
                 forms (
-                    id, title, duration, passing_score,
+                    id, title, duration, passing_score, show_score_to_respondent,
                     users:creator_id ( name ),
                     questions ( id )
                 )
@@ -50,7 +51,7 @@ function History() {
 
         if (data) {
             setItems((data as unknown as HistoryRow[]).map((item) => {
-                const f = item.forms as unknown as { title: string; duration: number; passing_score?: number | null; users?: { name: string } | null; questions?: { id: string }[] | null }
+                const f = item.forms as unknown as { title: string; duration: number; passing_score?: number | null; show_score_to_respondent?: boolean | null; users?: { name: string } | null; questions?: { id: string }[] | null }
                 return {
                     id: item.id,
                     form_id: item.form_id,
@@ -61,6 +62,7 @@ function History() {
                         duration: f?.duration || 0,
                         question_count: f?.questions?.length || 0,
                         passing_score: f?.passing_score ?? null,
+                        show_score: f?.show_score_to_respondent !== false,
                     },
                 }
             }))
@@ -131,6 +133,7 @@ function History() {
                                             questions={item.forms?.question_count || 0}
                                             score={item.total_score || 0}
                                             passingScore={item.forms?.passing_score ?? null}
+                                            hideScore={!item.forms?.show_score}
                                             to={`/form/result/${item.id}`}
                                             buttonLabel="Lihat"
                                         />

@@ -1,7 +1,7 @@
-import { useEffect, useState, useCallback, type DragEvent } from "react"
+import { useEffect, useState, useCallback, useMemo, type DragEvent } from "react"
 import { useNavigate, useParams } from "react-router-dom"
 import { AnimatePresence, motion } from "motion/react"
-import { Plus, Pencil, Trash2, Save, X, Loader2, Check, GripVertical, ListChecks, KeyRound, Share2, ClipboardList, Info } from "lucide-react"
+import { Plus, Pencil, Trash2, Save, X, Loader2, Check, GripVertical, ListChecks, KeyRound, Share2, ClipboardList, Info, Settings } from "lucide-react"
 import { supabase } from "../../lib/supabase"
 import { useAuth } from "../../lib/auth-context"
 import QuestionImportModal from "../../components/creator/QuestionImportModal"
@@ -58,7 +58,8 @@ function Questions({ embedded = false }: { embedded?: boolean }) {
     const [removedOptionIds, setRemovedOptionIds] = useState<string[]>([])
     const [saving, setSaving] = useState(false)
     const [showImport, setShowImport] = useState(false)
-    const [dragIndex, setDragIndex] = useState<number | null>(null)
+    const [dragId, setDragId] = useState<string | null>(null)
+    const [orderIds, setOrderIds] = useState<string[] | null>(null)
 
     const loadAll = useCallback(async () => {
         if (!user || !id) return
@@ -226,35 +227,79 @@ function Questions({ embedded = false }: { embedded?: boolean }) {
         }
     }
 
-    const handleDragStart = (e: DragEvent, index: number) => {
-        setDragIndex(index)
+    const handleDragStart = (e: DragEvent, id: string) => {
+        setDragId(id)
+        setOrderIds(questions.map((q) => q.id))
         e.dataTransfer.effectAllowed = "move"
-        e.dataTransfer.setData("text/plain", String(index))
+        e.dataTransfer.setData("text/plain", id)
+
+        // Gambar drag custom: pil kecil "Soal N" menggantikan screenshot kartu
+        // penuh bawaan browser yang besar & buram. Elemen diletakkan di luar
+        // viewport agar tidak terlihat, cukup untuk direkam setDragImage.
+        const srcIdx = questions.findIndex((q) => q.id === id)
+        const ghost = document.createElement("div")
+        ghost.textContent = `Soal ${srcIdx + 1}`
+        ghost.style.cssText =
+            "position:fixed;top:-200px;left:-200px;padding:7px 16px;border-radius:9999px;" +
+            "background:#393E46;color:#F7F7F7;font-size:13px;font-weight:600;line-height:1;" +
+            "font-family:'Funnel Display','DM Sans',ui-sans-serif,sans-serif;box-shadow:0 10px 28px rgba(0,0,0,.3);"
+        document.body.appendChild(ghost)
+        e.dataTransfer.setDragImage(ghost, 20, 20)
+        window.setTimeout(() => ghost.remove(), 0)
     }
 
-    const handleDragOver = (e: DragEvent) => {
+    // Selama drag, urutan kartu diperbarui mengikuti posisi kursor sehingga
+    // kreator melihat preview lokasi drop secara langsung sebelum melepas soal.
+    // Insertion memakai garis tengah kartu sebagai ambang agar urutan tidak
+    // bolak-balik (flicker) saat kursor tepat berada di batas dua kartu.
+    const handleDragOver = (e: DragEvent, index: number) => {
         e.preventDefault()
         e.dataTransfer.dropEffect = "move"
+        if (!dragId || !orderIds) return
+        const from = orderIds.indexOf(dragId)
+        if (from === -1 || from === index) return
+
+        const rect = e.currentTarget.getBoundingClientRect()
+        const pastMid = e.clientY > rect.top + rect.height / 2
+        const target = from < index ? (pastMid ? index : index - 1) : pastMid ? index + 1 : index
+        if (target < 0 || target >= orderIds.length) return
+
+        setOrderIds((prev) => {
+            if (!prev || prev[index] === undefined) return prev
+            const curFrom = prev.indexOf(dragId)
+            if (curFrom === -1 || curFrom === target) return prev
+            const next = [...prev]
+            next.splice(curFrom, 1)
+            next.splice(target, 0, dragId)
+            return next
+        })
     }
 
-    const handleDrop = (e: DragEvent, index: number) => {
-        e.preventDefault()
-        const from = dragIndex
-        if (from === null || from === index) {
-            setDragIndex(null)
-            return
+    const finishDrag = () => {
+        if (dragId && orderIds && questions.some((q, i) => q.id !== orderIds[i])) {
+            const byId = new Map(questions.map((q) => [q.id, q]))
+            const next = orderIds.map((qid) => byId.get(qid)).filter((q): q is Question => Boolean(q))
+            setQuestions(next)
+            persistOrder(next)
         }
-        const next = [...questions]
-        const [moved] = next.splice(from, 1)
-        next.splice(index, 0, moved)
-        setQuestions(next)
-        setDragIndex(null)
-        persistOrder(next)
+        setDragId(null)
+        setOrderIds(null)
+    }
+
+    const handleDrop = (e: DragEvent) => {
+        e.preventDefault()
+        finishDrag()
     }
 
     const handleDragEnd = () => {
-        setDragIndex(null)
+        finishDrag()
     }
+
+    const previewQuestions = useMemo(() => {
+        if (!dragId || !orderIds || orderIds.length !== questions.length) return questions
+        const byId = new Map(questions.map((q) => [q.id, q]))
+        return orderIds.map((qid) => byId.get(qid)).filter((q): q is Question => Boolean(q))
+    }, [questions, dragId, orderIds])
 
     const typeLabel = (t: string) => {
         if (t === "multiple_choice") return "Pilihan Ganda"
@@ -458,6 +503,12 @@ function Questions({ embedded = false }: { embedded?: boolean }) {
                             >
                                 <ClipboardList className="h-3.5 w-3.5" /> <span className="hidden sm:block">Responden</span>
                             </button>
+                            <button
+                                onClick={() => navigate(`/creator/forms/${id}/settings`)}
+                                className="btn btn-sm bg-base text-darks border border-second hover:bg-second"
+                            >
+                                <Settings className="h-3.5 w-3.5" /> <span className="hidden sm:block">Pengaturan</span>
+                            </button>
                         </div>
                     </>
                 )}
@@ -476,28 +527,39 @@ function Questions({ embedded = false }: { embedded?: boolean }) {
                     <div className="text-center py-16">
                         <p className="text-tinted mb-4">Belum ada soal.</p>
                     </div>
-                ) : questions.length > 0 && (
+                ) : previewQuestions.length > 0 && (
                     <div className="space-y-3 pb-8">
-                        {questions.map((q, idx) => (
+                        {previewQuestions.map((q, idx) => {
+                            const isDragging = dragId === q.id
+                            return (
                             <AnimatePresence key={q.id} initial={false}>
                             {showEditor && editingId === q.id ? renderEditor() : (
                             <motion.div
+                                // Kartu pengganti hanya meluncur (posisi saja, ukuran tetap);
+                                // kartu yang di-drag snap langsung agar tidak "menumpuk" dengan ghost.
+                                layout={isDragging ? false : "position"}
                                 initial={{ opacity: 0, y: 12 }}
                                 animate={{ opacity: 1, y: 0 }}
                                 exit={{ opacity: 0, scale: 0.98 }}
-                                transition={{ duration: 0.3, ease: easeOutExpo, delay: Math.min(idx * 0.05, 0.3) }}
+                                transition={{
+                                    layout: { type: "spring", stiffness: 420, damping: 40 },
+                                    opacity: { duration: 0.25, ease: easeOutExpo, delay: dragId ? 0 : Math.min(idx * 0.05, 0.3) },
+                                    y: { duration: 0.3, ease: easeOutExpo, delay: dragId ? 0 : Math.min(idx * 0.05, 0.3) },
+                                }}
                             >
                             <div
                                 draggable
-                                onDragStart={(e) => handleDragStart(e, idx)}
-                                onDragOver={handleDragOver}
-                                onDrop={(e) => handleDrop(e, idx)}
+                                onDragStart={(e) => handleDragStart(e, q.id)}
+                                onDragOver={(e) => handleDragOver(e, idx)}
+                                onDrop={handleDrop}
                                 onDragEnd={handleDragEnd}
-                                className={`bg-white border p-5 shadow-sm rounded-xl cursor-grab active:cursor-grabbing transition-colors hover:bg-base-200 ${
-                                    dragIndex === idx
-                                        ? "border-done opacity-50"
-                                        : "border-second"
-                                }`}
+                                className={
+                                    isDragging
+                                        ? "bg-done/5 border border-done/60 border-dashed p-5 rounded-xl cursor-grab active:cursor-grabbing transition-colors"
+                                        : `bg-white border border-second p-5 shadow-sm rounded-xl cursor-grab active:cursor-grabbing transition-colors ${
+                                            dragId ? "opacity-60" : "hover:bg-base-200"
+                                        }`
+                                }
                             >
                                 <div className="flex items-start justify-between gap-2">
                                     <div className="flex gap-3 min-w-0">
@@ -539,12 +601,13 @@ function Questions({ embedded = false }: { embedded?: boolean }) {
                                         </button>
                                     </div>
                                 </div>
-                            </div>
-                            </motion.div>
-                        )}
-                        </AnimatePresence>
-                    ))}
-                    </div>
+                             </div>
+                             </motion.div>
+                         )}
+                         </AnimatePresence>
+                            )
+                        })}
+                        </div>
                 )}
                 <AnimatePresence>
                 {showImport && id && (
