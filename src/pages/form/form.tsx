@@ -45,6 +45,10 @@ function FormPage() {
 
     const [questions, setQuestions] = useState<Question[]>([])
     const [formMeta, setFormMeta] = useState<{ title: string; duration: number; randomize_questions?: boolean | null } | null>(null)
+    // Header/banner form diambil lewat query terpisah yang toleran gagal:
+    // kalau migrasi kolom header_image belum diterapkan, pengerjaan soal
+    // tetap jalan normal tanpa banner.
+    const [headerImage, setHeaderImage] = useState<string | null>(null)
     const [current, setCurrent] = useState(locationState?.current || 0)
     const [answers, setAnswers] = useState<Answer>(locationState?.answers || {})
     const [timeLeft, setTimeLeft] = useState(300)
@@ -56,6 +60,25 @@ function FormPage() {
     const [hasTimer, setHasTimer] = useState(false)
     const autoSubmitted = useRef(false)
     const deadlineRef = useRef<number | null>(null)
+
+    // Fetch header terpisah & diam-diam: error diabaikan supaya halaman soal
+    // tidak ikut gagal saat kolom header_image belum ada di database.
+    useEffect(() => {
+        if (!formId) return
+        let cancelled = false
+        supabase
+            .from("forms")
+            .select("header_image")
+            .eq("id", formId)
+            .single()
+            .then(({ data }) => {
+                if (cancelled) return
+                setHeaderImage((data as { header_image?: string | null } | null)?.header_image || null)
+            })
+        return () => {
+            cancelled = true
+        }
+    }, [formId])
 
     const handleSubmit = useCallback(async (allowRequiredSkip = false) => {
         if (!user || !formId) return
@@ -308,7 +331,15 @@ function FormPage() {
                 </div>
             ) : (
         <div className="flex flex-col items-center px-4 pt-6 pb-28 md:pb-6">
-            <div className="w-full max-w-3xl xl:mt-15">
+            <div className="w-full max-w-5xl xl:mt-3">
+                {/* Banner header hanya di desktop; mobile fokus ke soal. */}
+                {headerImage && (
+                    <img
+                        src={headerImage}
+                        alt={`Header ${formMeta?.title || "Form"}`}
+                        className="hidden lg:block w-full max-w-4xl mx-auto max-h-48 sm:max-h-72 object-cover rounded-xl border border-second mb-4"
+                    />
+                )}
                 <div className="p-2 mb-3 hidden sm:block">
                     <h1 className="text-xl xl:text-4xl font-bold text-darks">{formMeta?.title || "Form"}</h1>
                     <p className="text-xs text-tinted mt-1">
@@ -344,12 +375,12 @@ function FormPage() {
                         </div>
                     </div>
 
-                    <div className="text-base font-medium text-darks leading-relaxed">
+                    <div className="text-base font-medium text-darks leading-relaxed mt-5">
                         <RichText html={question.question_text} />
                     </div>
                     {/* Menampilkan Gambar Soal menggunakan field image_question */}
                     {question.image_question && (
-                        <div className="mt-4 relative group rounded-lg overflow-hidden border border-second bg-base w-fit">
+                        <div className="mt-6 relative group rounded-lg overflow-hidden border border-second bg-base w-fit">
                             <img
                                 src={question.image_question}
                                 alt="Ilustrasi Soal"

@@ -15,6 +15,7 @@ interface FormItem {
     duration: number
     question_count: number
     status?: string
+    header_image?: string | null
 }
 
 interface LocationState {
@@ -30,6 +31,10 @@ function FormDescriptionPage() {
     const formIdParam = params.get("formId")
     const [form, setForm] = useState<FormItem | null>(locationState?.form || null)
     const [alreadySubmitted, setAlreadySubmitted] = useState(false)
+
+    // Header diambil lewat query terpisah yang toleran gagal: kalau migrasi
+    // kolom header_image belum diterapkan, halaman tetap berfungsi tanpa banner.
+    const [headerImage, setHeaderImage] = useState<string | null>(null)
 
     const [loading, setLoading] = useState(false)
 
@@ -106,6 +111,24 @@ function FormDescriptionPage() {
             })
     }, [formId, user, authLoading])
 
+    // Fetch header gambar form (diam-diam; error diabaikan).
+    useEffect(() => {
+        if (!formId) return
+        let cancelled = false
+        supabase
+            .from("forms")
+            .select("header_image")
+            .eq("id", formId)
+            .single()
+            .then(({ data }) => {
+                if (cancelled) return
+                setHeaderImage((data as { header_image?: string | null } | null)?.header_image || null)
+            })
+        return () => {
+            cancelled = true
+        }
+    }, [formId])
+
     const handleStartExam = () => {
         setLoading(true)
         // Navigasi ke halaman pengerjaan soal (FormPage) dengan membawa formId di URL
@@ -122,6 +145,16 @@ function FormDescriptionPage() {
                             <BackButton to="/" />
                         )}
 
+
+                        {/* Header/banner gambar form (jika creator mengisinya). */}
+                        {headerImage && (
+                            <img
+                                src={headerImage}
+                                alt={`Header ${form.title}`}
+                                className="w-full max-h-48 sm:max-h-72 object-cover rounded-xl border border-second mb-3 sm:mb-4"
+                                loading="lazy"
+                            />
+                        )}
 
                         <div className="border-b border-second pb-3 sm:pb-4">
                             <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold text-darks leading-snug sm:leading-tight">

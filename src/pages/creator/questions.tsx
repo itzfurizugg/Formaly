@@ -6,6 +6,8 @@ import { supabase } from "../../lib/supabase"
 import { useAuth } from "../../lib/auth-context"
 import QuestionImportModal from "../../components/creator/QuestionImportModal"
 import CreateButton from "../../components/creator/createButton"
+import ImageUrlInput from "../../components/creator/imageUrlInput"
+import { isValidImageUrl } from "../../lib/imageUrl"
 import RichTextEditor, { RichText } from "../../components/richText"
 import { richTextToPlain } from "../../lib/richtext"
 import { alertSaveSuccess, confirmDelete, showAlert } from "../../lib/alerts"
@@ -156,6 +158,10 @@ function Questions({ embedded = false }: { embedded?: boolean }) {
         }
         if (questionType !== "text" && options.length === 0) {
             showAlert("Tambahkan minimal satu pilihan jawaban.", "error")
+            return
+        }
+        if (imageQuestion.trim() && !isValidImageUrl(imageQuestion)) {
+            showAlert("URL gambar harus diawali http:// atau https://.", "error")
             return
         }
 
@@ -372,16 +378,7 @@ function Questions({ embedded = false }: { embedded?: boolean }) {
                     />
                 </div>
                 <div>
-                    <label className="block text-sm font-medium text-darks mb-1.5 ml-1">
-                        <span className="inline-flex items-center gap-1"> URL Gambar</span>
-                    </label>
-                    <input
-                        type="text"
-                        className="input w-full bg-base border-second focus:border-done focus:outline-none"
-                        value={imageQuestion}
-                        onChange={(e) => setImageQuestion(e.target.value)}
-                        placeholder="https://..."
-                    />
+                    <ImageUrlInput value={imageQuestion} onChange={setImageQuestion} />
                 </div>
             </div>
 

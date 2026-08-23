@@ -30,18 +30,9 @@ interface SubmissionRow {
     form_id: string
 }
 
-interface RecentSubmission {
-    id: string
-    total_score: number | null
-    submitted_at: string | null
-    form: { id: string; title: string } | null
-    user: { name: string } | null
-}
-
 interface DashboardCache {
     stats: Stats
     barData: BarDatum[]
-    recent: RecentSubmission[]
 }
 
 function CreatorDashboard() {
@@ -55,17 +46,16 @@ function CreatorDashboard() {
     const [stats, setStats] = useState<Stats>(cached?.stats ?? { total: 0, active: 0, submissions: 0, score: 0 })
     const [loading, setLoading] = useState(!cached)
     const [barData, setBarData] = useState<BarDatum[]>(cached?.barData ?? [])
-    const [recent, setRecent] = useState<RecentSubmission[]>(cached?.recent ?? [])
 
     const loadStats = useCallback(async () => {
         if (!user) return
         if (!cached) setLoading(true)
 
-        // Keempat query dijalankan paralel (Promise.all): total waktu dibatasi
+        // Tiga query dijalankan paralel (Promise.all): total waktu dibatasi
         // query paling lambat, bukan jumlah semuanya. Submission difilter lewat
         // relasi forms.creator_id sehingga tidak perlu menunggu daftar form
         // selesai dulu — hasilnya identik dengan filter .in("form_id", ids).
-        const [formsRes, subCountRes, scoreRes, recentRes] = await Promise.all([
+        const [formsRes, subCountRes, scoreRes] = await Promise.all([
             supabase
                 .from("forms")
                 .select("id, title, status, passing_score")
@@ -78,21 +68,12 @@ function CreatorDashboard() {
                 .from("submissions")
                 .select("id, total_score, form_id, forms!inner(creator_id)")
                 .eq("forms.creator_id", user.id),
-            supabase
-                .from("submissions")
-                .select(
-                    "id, total_score, submitted_at, form:form_id ( id, title ), user:user_id ( name ), forms!inner(creator_id)"
-                )
-                .eq("forms.creator_id", user.id)
-                .order("submitted_at", { ascending: false })
-                .limit(6),
         ])
 
         const formRows = (formsRes.data || []) as FormRow[]
         const subsCount = subCountRes.count || 0
         const score = (scoreRes.data || []).reduce((s, r) => s + (Number(r.total_score) || 0), 0)
         const subRows = (scoreRes.data || []) as SubmissionRow[]
-        const recent = (recentRes.data as unknown as RecentSubmission[]) || []
 
         const total = formRows.length
         const active = formRows.filter((f) => String(f.status).toLowerCase() === "published").length
@@ -105,13 +86,11 @@ function CreatorDashboard() {
             .filter((d) => d.value > 0)
 
         setStats({ total, active, submissions: subsCount, score })
-        setRecent(recent)
         setBarData(nextBarData)
 
         if (user) {
             pageSet(`dashboard:${user.id}`, {
                 stats: { total, active, submissions: subsCount, score },
-                recent,
                 barData: nextBarData,
             })
         }

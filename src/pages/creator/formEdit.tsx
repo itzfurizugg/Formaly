@@ -5,6 +5,8 @@ import { supabase } from "../../lib/supabase"
 import { useAuth } from "../../lib/auth-context"
 import { alertSaveError, alertSaveSuccess, showAlert } from "../../lib/alerts"
 import RichTextEditor from "../../components/richText"
+import ImageUrlInput from "../../components/creator/imageUrlInput"
+import { isValidImageUrl } from "../../lib/imageUrl"
 import Questions from "./questions"
 import { pageGet, pageSet } from "../../lib/pageCache"
 import BackButton from "../../components/backButton"
@@ -19,6 +21,7 @@ interface FormEditCache {
     status: string
     tags: string[]
     createdAt: string
+    headerImage: string
 }
 
 function FormEdit() {
@@ -44,6 +47,7 @@ function FormEdit() {
     const [saving, setSaving] = useState(false)
     const [tags, setTags] = useState<string[]>(cached?.tags ?? [])
     const [tagInput, setTagInput] = useState("")
+    const [headerImage, setHeaderImage] = useState(cached?.headerImage ?? "")
 
     const loadForm = useCallback(async () => {
         if (!user || !id) return
@@ -65,6 +69,7 @@ function FormEdit() {
         setPassingScore(data.passing_score || 0)
         setStatus(String(data.status))
         setCreatedAt(data.created_at || "")
+        setHeaderImage(data.header_image || "")
 
         const { data: rel } = await supabase
             .from("form_tags")
@@ -84,6 +89,7 @@ function FormEdit() {
             status: String(data.status),
             tags: newTags,
             createdAt: data.created_at || "",
+            headerImage: data.header_image || "",
         })
         setLoading(false)
     }, [user, id, navigate, cached])
@@ -97,9 +103,9 @@ function FormEdit() {
         if (!id) return
         const normalized = [...new Set(tags.map((t) => t.trim()).filter(Boolean))]
 
-        const { error: delErr } = await supabase.from("form_tags").delete().eq("form_id", id)
-        if (delErr) throw new Error("Gagal memperbarui tag: " + delErr.message)
-
+        // Resolusi id tag dulu (pakai yang sudah ada atau buat baru),
+        // supaya penautan bisa dilakukan sekaligus lewat upsert di akhir.
+        const tagIds: (string | number)[] = []
         for (const name of normalized) {
             const { data: existing, error: selErr } = await supabase.from("tags").select("id").eq("name", name).maybeSingle()
             if (selErr && selErr.code !== "PGRST116") throw new Error("Gagal memperbarui tag: " + selErr.message)
@@ -111,10 +117,23 @@ function FormEdit() {
                 tagId = ins?.id as string | undefined
             }
 
-            if (tagId) {
-                const { error: relErr } = await supabase.from("form_tags").insert({ form_id: id, tag_id: tagId })
-                if (relErr) throw new Error("Gagal menautkan tag: " + relErr.message)
-            }
+            if (tagId) tagIds.push(tagId)
+        }
+
+        // Hapus relasi lama agar tag yang dicabut benar-benar lepas. Delete
+        // sengaja best-effort: bila dibatasi RLS, PostgREST sukses tanpa
+        // menghapus apa pun — upsert ignoreDuplicates di bawah tetap aman
+        // dari bentrok form_tags_pkey untuk pasangan yang masih ada.
+        await supabase.from("form_tags").delete().eq("form_id", id)
+
+        if (tagIds.length > 0) {
+            const { error: relErr } = await supabase
+                .from("form_tags")
+                .upsert(
+                    tagIds.map((tag_id) => ({ form_id: id!, tag_id })),
+                    { onConflict: "form_id,tag_id", ignoreDuplicates: true }
+                )
+            if (relErr) throw new Error("Gagal menautkan tag: " + relErr.message)
         }
     }
 
@@ -144,6 +163,7 @@ function FormEdit() {
 
     const saveFormData = async () => {
         if (!id) return
+        const header = headerImage.trim() || null
         const payload = {
             p_form_id: id,
             p_title: title,
@@ -151,31 +171,53 @@ function FormEdit() {
             p_duration: duration === "" ? null : duration,
             p_passing_score: passingScore === "" ? 70 : passingScore,
             p_status: status,
+            p_header_image: header,
         }
 
         const { error } = await supabase.rpc("update_form", payload)
         if (!error) return
 
-        // Fallback ke UPDATE langsung ketika RPC belum tersedia di database
-        // (migrasi belum diterapkan) ATAU versi RPC lama masih belum memakai
-        // cast enum (p_status dikirim sebagai text, kolom status bertipe
-        // form_status). PostgREST menangani cast enum secara otomatis, jadi
-        // UPDATE langsung ini tetap berhasil. Baris yang benar-benar berubah
-        // tetap diverifikasi agar RLS yang memfilter diam-diam tidak tampak
-        // seperti sukses.
-        if (/(does not exist|not found|PGRST202)/i.test(error.message) || /is of type .* but expression is of type/i.test(error.message)) {
+        // Fallback ke UPDATE langsung ketika RPC belum tersedia / signature-nya
+        // tidak cocok (misal RPC lama belum kenal p_header_image -> PostgREST
+        // menjawab "Could not find the function ... in the schema cache"),
+        // ATAU versi RPC lama masih belum memakai cast enum (p_status dikirim
+        // sebagai text, kolom status bertipe form_status). PostgREST menangani
+        // cast enum secara otomatis, jadi UPDATE langsung ini tetap berhasil.
+        // Baris yang benar-benar berubah tetap diverifikasi agar RLS yang
+        // memfilter diam-diam tidak tampak seperti sukses.
+        const rpcMismatch =
+            error.code === "PGRST202" ||
+            /(does not exist|not found|could not find the function|schema cache)/i.test(error.message) ||
+            /is of type .* but expression is of type/i.test(error.message)
+        if (rpcMismatch) {
+            const baseUpdate = {
+                title,
+                description: description || null,
+                duration: duration === "" ? null : duration,
+                passing_score: passingScore === "" ? 70 : passingScore,
+                status,
+            }
             const { data, error: fallbackError } = await supabase
                 .from("forms")
-                .update({
-                    title,
-                    description: description || null,
-                    duration: duration === "" ? null : duration,
-                    passing_score: passingScore === "" ? 70 : passingScore,
-                    status,
-                })
+                .update({ ...baseUpdate, header_image: header })
                 .eq("id", id)
                 .select("id")
                 .maybeSingle()
+
+            // Kolom header_image belum ada (migrasi belum diterapkan): simpan
+            // ulang tanpa header agar perubahan lain tidak ikut gagal.
+            if (fallbackError && /could not find the .* column|PGRST204/i.test(fallbackError.message)) {
+                const { data: retried, error: retryError } = await supabase
+                    .from("forms")
+                    .update(baseUpdate)
+                    .eq("id", id)
+                    .select("id")
+                    .maybeSingle()
+                if (retryError) throw new Error(retryError.message)
+                if (!retried) throw new Error("Perubahan tidak tersimpan. Pastikan migrasi RPC update_form sudah diterapkan di database.")
+                showAlert("Header gambar belum tersimpan karena migrasi kolom header_image belum diterapkan di database.", "info")
+                return
+            }
             if (fallbackError) throw new Error(fallbackError.message)
             if (!data) throw new Error("Perubahan tidak tersimpan. Pastikan migrasi RPC update_form sudah diterapkan di database.")
             return
@@ -186,6 +228,10 @@ function FormEdit() {
     const handleSave = async (e: React.FormEvent) => {
         e.preventDefault()
         if (!id) return
+        if (headerImage.trim() && !isValidImageUrl(headerImage)) {
+            showAlert("URL gambar header harus diawali http:// atau https://.", "error")
+            return
+        }
         setSaving(true)
 
         try {
@@ -200,6 +246,7 @@ function FormEdit() {
                     status,
                     tags,
                     createdAt,
+                    headerImage,
                 })
             }
             alertSaveSuccess()
@@ -244,6 +291,13 @@ function FormEdit() {
                             placeholder="Deskripsi Form..."
                         />
                     </div>
+
+                    <ImageUrlInput
+                        label="URL Gambar Header"
+                        placeholder="https://... (tampil di halaman deskripsi form)"
+                        value={headerImage}
+                        onChange={setHeaderImage}
+                    />
 
                     <div className="grid grid-cols-2 gap-4">
                         <div>
