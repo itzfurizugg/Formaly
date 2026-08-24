@@ -6,6 +6,7 @@ import { supabase } from "../../lib/supabase"
 import { useAuth } from "../../lib/auth-context"
 import { loginUrl } from "../../lib/redirect"
 import BackButton from "../../components/backButton"
+import FormHeader from "../../components/creator/formHeader"
 
 interface FormItem {
     id: string
@@ -139,23 +140,19 @@ function FormDescriptionPage() {
         <>
             {!loading && form && (
                 <div className="flex flex-col items-center min-h-screen sm:min-h-[80vh] sm:justify-center px-0 pt-6 pb-28 sm:px-4 sm:py-10 bg-base-300 sm:bg-transparent">
-                    <div className="w-full max-w-4xl bg-base-300 md:bg-white sm:border sm:border-second p-3.5 sm:p-8 sm:shadow-sm sm:rounded-lg relative">
-                        {/* Tombol Kembali */}
-                        {locationState?.form && (
-                            <BackButton to="/" />
-                        )}
+                    {/* Tombol Kembali di atas banner (sticky mengikuti scroll; hidden otomatis di lg+). */}
+                    {locationState?.form && (
+                        <BackButton to="/" className="ml-3.5 sm:ml-0" />
+                    )}
 
+                    {/* Banner di luar kartu — full width di semua device, proporsi 3105x1100. */}
+                    <div className="w-full px-3.5 sm:px-4">
+                        <div className="rounded-xl overflow-hidden border border-second shadow-sm">
+                            <FormHeader formId={form.id} title={form.title} headerImage={headerImage} />
+                        </div>
+                    </div>
 
-                        {/* Header/banner gambar form (jika creator mengisinya). */}
-                        {headerImage && (
-                            <img
-                                src={headerImage}
-                                alt={`Header ${form.title}`}
-                                className="w-full max-h-48 sm:max-h-72 object-cover rounded-xl border border-second mb-3 sm:mb-4"
-                                loading="lazy"
-                            />
-                        )}
-
+                    <div className="w-full sm:max-w-3xl bg-base-300 md:bg-white sm:border sm:border-second p-3.5 sm:p-8 sm:shadow-sm sm:rounded-lg relative mt-3 sm:mt-4">
                         <div className="border-b border-second pb-3 sm:pb-4">
                             <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold text-darks leading-snug sm:leading-tight">
                                 {form.title}

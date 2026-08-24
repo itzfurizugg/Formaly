@@ -45,7 +45,7 @@ function FormNew() {
 
     const inputCls = "input w-full bg-white text-xl lg:text-3xl h-auto p-2 border-second focus:border-done focus:outline-none transition-colors"
     return (
-        <div className="flex flex-col items-center px-4 py-10">
+        <div className="flex flex-col items-center px-4 py-5">
             <div className="w-full max-w-5xl">
                 <BackButton to="/creator" />
 

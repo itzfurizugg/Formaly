@@ -8,6 +8,8 @@ export interface ParsedOption {
 export interface ParsedQuestion {
     question_text: string
     options: ParsedOption[]
+    score_value?: number
+    is_required?: boolean
     parse_status: ParseStatus
     raw_block?: string
     error_message?: string
@@ -27,11 +29,13 @@ export function validateParsedQuestion(question: Omit<ParsedQuestion, "parse_sta
     else if (options.length < 1) errorMessage = "Setiap soal harus memiliki minimal satu pilihan jawaban."
     else if (options.length > OPTION_LETTERS.length) errorMessage = `Pilihan jawaban maksimal ${OPTION_LETTERS.length} (A–Z).`
     else if (options.some((option) => !option.text)) errorMessage = "Semua pilihan jawaban wajib diisi."
-    else if (options.filter((option) => option.is_correct).length !== 1) errorMessage = "Tentukan tepat satu jawaban yang benar."
+    else if (options.filter((option) => option.is_correct).length > 1) errorMessage = "Pilih maksimal satu jawaban yang benar."
 
     return {
         question_text: questionText,
         options,
+        score_value: question.score_value,
+        is_required: question.is_required,
         raw_block: question.raw_block,
         parse_status: errorMessage ? "error" : "ok",
         error_message: errorMessage || undefined,

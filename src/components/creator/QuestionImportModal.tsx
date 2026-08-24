@@ -81,7 +81,8 @@ export default function QuestionImportModal({ formId, startingOrder, onClose, on
                 form_id: formId,
                 question_text: row.question_text,
                 question_type: "single_choice",
-                score_value: 0,
+                score_value: row.score_value ?? 0,
+                is_required: row.is_required ?? false,
                 order_index: startingOrder + index,
                 image_question: null,
             })))
@@ -164,7 +165,7 @@ export default function QuestionImportModal({ formId, startingOrder, onClose, on
                                             className={row.parse_status === "error" ? "bg-wrong/5" : ""}
                                         >
                                             <td className="align-top w-32"><span className={`badge rounded-full text-xs ${row.parse_status === "ok" ? "badge-success" : "badge-error"}`}>{row.parse_status === "ok" ? "Siap" : "Perlu edit"}</span>{row.error_message && <p className="text-xs text-wrong mt-2 max-w-40">{row.error_message}</p>}</td>
-                                            <td className="align-top whitespace-pre-line max-w-xs">{editing === index ? <textarea className="textarea textarea-sm w-full bg-base border-second" value={row.question_text} onChange={(e) => updateRow(index, { ...row, question_text: e.target.value })} /> : row.question_text || <span className="text-tinted">(kosong)</span>}</td>
+                                            <td className="align-top whitespace-pre-line max-w-xs">{editing === index ? <textarea className="textarea textarea-sm w-full bg-base border-second" value={row.question_text} onChange={(e) => updateRow(index, { ...row, question_text: e.target.value })} /> : row.question_text || <span className="text-tinted">(kosong)</span>}{(row.score_value != null || row.is_required) && <p className="text-xs text-tinted mt-1">{row.score_value != null && <span>{row.score_value} poin</span>}{row.score_value != null && row.is_required && " · "}{row.is_required && <span className="text-wrong">Wajib diisi</span>}</p>}</td>
                                             <td className="align-top"><div className="space-y-1">{row.options.map((option, optionIndex) => <label key={optionIndex} className={`flex gap-2 items-center text-xs ${option.is_correct ? "text-done font-medium" : "text-tinted"}`}><input type="radio" name={`answer-${index}`} checked={option.is_correct} disabled={editing !== index} onChange={() => updateRow(index, { ...row, options: row.options.map((item, itemIndex) => ({ ...item, is_correct: itemIndex === optionIndex })) })} />{editing === index ? <input className="input input-xs h-7 flex-1 bg-base border-second" value={option.text} onChange={(e) => updateRow(index, { ...row, options: row.options.map((item, itemIndex) => itemIndex === optionIndex ? { ...item, text: e.target.value } : item) })} /> : `${String.fromCharCode(65 + optionIndex)}. ${option.text || "(kosong)"}`}</label>)}</div></td>
                                             <td className="align-top"><button onClick={() => setEditing(editing === index ? null : index)} className="btn btn-sm btn-ghost text-darks"><Pencil className="h-4 w-4" />{editing === index ? "Selesai" : "Edit"}</button></td>
                                         </motion.tr>

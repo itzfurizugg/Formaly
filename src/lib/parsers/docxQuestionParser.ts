@@ -4,6 +4,9 @@ import { OPTION_LETTERS, type ParsedOption, type ParsedQuestion, validateParsedQ
 const questionNumberPattern = /^\s*\d+\.\s+(.+)\s*$/
 const optionPattern = /^\s*([a-z])\s*(?:[.)\-:]\s*)+(.+)\s*$/i
 const answerKeyPattern = /^\s*kunci\s*jawaban\s*:\s*([a-z])\s*$/i
+const pointPattern = /^\s*poin\s*jawaban\s*:\s*([1-9]\d*)\s*$/i
+const requiredPattern = /^\s*wajib\s*diisi\s*:\s*(\S+)\s*$/i
+const requiredTrueWords = new Set(["ya", "iya", "yes", "true", "1"])
 
 function parseBlock(rawBlock: string): ParsedQuestion {
     const lines = rawBlock.split("\n").map((line) => line.trim()).filter(Boolean)
@@ -16,6 +19,8 @@ function parseBlock(rawBlock: string): ParsedQuestion {
     const questionLines = [questionMatch[1].trim()]
     const optionsByLetter = new Map<string, string>()
     let answerLetter: string | undefined
+    let scoreValue: number | undefined
+    let isRequired: boolean | undefined
     let foundOption = false
     let errorMessage = ""
 
@@ -23,6 +28,18 @@ function parseBlock(rawBlock: string): ParsedQuestion {
         const answerMatch = line.match(answerKeyPattern)
         if (answerMatch) {
             answerLetter = answerMatch[1].toLowerCase()
+            continue
+        }
+
+        const pointMatch = line.match(pointPattern)
+        if (pointMatch) {
+            scoreValue = Number(pointMatch[1])
+            continue
+        }
+
+        const requiredMatch = line.match(requiredPattern)
+        if (requiredMatch) {
+            isRequired = requiredTrueWords.has(requiredMatch[1].toLowerCase())
             continue
         }
 
@@ -51,11 +68,12 @@ function parseBlock(rawBlock: string): ParsedQuestion {
     const parsed = validateParsedQuestion({
         question_text: questionLines.join(" "),
         options,
+        score_value: scoreValue,
+        is_required: isRequired,
         raw_block: rawBlock.trim(),
     })
 
     if (errorMessage) return { ...parsed, parse_status: "error", error_message: errorMessage }
-    if (!answerLetter) return { ...parsed, parse_status: "error", error_message: "Kunci Jawaban tidak ditemukan atau tidak valid." }
     return parsed
 }
 

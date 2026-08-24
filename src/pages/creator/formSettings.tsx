@@ -132,7 +132,7 @@ function FormSettings() {
         <>
             <Loading show={loading} />
             {!loading && (
-                <div className="flex flex-col items-center px-3 py-10">
+                <div className="flex flex-col items-center px-3 py-5">
                     <div className="w-full xl:max-w-7xl lg:max-w-5xl">
                         <BackButton to="/creator" />
 

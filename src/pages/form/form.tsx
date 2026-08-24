@@ -8,6 +8,7 @@ import { supabase } from "../../lib/supabase"
 import { useAuth } from "../../lib/auth-context"
 import { loginUrl } from "../../lib/redirect"
 import ModalPortal from "../../components/modalPortal"
+import FormHeader from "../../components/creator/formHeader"
 import { alertPop, modalBackdrop, modalPanel } from "../../lib/motion"
 
 interface Option {
@@ -332,13 +333,11 @@ function FormPage() {
             ) : (
         <div className="flex flex-col items-center px-4 pt-6 pb-28 md:pb-6">
             <div className="w-full max-w-5xl xl:mt-3">
-                {/* Banner header hanya di desktop; mobile fokus ke soal. */}
+                {/* Banner header hanya di desktop; mobile fokus ke soal. Full width, proporsi 3105x1100 via FormHeader. */}
                 {headerImage && (
-                    <img
-                        src={headerImage}
-                        alt={`Header ${formMeta?.title || "Form"}`}
-                        className="hidden lg:block w-full max-w-4xl mx-auto max-h-48 sm:max-h-72 object-cover rounded-xl border border-second mb-4"
-                    />
+                    <div className="hidden lg:block w-full rounded-xl overflow-hidden border border-second shadow-sm mb-4">
+                        <FormHeader formId={formId || ""} title={formMeta?.title || "Form"} headerImage={headerImage} />
+                    </div>
                 )}
                 <div className="p-2 mb-3 hidden sm:block">
                     <h1 className="text-xl xl:text-4xl font-bold text-darks">{formMeta?.title || "Form"}</h1>

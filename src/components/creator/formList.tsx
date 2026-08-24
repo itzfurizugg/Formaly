@@ -6,6 +6,7 @@ import { supabase } from "../../lib/supabase"
 import { useAuth } from "../../lib/auth-context"
 import { confirmDelete } from "../../lib/alerts"
 import { RichText } from "../richText"
+import FormHeader from "./formHeader"
 import { pageGet, pageSet } from "../../lib/pageCache"
 import { easeOutExpo } from "../../lib/motion"
 
@@ -17,6 +18,7 @@ interface FormRow {
     duration: number
     passing_score: number
     created_at: string
+    header_image?: string | null
     questions: { id: string }[]
     submissions: { id: string }[]
 }
@@ -40,7 +42,7 @@ function FormList() {
         const { data, error: err } = await supabase
             .from("forms")
             .select(`
-                id, title, description, status, duration, passing_score, created_at,
+                id, title, description, status, duration, passing_score, created_at, header_image,
                 questions ( id ),
                 submissions ( id )
             `)
@@ -117,11 +119,12 @@ function FormList() {
                 >
                 {/* h-full agar kartu melar mengikuti tinggi baris grid — semua kartu
                     satu baris jadi sama tinggi seperti tampilan di halaman Responden */}
-                <div className="card bg-white border border-second rounded-xl transition-colors hover:bg-base-200 h-full">
+                <div className="card bg-white border border-second rounded-xl transition-colors hover:bg-base-200 h-full overflow-hidden">
+                    <FormHeader formId={form.id} title={form.title} headerImage={form.header_image} />
                     <div className="card-body gap-3 p-4">
                         <div className="flex items-start justify-between gap-3">
                             <div className="min-w-0">
-                                <h2 className="card-title text-darks break-words leading-snug text-base">{form.title}</h2>
+                                <h2 className="card-title text-xl sm:text-2xl text-darks break-words leading-snug text-base">{form.title}</h2>
                                 <div className="text-sm text-tinted line-clamp-2">
                                     {form.description ? <RichText html={form.description} className="line-clamp-2" /> : "Tidak ada deskripsi"}
                                 </div>

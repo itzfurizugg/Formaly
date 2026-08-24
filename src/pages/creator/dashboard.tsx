@@ -104,7 +104,7 @@ function CreatorDashboard() {
     }, [user, loadStats])
 
     return (
-        <div className="flex flex-col items-center px-3 py-10 sm:py-23">
+        <div className="flex flex-col items-center px-3 py-5 sm:py-23">
             <div className="xl:max-w-7xl lg:max-w-5xl w-full">
                 <BackButton to="/" />
                 <div className="flex items-center justify-between mb-1">

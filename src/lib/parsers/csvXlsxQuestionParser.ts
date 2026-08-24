@@ -23,7 +23,7 @@ function parseRows(rows: SourceRow[]): ParsedQuestion[] {
                 options,
                 raw_block: JSON.stringify(row),
             })
-            if (!/^[a-z]$/.test(answer)) {
+            if (answer && !/^[a-z]$/.test(answer)) {
                 return { ...parsed, parse_status: "error" as const, error_message: "correct_answer harus berupa huruf A–Z." }
             }
             return parsed

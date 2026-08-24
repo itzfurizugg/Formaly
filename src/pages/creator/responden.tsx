@@ -1,15 +1,18 @@
 import { useEffect, useState, useCallback } from "react"
 import { useNavigate } from "react-router-dom"
-import { ChartNoAxesColumn, ChevronRight, FileText } from "lucide-react"
+import { motion } from "motion/react"
+import { ChartNoAxesColumn, ChevronRight, FileText, ListChecks, Timer } from "lucide-react"
 import { supabase } from "../../lib/supabase"
 import { useAuth } from "../../lib/auth-context"
-import { RichText } from "../../components/richText"
 import BackButton from "../../components/backButton"
+import FormHeader from "../../components/creator/formHeader"
+import { listContainer, listItem } from "../../lib/motion"
 
 interface FormRow {
     id: string
     title: string
     description: string
+    header_image?: string | null
     duration: number
     questions: { id: string }[]
     submissions: { id: string }[]
@@ -27,7 +30,7 @@ function CreatorResponden() {
         const { data, error: err } = await supabase
             .from("forms")
             .select(`
-                id, title, description, duration,
+                id, title, description, duration, header_image,
                 questions ( id ),
                 submissions ( id )
             `)
@@ -44,12 +47,12 @@ function CreatorResponden() {
     }, [user, load])
 
     return (
-        <div className="flex flex-col items-center px-3 py-10">
+        <div className="flex flex-col items-center px-3 py-5 sm:py-10">
             <div className="w-full xl:max-w-7xl lg:max-w-5xl">
                 <BackButton to="/creator" />
 
                 <div className="ml-2">
-                    <h1 className="text-3xl lg:text-4xl font-bold font-display text-darks mb-1">Responden</h1>
+                    <h1 className="text-3xl lg:text-5xl font-bold font-display text-darks mb-1">Responden</h1>
                     <p className="text-sm text-tinted mb-6">Pilih form untuk melihat submission-nya.</p>
                 </div>
 
@@ -65,32 +68,49 @@ function CreatorResponden() {
                     </div>
                 )}
                 {!loading && forms.length > 0 && (
-                    <div className="grid lg:grid-cols-2 gap-3">
+                    <motion.div
+                        variants={listContainer}
+                        initial="hidden"
+                        animate="show"
+                        className="grid lg:grid-cols-2 gap-3 items-stretch"
+                    >
                         {forms.map((form) => (
-                            <button
-                                key={form.id}
-                                onClick={() => navigate(`/creator/forms/${form.id}/submissions`)}
-                                className="card bg-white border border-second rounded-xl hover:bg-base-200 transition-colors w-full text-left"
-                            >
-                                <div className="card-body gap-3 p-4">
-                                    <div className="flex items-start justify-between gap-3">
-                                        <div className="min-w-0">
-                                            <h2 className="card-title text-darks break-words leading-snug text-base">{form.title}</h2>
-                                            <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5 text-xs text-tinted/80 mt-1.5 mb-3">
-                                                <span className="inline-flex items-center gap-1.5">
-                                                    <ChartNoAxesColumn className="h-3.5 w-3.5" /> Total Responden: {form.submissions?.length || 0}
-                                                </span>
+                            <motion.div key={form.id} variants={listItem} className="h-full">
+                                <button
+                                    onClick={() => navigate(`/creator/forms/${form.id}/submissions`)}
+                                    aria-label={`Lihat submission ${form.title}`}
+                                    className="group card bg-white border border-second rounded-xl transition-all duration-300 hover:shadow-lg hover:shadow-darks/5 w-full text-left h-full overflow-hidden"
+                                >
+                                    <FormHeader formId={form.id} title={form.title} headerImage={form.header_image} />
+                                    <div className="card-body gap-4 p-4 sm:p-5">
+                                        <div className="flex items-start gap-3">
+                                            <div className="min-w-0 flex-1">
+                                                <h2 className="text-base text-xl sm:text-2xl font-bold font-display text-darks break-words leading-snug">
+                                                    {form.title}
+                                                </h2>
+                                                <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-tinted mt-1">
+                                                    <span className="inline-flex items-center gap-1">
+                                                        <ListChecks className="h-3.5 w-3.5" /> {form.questions?.length || 0} soal
+                                                    </span>
+                                                    <span className="inline-flex items-center gap-1">
+                                                        <Timer className="h-3.5 w-3.5" /> {form.duration ? `${form.duration} menit` : "Tanpa Waktu"}
+                                                    </span>
+                                                </div>
                                             </div>
-                                            <div className="text-sm text-tinted line-clamp-2">
-                                                {form.description ? <RichText html={form.description} className="line-clamp-2" /> : "Tidak ada deskripsi"}
-                                            </div>
+                                            <ChevronRight className="h-5 w-5 text-tinted/60 shrink-0 self-center transition-all" />
                                         </div>
-                                        <ChevronRight className="h-5 w-5 text-tinted shrink-0" />
+
+                                        <div className="flex items-center justify-between pt-2 border-t border-dashed border-second">
+                                            <span className="inline-flex items-center gap-1.5 rounded-full text-darks text-xs font-semibold px-1">
+                                                <ChartNoAxesColumn className="h-3.5 w-3.5" />
+                                                Total Responden: {form.submissions?.length || 0}
+                                            </span>
+                                        </div>
                                     </div>
-                                </div>
-                            </button>
+                                </button>
+                            </motion.div>
                         ))}
-                    </div>
+                    </motion.div>
                 )}
             </div>
         </div>
