@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom"
-import { Clock, FileText, Check, X } from "lucide-react"
+import { Clock, FileText } from "lucide-react"
 import FormHeader from "./creator/formHeader"
 
 interface CardProps {

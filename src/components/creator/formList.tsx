@@ -1,7 +1,7 @@
 import { useEffect, useState, useCallback } from "react"
 import { useNavigate } from "react-router-dom"
 import { motion } from "motion/react"
-import { FileText, Pencil, Trash2, ClipboardList, KeyRound, Loader2, ListChecks, Timer, Target, Share2 } from "lucide-react"
+import { FileText, Pencil, Trash2, ClipboardList, KeyRound, Loader2, Share2 } from "lucide-react"
 import { supabase } from "../../lib/supabase"
 import { useAuth } from "../../lib/auth-context"
 import { confirmDelete, showAlert } from "../../lib/alerts"
