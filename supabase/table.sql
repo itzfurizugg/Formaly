@@ -30,6 +30,12 @@ CREATE TABLE public.forms (
   created_at timestamp with time zone DEFAULT now(),
   updated_at timestamp with time zone DEFAULT now(),
   duration integer,
+  show_score_to_respondent boolean NOT NULL DEFAULT true,
+  show_answers_to_respondent boolean NOT NULL DEFAULT false,
+  randomize_questions boolean NOT NULL DEFAULT false,
+  header_image text,
+  show_correct_filter_to_respondent boolean NOT NULL DEFAULT true,
+  requires_token boolean NOT NULL DEFAULT false,
   CONSTRAINT forms_pkey PRIMARY KEY (id),
   CONSTRAINT forms_creator_id_fkey FOREIGN KEY (creator_id) REFERENCES public.users(id)
 );
@@ -108,4 +114,11 @@ CREATE TABLE public.form_tags (
   CONSTRAINT form_tags_pkey PRIMARY KEY (form_id, tag_id),
   CONSTRAINT form_tags_form_id_fkey FOREIGN KEY (form_id) REFERENCES public.forms(id),
   CONSTRAINT form_tags_tag_id_fkey FOREIGN KEY (tag_id) REFERENCES public.tags(id)
+);
+CREATE TABLE public.form_tokens (
+  form_id uuid NOT NULL,
+  token_hash text NOT NULL,
+  updated_at timestamp with time zone NOT NULL DEFAULT now(),
+  CONSTRAINT form_tokens_pkey PRIMARY KEY (form_id),
+  CONSTRAINT form_tokens_form_id_fkey FOREIGN KEY (form_id) REFERENCES public.forms(id)
 );

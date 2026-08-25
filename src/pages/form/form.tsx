@@ -35,6 +35,8 @@ interface LocationState {
     current?: number
     answers?: Answer
     deadline?: number
+    /** "Tiket" dari RPC start_form_submission — wajib ada, tanpa ini akses ditolak. */
+    submissionId?: string
 }
 
 function FormPage() {
@@ -43,6 +45,9 @@ function FormPage() {
     const { user, loading: authLoading } = useAuth()
     const location = useLocation()
     const locationState = location.state as LocationState | null
+    // Submission dibuat di server lewat RPC start_form_submission (IN_PROGRESS)
+    // sebelum halaman ini boleh dibuka. Tanpa itu, akses langsung via URL ditolak.
+    const submissionId = locationState?.submissionId ?? null
 
     const [questions, setQuestions] = useState<Question[]>([])
     const [formMeta, setFormMeta] = useState<{ title: string; duration: number; randomize_questions?: boolean | null } | null>(null)
@@ -82,7 +87,7 @@ function FormPage() {
     }, [formId])
 
     const handleSubmit = useCallback(async (allowRequiredSkip = false) => {
-        if (!user || !formId) return
+        if (!user || !formId || !submissionId) return
         setSubmitting(true)
         setError(null)
 
@@ -116,20 +121,22 @@ function FormPage() {
             }
         }
 
-        const { data: subData, error: subErr } = await supabase.from("submissions").insert({
-            user_id: user.id,
-            form_id: formId,
-            total_score: totalScore,
-            status: 'SUBMITTED',
-            submitted_at: new Date().toISOString()
-        }).select("id").single()
+        // Submission sudah dibuat saat mulai (RPC start_form_submission, IN_PROGRESS).
+        // Di sini cukup finalisasi: skor + status SUBMITTED.
+        const { error: subErr } = await supabase
+            .from("submissions")
+            .update({
+                total_score: totalScore,
+                status: 'SUBMITTED',
+                submitted_at: new Date().toISOString()
+            })
+            .eq("id", submissionId)
 
         if (subErr) {
             setSubmitting(false)
             setError(subErr.message || "Gagal mengirim jawaban. Coba lagi.")
             return
         }
-        const submissionId = subData.id
 
         for (const q of questions) {
             const ans = answers[q.id]
@@ -238,7 +245,7 @@ function FormPage() {
         if (formData.randomize_questions) {
             for (let i = nextQuestions.length - 1; i > 0; i--) {
                 const j = Math.floor(Math.random() * (i + 1))
-                ;[nextQuestions[i], nextQuestions[j]] = [nextQuestions[j], nextQuestions[i]]
+                    ;[nextQuestions[i], nextQuestions[j]] = [nextQuestions[j], nextQuestions[i]]
             }
         }
         if (nextQuestions.length > 0) {
@@ -258,8 +265,14 @@ function FormPage() {
             navigate("/")
             return
         }
+        // Anti akses langsung via URL: halaman soal hanya boleh dibuka dengan
+        // submission_id hasil RPC start_form_submission.
+        if (!submissionId) {
+            navigate(`/form/description?formId=${formId}`)
+            return
+        }
         loadForm()
-    }, [user, authLoading, formId, navigate, location, loadForm])
+    }, [user, authLoading, formId, submissionId, navigate, location, loadForm])
 
     useEffect(() => {
         if (!hasTimer || !deadlineRef.current || loading) return
@@ -316,226 +329,228 @@ function FormPage() {
     return (
         <>
             {!authLoading && !loading && (
-            notFound ? (
-                <div className="flex flex-col items-center justify-center min-h-screen px-3.5">
-                    <p className="text-tinted mb-4">Form tidak ditemukan atau belum dipublikasikan.</p>
-                    <button onClick={() => navigate("/")} className="btn rounded-full p-4 bg-darks text-white border-none">
-                        Kembali
-                    </button>
-                </div>
-            ) : !question || total === 0 ? (
-                <div className="flex flex-col items-center justify-center min-h-screen px-3.5">
-                    <p className="text-tinted mb-4">Form tidak memiliki soal.</p>
-                    <button onClick={() => navigate("/")} className="btn rounded-full p-4 bg-darks text-white border-none">
-                        Kembali
-                    </button>
-                </div>
-            ) : (
-        <div className="flex flex-col items-center px-3.5 pt-6 pb-28 md:pb-6">
-            <div className="w-full max-w-5xl xl:mt-3">
-                {/* Banner header hanya di desktop; mobile fokus ke soal. Full width, proporsi 3105x1100 via FormHeader. */}
-                {headerImage && (
+                notFound ? (
+                    <div className="flex flex-col items-center justify-center min-h-screen px-3.5">
+                        <p className="text-tinted mb-4">Form tidak ditemukan atau belum dipublikasikan.</p>
+                        <button onClick={() => navigate("/")} className="btn rounded-full p-4 bg-darks text-white border-none">
+                            Kembali
+                        </button>
+                    </div>
+                ) : !question || total === 0 ? (
+                    <div className="flex flex-col items-center justify-center min-h-screen px-3.5">
+                        <p className="text-tinted mb-4">Form tidak memiliki soal.</p>
+                        <button onClick={() => navigate("/")} className="btn rounded-full p-4 bg-darks text-white border-none">
+                            Kembali
+                        </button>
+                    </div>
+                ) : (
+                    <div className="flex flex-col items-center px-3.5 pt-6 pb-28 md:pb-6">
+                        <div className="w-full max-w-5xl xl:mt-3">
+                            {/* Banner header hanya di desktop; mobile fokus ke soal. Full width, proporsi 3105x1100 via FormHeader. */}
+                            {/* {headerImage && (
                     <div className="hidden lg:block w-full rounded-xl overflow-hidden border border-second shadow-sm mb-4">
                         <FormHeader formId={formId || ""} title={formMeta?.title || "Form"} headerImage={headerImage} />
                     </div>
-                )}
-                <div className="p-2 mb-3 hidden sm:block">
-                    <h1 className="text-xl xl:text-4xl font-bold text-darks">{formMeta?.title || "Form"}</h1>
-                    <p className="text-xs text-tinted mt-1">
-                        {current + 1} dari {total} soal
-                    </p>
-                </div>
+                )} */}
+                            <div className="p-2 mb-3 hidden sm:block">
+                                <h1 className="text-xl xl:text-4xl font-bold text-darks">{formMeta?.title || "Form"}</h1>
+                                <p className="text-xs text-tinted mt-1">
+                                    {current + 1} dari {total} soal
+                                </p>
+                            </div>
 
-                {/* key=current agar animasi diulang tiap pindah soal */}
-                <motion.div
-                    key={current}
-                    initial={{ opacity: 0, y: 16 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.45, ease: [0.22, 1, 0.36, 1] }}
-                    className="bg-base-300 lg:bg-white border border-second p-1 lg:p-6 lg:shadow-sm rounded-xl"
-                >
-                    <div className="flex items-center justify-between mb-3">
-                        <div className="flex gap-2">
-                            <p className="text-sm text-tinted font-semibold">Soal {current + 1}</p>
-                            {question.is_required && <span className="text-red-600 font-bold text-xl">*</span>}
-                        </div>
-                        <div className="flex items-center gap-2">
-                            <span
-                                className={`inline-flex items-center gap-1 px-3.5 py-1 rounded-full text-xs font-semibold tabular-nums transition-colors ${!hasTimer
-                                    ? "bg-second text-tinted"
-                                    : timeLeft <= 60
-                                        ? "bg-red-500/10 text-red-600"
-                                        : "bg-done/10 text-done"
-                                    }`}
+                            {/* key=current agar animasi diulang tiap pindah soal */}
+                            <motion.div
+                                key={current}
+                                initial={{ opacity: 0, y: 16 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                transition={{ duration: 0.45, ease: [0.22, 1, 0.36, 1] }}
+                                className="bg-base-300 lg:bg-white border border-second p-1 lg:p-6 lg:shadow-sm rounded-xl"
                             >
-                                <Clock className="h-3.5 w-3.5" />
-                                {hasTimer ? formattedTime : "Tanpa Waktu"}
-                            </span>
-                        </div>
-                    </div>
-
-                    <div className="text-base font-medium text-darks leading-relaxed mt-5">
-                        <RichText html={question.question_text} />
-                    </div>
-                    {/* Menampilkan Gambar Soal menggunakan field image_question */}
-                    {question.image_question && (
-                        <div className="mt-6 relative group rounded-lg overflow-hidden border border-second bg-base w-fit">
-                            <img
-                                src={question.image_question}
-                                alt="Ilustrasi Soal"
-                                className="max-h-60 object-contain cursor-pointer"
-                                onClick={() => setModalImage(question.image_question ?? null)}
-                            />
-                            <button
-                                onClick={() => setModalImage(question.image_question ?? null)}
-                                className="absolute bottom-2 right-2 bg-base/70 hover:bg-darks text-medium text-darks hover:text-white p-1.5 rounded-md opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-1 text-xs"
-                            >
-                                <ZoomIn className="h-4 w-4" /> Perbesar
-                            </button>
-                        </div>
-                    )}
-
-                    <div className="mt-6 space-y-3">
-                        {question.question_type === "text" ? (
-                            <textarea
-                                value={Array.isArray(answers[question.id]) ? "" : (answers[question.id] as string) || ""}
-                                onChange={(e) => setAnswers((prev) => ({ ...prev, [question.id]: e.target.value }))}
-                                rows={5}
-                                placeholder="Tulis jawabanmu di sini..."
-                                className="textarea w-full bg-white border-second focus:border-done focus:outline-none transition-colors text-sm resize-y"
-                            />
-                        ) : (
-                            question.question_options?.map((option) => {
-                                const isMulti = question.question_type === "multiple_choice"
-                                const selected = isMulti
-                                    ? Array.isArray(answers[question.id]) && (answers[question.id] as string[]).includes(option.id)
-                                    : answers[question.id] === option.id
-                                return (
-                                    <button
-                                        key={option.id}
-                                        onClick={() => selectOption(option.id)}
-                                        className={`w-full text-left px-3.5 py-3 rounded-lg border text-sm transition-colors ${selected
-                                            ? "bg-darks border-darks text-white font-medium"
-                                            : "bg-white border-second text-darks hover:border-darks/50"
-                                            }`}
-                                    >
-                                        <span className="flex items-center gap-3">
-                                            <span
-                                                className={`shrink-0 w-5 h-5 rounded-full border-2 flex items-center justify-center ${isMulti ? "rounded-md" : "rounded-full"
-                                                    } ${selected ? "border-darks bg-darks" : "border-tinted"}`}
-                                            >
-                                                {selected && <Check className="h-3 w-3 text-white" strokeWidth={3} />}
-                                            </span>
-                                            <RichText as="span" html={option.option_text} />
+                                <div className="flex items-center justify-between mb-3">
+                                    <div className="flex gap-2">
+                                        <p className="text-sm text-tinted font-semibold">Soal {current + 1}</p>
+                                        {question.is_required && <span className="text-red-600 font-bold text-xl">*</span>}
+                                    </div>
+                                    <div className="flex items-center gap-2">
+                                        <span
+                                            className={`inline-flex items-center gap-1 px-3.5 py-1 rounded-full text-xs font-semibold tabular-nums transition-colors ${!hasTimer
+                                                ? "bg-second text-tinted"
+                                                : timeLeft <= 60
+                                                    ? "bg-red-500/10 text-red-600"
+                                                    : "bg-done/10 text-done"
+                                                }`}
+                                        >
+                                            <Clock className="h-3.5 w-3.5" />
+                                            {hasTimer ? formattedTime : "Tanpa Waktu"}
                                         </span>
+                                    </div>
+                                </div>
+
+                                <div className="text-base font-medium text-darks leading-relaxed mt-5">
+                                    <RichText html={question.question_text} />
+                                </div>
+                                {/* Menampilkan Gambar Soal menggunakan field image_question */}
+                                {question.image_question && (
+                                    <div className="mt-6 relative group rounded-lg overflow-hidden border border-second bg-base w-fit">
+                                        <img
+                                            src={question.image_question}
+                                            alt="Ilustrasi Soal"
+                                            className="max-h-60 object-contain cursor-pointer"
+                                            onClick={() => setModalImage(question.image_question ?? null)}
+                                        />
+                                        <button
+                                            onClick={() => setModalImage(question.image_question ?? null)}
+                                            className="absolute bottom-2 right-2 bg-base/70 hover:bg-darks text-medium text-darks hover:text-white p-1.5 rounded-md opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-1 text-xs"
+                                        >
+                                            <ZoomIn className="h-4 w-4" /> Perbesar
+                                        </button>
+                                    </div>
+                                )}
+
+                                <div className="mt-6 space-y-3">
+                                    {question.question_type === "text" ? (
+                                        <textarea
+                                            value={Array.isArray(answers[question.id]) ? "" : (answers[question.id] as string) || ""}
+                                            onChange={(e) => setAnswers((prev) => ({ ...prev, [question.id]: e.target.value }))}
+                                            rows={5}
+                                            placeholder="Tulis jawabanmu di sini..."
+                                            className="textarea w-full bg-white border-second focus:border-done focus:outline-none transition-colors text-sm resize-y"
+                                        />
+                                    ) : (
+                                        question.question_options?.map((option) => {
+                                            const isMulti = question.question_type === "multiple_choice"
+                                            const selected = isMulti
+                                                ? Array.isArray(answers[question.id]) && (answers[question.id] as string[]).includes(option.id)
+                                                : answers[question.id] === option.id
+                                            return (
+                                                <button
+                                                    key={option.id}
+                                                    onClick={() => selectOption(option.id)}
+                                                    className={`w-full text-left px-3.5 py-3 rounded-lg border text-sm transition-colors ${selected
+                                                        ? "bg-darks border-darks text-white font-medium"
+                                                        : "bg-white border-second text-darks hover:border-darks/50"
+                                                        }`}
+                                                >
+                                                    <span className="flex items-center gap-3">
+                                                        <span
+                                                            className={`shrink-0 w-5 h-5 rounded-full border-2 flex items-center justify-center ${isMulti ? "rounded-md" : "rounded-full"
+                                                                } ${selected ? "border-darks bg-darks" : "border-tinted"}`}
+                                                        >
+                                                            {selected && <Check className="h-3 w-3 text-white" strokeWidth={3} />}
+                                                        </span>
+                                                        <RichText as="span" html={option.option_text} />
+                                                    </span>
+                                                </button>
+                                            )
+                                        })
+                                    )}
+                                </div>
+                            </motion.div>
+
+                            {/* NOTE: LAYOUT DESKTOP (>= md) — PageIndicator & tombol Kirim inline di bawah konten */}
+                            <div className="hidden md:flex items-center justify-between gap-3 sticky bottom-0 z-30 mt-4 py-3 bg-gradient-to-t from-second via-second/90 to-transparent">
+                                <PageIndicator total={total} current={current} onPrev={prev} onNext={next} onListClick={goToList} />
+                                {current === total - 1 && (
+                                    <button
+                                        onClick={() => handleSubmit()}
+                                        disabled={submitting}
+                                        className="btn text-white h-12 min-h-0 px-3.5 bg-done border-none rounded-xl hover:opacity-90 disabled:opacity-25"
+                                    >
+                                        {submitting ? (
+                                            <span className="loading loading-spinner loading-sm" />
+                                        ) : (
+                                            <Check className="h-4 w-4" />
+                                        )}
+                                        {submitting ? "Mengirim..." : "Kirim"}
                                     </button>
-                                )
-                            })
-                        )}
+                                )}
+                            </div>
+
+                            <AnimatePresence>
+                                {error && (
+                                    <motion.div
+                                        key="form-error-desktop"
+                                        variants={alertPop}
+                                        initial="hidden"
+                                        animate="show"
+                                        exit="exit"
+                                        className="mt-4 flex items-start gap-3 bg-red-500/10 border border-red-500/20 rounded-lg px-3.5 py-3"
+                                    >
+                                        <p className="text-sm text-red-600 font-medium">{error}</p>
+                                    </motion.div>
+                                )}
+                            </AnimatePresence>
+                        </div>
+
+                        {/* NOTE: LAYOUT MOBILE (< md) — bar fixed di bawah dengan gradasi */}
+                        <div className="fixed bottom-0 left-0 right-0 z-40 md:hidden pointer-events-none">
+                            <div className="bg-gradient-to-t from-second via-second/95 to-transparent px-3.5 pt-20 pb-5">
+                                <div className="w-full max-w-3xl mx-auto flex items-center justify-between gap-3 pointer-events-auto mb-2">
+                                    <PageIndicator total={total} current={current} onPrev={prev} onNext={next} onListClick={goToList} />
+                                    {current === total - 1 && (
+                                        <button
+                                            onClick={() => handleSubmit()}
+                                            disabled={submitting}
+                                            className="btn text-white h-12 min-h-0 px-3.5 bg-done border-none rounded-full hover:opacity-90 disabled:opacity-25"
+                                        >
+                                            {submitting ? (
+                                                <span className="loading loading-spinner loading-sm" />
+                                            ) : (
+                                                <Check className="h-4 w-4" />
+                                            )}
+                                            {submitting ? "Mengirim..." : "Kirim"}
+                                        </button>
+                                    )}
+                                </div>
+
+                                <AnimatePresence>
+                                {error && (
+                                    <motion.div
+                                        key="form-error-mobile"
+                                        variants={alertPop}
+                                        initial="hidden"
+                                        animate="show"
+                                        exit="exit"
+                                        className="pointer-events-auto flex flex-col items-stretch gap-2 bg-red-500/10 border border-red-500/20 rounded-lg px-3.5 py-3"
+                                    >
+                                        <p className="text-sm text-red-600 font-medium">{error}</p>
+                                    </motion.div>
+                                )}
+                                </AnimatePresence>
+                            </div>
+                        </div>
+
+                        {/* Modal Zoom Gambar */}
+                        <AnimatePresence>
+                            {modalImage && (
+                                <ModalPortal>
+                                    <motion.div
+                                        variants={modalBackdrop}
+                                        initial="hidden"
+                                        animate="show"
+                                        exit="exit"
+                                        className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4"
+                                    >
+                                        <motion.div variants={modalPanel} className="relative max-w-4xl max-h-[90vh] w-full flex items-center justify-center">
+                                            <button
+                                                onClick={() => setModalImage(null)}
+                                                className="absolute -top-10 right-0 text-white hover:text-gray-300 bg-darks/50 p-2 rounded-full"
+                                            >
+                                                <X className="h-6 w-6" />
+                                            </button>
+                                            <img
+                                                src={modalImage}
+                                                alt="Zoom Preview"
+                                                className="max-w-full max-h-[85vh] object-contain rounded-lg shadow-2xl bg-white"
+                                            />
+                                        </motion.div>
+                                    </motion.div>
+                                </ModalPortal>
+                            )}
+                        </AnimatePresence>
                     </div>
-                </motion.div>
-
-                {/* NOTE: LAYOUT DESKTOP (>= md) — PageIndicator & tombol Kirim inline di bawah konten */}
-                <div className="hidden md:flex items-center justify-between mt-4">
-                    <PageIndicator total={total} current={current} onPrev={prev} onNext={next} onListClick={goToList} />
-                    {current === total - 1 && (
-                        <button
-                            onClick={() => handleSubmit()}
-                            disabled={submitting}
-                            className="btn text-white h-12 min-h-0 px-3.5 bg-done border-none rounded-xl hover:opacity-90 disabled:opacity-25"
-                        >
-                            {submitting ? (
-                                <span className="loading loading-spinner loading-sm" />
-                            ) : (
-                                <Check className="h-4 w-4" />
-                            )}
-                            {submitting ? "Mengirim..." : "Kirim"}
-                        </button>
-                    )}
-                </div>
-
-                <AnimatePresence>
-                {error && (
-                    <motion.div
-                        key="form-error-desktop"
-                        variants={alertPop}
-                        initial="hidden"
-                        animate="show"
-                        exit="exit"
-                        className="mt-4 flex items-start gap-3 bg-red-500/10 border border-red-500/20 rounded-lg px-3.5 py-3"
-                    >
-                        <p className="text-sm text-red-600 font-medium">{error}</p>
-                    </motion.div>
-                )}
-                </AnimatePresence>
-            </div>
-
-            {/* NOTE: LAYOUT MOBILE (< md) — Dock fixed di bawah, latar bg-second */}
-            <div className="fixed bottom-0 left-0 right-0 z-40 bg-second border-t border-base px-3.5 py-3 md:hidden">
-                <div className="w-full max-w-3xl mx-auto flex items-center justify-between mb-3">
-                    <PageIndicator total={total} current={current} onPrev={prev} onNext={next} onListClick={goToList} />
-                    {current === total - 1 && (
-                        <button
-                            onClick={() => handleSubmit()}
-                            disabled={submitting}
-                            className="btn text-white h-12 min-h-0 px-3.5 bg-done border-none rounded-full hover:opacity-90 disabled:opacity-25"
-                        >
-                            {submitting ? (
-                                <span className="loading loading-spinner loading-sm" />
-                            ) : (
-                                <Check className="h-4 w-4" />
-                            )}
-                            {submitting ? "Mengirim..." : "Kirim"}
-                        </button>
-                    )}
-                </div>
-
-                <AnimatePresence>
-                {error && (
-                    <motion.div
-                        key="form-error-mobile"
-                        variants={alertPop}
-                        initial="hidden"
-                        animate="show"
-                        exit="exit"
-                        className="mt-3 flex flex-col items-stretch gap-2 bg-red-500/10 border border-red-500/20 rounded-lg px-3.5 py-3"
-                    >
-                        <p className="text-sm text-red-600 font-medium">{error}</p>
-                    </motion.div>
-                )}
-                </AnimatePresence>
-            </div>
-
-            {/* Modal Zoom Gambar */}
-            <AnimatePresence>
-            {modalImage && (
-                <ModalPortal>
-                <motion.div
-                    variants={modalBackdrop}
-                    initial="hidden"
-                    animate="show"
-                    exit="exit"
-                    className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4"
-                >
-                    <motion.div variants={modalPanel} className="relative max-w-4xl max-h-[90vh] w-full flex items-center justify-center">
-                        <button
-                            onClick={() => setModalImage(null)}
-                            className="absolute -top-10 right-0 text-white hover:text-gray-300 bg-darks/50 p-2 rounded-full"
-                        >
-                            <X className="h-6 w-6" />
-                        </button>
-                        <img
-                            src={modalImage}
-                            alt="Zoom Preview"
-                            className="max-w-full max-h-[85vh] object-contain rounded-lg shadow-2xl bg-white"
-                        />
-                    </motion.div>
-                </motion.div>
-                </ModalPortal>
-            )}
-            </AnimatePresence>
-        </div>
-            )
+                )
             )}
         </>
     )

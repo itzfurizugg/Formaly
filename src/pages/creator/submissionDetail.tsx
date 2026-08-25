@@ -9,6 +9,7 @@ import { supabase } from "../../lib/supabase"
 import { useAuth } from "../../lib/auth-context"
 import { easeOutExpo } from "../../lib/motion"
 import BackButton from "../../components/backButton"
+import { showAlert } from "../../lib/alerts"
 
 interface AnswerRow {
     id: string
@@ -59,7 +60,8 @@ function SubmissionDetail() {
 
         const { data: owner } = await supabase.from("forms").select("creator_id").eq("id", id).single()
         if (owner && owner.creator_id !== user.id) {
-            setError("Anda tidak memiliki akses ke submission ini.")
+            showAlert("Gagal memuat data.", "error")
+            setError("Gagal memuat data.")
             setLoading(false)
             return
         }
@@ -133,9 +135,7 @@ function SubmissionDetail() {
     if (error) {
         return (
             <div className="flex flex-col items-center px-3.5 sm:px-6 py-10">
-                <div role="alert" className="text-sm text-wrong bg-wrong/5 border border-wrong/20 rounded-lg px-3.5 py-3">
-                    {error}
-                </div>
+                <p className="text-sm text-tinted">{error}</p>
             </div>
         )
     }
@@ -143,7 +143,7 @@ function SubmissionDetail() {
     return (
         <>
             {!loading && (
-        <div className="flex flex-col items-center px-3.5 sm:px-6 py-5">
+        <div className="flex flex-col items-center px-3.5 sm:px-6 py-5 sm:py-10">
             <div className="w-full xl:max-w-7xl lg:max-w-5xl">
                 <BackButton to={`/creator/forms/${id}/submissions`} />
 

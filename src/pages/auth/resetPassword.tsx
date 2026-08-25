@@ -7,6 +7,7 @@ import { supabase } from "../../lib/supabase"
 import { useAuth } from "../../lib/auth-context"
 import PasswordInput from "../../components/passwordInput"
 import { alertPop } from "../../lib/motion"
+import { showAlert } from "../../lib/alerts"
 
 function friendlyError(message: string): string {
     const msg = message.toLowerCase()
@@ -51,6 +52,12 @@ function ResetPassword() {
             subscription.unsubscribe()
         }
     }, [])
+
+    useEffect(() => {
+        if (!checking && !sessionValid) {
+            showAlert("Link reset password sudah kedaluwarsa. Silakan minta tautan baru untuk melanjutkan.", "error")
+        }
+    }, [checking, sessionValid])
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault()
@@ -160,10 +167,6 @@ function ResetPassword() {
                                 <p className="text-sm text-tinted mt-2 mb-6">
                                     Tautan reset password tidak valid atau sudah kedaluwarsa.
                                 </p>
-
-                                <div role="alert" className="text-sm text-wrong bg-wrong/5 border border-wrong/20 rounded-xl lg:rounded-lg px-3.5 py-3 mb-4">
-                                    Link reset password sudah kedaluwarsa. Silakan minta tautan baru untuk melanjutkan.
-                                </div>
 
                                 <button
                                     type="button"

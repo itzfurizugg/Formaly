@@ -4,7 +4,7 @@ import { motion } from "motion/react"
 import { FileText, Pencil, Trash2, ClipboardList, KeyRound, Loader2, ListChecks, Timer, Target, Share2 } from "lucide-react"
 import { supabase } from "../../lib/supabase"
 import { useAuth } from "../../lib/auth-context"
-import { confirmDelete } from "../../lib/alerts"
+import { confirmDelete, showAlert } from "../../lib/alerts"
 import { RichText } from "../richText"
 import FormHeader from "./formHeader"
 import { pageGet, pageSet } from "../../lib/pageCache"
@@ -49,8 +49,10 @@ function FormList() {
             .eq("creator_id", user.id)
             .order("created_at", { ascending: false })
 
-        if (err) setError(err.message)
-        else {
+        if (err) {
+            showAlert("Gagal memuat data.", "error")
+            setError(err.message)
+        } else {
             const rows = (data as FormRow[]) || []
             setForms(rows)
             if (user) pageSet(`formList:${user.id}`, rows)
@@ -99,9 +101,7 @@ function FormList() {
         <>
             {!loading && (
                 error ? (
-                    <div role="alert" className="text-sm text-wrong bg-wrong/5 border border-wrong/20 rounded-xl px-4 py-3">
-                        {error}
-                    </div>
+                    <p className="text-sm text-tinted">{error}</p>
                 ) : forms.length === 0 ? (
                     <div className="text-center py-20">
                         <FileText className="h-12 w-12 text-tinted/40 mx-auto mb-3" />
@@ -126,7 +126,7 @@ function FormList() {
                                             <div className="min-w-0">
                                                 <h2 className="card-title text-xl sm:text-2xl text-darks break-words leading-snug text-base">{form.title}</h2>
                                                 <div className="text-sm text-tinted line-clamp-2">
-                                                    {form.description ? <RichText html={form.description} className="line-clamp-2" /> : "Tidak ada deskripsi"}
+                                                    {form.description ? <RichText html={form.description} className="line-clamp-1" /> : "Tidak ada deskripsi"}
                                                 </div>
                                             </div>
                                             <div className="shrink-0">
@@ -134,25 +134,24 @@ function FormList() {
                                             </div>
                                         </div>
 
-                                        <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5 text-xs text-tinted/80 mt-1 mb-2">
-                                            <span className="inline-flex items-center gap-1.5">
-                                                <ListChecks className="h-3.5 w-3.5" /> {form.questions?.length || 0} soal
-                                            </span>
+                                        <div className="flex flex-wrap items-center gap-x-4 text-xs text-tinted/80 mt-1 mb-2">
                                             {/* <span className="inline-flex items-center gap-1.5">
-                                <Users className="h-3.5 w-3.5" /> {form.submissions?.length || 0} submission
-                            </span> */}
-                                            <span className="inline-flex items-center gap-1.5">
+                                                <ListChecks className="h-3.5 w-3.5" /> {form.questions?.length || 0} soal
+                                            </span> */}
+                                            {/* <span className="inline-flex items-center gap-1.5">
+                                                    <Users className="h-3.5 w-3.5" /> {form.submissions?.length || 0} submission
+                                            </span> */}
+                                            {/* <span className="inline-flex items-center gap-1.5">
                                                 <Timer className="h-3.5 w-3.5" /> {form.duration ? `${form.duration} menit` : "Tanpa Waktu"}
                                             </span>
                                             {form.passing_score != null && (
                                                 <span className="hidden sm:inline-flex items-center gap-1.5">
                                                     <Target className="h-3.5 w-3.5" /> Nilai Minimum: {form.passing_score}
                                                 </span>
-                                            )}
-                                            {/* <span className="inline-flex items-center gap-1.5">
-                                <CalendarDays className="h-3.5 w-3.5" />
-                                {new Date(form.created_at).toLocaleDateString("id-ID", { day: "numeric", month: "short", year: "numeric" })}
-                            </span> */}
+                                            )} */}
+                                            <span className="inline-flex items-center gap-1.5">
+                                                Dibuat pada: {new Date(form.created_at).toLocaleDateString("id-ID", { day: "numeric", month: "long", year: "numeric" })}
+                                            </span>
                                         </div>
 
                                         <div className="card-actions justify-end flex-wrap gap-2">

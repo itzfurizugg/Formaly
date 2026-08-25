@@ -1,59 +1,61 @@
 import { Link } from "react-router-dom"
 import { Clock, FileText, Check, X } from "lucide-react"
+import FormHeader from "./creator/formHeader"
 
 interface CardProps {
+    formId: string
     title: string
     author: string
     duration: string
     questions: number
     score: number
     to: string
-    buttonLabel?: string
     state?: Record<string, unknown>
     passingScore?: number | null
     hideScore?: boolean
+    headerImage?: string | null
 }
 
-function HistoryCard({ title, author, duration, questions, score, to, buttonLabel = "Lihat Hasil", state, passingScore = null, hideScore = false }: CardProps) {
+function HistoryCard({ formId, title, author, duration, questions, score, to, state, passingScore = null, hideScore = false, headerImage = null }: CardProps) {
     const failed = !hideScore && passingScore != null && score < passingScore
+
     return (
-        <div className="card bg-white border border-second rounded-2xl lg:rounded-xl transition-colors hover:bg-base-200">
-            <div className="card-body">
-                <span
-                    className={`badge border-none rounded-full ${hideScore ? "badge-ghost text-tinted" : failed ? "bg-wrong/10 text-wrong" : "bg-done/10 text-done"
+        <Link
+            to={to}
+            state={state}
+            className="card bg-white border border-second rounded-xl transition-all duration-300 hover:shadow-lg hover:shadow-darks/5 active:scale-[0.98] overflow-hidden cursor-pointer"
+        >
+            <FormHeader formId={formId} title={title} headerImage={headerImage} />
+            <div className="card-body gap-4 p-4 sm:p-5">
+                <div className="flex items-start gap-3">
+                    <div className="min-w-0 flex-1">
+                        <h2 className="text-xl sm:text-2xl font-bold font-display text-darks break-words leading-snug">
+                            {title}
+                        </h2>
+                        <p className="text-sm text-tinted mt-0.5">Oleh <span className="font-semibold text-darks">{author}</span></p>
+                    </div>
+                    <span
+                        className={`shrink-0 badge rounded-full text-xs font-medium px-2 border-none ${hideScore
+                            ? "bg-tinted/10 text-tinted"
+                            : failed
+                                ? "bg-wrong/10 text-wrong"
+                                : "bg-done/10 text-done"
                         }`}
-                >
-                    {failed ? <X className="h-4 w-4" /> : <Check className="h-4 w-4" />}
-                    {failed ? "Gagal" : "Selesai"}
-                </span>
-                {/* <span className={`flex items-center gap-1 font-semibold ${passingScore != null && score < passingScore ? "text-darks" : "text-darks"}`}>
-                    Skor: {score}
-                </span> */}
-                <div className="flex items-start justify-between gap-3">
-                    <h2 className="card-title text-darks">{title}</h2>
-                </div>
-                <p className="text-sm text-tinted">Oleh <span className="font-semibold text-accents">{author}</span></p>
-                <div className="flex items-center gap-4 mt-1 text-xs text-tinted/70">
-                    <span className="flex items-center gap-1">
-                        <Clock className="h-3.5 w-3.5" />
-                        {duration}
-                    </span>
-                    <span className="flex items-center gap-1">
-                        <FileText className="h-3.5 w-3.5w bo" />
-                        {questions} soal
-                    </span>
-                </div>
-                <div className="card-actions justify-center mt-3">
-                    <Link
-                        to={to}
-                        state={state}
-                        className="btn rounded-full lg:rounded-xl bg-darks text-base border-none h-9 min-h-0 w-full"
                     >
-                        {buttonLabel}
-                    </Link>
+                        {hideScore ? "Selesai" : failed ? <> Gagal</> : <> Lulus</>}
+                    </span>
+                </div>
+
+                <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-tinted">
+                    <span className="inline-flex items-center gap-1">
+                        <Clock className="h-3.5 w-3.5" /> {duration}
+                    </span>
+                    <span className="inline-flex items-center gap-1">
+                        <FileText className="h-3.5 w-3.5" /> {questions} soal
+                    </span>
                 </div>
             </div>
-        </div>
+        </Link>
     )
 }
 

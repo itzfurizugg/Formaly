@@ -3,11 +3,11 @@ import { useNavigate, useParams } from "react-router-dom"
 import { Eye, Trash2, Loader2 } from "lucide-react"
 import { supabase } from "../../lib/supabase"
 import { useAuth } from "../../lib/auth-context"
-import { confirmDelete } from "../../lib/alerts"
+import { confirmDelete, showAlert } from "../../lib/alerts"
 import { richTextToPlain } from "../../lib/richtext"
 import { colors } from "../../lib/colorbase"
 import { getOptionColor } from "../../lib/optionColors"
-import { DonutChart } from "../../components/charts"
+import { DonutChart, MiniStackedBarChart } from "../../components/charts"
 import { Bar, BarChart, ResponsiveContainer, Tooltip, XAxis, YAxis, type TooltipContentProps } from "recharts"
 import BackButton from "../../components/backButton"
 import FormTabs from "../../components/creator/formTabs"
@@ -72,7 +72,7 @@ function Submissions() {
     const [avgCorrect, setAvgCorrect] = useState(0)
     const [avgWrong, setAvgWrong] = useState(0)
     const [perQuestionStats, setPerQuestionStats] = useState<PerQuestionStat[]>([])
-    const [chartView, setChartView] = useState<"statistik" | "distribusi">("statistik")
+    const [chartView, setChartView] = useState<"statistik" | "distribusi">("distribusi")
 
     const loadAll = useCallback(async () => {
         if (!user || !id) return
@@ -83,6 +83,7 @@ function Submissions() {
             .eq("form_id", id)
             .order("submitted_at", { ascending: false })
         if (err) {
+            showAlert("Gagal memuat data.", "error")
             setError(err.message)
         } else {
             setSubmissions((subs as unknown as Submission[]) || [])
@@ -347,166 +348,186 @@ function Submissions() {
     return (
         <>
             {!loading && (
-        <div className="flex flex-col items-center px-3.5 sm:px-6 py-5 sm:py-10">
-            <div className="w-full xl:max-w-7xl lg:max-w-5xl">
-                <BackButton to="/creator" />
+                <div className="flex flex-col items-center px-3.5 sm:px-6 py-5 sm:py-10">
+                    <div className="w-full xl:max-w-7xl lg:max-w-5xl">
+                        <BackButton to="/creator" />
 
-                <FormTabs id={id} active="submissions" />
+                        <FormTabs id={id} active="submissions" />
 
-                {/* <h1 className="text-2xl lg:text-4xl font-bold text-darks mb-1">Submission</h1>
+                        {/* <h1 className="text-2xl lg:text-4xl font-bold text-darks mb-1">Submission</h1>
                 <p className="text-sm text-tinted mb-6">Form: {formTitle}</p> */}
 
-                {error && (
-                    <div role="alert" className="text-sm text-wrong bg-wrong/5 border border-wrong/20 rounded-lg px-3.5 py-3 mb-4">
-                        {error}
-                    </div>
-                )}
-
-                {submissions.length > 0 && (
-                    <div className="space-y-4 mb-6">
-                        {/* Baris 1: Total Responded + Rata-rata Benar/Salah + Benar vs Salah */}
-                        <div className="flex flex-col lg:flex-row gap-4">
-                            <div className="bg-white border border-second p-5 shadow-sm rounded-xl lg:flex-none lg:w-64 flex flex-col">
-                                <p className="font-semibold text-darks mb-0.5">Total Responded</p>
-                                <p className="text-xs text-tinted mb-3">
-                                    Jumlah submission yang masuk.
-                                </p>
-                                <div className="flex-1 flex flex-col items-center justify-center text-center">
-                                    <p className="text-5xl font-bold text-darks leading-none">{submissions.length}</p>
-                                    <p className="text-xs text-tinted mt-2">responden</p>
-                                </div>
-                            </div>
-                            <div className="bg-white border border-second p-5 shadow-sm rounded-xl lg:flex-1 hidden sm:block">
-                                <p className="font-semibold text-darks mb-0.5">Rata-rata Benar vs Salah</p>
-                                <p className="text-xs text-tinted mb-2">
-                                    Rata-rata jawaban benar dan salah per responden (soal isian tanpa kunci tidak dihitung).
-                                </p>
-                                <div className="h-[190px]">
-                                    <DonutChart
-                                        bare
-                                        showLegend
-                                        height={200}
-                                        data={[
-                                            { name: "Rata-rata Benar", value: avgCorrect, color: colors.pass },
-                                            { name: "Rata-rata Salah", value: avgWrong, color: colors.wrong },
-                                        ]}
-                                    />
-                                </div>
-                            </div>
-                            <div className="bg-white border border-second p-5 shadow-sm rounded-xl lg:flex-1 hidden sm:block">
-                                <p className="font-semibold text-darks mb-0.5">Total Benar vs Salah</p>
-                                <p className="text-xs text-tinted mb-2">
-                                    Jumlah jawaban benar dan salah dari seluruh submission.
-                                </p>
-                                <div className="h-[190px]">
-                                    <DonutChart
-                                        bare
-                                        showLegend
-                                        height={200}
-                                        data={[
-                                            { name: "Benar", value: totalCorrect, color: colors.pass },
-                                            { name: "Salah", value: totalWrong, color: colors.wrong },
-                                        ]}
-                                    />
-                                </div>
-                            </div>
-                        </div>
-
-                        {/* Baris 2+3: Statistik per Soal & Distribusi Opsi (switch) */}
-                        {(perQuestionStats.length > 0 || barData.length > 0) && (
-                            <div className="bg-white border border-second p-5 shadow-sm rounded-xl hidden sm:block">
-                                <div className="flex items-start justify-between gap-3 flex-wrap mb-4">
-                                    <div>
-                                        <p className="font-semibold text-darks mb-0.5">
-                                            {chartView === "statistik" ? "Statistik Jawaban per Soal" : "Distribusi Opsi Jawaban"}
-                                        </p>
-                                        <p className="text-xs text-tinted">
-                                            {chartView === "statistik"
-                                                ? "Jumlah jawaban benar, salah, dan kosong (tidak dijawab) untuk tiap soal dari seluruh submission."
-                                                : "Jumlah pilihan tiap opsi per soal dari seluruh submission (soal isian tidak dihitung)."}
-                                        </p>
-                                    </div>
-                                    <div className="flex items-center gap-1 p-1 bg-base border border-second rounded-xl shrink-0">
-                                        <button
-                                            onClick={() => setChartView("statistik")}
-                                            className={`px-3.5 py-1.5 text-xs font-medium rounded-xl transition-colors ${
-                                                chartView === "statistik" ? "bg-darks text-base" : "text-tinted hover:text-darks"
-                                            }`}
-                                        >
-                                            Statistik
-                                        </button>
-                                        <button
-                                            onClick={() => setChartView("distribusi")}
-                                            className={`px-3.5 py-1.5 text-xs font-medium rounded-xl transition-colors ${
-                                                chartView === "distribusi" ? "bg-darks text-base" : "text-tinted hover:text-darks"
-                                            }`}
-                                        >
-                                            Distribusi
-                                        </button>
-                                    </div>
-                                </div>
-
-                                {chartView === "statistik" && perQuestionStats.length > 0 && (
-                                    <>
-                                        <div style={{ overflowX: "auto" }}>
-                                            <div style={{ width: `max(100%, ${Math.max(1, perQuestionStats.length) * 64}px)`, height: 280 }}>
-                                                <ResponsiveContainer width="100%" height="100%">
-                                                    <BarChart data={perQuestionStats} margin={{ top: 8, right: 16, left: -14, bottom: 0 }}>
-                                                        <XAxis dataKey="name" tick={{ fontSize: 11, fill: colors.tinted }} axisLine={false} tickLine={false} interval={0} />
-                                                        <YAxis tick={{ fontSize: 11, fill: colors.tinted }} axisLine={false} tickLine={false} allowDecimals={false} />
-                                                        <Tooltip cursor={{ fill: colors.second }} content={renderPerQuestionTooltip} />
-                                                        <Bar dataKey="benar" stackId="q" name="Benar" fill={colors.pass} />
-                                                        <Bar dataKey="salah" stackId="q" name="Salah" fill={colors.wrong} />
-                                                        <Bar dataKey="kosong" stackId="q" name="Kosong" fill={colors.tinted} radius={[4, 4, 0, 0]} />
-                                                    </BarChart>
-                                                </ResponsiveContainer>
-                                            </div>
-                                        </div>
-                                        <div className="mt-3 flex flex-wrap gap-x-4 gap-y-1.5">
-                                            <span className="inline-flex items-center gap-1.5 text-xs text-tinted">
-                                                <span className="h-2.5 w-2.5 rounded-full shrink-0" style={{ background: colors.pass }} />
-                                                Benar
-                                            </span>
-                                            <span className="inline-flex items-center gap-1.5 text-xs text-tinted">
-                                                <span className="h-2.5 w-2.5 rounded-full shrink-0" style={{ background: colors.wrong }} />
-                                                Salah
-                                            </span>
-                                            <span className="inline-flex items-center gap-1.5 text-xs text-tinted">
-                                                <span className="h-2.5 w-2.5 rounded-full shrink-0" style={{ background: colors.tinted }} />
-                                                Kosong
-                                            </span>
-                                        </div>
-                                    </>
-                                )}
-
-                                {chartView === "distribusi" && barData.length > 0 && (
-                                    <>
-                                        <div style={{ overflowX: "auto" }}>
-                                            <div style={{ width: `max(100%, ${Math.max(1, barData.length) * 56}px)`, height: 280 }}>
-                                                <ResponsiveContainer width="100%" height="100%">
-                                                    <BarChart data={barData} margin={{ top: 8, right: 16, left: -14, bottom: 0 }}>
-                                                        <XAxis dataKey="name" tick={{ fontSize: 11, fill: colors.tinted }} axisLine={false} tickLine={false} interval={0} />
-                                                        <YAxis tick={{ fontSize: 11, fill: colors.tinted }} axisLine={false} tickLine={false} allowDecimals={false} />
-                                                        <Tooltip cursor={{ fill: colors.second }} content={renderTooltip} />
-                                                        {barSeries.map((s) => (
-                                                            <Bar key={s.key} dataKey={s.key} stackId="opt" name={s.label} fill={s.color} />
-                                                        ))}
-                                                    </BarChart>
-                                                </ResponsiveContainer>
-                                            </div>
-                                        </div>
-                                        <div className="mt-3 flex flex-wrap gap-x-4 gap-y-1.5">
-                                            {barSeries.map((s) => (
-                                                <span key={s.key} className="inline-flex items-center gap-1.5 text-xs text-tinted">
-                                                    <span className="h-2.5 w-2.5 rounded-full shrink-0" style={{ background: s.color }} />
-                                                    {s.label}
-                                                </span>
-                                            ))}
-                                        </div>
-                                    </>
-                                )}
-                            </div>
+                        {error && (
+                            <p className="text-sm text-tinted mb-4">{error}</p>
                         )}
+
+                        {submissions.length > 0 && (
+                            <div className="space-y-4 mb-6">
+                                {/* Baris 2+3: Statistik per Soal & Distribusi Opsi (switch) */}
+                                {(perQuestionStats.length > 0 || barData.length > 0) && (
+                                    <div className="bg-white border border-second p-5 shadow-sm rounded-xl hidden sm:block">
+                                        <div className="flex items-start justify-between gap-3 flex-wrap mb-4">
+                                            <div>
+                                                <p className="font-semibold text-darks mb-0.5">
+                                                    {chartView === "statistik" ? "Statistik Jawaban per Soal" : "Distribusi Opsi Jawaban"}
+                                                </p>
+                                                <p className="text-xs text-tinted">
+                                                    {chartView === "statistik"
+                                                        ? "Jumlah jawaban benar, salah, dan kosong (tidak dijawab) untuk tiap soal dari seluruh submission."
+                                                        : "Jumlah pilihan tiap opsi per soal dari seluruh submission (soal isian tidak dihitung)."}
+                                                </p>
+                                            </div>
+                                            <div className="flex items-center gap-1 p-1 bg-base border border-second rounded-full shrink-0">
+                                                <button
+                                                    onClick={() => setChartView("distribusi")}
+                                                    className={`px-3.5 py-1.5 text-xs font-medium rounded-full transition-colors ${chartView === "distribusi" ? "bg-darks text-base" : "text-tinted hover:text-darks"
+                                                        }`}
+                                                >
+                                                    Distribusi
+                                                </button>
+                                                <button
+                                                    onClick={() => setChartView("statistik")}
+                                                    className={`px-3.5 py-1.5 text-xs font-medium rounded-full transition-colors ${chartView === "statistik" ? "bg-darks text-base" : "text-tinted hover:text-darks"
+                                                        }`}
+                                                >
+                                                    Statistik
+                                                </button>
+                                            </div>
+                                        </div>
+
+                                        {chartView === "statistik" && perQuestionStats.length > 0 && (
+                                            <>
+                                                <div style={{ overflowX: "auto" }}>
+                                                    <div style={{ width: `max(100%, ${Math.max(1, perQuestionStats.length) * 64}px)`, height: 280 }}>
+                                                        <ResponsiveContainer width="100%" height="100%">
+                                                            <BarChart data={perQuestionStats} margin={{ top: 8, right: 16, left: -14, bottom: 0 }}>
+                                                                <XAxis dataKey="name" tick={{ fontSize: 11, fill: colors.tinted }} axisLine={false} tickLine={false} interval={0} />
+                                                                <YAxis tick={{ fontSize: 11, fill: colors.tinted }} axisLine={false} tickLine={false} allowDecimals={false} />
+                                                                <Tooltip cursor={{ fill: colors.second }} content={renderPerQuestionTooltip} />
+                                                                <Bar dataKey="benar" stackId="q" name="Benar" fill={colors.pass} />
+                                                                <Bar dataKey="salah" stackId="q" name="Salah" fill={colors.wrong} />
+                                                                <Bar dataKey="kosong" stackId="q" name="Kosong" fill={colors.tinted} radius={[4, 4, 0, 0]} />
+                                                            </BarChart>
+                                                        </ResponsiveContainer>
+                                                    </div>
+                                                </div>
+                                                <div className="mt-3 flex flex-wrap gap-x-4 gap-y-1.5">
+                                                    <span className="inline-flex items-center gap-1.5 text-xs text-tinted">
+                                                        <span className="h-2.5 w-2.5 rounded-full shrink-0" style={{ background: colors.pass }} />
+                                                        Benar
+                                                    </span>
+                                                    <span className="inline-flex items-center gap-1.5 text-xs text-tinted">
+                                                        <span className="h-2.5 w-2.5 rounded-full shrink-0" style={{ background: colors.wrong }} />
+                                                        Salah
+                                                    </span>
+                                                    <span className="inline-flex items-center gap-1.5 text-xs text-tinted">
+                                                        <span className="h-2.5 w-2.5 rounded-full shrink-0" style={{ background: colors.tinted }} />
+                                                        Kosong
+                                                    </span>
+                                                </div>
+                                            </>
+                                        )}
+
+                                        {chartView === "distribusi" && barData.length > 0 && (
+                                            <>
+                                                <div style={{ overflowX: "auto" }}>
+                                                    <div style={{ width: `max(100%, ${Math.max(1, barData.length) * 56}px)`, height: 280 }}>
+                                                        <ResponsiveContainer width="100%" height="100%">
+                                                            <BarChart data={barData} margin={{ top: 8, right: 16, left: -14, bottom: 0 }}>
+                                                                <XAxis dataKey="name" tick={{ fontSize: 11, fill: colors.tinted }} axisLine={false} tickLine={false} interval={0} />
+                                                                <YAxis tick={{ fontSize: 11, fill: colors.tinted }} axisLine={false} tickLine={false} allowDecimals={false} />
+                                                                <Tooltip cursor={{ fill: colors.second }} content={renderTooltip} />
+                                                                {barSeries.map((s) => (
+                                                                    <Bar key={s.key} dataKey={s.key} stackId="opt" name={s.label} fill={s.color} />
+                                                                ))}
+                                                            </BarChart>
+                                                        </ResponsiveContainer>
+                                                    </div>
+                                                </div>
+                                                <div className="mt-3 flex flex-wrap gap-x-4 gap-y-1.5">
+                                                    {barSeries.map((s) => (
+                                                        <span key={s.key} className="inline-flex items-center gap-1.5 text-xs text-tinted">
+                                                            <span className="h-2.5 w-2.5 rounded-full shrink-0" style={{ background: s.color }} />
+                                                            {s.label}
+                                                        </span>
+                                                    ))}
+                                                </div>
+                                            </>
+                                        )}
+                                    </div>
+                                )}
+                                {/* Baris 1: Total Responded + Rata-rata Benar/Salah + Benar vs Salah */}
+                                <div className="flex flex-col lg:flex-row gap-4">
+                                    <div className="bg-white border border-second p-5 shadow-sm rounded-xl lg:flex-none lg:w-64 flex flex-col">
+                                        <p className="font-semibold text-darks mb-0.5">Total Responded</p>
+                                        <p className="text-xs text-tinted mb-3">
+                                            Jumlah submission yang masuk.
+                                        </p>
+                                        <div className="flex-1 flex flex-col items-center justify-center text-center">
+                                            <p className="text-5xl font-bold text-darks leading-none">{submissions.length}</p>
+                                            <p className="text-xs text-tinted mt-2">responden</p>
+                                        </div>
+                                    </div>
+                                    <div className="bg-white border border-second p-5 shadow-sm rounded-xl lg:flex-1 hidden sm:block">
+                                        <p className="font-semibold text-darks mb-0.5">Rata-rata Benar vs Salah</p>
+                                        <p className="text-xs text-tinted mb-2">
+                                            Rata-rata jawaban benar dan salah per responden (soal isian tanpa kunci tidak dihitung).
+                                        </p>
+                                        <div className="h-[190px]">
+                                            <DonutChart
+                                                bare
+                                                showLegend
+                                                height={200}
+                                                data={[
+                                                    { name: "Rata-rata Benar", value: avgCorrect, color: colors.pass },
+                                                    { name: "Rata-rata Salah", value: avgWrong, color: colors.wrong },
+                                                ]}
+                                            />
+                                        </div>
+                                    </div>
+                                    <div className="bg-white border border-second p-5 shadow-sm rounded-xl lg:flex-1 hidden sm:block">
+                                        <p className="font-semibold text-darks mb-0.5">Total Benar vs Salah</p>
+                                        <p className="text-xs text-tinted mb-2">
+                                            Jumlah jawaban benar dan salah dari seluruh submission.
+                                        </p>
+                                        <div className="h-[190px]">
+                                            <DonutChart
+                                                bare
+                                                showLegend
+                                                height={200}
+                                                data={[
+                                                    { name: "Benar", value: totalCorrect, color: colors.pass },
+                                                    { name: "Salah", value: totalWrong, color: colors.wrong },
+                                                ]}
+                                            />
+                                        </div>
+                                    </div>
+                                </div>
+                        {/* Versi mini untuk mobile: kedua chart tampil sebagai kartu ramping terpisah */}
+                        <div className="sm:hidden space-y-3">
+                            {barData.length > 0 && (
+                                <MiniStackedBarChart
+                                    title="Distribusi Opsi Jawaban"
+                                    subtitle="Jumlah pilihan tiap opsi per soal (soal isian tidak dihitung)."
+                                    data={barData}
+                                    series={barSeries}
+                                    tooltip={renderTooltip}
+                                />
+                            )}
+                            {perQuestionStats.length > 0 && (
+                                <MiniStackedBarChart
+                                    title="Statistik Jawaban per Soal"
+                                    subtitle="Jumlah jawaban benar, salah, dan kosong tiap soal."
+                                    data={perQuestionStats}
+                                    series={[
+                                        { key: "benar", label: "Benar", color: colors.pass },
+                                        { key: "salah", label: "Salah", color: colors.wrong },
+                                        { key: "kosong", label: "Kosong", color: colors.tinted },
+                                    ]}
+                                    tooltip={renderPerQuestionTooltip}
+                                />
+                            )}
+                        </div>
                     </div>
                 )}
 
@@ -515,54 +536,54 @@ function Submissions() {
                         <p className="text-tinted">Belum ada submission.</p>
                     </div>
                 ) : (
-                    <div className="space-y-3">
-                        {submissions.map((s) => (
-                            <div key={s.id} className="bg-white border border-second p-5 shadow-sm rounded-xl">
-                                <div className="flex items-start justify-between gap-2">
-                                    <div className="min-w-0">
-                                        <p className="font-semibold text-darks">{s.user?.name || "Pengguna"}</p>
-                                        {s.total_score != null && (
-                                            <p className="text-sm text-darks mt-1">Skor: <span className="font-bold">{s.total_score}</span></p>
-                                        )}
-                                        <p className="text-xs text-tinted mt-1">
-                                            Token: {s.token?.token_code || "-"} &middot; Dikirim: {fmtDate(s.submitted_at)}
-                                        </p>
-                                    </div>
-                                    <div className="flex flex-col items-end gap-2 shrink-0">
-                                        <span
-                                            className={`badge rounded-full text-xs ${s.status === "SUBMITTED" ? "bg-done/10 text-done border-none" : "badge-ghost text-tinted"
-                                                }`}
-                                        >
-                                            {statusLabel(s.status)}
-                                        </span>
-                                        <div className="flex items-center gap-1">
-                                            <button
-                                                onClick={() => navigate(`/creator/forms/${id}/submissions/${s.id}`)}
-                                                className="btn btn-sm bg-base text-darks border border-second hover:bg-second"
-                                            >
-                                                <Eye className="h-3.5 w-3.5" /> <span className="hidden sm:block">Lihat</span>
-                                            </button>
-                                            <button
-                                                onClick={() => handleDelete(s)}
-                                                disabled={deletingId === s.id}
-                                                className="btn btn-sm bg-wrong/10 text-wrong border-none hover:opacity-90 disabled:opacity-60"
-                                            >
-                                                {deletingId === s.id ? (
-                                                    <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                                                ) : (
-                                                    <Trash2 className="h-3.5 w-3.5" />
+                            <div className="space-y-3">
+                                {submissions.map((s) => (
+                                    <div key={s.id} className="bg-white border border-second p-5 shadow-sm rounded-xl">
+                                        <div className="flex items-start justify-between gap-2">
+                                            <div className="min-w-0">
+                                                <p className="font-semibold text-darks">{s.user?.name || "Pengguna"}</p>
+                                                {s.total_score != null && (
+                                                    <p className="text-sm text-darks mt-1">Skor: <span className="font-bold">{s.total_score}</span></p>
                                                 )}
-                                                <span className="hidden sm:block">Hapus</span>
-                                            </button>
+                                                <p className="text-xs text-tinted mt-1">
+                                                    Token: {s.token?.token_code || "-"} &middot; Dikirim: {fmtDate(s.submitted_at)}
+                                                </p>
+                                            </div>
+                                            <div className="flex flex-col items-end gap-2 shrink-0">
+                                                <span
+                                                    className={`badge rounded-full text-xs ${s.status === "SUBMITTED" ? "bg-done/10 text-done border-none" : "badge-ghost text-tinted"
+                                                        }`}
+                                                >
+                                                    {statusLabel(s.status)}
+                                                </span>
+                                                <div className="flex items-center gap-1">
+                                                    <button
+                                                        onClick={() => navigate(`/creator/forms/${id}/submissions/${s.id}`)}
+                                                        className="btn btn-sm bg-base text-darks border border-second hover:bg-second"
+                                                    >
+                                                        <Eye className="h-3.5 w-3.5" /> <span className="hidden sm:block">Lihat</span>
+                                                    </button>
+                                                    <button
+                                                        onClick={() => handleDelete(s)}
+                                                        disabled={deletingId === s.id}
+                                                        className="btn btn-sm bg-wrong/10 text-wrong border-none hover:opacity-90 disabled:opacity-60"
+                                                    >
+                                                        {deletingId === s.id ? (
+                                                            <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                                                        ) : (
+                                                            <Trash2 className="h-3.5 w-3.5" />
+                                                        )}
+                                                        <span className="hidden sm:block">Hapus</span>
+                                                    </button>
+                                                </div>
+                                            </div>
                                         </div>
                                     </div>
-                                </div>
+                                ))}
                             </div>
-                        ))}
+                        )}
                     </div>
-                )}
-            </div>
-        </div>
+                </div>
             )}
         </>
     )

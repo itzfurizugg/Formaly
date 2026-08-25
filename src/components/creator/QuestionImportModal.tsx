@@ -3,6 +3,7 @@ import { motion } from "motion/react"
 import { CheckCircle2, FileUp, Loader2, Pencil, Upload, X } from "lucide-react"
 import { type ParsedQuestion, validateParsedQuestion } from "../../lib/parsers/types"
 import { supabase } from "../../lib/supabase"
+import { showAlert } from "../../lib/alerts"
 import ModalPortal from "../modalPortal"
 import { easeOutExpo, modalBackdrop, modalPanel } from "../../lib/motion"
 
@@ -30,7 +31,6 @@ export default function QuestionImportModal({ formId, startingOrder, onClose, on
     const inputRef = useRef<HTMLInputElement>(null)
     const [rows, setRows] = useState<ParsedQuestion[]>([])
     const [fileName, setFileName] = useState("")
-    const [error, setError] = useState<string | null>(null)
     const [parsing, setParsing] = useState(false)
     const [saving, setSaving] = useState(false)
     const [editing, setEditing] = useState<number | null>(null)
@@ -40,11 +40,10 @@ export default function QuestionImportModal({ formId, startingOrder, onClose, on
         if (!file) return
         if (file.size > 10 * 1024 * 1024) {
             setRows([])
-            setError("Ukuran file maksimal 10 MB.")
+            showAlert("Ukuran file maksimal 10 MB.", "error")
             return
         }
         setParsing(true)
-        setError(null)
         setSummary(null)
         try {
             const parsed = await parseFile(file)
@@ -53,7 +52,7 @@ export default function QuestionImportModal({ formId, startingOrder, onClose, on
             setFileName(file.name)
         } catch (err) {
             setRows([])
-            setError(err instanceof Error ? err.message : "File tidak dapat dibaca.")
+            showAlert(err instanceof Error ? err.message : "File tidak dapat dibaca.", "error")
         } finally {
             setParsing(false)
         }
@@ -69,12 +68,11 @@ export default function QuestionImportModal({ formId, startingOrder, onClose, on
         const validRows = checkedRows.filter((row) => row.parse_status === "ok")
         const invalidCount = checkedRows.length - validRows.length
         if (!validRows.length) {
-            setError("Perbaiki setidaknya satu soal sebelum mengimpor.")
+            showAlert("Perbaiki setidaknya satu soal sebelum mengimpor.", "warning")
             return
         }
 
         setSaving(true)
-        setError(null)
         const { data: insertedQuestions, error: questionError } = await supabase
             .from("questions")
             .insert(validRows.map((row, index) => ({
@@ -90,7 +88,7 @@ export default function QuestionImportModal({ formId, startingOrder, onClose, on
 
         if (questionError || !insertedQuestions || insertedQuestions.length !== validRows.length) {
             setSaving(false)
-            setError(questionError?.message || "Gagal menyimpan soal.")
+            showAlert(questionError?.message || "Gagal menyimpan soal.", "error")
             return
         }
 
@@ -103,7 +101,7 @@ export default function QuestionImportModal({ formId, startingOrder, onClose, on
         const { error: optionError } = await supabase.from("question_options").insert(optionRows)
         setSaving(false)
         if (optionError) {
-            setError(`Soal tersimpan, tetapi pilihan jawaban gagal disimpan: ${optionError.message}`)
+            showAlert(`Soal tersimpan, tetapi pilihan jawaban gagal disimpan: ${optionError.message}`, "error")
             return
         }
 
@@ -144,7 +142,6 @@ export default function QuestionImportModal({ formId, startingOrder, onClose, on
                     <input ref={inputRef} type="file" accept=".docx,.csv,.xlsx" className="hidden" onChange={(event) => chooseFile(event.target.files?.[0])} />
 
                     {parsing && <div className="py-12 text-center text-tinted"><Loader2 className="h-5 w-5 animate-spin inline mr-2" />Membaca file…</div>}
-                    {error && <div role="alert" className="mt-4 text-sm text-wrong bg-wrong/5 border border-wrong/20 px-4 py-3">{error}</div>}
                     {summary && <div role="status" className="mt-4 text-sm text-done bg-done/5 border border-done/20 px-4 py-3 flex gap-2"><CheckCircle2 className="h-4 w-4 shrink-0" />{summary}</div>}
 
                     {rows.length > 0 && (

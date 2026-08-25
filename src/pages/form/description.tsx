@@ -6,6 +6,8 @@ import { supabase } from "../../lib/supabase"
 import { showAlert } from "../../lib/alerts"
 import { useAuth } from "../../lib/auth-context"
 import { loginUrl } from "../../lib/redirect"
+import { startFormSubmission } from "../../lib/formStart"
+import TokenInputModal from "../../components/TokenInputModal"
 import BackButton from "../../components/backButton"
 import FormHeader from "../../components/creator/formHeader"
 
@@ -35,11 +37,9 @@ function FormDescriptionPage() {
     const [form, setForm] = useState<FormItem | null>(locationState?.form || null)
     const [alreadySubmitted, setAlreadySubmitted] = useState(false)
 
-    // Header diambil lewat query terpisah yang toleran gagal: kalau migrasi
-    // kolom header_image belum diterapkan, halaman tetap berfungsi tanpa banner.
     const [headerImage, setHeaderImage] = useState<string | null>(null)
-
     const [loading, setLoading] = useState(false)
+    const [showTokenModal, setShowTokenModal] = useState(false)
 
     const formId = form?.id || formIdParam
 
@@ -89,12 +89,10 @@ function FormDescriptionPage() {
             return
         }
 
-        // Jika user mengakses halaman ini langsung via URL tanpa lewat Home (state kosong)
         if (!form) {
             navigate("/")
         }
 
-        // Form yang masih draft tidak boleh diakses, walau dibawa lewat state Home
         if (form?.status && String(form.status).toLowerCase() !== "published") {
             navigate("/")
         }
@@ -115,7 +113,7 @@ function FormDescriptionPage() {
             })
     }, [formId, user, authLoading])
 
-    // Fetch header gambar form (diam-diam; error diabaikan).
+    // Ambil header image saja — tidak perlu requires_token, biarkan RPC yang memutuskan.
     useEffect(() => {
         if (!formId) return
         let cancelled = false
@@ -125,32 +123,48 @@ function FormDescriptionPage() {
             .eq("id", formId)
             .single()
             .then(({ data }) => {
-                if (cancelled) return
-                setHeaderImage((data as { header_image?: string | null } | null)?.header_image || null)
+                if (!cancelled) setHeaderImage((data as { header_image?: string | null } | null)?.header_image || null)
             })
-        return () => {
-            cancelled = true
-        }
+        return () => { cancelled = true }
     }, [formId])
 
-    const handleStartExam = () => {
-        // Pengingat koneksi tampil sebagai toast tepat sebelum mulai (timer jalan otomatis).
-        showAlert('Pastikan koneksi internet stabil. Timer akan berjalan otomatis setelah kamu menekan "Mulai Mengerjakan".', "warning")
+    /**
+     * Mulai pengerjaan — selalu coba RPC tanpa token dulu.
+     * Kalau backend bilang "Token wajib diisi" → baru tampilkan modal.
+     */
+    const beginAttempt = async (tokenCode?: string) => {
+        if (!form?.id) return
         setLoading(true)
-        // Navigasi ke halaman pengerjaan soal (FormPage) dengan membawa formId di URL
-        navigate(`/form/${form?.id}`)
+        try {
+            const submissionId = await startFormSubmission(form.id, tokenCode)
+            navigate(`/form/${form.id}`, { state: { submissionId } })
+        } catch (err) {
+            const msg = err instanceof Error ? err.message : ""
+            if (msg.includes("Token wajib diisi")) {
+                setShowTokenModal(true)
+            } else {
+                showAlert(msg || "Gagal memulai pengerjaan.", "error")
+            }
+            setLoading(false)
+        }
+    }
+
+    const handleStartClick = () => {
+        if (alreadySubmitted) {
+            navigate("/history")
+            return
+        }
+        beginAttempt()
     }
 
     return (
         <>
             {!loading && form && (
                 <div className="flex flex-col items-center min-h-screen sm:min-h-[80vh] sm:justify-center pt-6 pb-28 sm:px-4 sm:py-10 bg-base-300 sm:bg-transparent">
-                    {/* Tombol Kembali di atas banner (sticky mengikuti scroll; hidden otomatis di lg+). */}
                     {locationState?.form && (
                         <BackButton to="/" className="ml-3.5 sm:ml-0" />
                     )}
 
-                    {/* Banner di luar kartu — lebar sejajar dengan kartu, proporsi 3105x1100. */}
                     <div className="w-full sm:max-w-3xl px-3.5 sm:px-0">
                         <div className="rounded-xl overflow-hidden border border-second shadow-sm">
                             <FormHeader formId={form.id} title={form.title} headerImage={headerImage} />
@@ -167,7 +181,6 @@ function FormDescriptionPage() {
                             </p>
                         </div>
 
-                        {/* Informasi Detail (Durasi & Jumlah Soal) */}
                         <div className="grid grid-cols-2 gap-2 sm:gap-4 mb-4 sm:mb-6 mt-2 sm:mt-6">
                             <div className="flex items-center gap-2 sm:gap-3 p-3 sm:p-4 bg-base border border-second rounded-lg">
                                 <Clock className="h-5 w-5 sm:h-6 sm:w-6 text-darks shrink-0" />
@@ -185,7 +198,6 @@ function FormDescriptionPage() {
                             </div>
                         </div>
 
-                        {/* Deskripsi / Petunjuk Pengerjaan */}
                         <div className="mb-6 sm:mb-8">
                             <h3 className="text-xs sm:text-sm font-semibold text-darks mb-2">Deskripsi & Petunjuk:</h3>
                             <div className="p-3 sm:p-4 bg-base border border-second rounded-lg text-xs sm:text-sm text-darks leading-relaxed whitespace-pre-line mb-6 sm:mb-8">
@@ -193,11 +205,10 @@ function FormDescriptionPage() {
                             </div>
                         </div>
 
-                        {/* Tombol Mulai */}
                         <button
-                            onClick={alreadySubmitted ? () => navigate("/history") : handleStartExam}
+                            onClick={handleStartClick}
                             disabled={loading}
-                            className="hidden sm:flex w-full py-3.5 bg-darks text-white font-bold rounded-lg hover:opacity-90 transition-opacity items-center justify-center gap-2 text-sm"
+                            className="hidden sm:flex w-full py-3.5 bg-darks text-white font-bold rounded-lg hover:opacity-90 transition-opacity items-center justify-center gap-2 text-sm disabled:opacity-60"
                         >
                             {loading ? (
                                 <span className="loading loading-spinner loading-sm" />
@@ -207,13 +218,18 @@ function FormDescriptionPage() {
                         </button>
                     </div>
 
-                    {/* Tombol Mulai sticky di bawah (mobile) — gradasi solid ke transparan agar scroll terasa mulus */}
                     <div className="fixed bottom-0 left-0 right-0 pointer-events-none sm:hidden">
                         <div className="px-3.5 pb-4 pt-14 bg-gradient-to-t from-base-300 via-base-300/85 to-transparent">
                             <button
-                                onClick={alreadySubmitted ? () => navigate(`/form/result/formId=${id}`) : handleStartExam}
+                                onClick={() => {
+                                    if (alreadySubmitted) {
+                                        navigate("/history")
+                                        return
+                                    }
+                                    beginAttempt()
+                                }}
                                 disabled={loading}
-                                className="w-auto p-6 h-16 bg-darks text-white font-bold rounded-full hover:opacity-90 transition-opacity flex items-center justify-center gap-2 text-sm mb-4 mx-auto pointer-events-auto disabled:pointer-events-none"
+                                className="w-auto p-6 h-16 bg-darks text-lg text-white font-bold rounded-full hover:opacity-90 transition-opvalidacity flex items-center justify-center gap-2 mb-4 mx-auto pointer-events-auto disabled:pointer-events-none"
                             >
                                 {loading ? (
                                     <span className="loading loading-spinner loading-sm" />
@@ -225,6 +241,16 @@ function FormDescriptionPage() {
                     </div>
                 </div>
             )}
+
+            <TokenInputModal
+                open={showTokenModal}
+                onClose={() => setShowTokenModal(false)}
+                formId={formId ?? ""}
+                onStarted={(submissionId) => {
+                    setLoading(true)
+                    navigate(`/form/${form?.id}`, { state: { submissionId } })
+                }}
+            />
         </>
     )
 }

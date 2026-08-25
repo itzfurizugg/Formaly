@@ -4,8 +4,8 @@ import { AnimatePresence, motion } from "motion/react"
 import { Plus, Trash2, X, Loader2, Copy, Check } from "lucide-react"
 import { supabase } from "../../lib/supabase"
 import { useAuth } from "../../lib/auth-context"
-import { confirmDelete } from "../../lib/alerts"
-import { easeOutExpo, alertPop, panelSlide } from "../../lib/motion"
+import { confirmDelete, showAlert } from "../../lib/alerts"
+import { easeOutExpo, panelSlide } from "../../lib/motion"
 import BackButton from "../../components/backButton"
 import FormTabs from "../../components/creator/formTabs"
 
@@ -24,7 +24,6 @@ function Tokens() {
     const { user } = useAuth()
 
     const [tokens, setTokens] = useState<Token[]>([])
-    const [error, setError] = useState<string | null>(null)
     const [copiedId, setCopiedId] = useState<string | null>(null)
 
     const [showCreate, setShowCreate] = useState(false)
@@ -32,6 +31,10 @@ function Tokens() {
     const [maxUsage, setMaxUsage] = useState(1)
     const [expiresAt, setExpiresAt] = useState("")
     const [saving, setSaving] = useState(false)
+
+    // Saklar gerbang: kalau aktif, peserta wajib memasukkan token sebelum mulai.
+    const [requiresToken, setRequiresToken] = useState(false)
+    const [togglingRequires, setTogglingRequires] = useState(false)
 
     const loadAll = useCallback(async () => {
         if (!user || !id) return
@@ -49,6 +52,16 @@ function Tokens() {
             })))
         }
 
+        // Status saklar gerbang token milik form ini.
+        supabase
+            .from("forms")
+            .select("requires_token")
+            .eq("id", id)
+            .single()
+            .then(({ data }) => {
+                setRequiresToken(!!(data as { requires_token?: boolean } | null)?.requires_token)
+            })
+
     }, [user, id])
 
     useEffect(() => {
@@ -60,13 +73,46 @@ function Tokens() {
         const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ0123456789"
         let code = ""
         for (let i = 0; i < 8; i++) code += chars[Math.floor(Math.random() * chars.length)]
-        setTokenCode(code)
+        return code
+    }
+
+    /** Saklar gerbang token. Saat dinyalakan tanpa token aktif, buatkan otomatis. */
+    const handleToggleRequires = async () => {
+        if (!id) return
+        setTogglingRequires(true)
+        try {
+            const next = !requiresToken
+            const { error: upErr } = await supabase
+                .from("forms")
+                .update({ requires_token: next })
+                .eq("id", id)
+            if (upErr) throw new Error(upErr.message)
+
+            setRequiresToken(next)
+
+            if (next && !tokens.some((t) => t.is_active && !t.expired)) {
+                const autoCode = generateCode()
+                const { error: insErr } = await supabase.from("tokens").insert({
+                    form_id: id,
+                    token_code: autoCode,
+                    max_usage: null,
+                    expires_at: null,
+                    is_active: true,
+                })
+                if (insErr) throw new Error(insErr.message)
+                showAlert(`Token ${autoCode} dibuat otomatis — bagikan ke peserta.`, "success")
+                await loadAll()
+            }
+        } catch (e) {
+            showAlert(e instanceof Error ? e.message : "Gagal mengubah status gerbang token.", "error")
+        } finally {
+            setTogglingRequires(false)
+        }
     }
 
     const handleCreate = async () => {
         if (!id) return
         setSaving(true)
-        setError(null)
 
         const { error: err } = await supabase.from("tokens").insert({
             form_id: id,
@@ -76,7 +122,7 @@ function Tokens() {
             is_active: true,
         })
         if (err) {
-            setError(err.message)
+            showAlert(err.message, "error")
             setSaving(false)
             return
         }
@@ -94,7 +140,7 @@ function Tokens() {
             .from("tokens")
             .update({ is_active: !t.is_active })
             .eq("id", t.id)
-        if (err) setError(err.message)
+        if (err) showAlert(err.message, "error")
         loadAll()
     }
 
@@ -129,31 +175,30 @@ function Tokens() {
 
                 <FormTabs id={id} active="tokens" />
 
-                {/* <h1 className="text-2xl lg:text-4xl font-bold text-darks mb-1">Token</h1>
-                <p className="text-sm text-tinted mb-6">Form: {formTitle}</p> */}
-
-                <AnimatePresence>
-                {error && (
-                    <motion.div
-                        key="token-error"
-                        variants={alertPop}
-                        initial="hidden"
-                        animate="show"
-                        exit="exit"
-                        role="alert"
-                        className="text-sm text-wrong bg-wrong/5 border border-wrong/20 rounded-lg px-3.5 py-3 mb-4"
-                    >
-                        {error}
-                    </motion.div>
-                )}
-                </AnimatePresence>
-
                 <div className="flex justify-end mb-4">
                     {!showCreate && (
                         <button onClick={() => setShowCreate(true)} className="btn bg-darks text-base border-none h-9 min-h-0">
                             <Plus className="h-4 w-4" /> Buat Token
                         </button>
                     )}
+                </div>
+
+                {/* Saklar gerbang: peserta wajib memasukkan token sebelum mulai */}
+                <div className="bg-white border border-second p-4 sm:p-5 shadow-sm rounded-xl mb-4 flex items-center justify-between gap-3">
+                    <div className="min-w-0">
+                        <p className="text-sm font-medium text-darks">Wajibkan token untuk mengerjakan</p>
+                        <p className="text-xs text-tinted mt-0.5">
+                            Kalau aktif, halaman deskripsi form akan meminta token sebelum tombol "Mulai Mengerjakan" bisa dipakai.
+                        </p>
+                    </div>
+                    <input
+                        type="checkbox"
+                        checked={requiresToken}
+                        onChange={handleToggleRequires}
+                        disabled={togglingRequires}
+                        className="toggle shrink-0 border-second checked:bg-darks checked:border-darks"
+                        aria-label="Wajibkan token untuk mengerjakan"
+                    />
                 </div>
 
                 <AnimatePresence>
@@ -183,7 +228,7 @@ function Tokens() {
                                     onChange={(e) => setTokenCode(e.target.value.toUpperCase())}
                                     placeholder="8 karakter"
                                 />
-                                <button onClick={generateCode} className="btn bg-base text-darks border border-second hover:bg-second">
+                                <button onClick={() => setTokenCode(generateCode())} className="btn bg-base text-darks border border-second hover:bg-second">
                                     Acak
                                 </button>
                             </div>

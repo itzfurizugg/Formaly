@@ -7,6 +7,7 @@ import { useAuth } from "../../lib/auth-context"
 import BackButton from "../../components/backButton"
 import FormHeader from "../../components/creator/formHeader"
 import { listContainer, listItem } from "../../lib/motion"
+import { showAlert } from "../../lib/alerts"
 
 interface FormRow {
     id: string
@@ -36,8 +37,10 @@ function CreatorResponden() {
             `)
             .eq("creator_id", user.id)
             .order("created_at", { ascending: false })
-        if (err) setError(err.message)
-        else setForms((data as FormRow[]) || [])
+        if (err) {
+            showAlert("Gagal memuat data.", "error")
+            setError(err.message)
+        } else setForms((data as FormRow[]) || [])
         setLoading(false)
     }, [user])
 
@@ -57,9 +60,7 @@ function CreatorResponden() {
                 </div>
 
                 {!loading && error && (
-                    <div role="alert" className="text-sm text-wrong bg-wrong/5 border border-wrong/20 rounded-xl px-3.5 py-3 mb-4">
-                        {error}
-                    </div>
+                    <p className="text-sm text-tinted mb-4">{error}</p>
                 )}
                 {!loading && forms.length === 0 && (
                     <div className="text-center py-20">

@@ -3,29 +3,18 @@ import { motion } from "motion/react"
 import { House, UserRound, LayoutDashboard, History } from "lucide-react"
 import { useAuth } from "../lib/auth-context"
 
-// Dock umum (role selain creator/admin)
 const baseItems = [
     { to: "/", label: "Beranda", icon: House },
     { to: "/history", label: "Riwayat", icon: History },
     { to: "/profile", label: "Profil", icon: UserRound }
 ]
 
-// Dock terpisah khusus creator/admin — bebas dimodifikasi tanpa menyentuh dock umum
-const creatorItems = [
-    { to: "/", label: "Beranda", icon: House },
-    { to: "/history", label: "Riwayat", icon: History },
-    { to: "/creator", label: "Creator", icon: LayoutDashboard },
-    { to: "/profile", label: "Profil", icon: UserRound }
-]
-
-// Tombol Creator dirender terpisah sebagai bubble bulat (mengikuti referensi
-// tombol Search di Apple News+), bukan ikut ke dalam pill dock utama.
 const creatorItem = { to: "/creator", label: "Creator", icon: LayoutDashboard }
 
-// Dock navigasi bottom bar bergaya "liquid glass" iOS 26: pill melayang
-// di bawah layar dengan efek frosted glass (backdrop-blur + border transparan)
-// dan pill aktif yang bergeser mulus via layoutId. Hanya tampil di layar kecil
-// (md:hidden); hilang total di tablet/desktop yang memakai Navbar + link horizontal.
+/**
+ * Dock bottom bar — tampil di sm (640–767px) saja.
+ * Di xs (< 640px) pakai Navbar sidebar drawer; di md+ (768px+) pakai Navbar desktop.
+ */
 function Dock() {
     const { pathname } = useLocation()
     const { user, profile } = useAuth()
@@ -38,12 +27,13 @@ function Dock() {
     const isCreatorActive = pathname === creatorItem.to
 
     return (
-        <div className="fixed bottom-0 inset-x-0 z-50 md:hidden pb-6 px-4 pointer-events-none">
-            <div className="mx-auto w-fit max-w-full flex items-center justify-center gap-3">
-                <nav
-                    className="w-fit max-w-full flex items-center justify-around gap-1 rounded-full border border-white/70 bg-white/40 backdrop-blur-2xl shadow-[0_8px_32px_rgba(57,62,70,0.25)] px-2 py-2 pointer-events-auto"
-                    aria-label="Navigasi utama"
-                >
+        <div className="fixed bottom-0 inset-x-0 z-50 hidden sm:block md:hidden pointer-events-none">
+            <div className="bg-gradient-to-t from-base-300 via-base-300/30 to-transparent px-4 pb-6 pt-30">
+                <div className="mx-auto w-fit max-w-full flex items-center justify-center gap-3">
+                    <nav
+                        className="w-fit max-w-full flex items-center justify-around gap-1 rounded-full border border-second/50 bg-white shadow-lg px-2 py-2 pointer-events-auto"
+                        aria-label="Navigasi utama"
+                    >
                     {items.map(({ to, label, icon: Icon }) => {
                         const isActive = pathname === to
                         return (
@@ -58,7 +48,7 @@ function Dock() {
                                 {isActive && (
                                     <motion.span
                                         layoutId="dock-active-pill"
-                                        className="absolute inset-0 rounded-full bg-white/70 border border-white/70 shadow-sm"
+                                        className="absolute inset-0 rounded-full bg-darks/10 border border-darks/10 shadow-sm"
                                         transition={{ type: "spring", stiffness: 400, damping: 30 }}
                                     />
                                 )}
@@ -84,10 +74,10 @@ function Dock() {
                         to={creatorItem.to}
                         aria-current={isCreatorActive ? "page" : undefined}
                         aria-label={creatorItem.label}
-                        className={`pointer-events-auto flex items-center justify-center size-14 rounded-full border backdrop-blur-2xl shadow-[0_8px_32px_rgba(57,62,70,0.25)] transition-colors ${
+                        className={`pointer-events-auto flex items-center justify-center size-14 rounded-full border border-second/50 bg-white shadow-lg transition-colors ${
                             isCreatorActive
                                 ? "bg-darks border-darks text-white"
-                                : "bg-white/40 border-white/70 text-darks"
+                                : "text-darks"
                         }`}
                     >
                         <creatorItem.icon
@@ -96,6 +86,7 @@ function Dock() {
                         />
                     </Link>
                 )}
+                </div>
             </div>
         </div>
     )

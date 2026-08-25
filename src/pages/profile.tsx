@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react"
+import { useEffect, useState } from "react"
 import { useNavigate } from "react-router-dom"
 import {
     LogOut,
@@ -14,7 +14,8 @@ import {
     Info,
 } from "lucide-react"
 import { useAuth } from "../lib/auth-context"
-import { supabase } from "../lib/supabase" // sesuaikan path kalau beda
+import { supabase } from "../lib/supabase"
+import { showAlert } from "../lib/alerts"
 import ModalPortal from "../components/modalPortal"
 import { AnimatePresence, motion } from "motion/react"
 import { modalBackdrop, modalPanel } from "../lib/motion"
@@ -122,21 +123,12 @@ function Profile() {
     const [name, setName] = useState("")
     const [email, setEmail] = useState("")
     const [saving, setSaving] = useState(false)
-    const [message, setMessage] = useState<string | null>(null)
-    const [error, setError] = useState<string | null>(null)
-    const messageTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
 
     // --- ganti password ---
     const [newPassword, setNewPassword] = useState("")
     const [confirmPassword, setConfirmPassword] = useState("")
     const [showPw, setShowPw] = useState(false)
     const [pwSaving, setPwSaving] = useState(false)
-    const [pwMessage, setPwMessage] = useState<string | null>(null)
-    const [pwError, setPwError] = useState<string | null>(null)
-
-    useEffect(() => () => {
-        if (messageTimer.current) clearTimeout(messageTimer.current)
-    }, [])
 
     useEffect(() => {
         if (!authLoading && !user) navigate("/login")
@@ -149,23 +141,12 @@ function Profile() {
         }
     }, [profile])
 
-    const resetAccountFeedback = () => {
-        setError(null)
-        setMessage(null)
-    }
-
     const closeAccountModal = () => {
         setShowAccountModal(false)
-        resetAccountFeedback()
         if (profile) {
             setName(profile.name || "")
             setEmail(profile.email || "")
         }
-    }
-
-    const resetPasswordFeedback = () => {
-        setPwError(null)
-        setPwMessage(null)
     }
 
     const closePasswordModal = () => {
@@ -173,39 +154,33 @@ function Profile() {
         setNewPassword("")
         setConfirmPassword("")
         setShowPw(false)
-        resetPasswordFeedback()
     }
 
     const handleSave = async (e: React.FormEvent) => {
         e.preventDefault()
-        setError(null)
-        setMessage(null)
         if (!name.trim()) {
-            setError("Username tidak boleh kosong.")
+            showAlert("Username tidak boleh kosong.", "error")
             return
         }
         if (!/^\S+@\S+\.\S+$/.test(email)) {
-            setError("Format email tidak valid.")
+            showAlert("Format email tidak valid.", "error")
             return
         }
         setSaving(true)
         const emailChanged = email.trim() !== (profile?.email ?? "")
         try {
             await updateProfile(name.trim(), email.trim())
-            setMessage(
+            showAlert(
                 emailChanged
                     ? "Email kamu akan diubah. Periksa email baru untuk konfirmasi perubahan."
-                    : "Profil berhasil diperbarui."
+                    : "Profil berhasil diperbarui.",
+                "success"
             )
-            if (messageTimer.current) clearTimeout(messageTimer.current)
             if (!emailChanged) {
-                messageTimer.current = setTimeout(() => {
-                    setMessage(null)
-                    setShowAccountModal(false)
-                }, 1500)
+                setTimeout(() => setShowAccountModal(false), 1500)
             }
         } catch (err) {
-            setError(err instanceof Error ? err.message : "Gagal memperbarui profil.")
+            showAlert(err instanceof Error ? err.message : "Gagal memperbarui profil.", "error")
         } finally {
             setSaving(false)
         }
@@ -213,28 +188,24 @@ function Profile() {
 
     const handleChangePassword = async (e: React.FormEvent) => {
         e.preventDefault()
-        setPwError(null)
-        setPwMessage(null)
         if (newPassword.length < 6) {
-            setPwError("Kata sandi minimal 6 karakter.")
+            showAlert("Kata sandi minimal 6 karakter.", "error")
             return
         }
         if (newPassword !== confirmPassword) {
-            setPwError("Konfirmasi kata sandi tidak cocok.")
+            showAlert("Konfirmasi kata sandi tidak cocok.", "error")
             return
         }
         setPwSaving(true)
         try {
             const { error: pwErr } = await supabase.auth.updateUser({ password: newPassword })
             if (pwErr) throw pwErr
-            setPwMessage("Kata sandi berhasil diubah.")
+            showAlert("Kata sandi berhasil diubah.", "success")
             setNewPassword("")
             setConfirmPassword("")
-            setTimeout(() => {
-                closePasswordModal()
-            }, 1500)
+            setTimeout(() => closePasswordModal(), 1500)
         } catch (err) {
-            setPwError(err instanceof Error ? err.message : "Gagal mengubah kata sandi.")
+            showAlert(err instanceof Error ? err.message : "Gagal mengubah kata sandi.", "error")
         } finally {
             setPwSaving(false)
         }
@@ -366,17 +337,6 @@ function Profile() {
                     Perbarui username dan email kamu. Perubahan email akan memerlukan verifikasi ulang.
                 </p>
 
-                {message && (
-                    <div role="alert" className="text-sm text-pass bg-pass/5 border border-pass/20 rounded-lg px-3.5 py-3 mb-4">
-                        {message}
-                    </div>
-                )}
-                {error && (
-                    <div role="alert" className="text-sm text-wrong bg-wrong/5 border border-wrong/20 rounded-lg px-3.5 py-3 mb-4">
-                        {error}
-                    </div>
-                )}
-
                 <form onSubmit={handleSave} className="space-y-4">
                     <div>
                         <label htmlFor="name" className="block text-xs font-medium text-darks mb-1.5">
@@ -435,17 +395,6 @@ function Profile() {
                 icon={<Lock className="h-4 w-4 text-darks" />}
             >
                 <p className="text-xs text-tinted mb-4">Gunakan kata sandi yang kuat dan belum pernah dipakai sebelumnya.</p>
-
-                {pwMessage && (
-                    <div role="alert" className="text-sm text-pass bg-pass/5 border border-pass/20 rounded-lg px-3.5 py-3 mb-4">
-                        {pwMessage}
-                    </div>
-                )}
-                {pwError && (
-                    <div role="alert" className="text-sm text-wrong bg-wrong/5 border border-wrong/20 rounded-lg px-3.5 py-3 mb-4">
-                        {pwError}
-                    </div>
-                )}
 
                 <form onSubmit={handleChangePassword} className="space-y-4">
                     <div>

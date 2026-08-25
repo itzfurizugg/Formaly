@@ -68,12 +68,12 @@ function FormList() {
                                 initial={{ opacity: 0 }}
                                 animate={{ opacity: 1 }}
                                 transition={{ duration: 0.4, ease: "easeOut", delay: Math.min(index * 20, 240) / 1000 }}
-                                className={`relative aspect-square p-3 rounded-sm flex items-center justify-center text-xl lg:text-sm font-medium
+                                className={`relative aspect-square w-full h-full p-3 rounded-xl flex items-center justify-center text-xl lg:text-sm font-medium cursor-pointer transition-all duration-300 active:scale-[0.95]
                                     ${isCurrent
-                                        ? "ring-2 ring-done ring-offset-1 bg-darks text-white"
+                                        ? "ring-2 ring-done ring-offset-2 bg-darks text-white shadow-lg shadow-darks/10"
                                         : isAnsweredQuestion
-                                            ? "bg-darks text-white"
-                                            : "bg-base-100 text-tinted border border-second hover:border-darks/50"
+                                            ? "bg-darks text-white hover:shadow-lg hover:shadow-darks/10"
+                                            : "bg-white text-tinted border border-second hover:border-darks/50 hover:shadow-lg hover:shadow-darks/5"
                                     }
                                 `}
                             >

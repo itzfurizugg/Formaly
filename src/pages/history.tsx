@@ -18,6 +18,7 @@ interface HistoryItem {
         question_count: number
         passing_score: number | null
         show_score: boolean
+        header_image: string | null
     }
 }
 
@@ -41,7 +42,7 @@ function History() {
             .select(`
                 id, form_id, total_score,
                 forms (
-                    id, title, duration, passing_score, show_score_to_respondent,
+                    id, title, duration, passing_score, show_score_to_respondent, header_image,
                     users:creator_id ( name ),
                     questions ( id )
                 )
@@ -51,7 +52,7 @@ function History() {
 
         if (data) {
             setItems((data as unknown as HistoryRow[]).map((item) => {
-                const f = item.forms as unknown as { title: string; duration: number; passing_score?: number | null; show_score_to_respondent?: boolean | null; users?: { name: string } | null; questions?: { id: string }[] | null }
+                const f = item.forms as unknown as { title: string; duration: number; passing_score?: number | null; show_score_to_respondent?: boolean | null; header_image?: string | null; users?: { name: string } | null; questions?: { id: string }[] | null }
                 return {
                     id: item.id,
                     form_id: item.form_id,
@@ -63,6 +64,7 @@ function History() {
                         question_count: f?.questions?.length || 0,
                         passing_score: f?.passing_score ?? null,
                         show_score: f?.show_score_to_respondent !== false,
+                        header_image: f?.header_image || null,
                     },
                 }
             }))
@@ -87,7 +89,7 @@ function History() {
         <>
             {!authLoading && user && !loading && (
                 <div className="flex flex-col items-center px-3.5 sm:px-6 py-5">
-                    <div className="max-w-4xl grid w-full lg:mt-10">
+                    <div className="max-w-6xl grid w-full lg:mt-10">
                         <div className="ml-2 sm:ml-3 lg:ml-0">
                             <div className="flex items-center gap-2 mb-1">
                                 <h1 className="text-2xl lg:text-4xl text-darks font-bold font-display">Riwayat</h1>
@@ -118,7 +120,7 @@ function History() {
                                 <p className="text-tinted">Belum ada histori formulir.</p>
                             </div>
                         ) : (
-                            <div className="space-y-3">
+                            <div className="grid lg:grid-cols-2 gap-3">
                                 {filtered.map((item, index) => (
                                     <motion.div
                                         key={item.id}
@@ -127,6 +129,7 @@ function History() {
                                         transition={{ duration: 0.35, ease: easeOutExpo, delay: Math.min(index * 0.06, 0.4) }}
                                     >
                                         <HistoryCard
+                                            formId={item.form_id}
                                             title={item.forms?.title || "Form"}
                                             author={item.forms?.author_name || "-"}
                                             duration={item.forms?.duration ? `${item.forms.duration} menit` : "Tanpa Waktu"}
@@ -134,8 +137,9 @@ function History() {
                                             score={item.total_score || 0}
                                             passingScore={item.forms?.passing_score ?? null}
                                             hideScore={!item.forms?.show_score}
+                                            headerImage={item.forms?.header_image || null}
                                             to={`/form/result/${item.id}`}
-                                            buttonLabel="Lihat"
+
                                         />
                                     </motion.div>
                                 ))}

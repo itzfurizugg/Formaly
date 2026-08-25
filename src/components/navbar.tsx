@@ -4,7 +4,6 @@ import { motion } from "motion/react"
 import logo from "../assets/logo.svg"
 import { House, RotateCcwClock, UserRound, LayoutDashboard, X, LogOut } from "lucide-react"
 import { useAuth } from "../lib/auth-context"
-import UserMenu from "./userMenu"
 
 const baseLinks = [
     { to: "/", label: "Beranda", icon: House },
@@ -91,20 +90,24 @@ function Navbar() {
                     </div>
 
                     <div className="hidden lg:flex flex-1 justify-center mt-1">
-                        {navLinks.map(({ to, label, icon: Icon }) => (
-                            <Link key={to} to={to} className={linkClass(to)}>
-                                <Icon className="h-4 w-auto" />
-                                {label}
-                            </Link>
-                        ))}
+                        {navLinks
+                            .filter(({ to }) => to !== "/creator")
+                            .map(({ to, label, icon: Icon }) => (
+                                <Link key={to} to={to} className={linkClass(to)}>
+                                    <Icon className="h-4 w-auto" />
+                                    {label}
+                                </Link>
+                            ))}
                     </div>
 
-                    {/* Hamburger & sidebar drawer di md (tablet/iPad) sampai sebelum lg.
-                        Di mobile (< md) navigasi memakai Dock (tanpa sidebar, biar tidak tumpang tindih);
-                        di lg ke atas memakai link horizontal. */}
+                    {/* Hamburger & sidebar drawer:
+                        - <=380px (HP ~4 inch: iPhone SE 2020, iPhone 5s, Redmi 5A, dll) -> tampil (sidebar)
+                        - 381px-767px (HP normal) -> disembunyikan, navigasi pakai Dock
+                        - md (768px-1023px, tablet/iPad) -> tampil (sidebar)
+                        - lg ke atas -> disembunyikan, pakai link horizontal */}
                     <button
                         onClick={toggle}
-                        className="btn btn-square btn-ghost mt-1 text-darks relative overflow-hidden shrink-0 hidden md:flex lg:hidden ml-auto"
+                        className="btn btn-square btn-ghost mt-1 text-darks relative overflow-hidden shrink-0 hidden max-[380px]:flex min-[381px]:max-[767px]:hidden md:flex lg:hidden ml-auto"
                         aria-label={open ? "Tutup menu" : "Buka menu"}
                     >
                         <motion.div
@@ -126,17 +129,25 @@ function Navbar() {
                         </motion.div>
                     </button>
 
-                    {/* Avatar profile disembunyikan hanya di md (tablet/iPad); di sm dan lg tetap tampil. */}
-                    <div className="flex flex-1 justify-end items-center gap-2 md:hidden lg:flex">
-                        <UserMenu />
+                    {/* Creator button disembunyikan di semua ukuran mobile/tablet, cuma tampil di lg ke atas.
+                        Di mobile/tablet, akses Creator lewat sidebar drawer. */}
+                    <div className="hidden lg:flex flex-1 justify-end items-center gap-2">
+                        {(role === "creator" || role === "admin") && (
+                            <Link
+                                to="/creator"
+                                className={`btn ${pathname === "/creator" ? "bg-darks text-base border-none hover:bg-darks" : "btn-ghost text-darks"}`}
+                            >
+                                <LayoutDashboard className="h-4 w-auto" />
+                            </Link>
+                        )}
                     </div>
                 </div>
             </div>
 
-            {/* Backdrop untuk sidebar (md sampai sebelum lg) */}
+            {/* Backdrop untuk sidebar */}
             {showContent && (
                 <motion.div
-                    className={`fixed inset-0 z-[60] hidden md:block lg:hidden ${open ? "" : "pointer-events-none"}`}
+                    className={`fixed inset-0 z-[60] hidden max-[380px]:block min-[381px]:max-[767px]:hidden md:block lg:hidden ${open ? "" : "pointer-events-none"}`}
                     initial={false}
                     animate={{ opacity: open ? 1 : 0 }}
                     transition={{ duration: 0.3, ease: "easeOut" }}
@@ -145,13 +156,12 @@ function Navbar() {
                 />
             )}
 
-            {/* Sidebar drawer: di md (tablet/iPad) sampai sebelum lg.
-                Mobile (< md) memakai Dock; lg ke atas memakai link horizontal. */}
+            {/* Sidebar drawer: <=380px dan md-lg (lihat komentar di button hamburger) */}
             <motion.aside
                 initial={false}
                 animate={{ x: open ? "0%" : "100%" }}
                 transition={{ duration: 0.3, ease: "easeOut" }}
-                className="fixed top-0 right-0 z-[70] h-full w-72 max-w-[85vw] bg-white shadow-xl hidden md:flex lg:hidden flex-col"
+                className="fixed top-0 right-0 z-[70] h-full w-72 max-w-[85vw] bg-white shadow-xl hidden max-[380px]:flex min-[381px]:max-[767px]:hidden md:flex lg:hidden flex-col"
                 role="dialog"
                 aria-modal="true"
                 aria-label="Menu navigasi"

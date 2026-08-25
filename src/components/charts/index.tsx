@@ -128,6 +128,81 @@ export function MiniDistributionChart({
     )
 }
 
+export interface MiniStackSeries {
+    key: string
+    label: string
+    color: string
+}
+
+export interface MiniStackedBarChartProps {
+    title?: string
+    subtitle?: string
+    data: object[]
+    series: MiniStackSeries[]
+    height?: number
+    /** Lebar minimum per batang (px) sebelum chart di-scroll horizontal. */
+    pxPerBar?: number
+    showLegend?: boolean
+    /** Renderer tooltip kustom (pola sama dengan content Tooltip recharts). */
+    tooltip?: (props: TooltipContentProps) => React.ReactNode
+}
+
+/** Varian mini dari stacked bar chart (dipakai untuk statistik jawaban &
+ * distribusi opsi di layar kecil): tinggi ramping, tanpa sumbu Y, font kecil,
+ * scroll horizontal saat banyak soal, dan legenda titik ringkas. */
+export function MiniStackedBarChart({
+    title,
+    subtitle,
+    data,
+    series,
+    height = 200,
+    pxPerBar = 44,
+    showLegend = true,
+    tooltip,
+}: MiniStackedBarChartProps) {
+    const rows = data as Array<Record<string, unknown>>
+    return (
+        <div className="bg-white border border-second shadow-sm rounded-xl px-3.5 pt-3 pb-2.5">
+            {(title || subtitle) && (
+                <div className="mb-2">
+                    {title && <p className="text-xs font-semibold text-darks">{title}</p>}
+                    {subtitle && <p className="text-[10px] text-tinted leading-snug">{subtitle}</p>}
+                </div>
+            )}
+            <div style={{ overflowX: "auto" }}>
+                <div style={{ width: `max(100%, ${Math.max(1, rows.length) * pxPerBar}px)`, height }}>
+                    <ResponsiveContainer width="100%" height="100%">
+                        <BarChart data={rows} margin={{ top: 8, right: 4, left: 4, bottom: 0 }}>
+                            <XAxis dataKey="name" tick={{ fontSize: 9, fill: colors.tinted }} axisLine={false} tickLine={false} interval={0} />
+                            <Tooltip cursor={{ fill: colors.second }} content={tooltip} />
+                            {series.map((s, i) => (
+                                <Bar
+                                    key={s.key}
+                                    dataKey={s.key}
+                                    stackId="mini"
+                                    name={s.label}
+                                    fill={s.color}
+                                    radius={i === series.length - 1 ? [3, 3, 0, 0] : undefined}
+                                />
+                            ))}
+                        </BarChart>
+                    </ResponsiveContainer>
+                </div>
+            </div>
+            {showLegend && (
+                <div className="mt-1.5 flex flex-wrap gap-x-3 gap-y-1">
+                    {series.map((s) => (
+                        <span key={s.key} className="inline-flex items-center gap-1 text-[10px] text-tinted">
+                            <span className="h-2 w-2 rounded-full shrink-0" style={{ background: s.color }} />
+                            {s.label}
+                        </span>
+                    ))}
+                </div>
+            )}
+        </div>
+    )
+}
+
 export interface DonutChartProps {
     title?: string
     subtitle?: string

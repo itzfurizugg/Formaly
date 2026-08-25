@@ -9,6 +9,7 @@ import { RichText } from "../../components/richText"
 import { listContainer, listItem } from "../../lib/motion"
 import BackButton from "../../components/backButton"
 import FormHeader from "../../components/creator/formHeader"
+import { showAlert } from "../../lib/alerts"
 
 interface AnswerRow {
     id: string
@@ -88,6 +89,7 @@ function ResultPage() {
             .single()
 
         if (!sub) {
+            showAlert("Gagal memuat data.", "error")
             setError("Submission tidak ditemukan.")
             setLoading(false)
             return
@@ -191,9 +193,7 @@ function ResultPage() {
                     <div className="flex flex-col items-center px-3.5 py-5 sm:py-10">
                         <div className="w-full max-w-2xl">
                             <BackButton to="/history" />
-                            <div role="alert" className="text-sm text-wrong bg-wrong/5 border border-wrong/20 rounded-lg px-3.5 py-3">
-                                {error}
-                            </div>
+                            <p className="text-sm text-tinted">{error}</p>
                         </div>
                     </div>
                 ) : (
