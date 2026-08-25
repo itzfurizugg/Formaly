@@ -67,7 +67,7 @@ function App() {
   return (
     <AuthProvider>
       <MotionConfig reducedMotion="user">
-      <div className="bg-second min-h-screen">
+      <div className="bg-second min-h-screen flex flex-col">
         <AnimatePresence mode="wait" initial={false}>
           {!hideNav && !isCreator && (
             <motion.div
@@ -97,7 +97,7 @@ function App() {
           {/* Key = pathname agar tiap pindah halaman me-replay animasi pembukaan halaman */}
           <motion.div
             key={location.pathname}
-            className={`min-h-screen ${showDock ? "pb-24 md:pb-0" : ""}`}
+            className={`flex-1 ${showDock ? "pb-24 md:pb-0" : ""}`}
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}

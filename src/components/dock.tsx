@@ -31,7 +31,7 @@ function Dock() {
             <div className="bg-gradient-to-t from-base-300 via-base-300/30 to-transparent px-4 pb-6 pt-30">
                 <div className="mx-auto w-fit max-w-full flex items-center justify-center gap-3">
                     <nav
-                        className="w-fit max-w-full flex items-center justify-around gap-1 rounded-full border border-second/50 bg-white shadow-lg px-2 py-2 pointer-events-auto"
+                        className="w-fit max-w-full flex items-center justify-around gap-1 rounded-full border border-white/70 bg-gradient-to-b from-white/60 to-white/25 backdrop-blur-2xl shadow-[0_8px_32px_rgba(57,62,70,0.18)] px-2 py-2 pointer-events-auto"
                         aria-label="Navigasi utama"
                     >
                     {items.map(({ to, label, icon: Icon }) => {
@@ -74,10 +74,10 @@ function Dock() {
                         to={creatorItem.to}
                         aria-current={isCreatorActive ? "page" : undefined}
                         aria-label={creatorItem.label}
-                        className={`pointer-events-auto flex items-center justify-center size-14 rounded-full border border-second/50 bg-white shadow-lg transition-colors ${
+                        className={`pointer-events-auto flex items-center justify-center size-14 rounded-full border transition-all duration-200 shadow-[0_8px_32px_rgba(57,62,70,0.18)] ${
                             isCreatorActive
                                 ? "bg-darks border-darks text-white"
-                                : "text-darks"
+                                : "border-white/70 bg-gradient-to-b from-white/60 to-white/25 backdrop-blur-2xl text-darks hover:from-white/75 hover:to-white/40 active:scale-95"
                         }`}
                     >
                         <creatorItem.icon
