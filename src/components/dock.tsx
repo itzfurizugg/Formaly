@@ -27,7 +27,7 @@ function Dock() {
     const isCreatorActive = pathname === creatorItem.to
 
     return (
-        <div className="fixed bottom-0 inset-x-0 z-50 hidden sm:block md:hidden pointer-events-none">
+        <div className="fixed bottom-0 inset-x-0 z-50 max-[380px]:hidden md:hidden pointer-events-none">
             <div className="bg-gradient-to-t from-base-300 via-base-300/30 to-transparent px-4 pb-6 pt-30">
                 <div className="mx-auto w-fit max-w-full flex items-center justify-center gap-3">
                     <nav
