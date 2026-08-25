@@ -66,6 +66,7 @@ function FormPage() {
     const [hasTimer, setHasTimer] = useState(false)
     const autoSubmitted = useRef(false)
     const deadlineRef = useRef<number | null>(null)
+    const prevTimeRef = useRef<number | null>(null)
 
     // Fetch header terpisah & diam-diam: error diabaikan supaya halaman soal
     // tidak ikut gagal saat kolom header_image belum ada di database.
@@ -286,6 +287,12 @@ function FormPage() {
 
     useEffect(() => {
         if (autoSubmitted.current) return
+        const prevTime = prevTimeRef.current
+        prevTimeRef.current = timeLeft
+        // Auto-submit hanya kalau timer benar-benar habis selama sesi ini;
+        // kalau 00:00 sudah begitu halaman dibuka (deadline lewat saat user
+        // pindah halaman), jangan langsung kirim.
+        if (prevTime === null || prevTime <= 0) return
         if (hasTimer && timeLeft === 0 && !submitting && questions.length > 0 && user && formId) {
             autoSubmitted.current = true
             const id = window.setTimeout(() => handleSubmit(true), 0)
@@ -323,7 +330,7 @@ function FormPage() {
     }
 
     const goToList = () => {
-        navigate('/form/list', { state: { current, answers, formId, questions, deadline: deadlineRef.current || undefined } })
+        navigate('/form/list', { state: { current, answers, formId, questions, submissionId, deadline: deadlineRef.current || undefined } })
     }
 
     return (

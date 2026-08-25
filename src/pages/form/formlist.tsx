@@ -16,6 +16,7 @@ interface LocationState {
     formId?: string
     questions?: Question[]
     deadline?: number
+    submissionId?: string
 }
 
 function FormList() {
@@ -27,9 +28,10 @@ function FormList() {
     const formId = locationState?.formId
     const questions = locationState?.questions || []
     const deadline = locationState?.deadline
+    const submissionId = locationState?.submissionId
 
     const backToForm = (index: number) => {
-        navigate(`/form/${formId}`, { state: { current: index, answers, questions, deadline } })
+        navigate(`/form/${formId}`, { state: { current: index, answers, questions, submissionId, deadline } })
     }
 
     if (questions.length === 0) {
