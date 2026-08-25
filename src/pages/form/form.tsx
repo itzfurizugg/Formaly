@@ -8,7 +8,7 @@ import { supabase } from "../../lib/supabase"
 import { useAuth } from "../../lib/auth-context"
 import { loginUrl } from "../../lib/redirect"
 import ModalPortal from "../../components/modalPortal"
-import FormHeader from "../../components/creator/formHeader"
+// import FormHeader from "../../components/creator/formHeader"
 import { alertPop, modalBackdrop, modalPanel } from "../../lib/motion"
 
 interface Option {
@@ -54,7 +54,7 @@ function FormPage() {
     // Header/banner form diambil lewat query terpisah yang toleran gagal:
     // kalau migrasi kolom header_image belum diterapkan, pengerjaan soal
     // tetap jalan normal tanpa banner.
-    const [headerImage, setHeaderImage] = useState<string | null>(null)
+    // const [headerImage, setHeaderImage] = useState<string | null>(null)
     const [current, setCurrent] = useState(locationState?.current || 0)
     const [answers, setAnswers] = useState<Answer>(locationState?.answers || {})
     const [timeLeft, setTimeLeft] = useState(300)
@@ -70,22 +70,22 @@ function FormPage() {
 
     // Fetch header terpisah & diam-diam: error diabaikan supaya halaman soal
     // tidak ikut gagal saat kolom header_image belum ada di database.
-    useEffect(() => {
-        if (!formId) return
-        let cancelled = false
-        supabase
-            .from("forms")
-            .select("header_image")
-            .eq("id", formId)
-            .single()
-            .then(({ data }) => {
-                if (cancelled) return
-                setHeaderImage((data as { header_image?: string | null } | null)?.header_image || null)
-            })
-        return () => {
-            cancelled = true
-        }
-    }, [formId])
+    // useEffect(() => {
+    //     if (!formId) return
+    //     let cancelled = false
+    //     supabase
+    //         .from("forms")
+    //         .select("header_image")
+    //         .eq("id", formId)
+    //         .single()
+    //         .then(({ data }) => {
+    //             if (cancelled) return
+    //             // setHeaderImage((data as { header_image?: string | null } | null)?.header_image || null)
+    //         })
+    //     return () => {
+    //         cancelled = true
+    //     }
+    // }, [formId])
 
     const handleSubmit = useCallback(async (allowRequiredSkip = false) => {
         if (!user || !formId || !submissionId) return

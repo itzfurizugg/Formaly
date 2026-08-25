@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react"
-import { useNavigate, useLocation, useParams } from "react-router-dom"
+import { useNavigate, useLocation } from "react-router-dom"
 import { Clock, FileText } from "lucide-react"
 import { RichText } from "../../components/richText"
 import { supabase } from "../../lib/supabase"
@@ -27,7 +27,7 @@ interface LocationState {
 }
 
 function FormDescriptionPage() {
-    const id = useParams()
+    // const id = useParams()
     const location = useLocation()
     const navigate = useNavigate()
     const { user, loading: authLoading } = useAuth()
