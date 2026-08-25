@@ -47,7 +47,7 @@ function CreatorResponden() {
     }, [user, load])
 
     return (
-        <div className="flex flex-col items-center px-3 py-5 sm:py-10">
+        <div className="flex flex-col items-center px-3 sm:px-6 py-5 sm:py-10">
             <div className="w-full xl:max-w-7xl lg:max-w-5xl">
                 <BackButton to="/creator" />
 
@@ -72,7 +72,7 @@ function CreatorResponden() {
                         variants={listContainer}
                         initial="hidden"
                         animate="show"
-                        className="grid lg:grid-cols-2 gap-3 items-stretch"
+                        className="grid sm:grid-cols-2 gap-3 items-stretch"
                     >
                         {forms.map((form) => (
                             <motion.div key={form.id} variants={listItem} className="h-full">
@@ -100,7 +100,7 @@ function CreatorResponden() {
                                             <ChevronRight className="h-5 w-5 text-tinted/60 shrink-0 self-center transition-all" />
                                         </div>
 
-                                        <div className="flex items-center justify-between pt-2 border-t border-dashed border-second">
+                                        <div className="mt-auto flex items-center justify-between pt-2 border-t border-dashed border-second">
                                             <span className="inline-flex items-center gap-1.5 rounded-full text-darks text-xs font-semibold px-1">
                                                 <ChartNoAxesColumn className="h-3.5 w-3.5" />
                                                 Total Responden: {form.submissions?.length || 0}

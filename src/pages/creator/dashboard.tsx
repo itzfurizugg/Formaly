@@ -104,13 +104,30 @@ function CreatorDashboard() {
     }, [user, loadStats])
 
     return (
-        <div className="flex flex-col items-center px-3 py-5 sm:py-23">
+        <div className="flex flex-col items-center px-3.5 sm:px-6 py-5 sm:py-10 lg:py-23">
             <div className="xl:max-w-7xl lg:max-w-5xl w-full">
                 <BackButton to="/" />
+
                 <div className="flex items-center justify-between mb-1">
-                    <h1 className="text-3xl lg:text-6xl font-bold font-display text-darks">Dashboard Creator</h1>
+                    <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold font-display text-darks">Dashboard Creator</h1>
                 </div>
-                <p className="text-sm text-tinted mb-3 sm:mb-6">Ringkasan formulir milik kamu.</p>
+                <p className="text-sm sm:text-lg text-tinted mb-3 sm:mb-6">Ringkasan formulir milik kamu.</p>
+
+                <div className="rounded-xl sm:block lg:hidden mt-3 mb-3">
+                    {barData.length > 0 ? (
+                        <DistributionChart
+                            title="Responden per Form"
+                            subtitle="Jumlah responden tiap formulir."
+                            data={barData}
+                            barColor={colors.done}
+                            onBarClick={(id) => navigate(`/creator/forms/${id}`)}
+                        />
+                    ) : (
+                        <div className="bg-white border border-second p-5 shadow-sm rounded-lg flex items-center justify-center h-[260px]">
+                            <p className="text-sm text-tinted">Belum ada submission untuk ditampilkan.</p>
+                        </div>
+                    )}
+                </div>
 
                 {!loading && (
                     <div className="flex flex-col">
@@ -173,7 +190,7 @@ function CreatorDashboard() {
                                 </div>
                             </div> */}
                         </div>
-                                                {/* Chart hanya tampil di rentang layar lg saja */}
+                        {/* Chart hanya tampil di rentang layar lg saja */}
                         <div className="rounded-xl hidden lg:block mt-3">
                             {barData.length > 0 ? (
                                 <DistributionChart
@@ -191,31 +208,32 @@ function CreatorDashboard() {
                         </div>
 
                         {/* Di mobile tidak ada sidebar, jadi akses halaman lewat dashboard. */}
-                        <div className="lg:hidden flex flex-col gap-2 sm:gap-3 mt-3">
+                        <div className="lg:hidden flex flex-col gap-2 sm:gap-3 mt-10 border-t-2 border-dashed border-white pt-3">
                             {[
                                 { to: "/creator/forms", label: "Kelola Form", desc: "Buat dan atur form kamu", icon: FileText },
                                 { to: "/creator/responden", label: "Responden", desc: "Lihat hasil pengisian form", icon: ChartNoAxesColumn },
                             ].map((item, index) => (
-                                <motion.div
-                                    key={item.to}
-                                    initial={{ opacity: 0, y: 12 }}
-                                    animate={{ opacity: 1, y: 0 }}
-                                    transition={{ duration: 0.35, ease: easeOutExpo, delay: Math.min(index * 0.08, 0.3) }}
-                                >
-                                    <Link
-                                        to={item.to}
-                                        className="flex items-center gap-3.5 bg-white border border-second rounded-2xl shadow-sm p-4 transition-all hover:bg-base-200 active:scale-[0.98]"
+                                    <motion.div
+                                        key={item.to}
+                                        initial={{ opacity: 0, y: 12 }}
+                                        animate={{ opacity: 1, y: 0 }}
+                                        transition={{ duration: 0.35, ease: easeOutExpo, delay: Math.min(index * 0.08, 0.3) }}
                                     >
-                                        <span className="w-8 h-8 shrink-0 flex items-center justify-center">
-                                            <item.icon className="h-5 w-5 text-darks" />
-                                        </span>
-                                        <span className="flex-1 min-w-0">
-                                            <span className="block text-sm font-bold text-darks">{item.label}</span>
-                                            <span className="block text-xs text-tinted">{item.desc}</span>
-                                        </span>
-                                        <ChevronRight className="h-4 w-4 text-tinted shrink-0" />
-                                    </Link>
-                                </motion.div>
+                                        <Link
+                                            to={item.to}
+                                            className="flex items-center gap-3.5 bg-white border border-second rounded-2xl shadow-sm p-4 transition-all hover:bg-base-200 active:scale-[0.98]"
+                                        >
+
+                                            <span className="w-8 h-8 shrink-0 flex items-center justify-center">
+                                                <item.icon className="h-5 w-5 text-darks" />
+                                            </span>
+                                            <span className="flex-1 min-w-0">
+                                                <span className="block text-sm font-bold text-darks">{item.label}</span>
+                                                <span className="block text-xs text-tinted">{item.desc}</span>
+                                            </span>
+                                            <ChevronRight className="h-4 w-4 text-tinted shrink-0" />
+                                        </Link>
+                                    </motion.div>
                             ))}
                         </div>
 

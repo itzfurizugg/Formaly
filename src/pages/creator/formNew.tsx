@@ -48,7 +48,7 @@ function FormNew() {
 
 
     return (
-        <div className="flex flex-col items-center px-4 py-5 sm:py-15">
+        <div className="flex flex-col items-center px-4 sm:px-6 py-5 sm:py-15">
             <div className="w-full max-w-5xl">
                 <BackButton to="/creator/forms" showOnDesktop />
 

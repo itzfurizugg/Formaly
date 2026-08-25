@@ -132,7 +132,7 @@ function SubmissionDetail() {
 
     if (error) {
         return (
-            <div className="flex flex-col items-center px-4 py-10">
+            <div className="flex flex-col items-center px-4 sm:px-6 py-10">
                 <div role="alert" className="text-sm text-wrong bg-wrong/5 border border-wrong/20 rounded-lg px-4 py-3">
                     {error}
                 </div>
@@ -143,7 +143,7 @@ function SubmissionDetail() {
     return (
         <>
             {!loading && (
-        <div className="flex flex-col items-center px-4 py-5">
+        <div className="flex flex-col items-center px-4 sm:px-6 py-5">
             <div className="w-full xl:max-w-7xl lg:max-w-5xl">
                 <BackButton to={`/creator/forms/${id}/submissions`} />
 

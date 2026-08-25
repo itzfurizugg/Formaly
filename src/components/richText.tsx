@@ -34,7 +34,7 @@ function RichText({ html, as = "div", className = "" }: { html?: string | null; 
     return <Tag ref={ref as React.Ref<HTMLDivElement>} className={`rich-content ${className}`} dangerouslySetInnerHTML={inner} />
 }
 
-const fullFormats = ["bold", "italic", "underline", "strike", "list", "link", "formula", "video", "code-block"]
+const fullFormats = ["header", "bold", "italic", "underline", "strike", "list", "link", "formula", "video", "code-block"]
 const compactFormats = ["bold", "italic", "underline", "link"]
 
 interface RichTextEditorProps {
@@ -60,6 +60,7 @@ function RichTextEditor({ value, onChange, placeholder, className = "", compact 
                 ? [["bold", "italic", "underline", "link", "clean"]]
                 : {
                     container: [
+                        [{ header: [1, 2, 3, 4, 5, false] }],
                         ["bold", "italic", "underline", "strike"],
                         [{ list: "ordered" }, { list: "bullet" }],
                         ["code-block"],

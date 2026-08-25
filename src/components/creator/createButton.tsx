@@ -24,7 +24,7 @@ function CreateButton({ onCreate, onImport, label = "Buat" }: CreateButtonProps)
                 onClick={() => setOpen((v) => !v)}
                 aria-expanded={open}
                 aria-haspopup="menu"
-                className="btn bg-darks text-base border-none h-9 min-h-0 flex items-center gap-2"
+                className="btn bg-darks rounded-full text-base border-none h-9 min-h-0 flex items-center gap-2"
             >
                 <Plus className="h-4 w-4" /> {label}
             </button>

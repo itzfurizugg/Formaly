@@ -15,7 +15,7 @@ export function sanitizeRichText(html: string): string {
     value = normalizeCodeBlocks(value)
 
     const clean = DOMPurify.sanitize(value, {
-        ALLOWED_TAGS: ["p", "br", "strong", "em", "u", "s", "ol", "ul", "li", "a", "h1", "h2", "h3", "blockquote", "code", "pre", "span", "iframe"],
+        ALLOWED_TAGS: ["p", "br", "strong", "em", "u", "s", "ol", "ul", "li", "a", "h1", "h2", "h3", "h4", "h5", "blockquote", "code", "pre", "span", "iframe"],
         ALLOWED_ATTR: ["href", "target", "rel", "class", "data-value", "data-list", "src", "frameborder", "allowfullscreen"],
     })
 

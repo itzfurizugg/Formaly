@@ -108,92 +108,92 @@ function FormList() {
                         <p className="text-tinted mb-4">Belum ada form. Buat form pertamamu!</p>
                     </div>
                 ) : (
-        <div className="grid lg:grid-cols-2 gap-3 items-stretch">
-            {forms.map((form, index) => (
-                <motion.div
-                    key={form.id}
-                    className="h-full"
-                    initial={{ opacity: 0, y: 12 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.35, ease: easeOutExpo, delay: Math.min(index * 0.06, 0.4) }}
-                >
-                {/* h-full agar kartu melar mengikuti tinggi baris grid — semua kartu
+                    <div className="grid sm:grid-cols-2 gap-3 items-stretch">
+                        {forms.map((form, index) => (
+                            <motion.div
+                                key={form.id}
+                                className="h-full"
+                                initial={{ opacity: 0, y: 12 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                transition={{ duration: 0.35, ease: easeOutExpo, delay: Math.min(index * 0.06, 0.4) }}
+                            >
+                                {/* h-full agar kartu melar mengikuti tinggi baris grid — semua kartu
                     satu baris jadi sama tinggi seperti tampilan di halaman Responden */}
-                <div className="card bg-white border border-second rounded-xl transition-colors hover:bg-base-200 h-full overflow-hidden">
-                    <FormHeader formId={form.id} title={form.title} headerImage={form.header_image} />
-                    <div className="card-body gap-3 p-4">
-                        <div className="flex items-start justify-between gap-3">
-                            <div className="min-w-0">
-                                <h2 className="card-title text-xl sm:text-2xl text-darks break-words leading-snug text-base">{form.title}</h2>
-                                <div className="text-sm text-tinted line-clamp-2">
-                                    {form.description ? <RichText html={form.description} className="line-clamp-2" /> : "Tidak ada deskripsi"}
-                                </div>
-                            </div>
-                            <div className="shrink-0">
-                                {statusBadge(form.status)}
-                            </div>
-                        </div>
+                                <div className="card bg-white border border-second rounded-xl transition-colors hover:bg-base-200 h-full overflow-hidden">
+                                    <FormHeader formId={form.id} title={form.title} headerImage={form.header_image} />
+                                    <div className="card-body gap-3 p-4">
+                                        <div className="flex items-start justify-between gap-3">
+                                            <div className="min-w-0">
+                                                <h2 className="card-title text-xl sm:text-2xl text-darks break-words leading-snug text-base">{form.title}</h2>
+                                                <div className="text-sm text-tinted line-clamp-2">
+                                                    {form.description ? <RichText html={form.description} className="line-clamp-2" /> : "Tidak ada deskripsi"}
+                                                </div>
+                                            </div>
+                                            <div className="shrink-0">
+                                                {statusBadge(form.status)}
+                                            </div>
+                                        </div>
 
-                        <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5 text-xs text-tinted/80 mt-1 mb-2">
-                            <span className="inline-flex items-center gap-1.5">
-                                <ListChecks className="h-3.5 w-3.5" /> {form.questions?.length || 0} soal
-                            </span>
-                            {/* <span className="inline-flex items-center gap-1.5">
+                                        <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5 text-xs text-tinted/80 mt-1 mb-2">
+                                            <span className="inline-flex items-center gap-1.5">
+                                                <ListChecks className="h-3.5 w-3.5" /> {form.questions?.length || 0} soal
+                                            </span>
+                                            {/* <span className="inline-flex items-center gap-1.5">
                                 <Users className="h-3.5 w-3.5" /> {form.submissions?.length || 0} submission
                             </span> */}
-                            <span className="inline-flex items-center gap-1.5">
-                                <Timer className="h-3.5 w-3.5" /> {form.duration ? `${form.duration} menit` : "Tanpa Waktu"}
-                            </span>
-                            {form.passing_score != null && (
-                                <span className="hidden sm:inline-flex items-center gap-1.5">
-                                    <Target className="h-3.5 w-3.5" /> Nilai Minimum: {form.passing_score}
-                                </span>
-                            )}
-                            {/* <span className="inline-flex items-center gap-1.5">
+                                            <span className="inline-flex items-center gap-1.5">
+                                                <Timer className="h-3.5 w-3.5" /> {form.duration ? `${form.duration} menit` : "Tanpa Waktu"}
+                                            </span>
+                                            {form.passing_score != null && (
+                                                <span className="hidden sm:inline-flex items-center gap-1.5">
+                                                    <Target className="h-3.5 w-3.5" /> Nilai Minimum: {form.passing_score}
+                                                </span>
+                                            )}
+                                            {/* <span className="inline-flex items-center gap-1.5">
                                 <CalendarDays className="h-3.5 w-3.5" />
                                 {new Date(form.created_at).toLocaleDateString("id-ID", { day: "numeric", month: "short", year: "numeric" })}
                             </span> */}
-                        </div>
+                                        </div>
 
-                        <div className="card-actions justify-end flex-wrap gap-2">
-                            <button
-                                onClick={() => navigate(`/creator/forms/${form.id}/submissions`)}
-                                className="btn btn-sm rounded-full bg-base text-darks border border-second hover:bg-second hover:border-second"
-                            >
-                                <ClipboardList className="h-3.5 w-3.5" /> <span className="hidden sm:inline">Submission</span>
-                            </button>
-                            <button
-                                onClick={() => navigate(`/creator/forms/${form.id}/shared`)}
-                                className="btn btn-sm rounded-full bg-base text-darks border border-second hover:bg-second hover:border-second"
-                            >
-                                <Share2 className="h-3.5 w-3.5" /> <span className="hidden sm:inline">Bagikan</span>
-                            </button>
-                            <button
-                                onClick={() => navigate(`/creator/forms/${form.id}/tokens`)}
-                                className="btn btn-sm rounded-full bg-base text-darks border border-second hover:bg-second hover:border-second"
-                            >
-                                <KeyRound className="h-3.5 w-3.5" /> <span className="hidden sm:inline">Token</span>
-                            </button>
-                            <button
-                                onClick={() => navigate(`/creator/forms/${form.id}`)}
-                                className="btn btn-sm rounded-full bg-base text-darks border border-second hover:bg-second hover:border-second"
-                            >
-                                <Pencil className="h-3.5 w-3.5" /> <span className="hidden sm:inline">Edit</span>
-                            </button>
-                            <button
-                                onClick={() => handleDelete(form.id)}
-                                disabled={deleting === form.id}
-                                className="btn btn-sm rounded-full bg-wrong/10 text-wrong border border-wrong/20 hover:bg-wrong/20"
-                            >
-                                {deleting === form.id ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Trash2 className="h-3.5 w-3.5" />}
-                                <span className="hidden sm:inline">Hapus</span>
-                            </button>
-                        </div>
+                                        <div className="card-actions justify-end flex-wrap gap-2">
+                                            <button
+                                                onClick={() => navigate(`/creator/forms/${form.id}/submissions`)}
+                                                className="btn btn-sm rounded-full bg-base text-darks border border-second hover:bg-second hover:border-second"
+                                            >
+                                                <ClipboardList className="h-3.5 w-3.5" /> <span className="hidden sm:inline">Submission</span>
+                                            </button>
+                                            <button
+                                                onClick={() => navigate(`/creator/forms/${form.id}/shared`)}
+                                                className="btn btn-sm rounded-full bg-base text-darks border border-second hover:bg-second hover:border-second"
+                                            >
+                                                <Share2 className="h-3.5 w-3.5" /> <span className="hidden sm:inline">Bagikan</span>
+                                            </button>
+                                            <button
+                                                onClick={() => navigate(`/creator/forms/${form.id}/tokens`)}
+                                                className="btn btn-sm rounded-full bg-base text-darks border border-second hover:bg-second hover:border-second"
+                                            >
+                                                <KeyRound className="h-3.5 w-3.5" /> <span className="hidden sm:inline">Token</span>
+                                            </button>
+                                            <button
+                                                onClick={() => navigate(`/creator/forms/${form.id}`)}
+                                                className="btn btn-sm rounded-full bg-base text-darks border border-second hover:bg-second hover:border-second"
+                                            >
+                                                <Pencil className="h-3.5 w-3.5" /> <span className="hidden sm:inline">Edit</span>
+                                            </button>
+                                            <button
+                                                onClick={() => handleDelete(form.id)}
+                                                disabled={deleting === form.id}
+                                                className="btn btn-sm rounded-full bg-wrong/10 text-wrong border border-wrong/20 hover:bg-wrong/20"
+                                            >
+                                                {deleting === form.id ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Trash2 className="h-3.5 w-3.5" />}
+                                                <span className="hidden sm:inline">Hapus</span>
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </motion.div>
+                        ))}
                     </div>
-                </div>
-                </motion.div>
-            ))}
-        </div>
                 )
             )}
         </>

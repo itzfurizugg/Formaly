@@ -477,7 +477,7 @@ function Questions({ embedded = false }: { embedded?: boolean }) {
     )
 
     return (
-        <div className={embedded ? "w-full min-w-0 pb-8" : "flex flex-col items-center px-3 py-5 sm:py-10"}>
+        <div className={embedded ? "w-full min-w-0 pb-8" : "flex flex-col items-center px-3 sm:px-6 py-5 sm:py-10"}>
             {!loading && (
             <div className={embedded ? "" : "w-full xl:max-w-7xl lg:max-w-5xl"}>
                 {!embedded && (

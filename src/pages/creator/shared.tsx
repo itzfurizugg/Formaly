@@ -39,7 +39,7 @@ function Shared() {
     }
 
     return (
-        <div className="flex flex-col items-center px-3 py-5">
+        <div className="flex flex-col items-center px-3 sm:px-6 py-5 sm:py-10">
             <div className="w-full xl:max-w-7xl lg:max-w-5xl">
                 <BackButton to="/creator" />
 
@@ -53,14 +53,6 @@ function Shared() {
                         Form ini sudah public. Bagikan link atau QR code agar orang lain bisa mengerjakannya.
                     </p>
 
-                    {!tag && (
-                        <div className="flex items-start gap-2 p-3 bg-amber-500/10 border border-amber-500/20 rounded-lg mb-4 text-amber-800 text-xs sm:text-sm">
-                            <p>
-                                Tambahkan tag di halaman Detail agar link singkat (contoh: <span className="font-medium">/form/CODEVERSE</span>) juga bisa dipakai.
-                            </p>
-                        </div>
-                    )}
-
                     <div className="flex flex-col sm:flex-row gap-2">
                         <input
                             type="text"
@@ -72,8 +64,14 @@ function Shared() {
                         <div className="flex gap-2 w-full sm:w-auto">
                         <button
                             type="button"
-                            onClick={() => setShortMode((v) => !v)}
-                            disabled={!shortUrl}
+                            onClick={() => {
+                                // Tanpa tag → notifikasi toast, jangan ganti mode link.
+                                if (!shortUrl) {
+                                    showAlert("Form belum punya tag. Tambahkan tag di halaman Detail agar bisa pakai link singkat.", "warning")
+                                    return
+                                }
+                                setShortMode((v) => !v)
+                            }}
                             className="btn bg-base text-darks border-second flex-1 sm:flex-none"
                             title={shortUrl ? (shortMode ? "Kembalikan ke link panjang" : "Ubah ke link singkat") : "Tambahkan tag untuk link singkat"}
                         >

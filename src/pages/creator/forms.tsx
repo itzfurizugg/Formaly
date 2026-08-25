@@ -5,7 +5,7 @@ import BackButton from "../../components/backButton"
 
 function CreatorForms() {
     return (
-        <div className="flex flex-col items-center px-3 py-5 sm:py-10">
+        <div className="flex flex-col items-center px-3 sm:px-6 py-5 sm:py-10">
             <div className="w-full xl:max-w-7xl lg:max-w-5xl">
                 <BackButton to="/creator" />
                 <div className="ml-2 mr-2">

@@ -2,13 +2,14 @@ import { createElement, useEffect, useState } from "react"
 import { createRoot, type Root } from "react-dom/client"
 import { Toaster, toast } from "sonner"
 
-type AlertType = "success" | "error" | "info"
+type AlertType = "success" | "error" | "info" | "warning"
 
 const toastClasses = {
     base: "!rounded-xl !border !border-second !bg-white !font-sans !text-darks !shadow-lg",
     success: "!border-done/30",
     error: "!border-wrong/30",
     info: "!border-second",
+    warning: "!border-amber-500/50 !bg-amber-50",
 }
 
 /** Toaster global Formaly. Render sekali di root aplikasi. */

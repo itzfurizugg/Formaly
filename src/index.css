@@ -33,7 +33,8 @@
   border: 1px solid var(--color-second);
   border-radius: 0.75rem;
   background: #fff;
-  overflow: hidden;
+  /* Tidak pakai overflow:hidden: akan memotong dropdown heading (.ql-picker-options)
+     saat expand. Sudut tetap rapi lewat border-radius di toolbar & container. */
   transition: border-color 0.15s ease, box-shadow 0.15s ease;
 }
 
@@ -45,7 +46,7 @@
 .rich-editor .ql-toolbar.ql-snow {
   border: none;
   border-bottom: 1px solid var(--color-second);
-  border-radius: 0;
+  border-radius: 0.75rem 0.75rem 0 0;
   background: var(--color-base);
   padding: 0.35rem 0.5rem;
 }
@@ -91,6 +92,7 @@
 .rich-editor .ql-container.ql-snow {
   border: none;
   background: #fff;
+  border-radius: 0 0 0.75rem 0.75rem;
   font-family: var(--font-sans);
   font-size: 1rem;
   color: var(--color-darks);
@@ -125,7 +127,9 @@
 /* reset Preflight (Tailwind) menyamakan ukuran heading; pulihkan hierarki */
 .rich-editor .ql-editor h1,
 .rich-editor .ql-editor h2,
-.rich-editor .ql-editor h3 {
+.rich-editor .ql-editor h3,
+.rich-editor .ql-editor h4,
+.rich-editor .ql-editor h5 {
   font-weight: 700;
   margin: 0.75em 0 0.35em;
   line-height: 1.25;
@@ -134,6 +138,8 @@
 .rich-editor .ql-editor h1 { font-size: 1.5em; }
 .rich-editor .ql-editor h2 { font-size: 1.3em; }
 .rich-editor .ql-editor h3 { font-size: 1.1em; }
+.rich-editor .ql-editor h4 { font-size: 1em; }
+.rich-editor .ql-editor h5 { font-size: 0.9em; }
 
 /* varian ringkas (pilihan jawaban) */
 .rich-editor-compact .ql-toolbar.ql-snow {
@@ -175,7 +181,9 @@
 
 .rich-content h1,
 .rich-content h2,
-.rich-content h3 {
+.rich-content h3,
+.rich-content h4,
+.rich-content h5 {
   font-weight: 700;
   margin: 0.75em 0 0.35em;
   line-height: 1.25;
@@ -184,6 +192,8 @@
 .rich-content h1 { font-size: 1.5em; }
 .rich-content h2 { font-size: 1.3em; }
 .rich-content h3 { font-size: 1.1em; }
+.rich-content h4 { font-size: 1em; }
+.rich-content h5 { font-size: 0.9em; }
 
 .rich-content ul,
 .rich-content ol {
