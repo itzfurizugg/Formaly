@@ -145,8 +145,8 @@ function FormDescriptionPage() {
                         <BackButton to="/" className="ml-3.5 sm:ml-0" />
                     )}
 
-                    {/* Banner di luar kartu — full width di semua device, proporsi 3105x1100. */}
-                    <div className="w-full px-3.5 sm:px-4">
+                    {/* Banner di luar kartu — lebar sejajar dengan kartu, proporsi 3105x1100. */}
+                    <div className="w-full sm:max-w-3xl px-3.5 sm:px-0">
                         <div className="rounded-xl overflow-hidden border border-second shadow-sm">
                             <FormHeader formId={form.id} title={form.title} headerImage={headerImage} />
                         </div>

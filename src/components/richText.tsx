@@ -163,7 +163,7 @@ function RichTextEditor({ value, onChange, placeholder, className = "", compact 
                     {value && sanitizeRichText(value).trim() ? (
                         <RichText html={value} />
                     ) : (
-                        <span className="text-tinted">{placeholder}</span>
+                        <span className="text-tinted lg:ml-2">{placeholder}</span>
                     )}
                 </div>
             )}

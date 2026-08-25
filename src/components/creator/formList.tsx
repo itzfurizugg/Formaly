@@ -158,32 +158,32 @@ function FormList() {
                         <div className="card-actions justify-end flex-wrap gap-2">
                             <button
                                 onClick={() => navigate(`/creator/forms/${form.id}/submissions`)}
-                                className="btn btn-sm rounded-xl bg-base text-darks border border-second hover:bg-second hover:border-second"
+                                className="btn btn-sm rounded-full bg-base text-darks border border-second hover:bg-second hover:border-second"
                             >
                                 <ClipboardList className="h-3.5 w-3.5" /> <span className="hidden sm:inline">Submission</span>
                             </button>
                             <button
                                 onClick={() => navigate(`/creator/forms/${form.id}/shared`)}
-                                className="btn btn-sm rounded-xl bg-base text-darks border border-second hover:bg-second hover:border-second"
+                                className="btn btn-sm rounded-full bg-base text-darks border border-second hover:bg-second hover:border-second"
                             >
                                 <Share2 className="h-3.5 w-3.5" /> <span className="hidden sm:inline">Bagikan</span>
                             </button>
                             <button
                                 onClick={() => navigate(`/creator/forms/${form.id}/tokens`)}
-                                className="btn btn-sm rounded-xl bg-base text-darks border border-second hover:bg-second hover:border-second"
+                                className="btn btn-sm rounded-full bg-base text-darks border border-second hover:bg-second hover:border-second"
                             >
                                 <KeyRound className="h-3.5 w-3.5" /> <span className="hidden sm:inline">Token</span>
                             </button>
                             <button
                                 onClick={() => navigate(`/creator/forms/${form.id}`)}
-                                className="btn btn-sm rounded-xl bg-base text-darks border border-second hover:bg-second hover:border-second"
+                                className="btn btn-sm rounded-full bg-base text-darks border border-second hover:bg-second hover:border-second"
                             >
                                 <Pencil className="h-3.5 w-3.5" /> <span className="hidden sm:inline">Edit</span>
                             </button>
                             <button
                                 onClick={() => handleDelete(form.id)}
                                 disabled={deleting === form.id}
-                                className="btn btn-sm rounded-xl bg-wrong/10 text-wrong border border-wrong/20 hover:bg-wrong/20"
+                                className="btn btn-sm rounded-full bg-wrong/10 text-wrong border border-wrong/20 hover:bg-wrong/20"
                             >
                                 {deleting === form.id ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Trash2 className="h-3.5 w-3.5" />}
                                 <span className="hidden sm:inline">Hapus</span>

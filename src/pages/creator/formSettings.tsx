@@ -3,6 +3,7 @@ import { useNavigate, useParams } from "react-router-dom"
 import {
     BookOpenText,
     Eye,
+    ListFilter,
     Loader2,
     Shuffle,
 } from "lucide-react"
@@ -16,12 +17,14 @@ import Loading from "../../components/loading"
 interface FormSettingsData {
     show_score_to_respondent: boolean
     show_answers_to_respondent: boolean
+    show_correct_filter_to_respondent: boolean
     randomize_questions: boolean
 }
 
 const DEFAULTS: FormSettingsData = {
     show_score_to_respondent: true,
     show_answers_to_respondent: false,
+    show_correct_filter_to_respondent: true,
     randomize_questions: false,
 }
 
@@ -45,6 +48,13 @@ const SETTING_ROWS: {
         title: "Tampilkan jawaban kepada responden",
         description: "Responden bisa melihat rincian jawabannya beserta koreksi benar/salah di halaman hasil.",
         hint: "Cocok dimatikan untuk ujian agar kunci jawaban tidak tersebar.",
+    },
+    {
+        key: "show_correct_filter_to_respondent",
+        icon: ListFilter,
+        title: "Tampilkan filter benar/salah di halaman hasil",
+        description: "Responden bisa memfilter rincian jawaban berdasarkan status benar, salah, isian, atau tanpa penilaian.",
+        hint: "Hanya berlaku jika rincian jawaban ditampilkan.",
     },
     {
         key: "randomize_questions",
@@ -83,6 +93,7 @@ function FormSettings() {
         setSettings({
             show_score_to_respondent: data.show_score_to_respondent ?? DEFAULTS.show_score_to_respondent,
             show_answers_to_respondent: data.show_answers_to_respondent ?? DEFAULTS.show_answers_to_respondent,
+            show_correct_filter_to_respondent: data.show_correct_filter_to_respondent ?? DEFAULTS.show_correct_filter_to_respondent,
             randomize_questions: data.randomize_questions ?? DEFAULTS.randomize_questions,
         })
         setLoading(false)
@@ -106,6 +117,7 @@ function FormSettings() {
                 .update({
                     show_score_to_respondent: settings.show_score_to_respondent,
                     show_answers_to_respondent: settings.show_answers_to_respondent,
+                    show_correct_filter_to_respondent: settings.show_correct_filter_to_respondent,
                     randomize_questions: settings.randomize_questions,
                 })
                 .eq("id", id)

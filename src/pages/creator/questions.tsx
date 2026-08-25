@@ -198,6 +198,18 @@ function Questions({ embedded = false }: { embedded?: boolean }) {
             return
         }
 
+        // Jaminan posisi tersimpan di database: RPC lama bisa saja mengabaikan
+        // p_order_index, jadi posisi final di-update langsung untuk soal lama.
+        if (editingId) {
+            const { error: orderErr } = await supabase
+                .from("questions")
+                .update({ order_index: orderIndex })
+                .eq("id", editingId)
+            if (orderErr) {
+                showAlert("Gagal menyimpan urutan soal: " + orderErr.message, "error")
+            }
+        }
+
         resetEditor()
         loadAll()
         alertSaveSuccess(editingId ? "Soal berhasil diperbarui." : "Soal berhasil ditambahkan.")
@@ -226,11 +238,14 @@ function Questions({ embedded = false }: { embedded?: boolean }) {
     }
 
     const persistOrder = async (list: Question[]) => {
+        let failed = false
         for (let i = 0; i < list.length; i++) {
             if (list[i].order_index !== i) {
-                await supabase.from("questions").update({ order_index: i }).eq("id", list[i].id)
+                const { error } = await supabase.from("questions").update({ order_index: i }).eq("id", list[i].id)
+                if (error) failed = true
             }
         }
+        if (failed) showAlert("Sebagian urutan soal gagal disimpan ke database.", "error")
     }
 
     const handleDragStart = (e: DragEvent, id: string) => {
@@ -320,7 +335,7 @@ function Questions({ embedded = false }: { embedded?: boolean }) {
             initial="hidden"
             animate="show"
             exit="exit"
-            className="bg-white border border-second p-3 sm:p-5 shadow-sm rounded-xl overflow-block space-y-4"
+            className="bg-white border border-second p-3 sm:p-5 shadow-sm rounded-xl overflow-block space-y-4 mb-10"
         >
             <div className="flex items-center justify-between">
                 <h2 className="font-semibold text-darks ml-2 sm:ml-1">{editingId ? "Edit Soal" : "Tambah Soal"}</h2>
@@ -462,7 +477,7 @@ function Questions({ embedded = false }: { embedded?: boolean }) {
     )
 
     return (
-        <div className={embedded ? "w-full min-w-0 pb-8" : "flex flex-col items-center px-3 py-10"}>
+        <div className={embedded ? "w-full min-w-0 pb-8" : "flex flex-col items-center px-3 py-5 sm:py-10"}>
             {!loading && (
             <div className={embedded ? "" : "w-full xl:max-w-7xl lg:max-w-5xl"}>
                 {!embedded && (

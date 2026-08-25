@@ -8,6 +8,7 @@ import Filter from "../../components/filter"
 import { RichText } from "../../components/richText"
 import { listContainer, listItem } from "../../lib/motion"
 import BackButton from "../../components/backButton"
+import FormHeader from "../../components/creator/formHeader"
 
 interface AnswerRow {
     id: string
@@ -39,6 +40,7 @@ interface SubmissionInfo {
         passing_score: number | null
         show_score_to_respondent?: boolean | null
         show_answers_to_respondent?: boolean | null
+        show_correct_filter_to_respondent?: boolean | null
     } | null
     user: { name: string } | null
 }
@@ -54,12 +56,33 @@ function ResultPage() {
     const [error, setError] = useState<string | null>(null)
     const [filter, setFilter] = useState("")
 
+    // Header gambar form diambil diam-diam; error diabaikan agar halaman tetap jalan.
+    const [headerImage, setHeaderImage] = useState<string | null>(null)
+
+    useEffect(() => {
+        const fid = info?.form?.id
+        if (!fid) return
+        let cancelled = false
+        supabase
+            .from("forms")
+            .select("header_image")
+            .eq("id", fid)
+            .single()
+            .then(({ data }) => {
+                if (cancelled) return
+                setHeaderImage((data as { header_image?: string | null } | null)?.header_image || null)
+            })
+        return () => {
+            cancelled = true
+        }
+    }, [info?.form?.id])
+
     const loadAll = useCallback(async () => {
         if (!user || !submissionId) return
 
         const { data: sub } = await supabase
             .from("submissions")
-            .select("id, total_score, status, started_at, submitted_at, form:form_id ( id, title, duration, passing_score, show_score_to_respondent, show_answers_to_respondent ), user:user_id ( name )")
+            .select("id, total_score, status, started_at, submitted_at, form:form_id ( id, title, duration, passing_score, show_score_to_respondent, show_answers_to_respondent, show_correct_filter_to_respondent ), user:user_id ( name )")
             .eq("id", submissionId)
             .eq("user_id", user.id)
             .single()
@@ -140,6 +163,7 @@ function ResultPage() {
     // supaya perilaku lama tidak berubah sebelum migrasi diterapkan.
     const showScore = info?.form?.show_score_to_respondent !== false
     const showAnswers = info?.form?.show_answers_to_respondent !== false
+    const showFilter = info?.form?.show_correct_filter_to_respondent !== false
     const failed = showScore && info?.form?.passing_score != null && (info?.total_score ?? 0) < info.form.passing_score
 
     const filterOptions = [
@@ -163,206 +187,213 @@ function ResultPage() {
     return (
         <>
             {!authLoading && !loading && (
-            error ? (
-                <div className="flex flex-col items-center px-4 py-10">
-                    <div className="w-full max-w-2xl">
-                        <BackButton to="/history" />
-                        <div role="alert" className="text-sm text-wrong bg-wrong/5 border border-wrong/20 rounded-lg px-4 py-3">
-                            {error}
+                error ? (
+                    <div className="flex flex-col items-center px-4 py-5 sm:py-10">
+                        <div className="w-full max-w-2xl">
+                            <BackButton to="/history" />
+                            <div role="alert" className="text-sm text-wrong bg-wrong/5 border border-wrong/20 rounded-lg px-4 py-3">
+                                {error}
+                            </div>
                         </div>
-                    </div>
-                </div>
-            ) : (
-        <div className="flex flex-col items-center px-4 py-10">
-            <div className="w-full max-w-4xl">
-                <BackButton to="/history" />
-
-                <h1 className="text-2xl lg:text-4xl font-bold text-darks mb-1">Hasil Pengerjaan</h1>
-                <p className="text-sm text-tinted mb-6">
-                    {info?.form?.title || "Form"}
-                </p>
-
-                <div className="bg-white border border-second p-6 shadow-sm rounded-xl mb-3 lg:mb-6">
-                    <div className="flex items-center gap-4">
-                        <div className="flex-1">
-                            <p className="text-xs text-tinted">Total Skor</p>
-                            {showScore ? (
-                                <p className={`text-5xl font-bold ${failed ? "text-wrong" : "text-pass"}`}>
-                                    {info?.total_score ?? 0}
-                                </p>
-                            ) : (
-                                <p className="text-sm text-tinted mt-2 flex items-center gap-2">
-                                    {/* <EyeOff className="h-4 w-4 shrink-0" /> */}
-                                    Nilai tidak ditampilkan oleh pembuat form.
-                                </p>
-                            )}
-                        </div>
-                        <div className="text-right">
-                            <span
-                                className={`badge rounded-full text-xs ${
-                                    failed
-                                        ? "bg-wrong/10 text-wrong border-none"
-                                        : info?.status === "SUBMITTED"
-                                            ? "bg-pass/10 text-pass border-none"
-                                            : "badge-ghost text-tinted"
-                                }`}
-                            >
-                                {failed ? "Gagal" : info?.status}
-                            </span>
-                            <p className="text-xs text-tinted mt-2 flex items-center gap-1 justify-end">
-                                <Clock className="h-3 w-3" /> {fmtDate(info?.submitted_at || info?.started_at || null)}
-                            </p>
-                        </div>
-                    </div>
-                    {showScore && showAnswers && (
-                        <div className="mt-4 pt-4 border-t border-base text-sm text-tinted flex items-center justify-between">
-                            <span>{answers.length} soal</span>
-                            <span>
-                                <span className="text-pass font-semibold">{correctCount} benar</span> &middot;{" "}
-                                <span className="text-wrong font-semibold">{answers.length - correctCount - textCount - noAnswerCount} salah</span>
-                                {noAnswerCount > 0 && <>&nbsp;&middot;&nbsp;<span className="text-tinted">{noAnswerCount} tanpa penilaian</span></>}
-                            </span>
-                        </div>
-                    )}
-                </div>
-
-                {!showAnswers ? (
-                    <div className="bg-white border border-second p-6 shadow-sm rounded-xl text-center py-5">
-                        {/* <EyeOff className="h-8 w-8 text-tinted/50 mx-auto mb-3" /> */}
-                        <p className="text-sm text-tinted">Rincian jawaban tidak ditampilkan untuk form ini.</p>
-                    </div>
-                ) : answers.length === 0 ? (
-                    <div className="text-center py-16">
-                        <p className="text-tinted">Belum ada jawaban.</p>
                     </div>
                 ) : (
-                    <>
-                        <div className="mb-4">
-                            <Filter options={filterOptions} value={filter} onChange={setFilter} />
-                        </div>
-                        {filteredAnswers.length === 0 ? (
-                            <div className="text-center py-10">
-                                <p className="text-tinted">Tidak ada jawaban yang cocok dengan filter ini.</p>
-                            </div>
-                        ) : (
-                            <motion.div
-                                key={filter}
-                                className="space-y-6"
-                                variants={listContainer}
-                                initial="hidden"
-                                animate="show"
-                            >
-                                {pgAnswers.length > 0 && (
-                                    <div className="space-y-3">
-                                        <div className="flex items-center gap-3">
-                                            <h3 className="text-sm font-bold text-darks whitespace-nowrap">Pilihan Ganda (PG)</h3>
-                                            <div className="flex-1 h-px bg-second"></div>
+                    <div className="flex flex-col items-center px-4 py-5 sm:py-10">
+                        <div className="w-full max-w-4xl">
+                            <BackButton to="/history" />
+                            {info?.form && (
+                                <div className="rounded-xl overflow-hidden border border-second shadow-sm mb-3 lg:mb-4">
+                                    <FormHeader formId={info.form.id} title={info.form.title} headerImage={headerImage} />
+                                </div>
+                            )}
+
+                            <h1 className="text-2xl lg:text-4xl font-bold text-darks mb-1">Hasil Pengerjaan</h1>
+                            <p className="text-sm text-tinted mb-6">
+                                {info?.form?.title || "Form"}
+                            </p>
+
+                            {showScore && (
+                                <div className="bg-white border border-second p-6 shadow-sm rounded-xl mb-3 lg:mb-6">
+                                    <div className="flex items-center gap-4">
+                                        <div className="flex-1">
+                                            <p className="text-xs text-tinted">Total Skor</p>
+                                            {showScore ? (
+                                                <p className={`text-5xl font-bold ${failed ? "text-wrong" : "text-pass"}`}>
+                                                    {info?.total_score ?? 0}
+                                                </p>
+                                            ) : (
+                                                <p className="text-sm text-tinted mt-2 flex items-center gap-2">
+                                                    {/* <EyeOff className="h-4 w-4 shrink-0" /> */}
+                                                    Nilai tidak ditampilkan oleh pembuat form.
+                                                </p>
+                                            )}
                                         </div>
-                                        {pgAnswers.map((a) => {
-                                            const idx = answers.indexOf(a)
-                                            return (
-                                                <motion.div key={a.id} variants={listItem} className="bg-white border border-second p-5 shadow-sm rounded-xl transition-colors hover:bg-base-200">
-                                                    <div className="flex items-center gap-2 flex-wrap mb-1">
-                                                        <span className="text-sm font-bold text-darks">Soal {idx + 1}</span>
-                                                        <span className="badge badge-ghost text-tinted rounded-full text-xs">{typeLabel(a.question?.question_type || "")}</span>
-                                                        {hasCorrectAnswer(a) ? (
-                                                            isCorrect(a) ? (
-                                                                <span className="text-xs text-pass font-medium flex items-center gap-1">
-                                                                    <Check className="h-3 w-3" /> Benar
-                                                                </span>
-                                                            ) : (
-                                                                <span className="text-xs text-wrong font-medium flex items-center gap-1">
-                                                                    <X className="h-3 w-3" /> Salah
-                                                                </span>
-                                                            )
-                                                        ) : (
-                                                            <span className="text-xs text-tinted font-medium">Tanpa Penilaian</span>
-                                                        )}
+                                        <div className="text-right">
+                                            <span
+                                                className={`badge rounded-full text-xs ${failed
+                                                        ? "bg-wrong/10 text-wrong border-none"
+                                                        : info?.status === "SUBMITTED"
+                                                            ? "bg-pass/10 text-pass border-none"
+                                                            : "badge-ghost text-tinted"
+                                                    }`}
+                                            >
+                                                {failed ? "Gagal" : info?.status}
+                                            </span>
+                                            <p className="text-xs text-tinted mt-2 flex items-center gap-1 justify-end">
+                                                <Clock className="h-3 w-3" /> {fmtDate(info?.submitted_at || info?.started_at || null)}
+                                            </p>
+                                        </div>
+                                    </div>
+                                    {showScore && showAnswers && (
+                                        <div className="mt-4 pt-4 border-t border-base text-sm text-tinted flex items-center justify-between">
+                                            <span>{answers.length} soal</span>
+                                            <span>
+                                                <span className="text-pass font-semibold">{correctCount} benar</span> &middot;{" "}
+                                                <span className="text-wrong font-semibold">{answers.length - correctCount - textCount - noAnswerCount} salah</span>
+                                                {noAnswerCount > 0 && <>&nbsp;&middot;&nbsp;<span className="text-tinted">{noAnswerCount} tanpa penilaian</span></>}
+                                            </span>
+                                        </div>
+                                    )}
+                                </div>
+                            )}
+
+                            {!showAnswers ? (
+                                <div className="bg-white border border-second p-6 shadow-sm rounded-xl text-center py-5">
+                                    {/* <EyeOff className="h-8 w-8 text-tinted/50 mx-auto mb-3" /> */}
+                                    <p className="text-sm text-tinted">Rincian jawaban tidak ditampilkan untuk form ini.</p>
+                                </div>
+                            ) : answers.length === 0 ? (
+                                <div className="text-center py-16">
+                                    <p className="text-tinted">Belum ada jawaban.</p>
+                                </div>
+                            ) : (
+                                <>
+                                    {showFilter && (
+                                        <div className="mb-4">
+                                            <Filter options={filterOptions} value={filter} onChange={setFilter} />
+                                        </div>
+                                    )}
+                                    {filteredAnswers.length === 0 ? (
+                                        <div className="text-center py-10">
+                                            <p className="text-tinted">Tidak ada jawaban yang cocok dengan filter ini.</p>
+                                        </div>
+                                    ) : (
+                                        <motion.div
+                                            key={filter}
+                                            className="space-y-6"
+                                            variants={listContainer}
+                                            initial="hidden"
+                                            animate="show"
+                                        >
+                                            {pgAnswers.length > 0 && (
+                                                <div className="space-y-3">
+                                                    <div className="flex items-center gap-3">
+                                                        <h3 className="text-sm font-bold text-darks whitespace-nowrap">Pilihan Ganda (PG)</h3>
+                                                        <div className="flex-1 h-px bg-second"></div>
                                                     </div>
-                                                    <div className="text-sm text-darks"><RichText html={a.question?.question_text} /></div>
-                                                    {a.question?.image_question && (
-                                                        <img src={a.question.image_question} alt="Soal" className="max-h-40 object-contain mt-2 border border-second rounded-lg" />
-                                                    )}
-                                                    <div className="mt-3 space-y-1.5">
-                                                        {(a.question?.question_options || []).map((o) => {
-                                                            const selected = a.question?.question_type === "multiple_choice"
-                                                                ? (a.selected_options || []).includes(o.id)
-                                                                : a.selected_option_id === o.id
-                                                            const graded = hasCorrectAnswer(a)
-                                                            const isCorrectOption = o.is_correct
-                                                            return (
-                                                                <div
-                                                                    key={o.id}
-                                                                    className={`flex items-center gap-2 text-sm rounded-lg px-3 py-1.5 border ${
-                                                                        graded
-                                                                            ? isCorrectOption
-                                                                                ? selected
-                                                                                    ? "border-pass/40 bg-pass/5 text-pass"
-                                                                                    : "border-done/40 bg-done/5 text-done"
-                                                                                : selected
-                                                                                ? "border-wrong/40 bg-wrong/5 text-wrong"
-                                                                                : "border-second text-tinted"
-                                                                            : selected
-                                                                            ? "border-darks/30 bg-darks/5 text-darks"
-                                                                            : "border-second text-tinted"
-                                                                    }`}
-                                                                >
-                                                                    {graded ? (
-                                                                        isCorrectOption ? (
-                                                                            <Check className="h-3.5 w-3.5 shrink-0" />
-                                                                        ) : selected ? (
-                                                                            <X className="h-3.5 w-3.5 shrink-0" />
+                                                    {pgAnswers.map((a) => {
+                                                        const idx = answers.indexOf(a)
+                                                        return (
+                                                            <motion.div key={a.id} variants={listItem} className="bg-white border border-second p-5 shadow-sm rounded-xl transition-colors hover:bg-base-200">
+                                                                <div className="flex items-center gap-2 flex-wrap mb-1">
+                                                                    <span className="text-sm font-bold text-darks">Soal {idx + 1}</span>
+                                                                    <span className="badge badge-ghost text-tinted rounded-full text-xs">{typeLabel(a.question?.question_type || "")}</span>
+                                                                    {hasCorrectAnswer(a) ? (
+                                                                        isCorrect(a) ? (
+                                                                            <span className="text-xs text-pass font-medium flex items-center gap-1">
+                                                                                <Check className="h-3 w-3" /> Benar
+                                                                            </span>
                                                                         ) : (
-                                                                            <span className="w-3.5 h-3.5 shrink-0" />
+                                                                            <span className="text-xs text-wrong font-medium flex items-center gap-1">
+                                                                                <X className="h-3 w-3" /> Salah
+                                                                            </span>
                                                                         )
-                                                                    ) : selected ? (
-                                                                        <span className="h-2 w-2 shrink-0 rounded-full bg-darks/50" />
                                                                     ) : (
-                                                                        <span className="w-3.5 h-3.5 shrink-0" />
+                                                                        <span className="text-xs text-tinted font-medium">Tanpa Penilaian</span>
                                                                     )}
-                                                                    <RichText as="span" html={o.option_text} />
                                                                 </div>
-                                                            )
-                                                        })}
+                                                                <div className="text-sm text-darks"><RichText html={a.question?.question_text} /></div>
+                                                                {a.question?.image_question && (
+                                                                    <img src={a.question.image_question} alt="Soal" className="max-h-40 object-contain mt-2 border border-second rounded-lg" />
+                                                                )}
+                                                                <div className="mt-3 space-y-1.5">
+                                                                    {(a.question?.question_options || []).map((o) => {
+                                                                        const selected = a.question?.question_type === "multiple_choice"
+                                                                            ? (a.selected_options || []).includes(o.id)
+                                                                            : a.selected_option_id === o.id
+                                                                        const graded = hasCorrectAnswer(a)
+                                                                        const isCorrectOption = o.is_correct
+                                                                        return (
+                                                                            <div
+                                                                                key={o.id}
+                                                                                className={`flex items-center gap-2 text-sm rounded-lg px-3 py-1.5 border ${graded
+                                                                                        ? isCorrectOption
+                                                                                            ? selected
+                                                                                                ? "border-pass/40 bg-pass/5 text-pass"
+                                                                                                : "border-done/40 bg-done/5 text-done"
+                                                                                            : selected
+                                                                                                ? "border-wrong/40 bg-wrong/5 text-wrong"
+                                                                                                : "border-second text-tinted"
+                                                                                        : selected
+                                                                                            ? "border-darks/30 bg-darks/5 text-darks"
+                                                                                            : "border-second text-tinted"
+                                                                                    }`}
+                                                                            >
+                                                                                {graded ? (
+                                                                                    isCorrectOption ? (
+                                                                                        <Check className="h-3.5 w-3.5 shrink-0" />
+                                                                                    ) : selected ? (
+                                                                                        <X className="h-3.5 w-3.5 shrink-0" />
+                                                                                    ) : (
+                                                                                        <span className="w-3.5 h-3.5 shrink-0" />
+                                                                                    )
+                                                                                ) : selected ? (
+                                                                                    <span className="h-2 w-2 shrink-0 rounded-full bg-darks/50" />
+                                                                                ) : (
+                                                                                    <span className="w-3.5 h-3.5 shrink-0" />
+                                                                                )}
+                                                                                <RichText as="span" html={o.option_text} />
+                                                                            </div>
+                                                                        )
+                                                                    })}
+                                                                </div>
+                                                            </motion.div>
+                                                        )
+                                                    })}
+                                                </div>
+                                            )}
+                                            {textAnswers.length > 0 && (
+                                                <div className="space-y-3">
+                                                    <div className="flex items-center gap-3">
+                                                        <h3 className="text-sm font-bold text-darks whitespace-nowrap">Soal Isian</h3>
+                                                        <div className="flex-1 h-px bg-second"></div>
                                                     </div>
-                                                </motion.div>
-                                            )
-                                        })}
-                                    </div>
-                                )}
-                                {textAnswers.length > 0 && (
-                                    <div className="space-y-3">
-                                        <div className="flex items-center gap-3">
-                                            <h3 className="text-sm font-bold text-darks whitespace-nowrap">Soal Isian</h3>
-                                            <div className="flex-1 h-px bg-second"></div>
-                                        </div>
-                                        {textAnswers.map((a) => {
-                                            const idx = answers.indexOf(a)
-                                            return (
-                                                <motion.div key={a.id} variants={listItem} className="bg-white border border-second p-5 shadow-sm rounded-xl transition-colors hover:bg-base-200">
-                                                    <div className="flex items-center gap-2 flex-wrap mb-1">
-                                                        <span className="text-sm font-bold text-darks">Soal {idx + 1}</span>
-                                                        <span className="badge badge-ghost text-tinted rounded-full text-xs">{typeLabel(a.question?.question_type || "")}</span>
-                                                    </div>
-                                                    <div className="text-sm text-darks"><RichText html={a.question?.question_text} /></div>
-                                                    {a.question?.image_question && (
-                                                        <img src={a.question.image_question} alt="Soal" className="max-h-40 object-contain mt-2 border border-second rounded-lg" />
-                                                    )}
-                                                    <div className="mt-3 text-sm text-darks bg-base border border-second rounded-lg px-3 py-2 whitespace-pre-wrap break-words">
-                                                        {a.answer_text || "-"}
-                                                    </div>
-                                                </motion.div>
-                                            )
-                                        })}
-                                    </div>
-                                )}
-                            </motion.div>
-                        )}
-                    </>
-                )}
-            </div>
-        </div>
-            )
+                                                    {textAnswers.map((a) => {
+                                                        const idx = answers.indexOf(a)
+                                                        return (
+                                                            <motion.div key={a.id} variants={listItem} className="bg-white border border-second p-5 shadow-sm rounded-xl transition-colors hover:bg-base-200">
+                                                                <div className="flex items-center gap-2 flex-wrap mb-1">
+                                                                    <span className="text-sm font-bold text-darks">Soal {idx + 1}</span>
+                                                                    <span className="badge badge-ghost text-tinted rounded-full text-xs">{typeLabel(a.question?.question_type || "")}</span>
+                                                                </div>
+                                                                <div className="text-sm text-darks"><RichText html={a.question?.question_text} /></div>
+                                                                {a.question?.image_question && (
+                                                                    <img src={a.question.image_question} alt="Soal" className="max-h-40 object-contain mt-2 border border-second rounded-lg" />
+                                                                )}
+                                                                <div className="mt-3 text-sm text-darks bg-base border border-second rounded-lg px-3 py-2 whitespace-pre-wrap break-words">
+                                                                    {a.answer_text || "-"}
+                                                                </div>
+                                                            </motion.div>
+                                                        )
+                                                    })}
+                                                </div>
+                                            )}
+                                        </motion.div>
+                                    )}
+                                </>
+                            )}
+                        </div>
+                    </div>
+                )
             )}
         </>
     )

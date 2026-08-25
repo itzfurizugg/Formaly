@@ -43,14 +43,17 @@ function FormNew() {
         navigate(`/creator/forms/${data.id}`)
     }
 
-    const inputCls = "input w-full bg-white text-xl lg:text-3xl h-auto p-2 border-second focus:border-done focus:outline-none transition-colors"
-    return (
-        <div className="flex flex-col items-center px-4 py-5">
-            <div className="w-full max-w-5xl">
-                <BackButton to="/creator" />
+    const inputCls = "input w-full rounded-xl bg-base-200 text-lg lg:text-2xl h-auto p-2 pl-4 border-second focus:border-done focus:outline-none transition-colors"
+    const titleForm = "input w-full rounded-xl bg-base-200 text-xl sm:text-3xl h-15 sm:h-20 p-2.5 sm:pl-4 lg:p-6 border-second focus:border-done focus:outline-none transition-colors"
 
-                <h1 className="text-2xl font-bold text-darks mb-1">Buat Form Baru</h1>
-                <p className="text-sm text-tinted mb-6">Lengkapi informasi dasar form.</p>
+
+    return (
+        <div className="flex flex-col items-center px-4 py-5 sm:py-15">
+            <div className="w-full max-w-5xl">
+                <BackButton to="/creator/forms" showOnDesktop />
+
+                <h1 className="text-2xl sm:text-4xl font-bold text-darks mb-1">Buat Form Baru</h1>
+                <p className="text-sm text-tinted mb-4">Lengkapi informasi dasar form.</p>
 
                 <form onSubmit={handleSubmit} className="space-y-4 bg-white border border-second p-3 lg:p-6 shadow-sm rounded-xl">
                     <div>
@@ -58,7 +61,7 @@ function FormNew() {
                         <input
                             type="text"
                             required
-                            className={inputCls}
+                            className={titleForm}
                             value={title}
                             onChange={(e) => setTitle(e.target.value)}
                             placeholder="Judul Form"
@@ -74,7 +77,7 @@ function FormNew() {
                         />
                     </div>
 
-                    <div className="grid grid-cols-2 gap-4">
+                    <div className="grid grid-cols-2 gap-2 sm:gap-4">
                         <div>
                             <label className="block text-sm font-medium text-darks mb-1.5">Durasi (menit)</label>
                             <input
@@ -113,7 +116,7 @@ function FormNew() {
                     <button
                         type="submit"
                         disabled={loading}
-                        className="btn bg-darks text-base mt-10 h-12 border-none w-full hover:opacity-90 transition-opacity disabled:opacity-60"
+                        className="btn bg-darks text-base justify-center mt-2 mb-1 h-11 rounded-xl border-none w-1/2 sm:w-full hover:opacity-90 transition-opacity disabled:opacity-60"
                     >
                         {loading ? <span className="loading loading-spinner loading-sm" /> : "Simpan & Lanjut"}
                     </button>
