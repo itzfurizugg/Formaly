@@ -29,9 +29,9 @@ function Dock() {
     return (
         <div className="fixed bottom-0 inset-x-0 z-50 max-[380px]:hidden md:hidden pointer-events-none">
             {/* <div className="bg-gradient-to-t from-base-300 via-base-300/30 to-transparent px-4 pb-6 pt-30"> */}
-                <div className="mx-auto w-fit max-w-full flex items-center justify-center gap-3">
+                <div className="mx-auto w-fit max-w-full flex items-center justify-center gap-3 px-4 pb-6">
                     <nav
-                        className="w-fit max-w-full flex items-center justify-around gap-1 rounded-full border border-white/70 bg-gradient-to-b from-white/60 to-white/25 backdrop-blur-2xl shadow-[0_8px_32px_rgba(57,62,70,0.18)] px-2 py-2 pointer-events-auto"
+                        className="w-fit max-w-full flex items-center justify-around gap-1 rounded-full border border-white/70 bg-white/40 backdrop-blur-2xl shadow-[0_8px_32px_rgba(57,62,70,0.25)] px-2 py-2 pointer-events-auto"
                         aria-label="Navigasi utama"
                     >
                     {items.map(({ to, label, icon: Icon }) => {
@@ -74,10 +74,10 @@ function Dock() {
                         to={creatorItem.to}
                         aria-current={isCreatorActive ? "page" : undefined}
                         aria-label={creatorItem.label}
-                        className={`pointer-events-auto flex items-center justify-center size-14 rounded-full border transition-all duration-200 shadow-[0_8px_32px_rgba(57,62,70,0.18)] ${
+                        className={`pointer-events-auto flex items-center justify-center size-14 rounded-full border transition-all duration-200 shadow-[0_8px_32px_rgba(57,62,70,0.25)] ${
                             isCreatorActive
                                 ? "bg-darks border-darks text-white"
-                                : "border-white/70 bg-gradient-to-b from-white/60 to-white/25 backdrop-blur-2xl text-darks hover:from-white/75 hover:to-white/40 active:scale-95"
+                                : "border-white/70 bg-white/40 backdrop-blur-2xl text-darks hover:bg-white/55 active:scale-95"
                         }`}
                     >
                         <creatorItem.icon

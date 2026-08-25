@@ -120,10 +120,11 @@ function History() {
                                 <p className="text-tinted">Belum ada histori formulir.</p>
                             </div>
                         ) : (
-                            <div className="grid lg:grid-cols-2 gap-3">
+                            <div className="grid sm:grid-cols-2 gap-3 items-stretch">
                                 {filtered.map((item, index) => (
                                     <motion.div
                                         key={item.id}
+                                        className="h-full"
                                         initial={{ opacity: 0, y: 12 }}
                                         animate={{ opacity: 1, y: 0 }}
                                         transition={{ duration: 0.35, ease: easeOutExpo, delay: Math.min(index * 0.06, 0.4) }}
