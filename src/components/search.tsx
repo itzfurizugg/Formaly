@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect } from "react"
+import { Search as SearchIcon } from "lucide-react"
 
 interface SearchProps {
     onSearch: (tag: string) => void
@@ -33,12 +34,12 @@ function Search({ onSearch, loading = false }: SearchProps) {
 
     return (
         <div className="w-full">
-            {/* Single rounded-full container with overflow-hidden — no join/join-item,
-                so every child corner just gets clipped by this one radius. No fighting radii. */}
+            {/* Liquid glass ala Dock: pill frosted-glass (backdrop-blur + border
+                transparan + shadow lembut) yang menguat saat input difokuskan. */}
             <div
-                className={`flex items-stretch w-full rounded-full overflow-hidden bg-base-100 transition-all duration-200 ${focused
-                        ? "ring-2 ring-darks/50 shadow-md"
-                        : "ring-1 ring-tinted/50 shadow-sm hover:ring-tinted/80"
+                className={`flex items-center w-full rounded-full border backdrop-blur-2xl transition-all duration-200 ${focused
+                        ? "border-white/90 bg-white/60 shadow-[0_8px_36px_rgba(57,62,70,0.30)]"
+                        : "border-white/70 bg-white/40 shadow-[0_8px_32px_rgba(57,62,70,0.18)] hover:bg-white/50"
                     }`}
             >
                 <div className="flex-1 relative flex items-center min-w-0">
@@ -58,13 +59,13 @@ function Search({ onSearch, loading = false }: SearchProps) {
                         onFocus={() => setFocused(true)}
                         onBlur={() => setFocused(false)}
                         onKeyDown={(e) => e.key === "Enter" && handleJoin()}
-                        className="w-full h-full pl-11 pr-9 py-3 border-none outline-none bg-transparent"
+                        className="w-full pl-11 pr-9 py-3 border-none outline-none bg-transparent placeholder:text-tinted"
                     />
 
                     {tag && (
                         <button
                             onClick={handleClear}
-                            className="absolute right-2 w-5 h-5 rounded-full flex items-center justify-center text-tinted hover:text-base-content hover:bg-tinted/20 transition-colors duration-150"
+                            className="absolute right-2 w-5 h-5 rounded-full flex items-center justify-center text-tinted hover:text-base-content hover:bg-darks/10 transition-colors duration-150"
                             aria-label="Hapus"
                         >
                             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} className="w-3 h-3">
@@ -75,11 +76,18 @@ function Search({ onSearch, loading = false }: SearchProps) {
                 </div>
 
                 <button
-                    className="shrink-0 bg-done text-base-100 px-6 font-medium hover:brightness-110 active:scale-95 transition-all duration-150 disabled:opacity-60"
+                    className="shrink-0 m-1 h-11 px-5 rounded-full bg-done text-base-100 font-medium flex items-center justify-center gap-2 hover:brightness-110 active:scale-95 transition-all duration-150 disabled:opacity-50"
                     onClick={handleJoin}
                     disabled={loading || !tag.trim()}
                 >
-                    {loading ? <span className="loading loading-spinner loading-xs"></span> : "Cari"}
+                    {loading ? (
+                        <span className="loading loading-spinner loading-xs"></span>
+                    ) : (
+                        <>
+                            <SearchIcon className="h-4 w-4" />
+                            Cari
+                        </>
+                    )}
                 </button>
             </div>
 {/* 

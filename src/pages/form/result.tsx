@@ -188,16 +188,16 @@ function ResultPage() {
         <>
             {!authLoading && !loading && (
                 error ? (
-                    <div className="flex flex-col items-center px-4 py-5 sm:py-10">
+                    <div className="flex flex-col items-center px-3.5 py-5 sm:py-10">
                         <div className="w-full max-w-2xl">
                             <BackButton to="/history" />
-                            <div role="alert" className="text-sm text-wrong bg-wrong/5 border border-wrong/20 rounded-lg px-4 py-3">
+                            <div role="alert" className="text-sm text-wrong bg-wrong/5 border border-wrong/20 rounded-lg px-3.5 py-3">
                                 {error}
                             </div>
                         </div>
                     </div>
                 ) : (
-                    <div className="flex flex-col items-center px-4 py-5 sm:py-10">
+                    <div className="flex flex-col items-center px-3.5 py-5 sm:py-10">
                         <div className="w-full max-w-4xl">
                             <BackButton to="/history" />
                             {info?.form && (
@@ -325,7 +325,7 @@ function ResultPage() {
                                                                         return (
                                                                             <div
                                                                                 key={o.id}
-                                                                                className={`flex items-center gap-2 text-sm rounded-lg px-3 py-1.5 border ${graded
+                                                                                className={`flex items-center gap-2 text-sm rounded-lg px-3.5 py-1.5 border ${graded
                                                                                         ? isCorrectOption
                                                                                             ? selected
                                                                                                 ? "border-pass/40 bg-pass/5 text-pass"
@@ -379,7 +379,7 @@ function ResultPage() {
                                                                 {a.question?.image_question && (
                                                                     <img src={a.question.image_question} alt="Soal" className="max-h-40 object-contain mt-2 border border-second rounded-lg" />
                                                                 )}
-                                                                <div className="mt-3 text-sm text-darks bg-base border border-second rounded-lg px-3 py-2 whitespace-pre-wrap break-words">
+                                                                <div className="mt-3 text-sm text-darks bg-base border border-second rounded-lg px-3.5 py-2 whitespace-pre-wrap break-words">
                                                                     {a.answer_text || "-"}
                                                                 </div>
                                                             </motion.div>

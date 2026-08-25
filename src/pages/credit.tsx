@@ -53,7 +53,7 @@ function CreditPage() {
                     initial={{ opacity: 0, y: 16 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.45, ease: [0.22, 1, 0.36, 1] }}
-                    className="bg-white border border-second rounded-2xl lg:rounded-xl mb-3 px-5 py-10 flex flex-col items-center text-center"
+                    className="bg-white border border-second rounded-2xl lg:rounded-xl mb-3 px-3.5 py-10 flex flex-col items-center text-center"
                 >
                     <img src={logo} alt="Formaly" className="h-10 w-auto mb-5" />
                     <h1 className="text-3xl md:text-4xl font-display font-bold uppercase text-darks">
@@ -123,7 +123,7 @@ function CreditPage() {
                         {TECH_STACK.map((tech) => (
                             <span
                                 key={tech}
-                                className="inline-flex items-center gap-1.5 text-xs font-semibold bg-base border border-second text-darks px-3 py-1.5 rounded-full"
+                                className="inline-flex items-center gap-1.5 text-xs font-semibold bg-base border border-second text-darks px-3.5 py-1.5 rounded-full"
                             >
                                 <Sparkles className="h-3 w-3 text-done" />
                                 {tech}

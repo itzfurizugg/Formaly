@@ -317,21 +317,21 @@ function FormPage() {
         <>
             {!authLoading && !loading && (
             notFound ? (
-                <div className="flex flex-col items-center justify-center min-h-screen px-4">
+                <div className="flex flex-col items-center justify-center min-h-screen px-3.5">
                     <p className="text-tinted mb-4">Form tidak ditemukan atau belum dipublikasikan.</p>
-                    <button onClick={() => navigate("/")} className="btn bg-darks text-white border-none">
+                    <button onClick={() => navigate("/")} className="btn rounded-full p-4 bg-darks text-white border-none">
                         Kembali
                     </button>
                 </div>
             ) : !question || total === 0 ? (
-                <div className="flex flex-col items-center justify-center min-h-screen px-4">
+                <div className="flex flex-col items-center justify-center min-h-screen px-3.5">
                     <p className="text-tinted mb-4">Form tidak memiliki soal.</p>
-                    <button onClick={() => navigate("/")} className="btn bg-darks text-white border-none">
+                    <button onClick={() => navigate("/")} className="btn rounded-full p-4 bg-darks text-white border-none">
                         Kembali
                     </button>
                 </div>
             ) : (
-        <div className="flex flex-col items-center px-4 pt-6 pb-28 md:pb-6">
+        <div className="flex flex-col items-center px-3.5 pt-6 pb-28 md:pb-6">
             <div className="w-full max-w-5xl xl:mt-3">
                 {/* Banner header hanya di desktop; mobile fokus ke soal. Full width, proporsi 3105x1100 via FormHeader. */}
                 {headerImage && (
@@ -361,7 +361,7 @@ function FormPage() {
                         </div>
                         <div className="flex items-center gap-2">
                             <span
-                                className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-semibold tabular-nums transition-colors ${!hasTimer
+                                className={`inline-flex items-center gap-1 px-3.5 py-1 rounded-full text-xs font-semibold tabular-nums transition-colors ${!hasTimer
                                     ? "bg-second text-tinted"
                                     : timeLeft <= 60
                                         ? "bg-red-500/10 text-red-600"
@@ -414,7 +414,7 @@ function FormPage() {
                                     <button
                                         key={option.id}
                                         onClick={() => selectOption(option.id)}
-                                        className={`w-full text-left px-4 py-3 rounded-lg border text-sm transition-colors ${selected
+                                        className={`w-full text-left px-3.5 py-3 rounded-lg border text-sm transition-colors ${selected
                                             ? "bg-darks border-darks text-white font-medium"
                                             : "bg-white border-second text-darks hover:border-darks/50"
                                             }`}
@@ -442,7 +442,7 @@ function FormPage() {
                         <button
                             onClick={() => handleSubmit()}
                             disabled={submitting}
-                            className="btn text-white h-12 min-h-0 px-4 bg-done border-none rounded-xl hover:opacity-90 disabled:opacity-25"
+                            className="btn text-white h-12 min-h-0 px-3.5 bg-done border-none rounded-xl hover:opacity-90 disabled:opacity-25"
                         >
                             {submitting ? (
                                 <span className="loading loading-spinner loading-sm" />
@@ -462,7 +462,7 @@ function FormPage() {
                         initial="hidden"
                         animate="show"
                         exit="exit"
-                        className="mt-4 flex items-start gap-3 bg-red-500/10 border border-red-500/20 rounded-lg px-4 py-3"
+                        className="mt-4 flex items-start gap-3 bg-red-500/10 border border-red-500/20 rounded-lg px-3.5 py-3"
                     >
                         <p className="text-sm text-red-600 font-medium">{error}</p>
                     </motion.div>
@@ -471,14 +471,14 @@ function FormPage() {
             </div>
 
             {/* NOTE: LAYOUT MOBILE (< md) — Dock fixed di bawah, latar bg-second */}
-            <div className="fixed bottom-0 left-0 right-0 z-40 bg-second border-t border-base px-4 py-3 md:hidden">
+            <div className="fixed bottom-0 left-0 right-0 z-40 bg-second border-t border-base px-3.5 py-3 md:hidden">
                 <div className="w-full max-w-3xl mx-auto flex items-center justify-between mb-3">
                     <PageIndicator total={total} current={current} onPrev={prev} onNext={next} onListClick={goToList} />
                     {current === total - 1 && (
                         <button
                             onClick={() => handleSubmit()}
                             disabled={submitting}
-                            className="btn text-white h-12 min-h-0 px-4 bg-done border-none rounded-full hover:opacity-90 disabled:opacity-25"
+                            className="btn text-white h-12 min-h-0 px-3.5 bg-done border-none rounded-full hover:opacity-90 disabled:opacity-25"
                         >
                             {submitting ? (
                                 <span className="loading loading-spinner loading-sm" />
@@ -498,7 +498,7 @@ function FormPage() {
                         initial="hidden"
                         animate="show"
                         exit="exit"
-                        className="mt-3 flex flex-col items-stretch gap-2 bg-red-500/10 border border-red-500/20 rounded-lg px-4 py-3"
+                        className="mt-3 flex flex-col items-stretch gap-2 bg-red-500/10 border border-red-500/20 rounded-lg px-3.5 py-3"
                     >
                         <p className="text-sm text-red-600 font-medium">{error}</p>
                     </motion.div>

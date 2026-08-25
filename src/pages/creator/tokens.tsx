@@ -123,7 +123,7 @@ function Tokens() {
     // }
 
     return (
-        <div className="flex flex-col items-center px-3 sm:px-6 py-5 sm:py-10">
+        <div className="flex flex-col items-center px-3.5 sm:px-6 py-5 sm:py-10">
             <div className="w-full xl:max-w-7xl lg:max-w-5xl">
                 <BackButton to="/creator" />
 
@@ -141,7 +141,7 @@ function Tokens() {
                         animate="show"
                         exit="exit"
                         role="alert"
-                        className="text-sm text-wrong bg-wrong/5 border border-wrong/20 rounded-lg px-4 py-3 mb-4"
+                        className="text-sm text-wrong bg-wrong/5 border border-wrong/20 rounded-lg px-3.5 py-3 mb-4"
                     >
                         {error}
                     </motion.div>

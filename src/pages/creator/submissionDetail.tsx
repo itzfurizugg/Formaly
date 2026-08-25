@@ -132,8 +132,8 @@ function SubmissionDetail() {
 
     if (error) {
         return (
-            <div className="flex flex-col items-center px-4 sm:px-6 py-10">
-                <div role="alert" className="text-sm text-wrong bg-wrong/5 border border-wrong/20 rounded-lg px-4 py-3">
+            <div className="flex flex-col items-center px-3.5 sm:px-6 py-10">
+                <div role="alert" className="text-sm text-wrong bg-wrong/5 border border-wrong/20 rounded-lg px-3.5 py-3">
                     {error}
                 </div>
             </div>
@@ -143,7 +143,7 @@ function SubmissionDetail() {
     return (
         <>
             {!loading && (
-        <div className="flex flex-col items-center px-4 sm:px-6 py-5">
+        <div className="flex flex-col items-center px-3.5 sm:px-6 py-5">
             <div className="w-full xl:max-w-7xl lg:max-w-5xl">
                 <BackButton to={`/creator/forms/${id}/submissions`} />
 
@@ -240,7 +240,7 @@ function SubmissionDetail() {
                                 )}
 
                                 {a.question?.question_type === "text" ? (
-                                    <div className="mt-3 text-sm text-darks bg-base border border-second rounded-lg px-3 py-2">
+                                    <div className="mt-3 text-sm text-darks bg-base border border-second rounded-lg px-3.5 py-2">
                                         {a.answer_text || "-"}
                                     </div>
                                 ) : (
@@ -254,7 +254,7 @@ function SubmissionDetail() {
                                             return (
                                                 <div
                                                     key={o.id}
-                                                    className={`flex items-center gap-2 text-sm rounded-lg px-3 py-1.5 border ${
+                                                    className={`flex items-center gap-2 text-sm rounded-lg px-3.5 py-1.5 border ${
                                                         graded
                                                             ? isCorrectOption
                                                                 ? selected

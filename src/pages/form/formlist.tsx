@@ -34,7 +34,7 @@ function FormList() {
 
     if (questions.length === 0) {
         return (
-            <div className="flex flex-col items-center justify-center min-h-screen px-4">
+            <div className="flex flex-col items-center justify-center min-h-screen px-3.5">
                 <p className="text-tinted mb-4">Tidak ada data soal.</p>
                 <button onClick={() => navigate("/")} className="btn bg-darks text-base border-none">
                     Kembali
@@ -44,7 +44,7 @@ function FormList() {
     }
 
     return (
-        <div className="flex flex-col items-center px-4 py-6 pb-28 min-h-screen bg-base-300 lg:justify-center lg:pb-6">
+        <div className="flex flex-col items-center px-3.5 py-6 pb-28 min-h-screen bg-base-300 lg:justify-center lg:pb-6">
             <div className="w-full max-w-4xl lg:bg-base-200 lg:rounded-md lg:p-6 lg:shadow-sm">
                 <div className="mb-5 lg:p-0 lg:mt-0">
                     <h1 className="text-2xl lg:text-4xl font-bold text-darks">Daftar Soal</h1>
@@ -87,19 +87,19 @@ function FormList() {
                 </div>
 
                 <button
-                            onClick={() => backToForm(current)}
-                    className="hidden lg:block btn w-full h-12 min-h-0 bg-darks text-white rounded-xl hover:opacity-90"
+                    onClick={() => backToForm(current)}
+                    className="hidden lg:block btn w-1/2 mx-auto h-14 min-h-0 bg-darks text-white rounded-full hover:opacity-90"
                 >
                     Kembali ke soal
                 </button>
             </div>
 
             <div className="fixed bottom-0 left-0 right-0 pointer-events-none lg:hidden">
-                <div className="bg-base-300 px-13 pb-4 pointer-events-auto">
-                    <div className="w-full max-w-3xl mx-auto">
+                <div className="bg-base-300 px-3.5 pb-4 pointer-events-auto">
+                    <div className="w-full max-w-3xl">
                         <button
-                    onClick={() => backToForm(current)}
-                            className="btn w-full h-14 mb-3 min-h-0 bg-darks text-white rounded-xl hover:opacity-90 rounded-full!"
+                            onClick={() => backToForm(current)}
+                            className="btn flex w-auto p-6 h-16 mb-3 min-h-0 bg-darks text-lg text-white hover:opacity-90 rounded-full! mx-auto items-center justify-center"
                         >
                             Kembali ke soal
                         </button>

@@ -264,7 +264,7 @@ function FormEdit() {
         <>
             <Loading show={loading} />
             {!loading && (
-        <div className="flex flex-col items-center px-3 sm:px-6 pt-5 sm:py-10 lg:h-[100dvh] lg:overflow-hidden">
+        <div className="flex flex-col items-center px-3.5 sm:px-6 pt-5 sm:py-10 lg:h-[100dvh] lg:overflow-hidden">
             <div className="w-full xl:max-w-7xl lg:max-w-5xl lg:h-full lg:flex lg:flex-col">
                 <BackButton to="/creator" />
 

@@ -86,7 +86,7 @@ function History() {
     return (
         <>
             {!authLoading && user && !loading && (
-                <div className="flex flex-col items-center px-3 sm:px-6 py-5">
+                <div className="flex flex-col items-center px-3.5 sm:px-6 py-5">
                     <div className="max-w-4xl grid w-full lg:mt-10">
                         <div className="ml-2 sm:ml-3 lg:ml-0">
                             <div className="flex items-center gap-2 mb-1">

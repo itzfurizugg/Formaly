@@ -45,7 +45,7 @@ function AdminForms() {
     return (
         <>
             {!loading && (
-        <div className="flex flex-col items-center px-4 py-10 rounded-xl">
+        <div className="flex flex-col items-center px-3.5 py-10 rounded-xl">
             <div className="max-w-4xl w-full rounded-xl">
                 <div className="flex items-center justify-between mb-1">
                     <h1 className="text-2xl font-bold text-darks">Daftar Form</h1>
@@ -61,7 +61,7 @@ function AdminForms() {
                         initial={{ opacity: 0, y: -6 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ duration: 0.25, ease: "easeOut" }}
-                        className="text-sm text-wrong bg-wrong/5 border border-wrong/20 rounded-xl px-4 py-3 mb-4"
+                        className="text-sm text-wrong bg-wrong/5 border border-wrong/20 rounded-xl px-3.5 py-3 mb-4"
                     >
                         <p>{error}</p>
                         <button onClick={fetchForms} className="btn btn-sm bg-wrong text-base border-none mt-2 rounded-xl">

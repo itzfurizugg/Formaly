@@ -1,8 +1,9 @@
 import { useState, useEffect } from "react"
-import { useNavigate, useLocation } from "react-router-dom"
-import { Clock, FileText, AlertCircle } from "lucide-react"
+import { useNavigate, useLocation, useParams } from "react-router-dom"
+import { Clock, FileText } from "lucide-react"
 import { RichText } from "../../components/richText"
 import { supabase } from "../../lib/supabase"
+import { showAlert } from "../../lib/alerts"
 import { useAuth } from "../../lib/auth-context"
 import { loginUrl } from "../../lib/redirect"
 import BackButton from "../../components/backButton"
@@ -24,6 +25,7 @@ interface LocationState {
 }
 
 function FormDescriptionPage() {
+    const id = useParams()
     const location = useLocation()
     const navigate = useNavigate()
     const { user, loading: authLoading } = useAuth()
@@ -109,6 +111,7 @@ function FormDescriptionPage() {
             .single()
             .then(({ data }) => {
                 setAlreadySubmitted(!!data)
+                if (data) showAlert("Kamu sudah pernah mengerjakan form ini.", "error")
             })
     }, [formId, user, authLoading])
 
@@ -131,6 +134,8 @@ function FormDescriptionPage() {
     }, [formId])
 
     const handleStartExam = () => {
+        // Pengingat koneksi tampil sebagai toast tepat sebelum mulai (timer jalan otomatis).
+        showAlert('Pastikan koneksi internet stabil. Timer akan berjalan otomatis setelah kamu menekan "Mulai Mengerjakan".', "warning")
         setLoading(true)
         // Navigasi ke halaman pengerjaan soal (FormPage) dengan membawa formId di URL
         navigate(`/form/${form?.id}`)
@@ -139,7 +144,7 @@ function FormDescriptionPage() {
     return (
         <>
             {!loading && form && (
-                <div className="flex flex-col items-center min-h-screen sm:min-h-[80vh] sm:justify-center px-0 pt-6 pb-28 sm:px-4 sm:py-10 bg-base-300 sm:bg-transparent">
+                <div className="flex flex-col items-center min-h-screen sm:min-h-[80vh] sm:justify-center pt-6 pb-28 sm:px-4 sm:py-10 bg-base-300 sm:bg-transparent">
                     {/* Tombol Kembali di atas banner (sticky mengikuti scroll; hidden otomatis di lg+). */}
                     {locationState?.form && (
                         <BackButton to="/" className="ml-3.5 sm:ml-0" />
@@ -152,7 +157,7 @@ function FormDescriptionPage() {
                         </div>
                     </div>
 
-                    <div className="w-full sm:max-w-3xl bg-base-300 md:bg-white sm:border sm:border-second p-3.5 sm:p-8 sm:shadow-sm sm:rounded-lg relative mt-3 sm:mt-4">
+                    <div className="w-full sm:max-w-3xl bg-base-300 md:bg-white sm:border sm:border-second p-4 pt-0 sm:p-8 sm:shadow-sm sm:rounded-lg relative mt-3 sm:mt-4">
                         <div className="border-b border-second pb-3 sm:pb-4">
                             <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold text-darks leading-snug sm:leading-tight">
                                 {form.title}
@@ -183,26 +188,10 @@ function FormDescriptionPage() {
                         {/* Deskripsi / Petunjuk Pengerjaan */}
                         <div className="mb-6 sm:mb-8">
                             <h3 className="text-xs sm:text-sm font-semibold text-darks mb-2">Deskripsi & Petunjuk:</h3>
-                            <div className="p-3 sm:p-4 bg-base border border-second rounded-lg text-xs sm:text-sm text-darks leading-relaxed whitespace-pre-line mb-4">
+                            <div className="p-3 sm:p-4 bg-base border border-second rounded-lg text-xs sm:text-sm text-darks leading-relaxed whitespace-pre-line mb-6 sm:mb-8">
                                 {form.description ? <RichText html={form.description} /> : "Tidak ada deskripsi tambahan untuk formulir ini. Silakan mulai mengerjakan jika sudah siap."}
                             </div>
-                            <div className="flex items-start gap-2 sm:gap-3 p-3 sm:p-4 bg-amber-500/10 border border-amber-500/20 rounded-lg mb-6 sm:mb-8 text-amber-800 text-xs sm:text-sm">
-                                {/* <AlertCircle className="h-4 w-4 sm:h-5 sm:w-5 shrink-0 mt-0.5 text-amber-600" /> */}
-                                <p>
-                                    Pastikan koneksi internet stabil. Timer akan berjalan otomatis setelah Anda menekan tombol "Mulai Mengerjakan" di bawah ini.
-                                </p>
-                            </div>
                         </div>
-
-                        {/* Peringatan sudah pernah mengerjakan */}
-                        {alreadySubmitted && (
-                            <div className="flex items-start gap-2 sm:gap-3 p-3 sm:p-4 bg-red-500/10 border border-red-500/20 rounded-lg mb-4 sm:mb-6 text-red-600 text-xs sm:text-sm">
-                                <AlertCircle className="h-4 w-4 sm:h-5 sm:w-5 shrink-0 mt-0.5" />
-                                <p>
-                                    Kamu sudah pernah mengerjakan form ini.
-                                </p>
-                            </div>
-                        )}
 
                         {/* Tombol Mulai */}
                         <button
@@ -218,13 +207,13 @@ function FormDescriptionPage() {
                         </button>
                     </div>
 
-                    {/* Tombol Mulai sticky di bawah (mobile) */}
+                    {/* Tombol Mulai sticky di bawah (mobile) — gradasi solid ke transparan agar scroll terasa mulus */}
                     <div className="fixed bottom-0 left-0 right-0 pointer-events-none sm:hidden">
-                        <div className="bg-base-300 px-10 pb-4 pt-3 border-t border-second pointer-events-auto">
+                        <div className="px-3.5 pb-4 pt-14 bg-gradient-to-t from-base-300 via-base-300/85 to-transparent">
                             <button
-                                onClick={alreadySubmitted ? () => navigate("/history") : handleStartExam}
+                                onClick={alreadySubmitted ? () => navigate(`/form/result/formId=${id}`) : handleStartExam}
                                 disabled={loading}
-                                className="w-full py-5 bg-darks text-white font-bold rounded-full hover:opacity-90 transition-opacity flex items-center justify-center gap-2 text-sm mb-4"
+                                className="w-auto p-6 h-16 bg-darks text-white font-bold rounded-full hover:opacity-90 transition-opacity flex items-center justify-center gap-2 text-sm mb-4 mx-auto pointer-events-auto disabled:pointer-events-none"
                             >
                                 {loading ? (
                                     <span className="loading loading-spinner loading-sm" />

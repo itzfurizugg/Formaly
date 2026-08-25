@@ -74,7 +74,7 @@ function Modal({
                         initial="hidden"
                         animate="show"
                         exit="exit"
-                        className="fixed inset-0 z-50 flex items-center justify-center px-4"
+                        className="fixed inset-0 z-50 flex items-center justify-center px-3.5"
                         role="dialog"
                         aria-modal="true"
                     >
@@ -265,7 +265,7 @@ function Profile() {
                             <div className="flex flex-wrap items-center gap-2 mt-1">
                                 <h2 className="text-xl font-bold text-darks truncate">{profile?.name || "User"}</h2>
                                 <span
-                                    className={`inline-flex items-center gap-1 text-xs font-semibold px-2.5 py-1 rounded-full ${ROLE_STYLE[role] || ROLE_STYLE.user
+                                    className={`inline-flex items-center gap-1 text-xs font-semibold px-3.5 py-1 rounded-full ${ROLE_STYLE[role] || ROLE_STYLE.user
                                         }`}
                                 >
                                     {/* <ShieldCheck className="h-3 w-3" /> */}
@@ -344,7 +344,7 @@ function Profile() {
                 <button
                     onClick={handleLogout}
                     disabled={loggingOut}
-                    className="btn bg-wrong/10 text-wrong border-none w-full mt-2 lg:hidden hover:opacity-90 transition-opacity rounded-full"
+                    className="btn flex w-full py-6 mx-auto bg-base text-wrong border-wrong/20 border-2 mt-2 lg:hidden hover:opacity-90 transition-opacity rounded-2xl"
                 >
                     {loggingOut ? (
                         <span className="loading loading-spinner loading-sm" />
@@ -367,12 +367,12 @@ function Profile() {
                 </p>
 
                 {message && (
-                    <div role="alert" className="text-sm text-pass bg-pass/5 border border-pass/20 rounded-lg px-4 py-3 mb-4">
+                    <div role="alert" className="text-sm text-pass bg-pass/5 border border-pass/20 rounded-lg px-3.5 py-3 mb-4">
                         {message}
                     </div>
                 )}
                 {error && (
-                    <div role="alert" className="text-sm text-wrong bg-wrong/5 border border-wrong/20 rounded-lg px-4 py-3 mb-4">
+                    <div role="alert" className="text-sm text-wrong bg-wrong/5 border border-wrong/20 rounded-lg px-3.5 py-3 mb-4">
                         {error}
                     </div>
                 )}
@@ -437,12 +437,12 @@ function Profile() {
                 <p className="text-xs text-tinted mb-4">Gunakan kata sandi yang kuat dan belum pernah dipakai sebelumnya.</p>
 
                 {pwMessage && (
-                    <div role="alert" className="text-sm text-pass bg-pass/5 border border-pass/20 rounded-lg px-4 py-3 mb-4">
+                    <div role="alert" className="text-sm text-pass bg-pass/5 border border-pass/20 rounded-lg px-3.5 py-3 mb-4">
                         {pwMessage}
                     </div>
                 )}
                 {pwError && (
-                    <div role="alert" className="text-sm text-wrong bg-wrong/5 border border-wrong/20 rounded-lg px-4 py-3 mb-4">
+                    <div role="alert" className="text-sm text-wrong bg-wrong/5 border border-wrong/20 rounded-lg px-3.5 py-3 mb-4">
                         {pwError}
                     </div>
                 )}

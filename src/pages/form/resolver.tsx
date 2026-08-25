@@ -95,7 +95,7 @@ function FormResolver() {
             mode === "exam" ? (
                 <FormPage />
             ) : (
-                <div className="flex flex-col items-center justify-center min-h-screen px-4">
+                <div className="flex flex-col items-center justify-center min-h-screen px-3.5">
                     <p className="text-tinted mb-4">Form tidak ditemukan atau belum dipublikasikan.</p>
                     <button onClick={() => navigate("/")} className="btn bg-darks text-white border-none">
                         Kembali

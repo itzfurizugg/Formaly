@@ -1,6 +1,6 @@
 import {
     Bar, BarChart, ResponsiveContainer,
-    Tooltip, XAxis, YAxis, PieChart, Pie, Cell, Legend,
+    Tooltip, XAxis, YAxis, PieChart, Pie, Cell, Legend, LabelList,
     type TooltipContentProps,
 } from "recharts"
 import { colors } from "../../lib/colorbase"
@@ -81,6 +81,50 @@ export function DistributionChart({
                 </BarChart>
             </ResponsiveContainer>
         </Card>
+    )
+}
+
+export interface MiniDistributionChartProps {
+    title?: string
+    data: BarDatum[]
+    barColor?: string
+    height?: number
+    onBarClick?: (formId: string) => void
+}
+
+/** Varian ringkas DistributionChart untuk layar kecil (mobile): tanpa sumbu Y,
+ * nilai ditampilkan di atas batang supaya tetap terbaca di ruang sempit. */
+export function MiniDistributionChart({
+    title = "Responden per Form",
+    data,
+    barColor = colors.done,
+    height = 150,
+    onBarClick,
+}: MiniDistributionChartProps) {
+    return (
+        <div className="bg-white border border-second shadow-sm rounded-xl px-3.5 pt-3 pb-2">
+            {title && <p className="text-xs font-semibold text-darks mb-2">{title}</p>}
+            <div style={{ height }}>
+                <ResponsiveContainer width="100%" height="100%">
+                    <BarChart data={data} margin={{ top: 12, right: 4, left: 4, bottom: 0 }}>
+                        <XAxis dataKey="name" tick={{ fontSize: 10, fill: colors.tinted }} axisLine={false} tickLine={false} />
+                        <Tooltip cursor={{ fill: colors.second }} content={ChartTooltip} />
+                        <Bar
+                            dataKey="value"
+                            radius={[5, 5, 0, 0]}
+                            fill={barColor}
+                            style={onBarClick ? { cursor: "pointer" } : undefined}
+                            onClick={(data) => {
+                                const formId = (data.payload as BarDatum | undefined)?.formId
+                                if (formId) onBarClick?.(formId)
+                            }}
+                        >
+                            <LabelList dataKey="value" position="top" style={{ fontSize: 10, fill: colors.tinted }} />
+                        </Bar>
+                    </BarChart>
+                </ResponsiveContainer>
+            </div>
+        </div>
     )
 }
 

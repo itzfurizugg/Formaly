@@ -48,7 +48,7 @@ function Register() {
 
     return (
         <div className="min-h-screen flex bg-base">
-            <div className="hidden lg:flex flex-1 flex-col justify-center px-16 bg-gradient-to-br from-darks/5 via-base to-darks/5">
+            <div className="hidden lg:flex flex-1 flex-col justify-center px-3.5 bg-gradient-to-br from-darks/5 via-base to-darks/5">
                 <div className="max-w-lg ml-20">
                     <img src={logo} alt="Formaly" className="h-10 w-auto mb-8" />
                     <h1 className="text-4xl font-bold text-darks leading-tight">
@@ -64,7 +64,7 @@ function Register() {
                 </div>
             </div>
 
-            <div className="flex-1 flex items-center justify-center px-4 py-12">
+            <div className="flex-1 flex items-center justify-center px-3.5 py-12">
                 <div className="w-full max-w-xl">
                     <div className="flex justify-center mb-8 lg:hidden">
                         <img src={logo} alt="Formaly" className="h-10 w-auto" />
@@ -90,7 +90,7 @@ function Register() {
                                 animate="show"
                                 exit="exit"
                                 role="alert"
-                                className="text-sm text-wrong bg-wrong/5 border border-wrong/20 rounded-xl lg:rounded-lg px-4 py-3 mb-4"
+                                className="text-sm text-wrong bg-wrong/5 border border-wrong/20 rounded-xl lg:rounded-lg px-3.5 py-3 mb-4"
                             >
                                 {error}
                             </motion.div>

@@ -47,7 +47,7 @@ function CreatorResponden() {
     }, [user, load])
 
     return (
-        <div className="flex flex-col items-center px-3 sm:px-6 py-5 sm:py-10">
+        <div className="flex flex-col items-center px-3.5 sm:px-6 py-5 sm:py-10">
             <div className="w-full xl:max-w-7xl lg:max-w-5xl">
                 <BackButton to="/creator" />
 
@@ -57,7 +57,7 @@ function CreatorResponden() {
                 </div>
 
                 {!loading && error && (
-                    <div role="alert" className="text-sm text-wrong bg-wrong/5 border border-wrong/20 rounded-xl px-4 py-3 mb-4">
+                    <div role="alert" className="text-sm text-wrong bg-wrong/5 border border-wrong/20 rounded-xl px-3.5 py-3 mb-4">
                         {error}
                     </div>
                 )}
@@ -79,7 +79,7 @@ function CreatorResponden() {
                                 <button
                                     onClick={() => navigate(`/creator/forms/${form.id}/submissions`)}
                                     aria-label={`Lihat submission ${form.title}`}
-                                    className="group card bg-white border border-second rounded-xl transition-all duration-300 hover:shadow-lg hover:shadow-darks/5 w-full text-left h-full overflow-hidden"
+                                    className="group card bg-white border border-second rounded-xl transition-all duration-300 hover:shadow-lg hover:shadow-darks/5 w-full text-left h-full overflow-hidden active:scale-[0.95]"
                                 >
                                     <FormHeader formId={form.id} title={form.title} headerImage={form.header_image} />
                                     <div className="card-body gap-4 p-4 sm:p-5">

@@ -144,7 +144,7 @@ function FormSettings() {
         <>
             <Loading show={loading} />
             {!loading && (
-                <div className="flex flex-col items-center px-3 sm:px-6 py-5 sm:py-10">
+                <div className="flex flex-col items-center px-3.5 sm:px-6 py-5 sm:py-10">
                     <div className="w-full xl:max-w-7xl lg:max-w-5xl">
                         <BackButton to="/creator" />
 
@@ -158,7 +158,7 @@ function FormSettings() {
                                 Atur apa yang dilihat responden dan bagaimana form dikerjakan.
                             </p>
 
-                            <div className="px-3 sm:px-1">
+                            <div className="px-3.5 sm:px-1">
                                 {SETTING_ROWS.map((row) => (
                                     <div key={row.key} className="flex items-start justify-between gap-4 py-4">
                                         <div className="flex items-start gap-3 min-w-0">
