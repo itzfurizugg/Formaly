@@ -28,7 +28,7 @@ function Dock() {
 
     return (
         <div className="fixed bottom-0 inset-x-0 z-50 max-[380px]:hidden md:hidden pointer-events-none">
-            <div className="bg-gradient-to-t from-base-300 via-base-300/30 to-transparent px-4 pb-6 pt-30">
+            {/* <div className="bg-gradient-to-t from-base-300 via-base-300/30 to-transparent px-4 pb-6 pt-30"> */}
                 <div className="mx-auto w-fit max-w-full flex items-center justify-center gap-3">
                     <nav
                         className="w-fit max-w-full flex items-center justify-around gap-1 rounded-full border border-white/70 bg-gradient-to-b from-white/60 to-white/25 backdrop-blur-2xl shadow-[0_8px_32px_rgba(57,62,70,0.18)] px-2 py-2 pointer-events-auto"
@@ -87,7 +87,7 @@ function Dock() {
                     </Link>
                 )}
                 </div>
-            </div>
+            {/* </div> */}
         </div>
     )
 }
