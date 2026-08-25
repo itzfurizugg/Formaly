@@ -4,6 +4,7 @@ import type { ReactNode } from "react"
 import { useAuth } from "../../lib/auth-context"
 import { supabase } from "../../lib/supabase"
 import { pageGet, pageSet } from "../../lib/pageCache"
+import LoadingPage from "../../components/loadingPage"
 
 function RequireCreator({ children, preload }: { children: ReactNode; preload?: () => Promise<unknown> }) {
     const navigate = useNavigate()
@@ -46,7 +47,9 @@ function RequireCreator({ children, preload }: { children: ReactNode; preload?: 
 
     return (
         <>
-            {allowed && <>{children}</>}
+            {/* Saat pertama kali membuka dashboard (role belum ter-cache), tampilkan
+                loading alih-alih layar kosong menunggu query role selesai. */}
+            {allowed ? <>{children}</> : user && !authLoading ? <LoadingPage label="Memeriksa akses..." /> : null}
         </>
     )
 }

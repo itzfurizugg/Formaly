@@ -162,7 +162,7 @@ function FormSettings() {
                                 {SETTING_ROWS.map((row) => (
                                     <div key={row.key} className="flex items-start justify-between gap-4 py-4">
                                         <div className="flex items-start gap-3 min-w-0">
-                                            <div className="shrink-0 bg-base border border-second rounded-lg p-2 mt-0.5">
+                                            <div className="shrink-0 bg-base rounded-lg p-2 mt-0.5">
                                                 <row.icon className="h-4 w-4 text-darks" />
                                             </div>
                                             <div className="min-w-0">
@@ -176,7 +176,7 @@ function FormSettings() {
                                             aria-label={row.title}
                                             checked={settings[row.key]}
                                             onChange={() => toggleSetting(row.key)}
-                                            className="toggle mt-1 shrink-0 border-second bg-tinted/30 checked:border-done/50 checked:bg-done/50"
+                                            className="toggle mt-1 shrink-0 border-second bg-tinted/30 checked:border-darks/50 checked:bg-darks/50"
                                         />
                                     </div>
                                 ))}

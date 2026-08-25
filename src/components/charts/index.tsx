@@ -102,7 +102,7 @@ export function MiniDistributionChart({
     onBarClick,
 }: MiniDistributionChartProps) {
     return (
-        <div className="bg-white border border-second shadow-sm rounded-xl px-3.5 pt-3 pb-2">
+        <div className="bg-white border border-second rounded-xl px-3.5 pt-3 pb-2">
             {title && <p className="text-xs font-semibold text-darks mb-2">{title}</p>}
             <div style={{ height }}>
                 <ResponsiveContainer width="100%" height="100%">
@@ -162,7 +162,7 @@ export function MiniStackedBarChart({
 }: MiniStackedBarChartProps) {
     const rows = data as Array<Record<string, unknown>>
     return (
-        <div className="bg-white border border-second shadow-sm rounded-xl px-3.5 pt-3 pb-2.5">
+        <>
             {(title || subtitle) && (
                 <div className="mb-2">
                     {title && <p className="text-xs font-semibold text-darks">{title}</p>}
@@ -199,7 +199,7 @@ export function MiniStackedBarChart({
                     ))}
                 </div>
             )}
-        </div>
+        </>
     )
 }
 

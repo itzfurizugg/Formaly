@@ -99,9 +99,29 @@ function FormEdit() {
         loadForm()
     }, [user, id, loadForm])
 
+    /** Hapus baris tag yang sudah tidak dirujuk form manapun (best-effort:
+     * bila dibatasi RLS, PostgREST sukses tanpa menghapus apa pun). */
+    const deleteOrphanTags = async (tagIds: (string | number)[]) => {
+        for (const tagId of tagIds) {
+            const { count } = await supabase
+                .from("form_tags")
+                .select("tag_id", { count: "exact", head: true })
+                .eq("tag_id", tagId)
+            if ((count ?? 0) > 0) continue
+            await supabase.from("tags").delete().eq("id", tagId)
+        }
+    }
+
     async function syncTags() {
         if (!id) return
         const normalized = [...new Set(tags.map((t) => t.trim()).filter(Boolean))]
+
+        // Simpan daftar tag lama dulu supaya tag yang dicabut diketahui
+        // dan bisa dihapus permanen dari tabel tags setelah sinkron.
+        const { data: oldRel } = await supabase
+            .from("form_tags")
+            .select("tag_id")
+            .eq("form_id", id)
 
         // Resolusi id tag dulu (pakai yang sudah ada atau buat baru),
         // supaya penautan bisa dilakukan sekaligus lewat upsert di akhir.
@@ -135,6 +155,12 @@ function FormEdit() {
                 )
             if (relErr) throw new Error("Gagal menautkan tag: " + relErr.message)
         }
+
+        // Tag yang dicabut saat edit ikut dihapus permanen dari tabel tags
+        // bila sudah tidak dipakai form lain.
+        const keptIds = new Set(tagIds.map(String))
+        const removedIds = [...new Set((oldRel || []).map((r) => String(r.tag_id)))].filter((tid) => !keptIds.has(tid))
+        if (removedIds.length > 0) await deleteOrphanTags(removedIds)
     }
 
     const addTag = () => {
@@ -147,12 +173,13 @@ function FormEdit() {
     const removeTag = async (name: string) => {
         if (!id) return
         try {
-            // Tag bersifat master/shared (dipakai lintas form), jadi yang dihapus
-            // hanya relasi form_tags, bukan baris di tabel tags.
             const { data: existing } = await supabase.from("tags").select("id").eq("name", name).maybeSingle()
             if (existing?.id) {
                 const { error } = await supabase.from("form_tags").delete().eq("form_id", id).eq("tag_id", existing.id)
                 if (error) throw error
+                // Tag yang dicabut ikut dihapus permanen dari tabel tags
+                // bila sudah tidak dipakai form lain.
+                await deleteOrphanTags([existing.id])
             }
             // Local state baru di-update SETELAH delete ke DB berhasil.
             setTags((prev) => prev.filter((t) => t !== name))

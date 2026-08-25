@@ -5,6 +5,7 @@ import { AuthProvider } from "./lib/auth"
 import Navbar from "./components/navbar"
 import Dock from "./components/dock"
 import CreatorSidebar from "./components/creator/sidebar"
+import LoadingPage from "./components/loadingPage"
 import { AlertToaster } from "./lib/alerts"
 
 const Login = lazy(() => import("./pages/auth/login"))
@@ -93,7 +94,7 @@ function App() {
             </motion.div>
           )}
         </AnimatePresence>
-        <Suspense>
+        <Suspense fallback={<LoadingPage />}>
           {/* Key = pathname agar tiap pindah halaman me-replay animasi pembukaan halaman */}
           <motion.div
             key={location.pathname}
