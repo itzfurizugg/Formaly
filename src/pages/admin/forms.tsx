@@ -94,7 +94,7 @@ function AdminForms() {
                                             <h2 className="card-title text-darks break-words">{form.title}</h2>
                                             {form.description && (
                                                 <p className="text-sm text-tinted mt-1 line-clamp-2">
-                                                    <RichText html={form.description} className="line-clamp-2" />
+                                                    <RichText html={form.description} className="line-clamp-2" enhanceMedia={false} />
                                                 </p>
                                             )}
                                         </div>

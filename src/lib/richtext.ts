@@ -67,6 +67,23 @@ export function richTextToPlain(html: string): string {
     return div.textContent || ""
 }
 
+/**
+ * Demote semua iframe embed menjadi teks URL biasa (bukan link, tidak bisa
+ * diklik). Dipakai di tampilan ringkas (kartu daftar form, preview 2 baris)
+ * supaya player video tidak meledak memenuhi kartu — cukup tampilkan URL-nya.
+ */
+export function embedsToText(html: string): string {
+    if (!/<iframe[\s>]/i.test(html)) return html
+    const doc = new DOMParser().parseFromString(html, "text/html")
+    doc.querySelectorAll("iframe").forEach((el) => {
+        const src = el.getAttribute("src") || ""
+        const span = document.createElement("span")
+        span.textContent = src || "Lampiran media"
+        el.replaceWith(span)
+    })
+    return doc.body.innerHTML
+}
+
 /** Cek apakah konten memakai format kaya selain teks polos (bold, list, heading, link, dll). */
 export function hasRichFormatting(html: string | null | undefined): boolean {
     if (!html) return false

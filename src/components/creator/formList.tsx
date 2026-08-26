@@ -126,7 +126,7 @@ function FormList() {
                                             <div className="min-w-0">
                                                 <h2 className="card-title text-xl sm:text-2xl text-darks break-words leading-snug text-base">{form.title}</h2>
                                                 <div className="text-sm text-tinted line-clamp-2">
-                                                    {form.description ? <RichText html={form.description} className="line-clamp-1" /> : "Tidak ada deskripsi"}
+                                                    {form.description ? <RichText html={form.description} className="line-clamp-1" enhanceMedia={false} /> : "Tidak ada deskripsi"}
                                                 </div>
                                             </div>
                                             <div className="shrink-0">

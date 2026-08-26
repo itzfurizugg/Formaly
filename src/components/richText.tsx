@@ -4,30 +4,38 @@ import type Quill from "quill"
 import "react-quill-new/dist/quill.snow.css"
 import katex from "katex"
 import "katex/dist/katex.min.css"
-import { sanitizeRichText, inlineRichText } from "../lib/richtext"
+import { sanitizeRichText, inlineRichText, embedsToText } from "../lib/richtext"
 import { promptText } from "../lib/alerts"
 import { enhanceVideoIframes } from "../lib/videoGui"
 
 // Quill v2 module "formula" membutuhkan KaTeX pada window.
 ;(window as unknown as { katex: typeof katex }).katex = katex
 
-/** Merender teks kaya (rich text) hasil sanitasi, tanpa editor. */
-function RichText({ html, as = "div", className = "" }: { html?: string | null; as?: "div" | "p" | "span"; className?: string }) {
+/** Merender teks kaya (rich text) hasil sanitasi, tanpa editor.
+ * enhanceMedia=false untuk tampilan ringkas (kartu daftar): iframe embed
+ * ditampilkan sebagai link biasa, bukan player penuh. */
+function RichText({ html, as = "div", className = "", enhanceMedia = true }: { html?: string | null; as?: "div" | "p" | "span"; className?: string; enhanceMedia?: boolean }) {
     // Memoize objek dangerouslySetInnerHTML: React membandingkan prop tsb by-reference,
     // jadi objek baru tiap render akan me-RE-APPLY innerHTML (iframe video ikut ke-reload).
     const inner = useMemo(
-        () => (html ? { __html: as === "span" ? inlineRichText(html) : sanitizeRichText(html) } : null),
-        [html, as]
+        () => {
+            if (!html) return null
+            let clean = as === "span" ? inlineRichText(html) : sanitizeRichText(html)
+            if (!enhanceMedia) clean = embedsToText(clean)
+            return { __html: clean }
+        },
+        [html, as, enhanceMedia]
     )
     const ref = useRef<HTMLElement>(null)
 
     // Tingkatkan iframe video YouTube menjadi player dengan GUI auto-hide.
     // Dijalankan setelah innerHTML diterapkan; dibersihkan saat konten berganti.
+    // Dilewati bila enhanceMedia=false karena tidak ada iframe tersisa.
     useEffect(() => {
-        if (!inner || !ref.current) return
+        if (!enhanceMedia || !inner || !ref.current) return
         const enhancer = enhanceVideoIframes(ref.current)
         return () => enhancer.destroy()
-    }, [inner])
+    }, [inner, enhanceMedia])
 
     if (!inner) return null
     const Tag = as
