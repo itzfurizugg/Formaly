@@ -184,7 +184,15 @@ function FormEdit() {
         const keptIds = new Set(tagIds.map(String))
         const removedIds = [...new Set((oldRel || []).map((r) => String(r.tag_id)))].filter((tid) => !keptIds.has(tid))
         if (removedIds.length > 0) await deleteOrphanTags(removedIds)
-        return normalized
+        // Ambil ulang dari DB sebagai source of truth.
+        const { data: verifyRel } = await supabase
+            .from("form_tags")
+            .select("tag:tags ( name )")
+            .eq("form_id", id)
+        const verifiedTags = (verifyRel ?? [])
+            .map((r) => (r.tag as unknown as { name: string } | null)?.name)
+            .filter((n): n is string => !!n)
+        return verifiedTags
     }
 
     const addTag = () => {
@@ -233,7 +241,31 @@ function FormEdit() {
                 if (delErr) throw delErr
                 await deleteOrphanTags([existing.id])
             }
-            setTags((prev) => prev.filter((t) => t !== name))
+            // Ambil ulang dari DB sebagai source of truth.
+            const { data: verifyRel } = await supabase
+                .from("form_tags")
+                .select("tag:tags ( name )")
+                .eq("form_id", id)
+            const verifiedTags = (verifyRel ?? [])
+                .map((r) => (r.tag as unknown as { name: string } | null)?.name)
+                .filter((n): n is string => !!n)
+            setTags(verifiedTags)
+            if (user && id) {
+                pageSet<FormEditCache>(`formEdit:${user.id}:${id}`, {
+                    title,
+                    description,
+                    duration,
+                    passingScore,
+                    status,
+                    tags: verifiedTags,
+                    createdAt,
+                    headerImage,
+                    headerColor,
+                })
+            }
+            if (verifiedTags.includes(name)) {
+                showAlert("Tag tidak bisa dihapus dari server. Periksa izin database.", "warning")
+            }
         } catch (err) {
             showAlert(err instanceof Error ? err.message : "Gagal menghapus tag.", "error")
         }
