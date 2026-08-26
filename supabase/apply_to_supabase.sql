@@ -13,3 +13,7 @@ alter table public.forms
 -- 2) Header/banner gambar form (URL eksternal)
 alter table public.forms
   add column if not exists header_image text;
+
+-- 3) Warna latar header form (hex, mis. #007DCC) — dipakai bila header_image kosong
+alter table public.forms
+  add column if not exists header_color text;

@@ -34,6 +34,7 @@ CREATE TABLE public.forms (
   show_answers_to_respondent boolean NOT NULL DEFAULT false,
   randomize_questions boolean NOT NULL DEFAULT false,
   header_image text,
+  header_color text,
   show_correct_filter_to_respondent boolean NOT NULL DEFAULT true,
   requires_token boolean NOT NULL DEFAULT false,
   CONSTRAINT forms_pkey PRIMARY KEY (id),

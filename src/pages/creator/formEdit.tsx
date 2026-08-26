@@ -5,12 +5,11 @@ import { supabase } from "../../lib/supabase"
 import { useAuth } from "../../lib/auth-context"
 import { alertSaveError, alertSaveSuccess, showAlert } from "../../lib/alerts"
 import RichTextEditor from "../../components/richText"
-import ImageUrlInput from "../../components/creator/imageUrlInput"
-import { isValidImageUrl } from "../../lib/imageUrl"
 import Questions from "./questions"
 import { pageGet, pageSet } from "../../lib/pageCache"
 import BackButton from "../../components/backButton"
 import FormTabs from "../../components/creator/formTabs"
+import FormHeader from "../../components/creator/formHeader"
 import Loading from "../../components/loading"
 
 interface FormEditCache {
@@ -22,6 +21,7 @@ interface FormEditCache {
     tags: string[]
     createdAt: string
     headerImage: string
+    headerColor: string
 }
 
 function FormEdit() {
@@ -47,7 +47,10 @@ function FormEdit() {
     const [saving, setSaving] = useState(false)
     const [tags, setTags] = useState<string[]>(cached?.tags ?? [])
     const [tagInput, setTagInput] = useState("")
+    // header_image/header_color hanya dibaca untuk pratinjau; pengeditannya
+    // dipindah ke tab Settings (formSettings.tsx).
     const [headerImage, setHeaderImage] = useState(cached?.headerImage ?? "")
+    const [headerColor, setHeaderColor] = useState(cached?.headerColor ?? "")
 
     const loadForm = useCallback(async () => {
         if (!user || !id) return
@@ -70,6 +73,7 @@ function FormEdit() {
         setStatus(String(data.status))
         setCreatedAt(data.created_at || "")
         setHeaderImage(data.header_image || "")
+        setHeaderColor(typeof data.header_color === "string" ? data.header_color : "")
 
         const { data: rel } = await supabase
             .from("form_tags")
@@ -90,6 +94,7 @@ function FormEdit() {
             tags: newTags,
             createdAt: data.created_at || "",
             headerImage: data.header_image || "",
+            headerColor: typeof data.header_color === "string" ? data.header_color : "",
         })
         setLoading(false)
     }, [user, id, navigate, cached])
@@ -99,9 +104,17 @@ function FormEdit() {
         loadForm()
     }, [user, id, loadForm])
 
-    /** Hapus baris tag yang sudah tidak dirujuk form manapun (best-effort:
-     * bila dibatasi RLS, PostgREST sukses tanpa menghapus apa pun). */
+    /** Hapus baris tag yang sudah tidak dirujuk form manapun. Pakai RPC
+     * SECURITY DEFINER (delete_unused_tags) supaya DELETE ke tabel tags tidak
+     * bisa diblokir RLS di sisi client; verifikasi referensi dilakukan di
+     * database. Bila RPC belum diterapkan, fallback ke loop per-tag yang
+     * best-effort (bila dibatasi RLS, PostgREST sukses tanpa menghapus apa pun). */
     const deleteOrphanTags = async (tagIds: (string | number)[]) => {
+        const { error } = await supabase.rpc("delete_unused_tags", { p_tag_ids: tagIds.map(String) })
+        if (!error) return
+        if (!/PGRST202|could not find the function|schema cache/i.test(error.message)) {
+            throw new Error("Gagal membersihkan tag yang tidak terpakai: " + error.message)
+        }
         for (const tagId of tagIds) {
             const { count } = await supabase
                 .from("form_tags")
@@ -112,19 +125,35 @@ function FormEdit() {
         }
     }
 
-    async function syncTags() {
-        if (!id) return
+    async function syncTags(): Promise<string[]> {
+        if (!id) return tags
         const normalized = [...new Set(tags.map((t) => t.trim()).filter(Boolean))]
 
-        // Simpan daftar tag lama dulu supaya tag yang dicabut diketahui
-        // dan bisa dihapus permanen dari tabel tags setelah sinkron.
+        // RPC SECURITY DEFINER (set_form_tags) menjalankan semuanya dalam
+        // satu transaksi: hapus relasi lama, buat tag baru jika perlu,
+        // tautkan, bersihkan tag yatim, dan mengembalikan daftar nama
+        // aktual dari database sebagai single source of truth.
+        const { data, error } = await supabase.rpc("set_form_tags", {
+            p_form_id: id,
+            p_tag_names: normalized,
+        })
+        if (!error) {
+            const newTags = (data ?? []) as string[]
+            setTags(newTags)
+            return newTags
+        }
+        if (!/PGRST202|could not find the function|schema cache/i.test(error.message)) {
+            throw new Error("Gagal memperbarui tag: " + error.message)
+        }
+
+        // Fallback lama — hanya dipakai bila RPC belum diterapkan ke DB.
+        // Operasi langsung ke tabel mungkin terblokir RLS, jadi tag bisa
+        // saja tidak benar-benar berubah di server.
         const { data: oldRel } = await supabase
             .from("form_tags")
             .select("tag_id")
             .eq("form_id", id)
 
-        // Resolusi id tag dulu (pakai yang sudah ada atau buat baru),
-        // supaya penautan bisa dilakukan sekaligus lewat upsert di akhir.
         const tagIds: (string | number)[] = []
         for (const name of normalized) {
             const { data: existing, error: selErr } = await supabase.from("tags").select("id").eq("name", name).maybeSingle()
@@ -140,10 +169,6 @@ function FormEdit() {
             if (tagId) tagIds.push(tagId)
         }
 
-        // Hapus relasi lama agar tag yang dicabut benar-benar lepas. Delete
-        // sengaja best-effort: bila dibatasi RLS, PostgREST sukses tanpa
-        // menghapus apa pun — upsert ignoreDuplicates di bawah tetap aman
-        // dari bentrok form_tags_pkey untuk pasangan yang masih ada.
         await supabase.from("form_tags").delete().eq("form_id", id)
 
         if (tagIds.length > 0) {
@@ -156,11 +181,10 @@ function FormEdit() {
             if (relErr) throw new Error("Gagal menautkan tag: " + relErr.message)
         }
 
-        // Tag yang dicabut saat edit ikut dihapus permanen dari tabel tags
-        // bila sudah tidak dipakai form lain.
         const keptIds = new Set(tagIds.map(String))
         const removedIds = [...new Set((oldRel || []).map((r) => String(r.tag_id)))].filter((tid) => !keptIds.has(tid))
         if (removedIds.length > 0) await deleteOrphanTags(removedIds)
+        return normalized
     }
 
     const addTag = () => {
@@ -172,16 +196,43 @@ function FormEdit() {
 
     const removeTag = async (name: string) => {
         if (!id) return
+        const nextNames = tags.filter((t) => t !== name).map((t) => t.trim())
         try {
+            // Satu panggilan RPC atomik: hapus relasi, bersihkan tag yatim,
+            // kembalikan daftar aktual — konsisten dengan syncTags.
+            const { data, error } = await supabase.rpc("set_form_tags", {
+                p_form_id: id,
+                p_tag_names: nextNames,
+            })
+            if (!error) {
+                const newTags = (data ?? []) as string[]
+                setTags(newTags)
+                if (user && id) {
+                    pageSet<FormEditCache>(`formEdit:${user.id}:${id}`, {
+                        title,
+                        description,
+                        duration,
+                        passingScore,
+                        status,
+                        tags: newTags,
+                        createdAt,
+                        headerImage,
+                        headerColor,
+                    })
+                }
+                return
+            }
+            if (!/PGRST202|could not find the function|schema cache/i.test(error.message)) {
+                throw new Error("Gagal menghapus tag: " + error.message)
+            }
+
+            // Fallback lama — operasi langsung mungkin terblokir RLS.
             const { data: existing } = await supabase.from("tags").select("id").eq("name", name).maybeSingle()
             if (existing?.id) {
-                const { error } = await supabase.from("form_tags").delete().eq("form_id", id).eq("tag_id", existing.id)
-                if (error) throw error
-                // Tag yang dicabut ikut dihapus permanen dari tabel tags
-                // bila sudah tidak dipakai form lain.
+                const { error: delErr } = await supabase.from("form_tags").delete().eq("form_id", id).eq("tag_id", existing.id)
+                if (delErr) throw delErr
                 await deleteOrphanTags([existing.id])
             }
-            // Local state baru di-update SETELAH delete ke DB berhasil.
             setTags((prev) => prev.filter((t) => t !== name))
         } catch (err) {
             showAlert(err instanceof Error ? err.message : "Gagal menghapus tag.", "error")
@@ -190,7 +241,9 @@ function FormEdit() {
 
     const saveFormData = async () => {
         if (!id) return
-        const header = headerImage.trim() || null
+        // header_image tidak disimpan di sini lagi — pengaturannya dipindah
+        // ke tab Settings (formSettings.tsx) agar tab Detail tidak menimpa
+        // nilai header yang diubah lewat Settings.
         const payload = {
             p_form_id: id,
             p_title: title,
@@ -198,55 +251,37 @@ function FormEdit() {
             p_duration: duration === "" ? null : duration,
             p_passing_score: passingScore === "" ? 70 : passingScore,
             p_status: status,
-            p_header_image: header,
         }
 
         const { error } = await supabase.rpc("update_form", payload)
         if (!error) return
 
         // Fallback ke UPDATE langsung ketika RPC belum tersedia / signature-nya
-        // tidak cocok (misal RPC lama belum kenal p_header_image -> PostgREST
-        // menjawab "Could not find the function ... in the schema cache"),
-        // ATAU versi RPC lama masih belum memakai cast enum (p_status dikirim
-        // sebagai text, kolom status bertipe form_status). PostgREST menangani
-        // cast enum secara otomatis, jadi UPDATE langsung ini tetap berhasil.
-        // Baris yang benar-benar berubah tetap diverifikasi agar RLS yang
-        // memfilter diam-diam tidak tampak seperti sukses.
+        // tidak cocok, ATAU versi RPC lama masih belum memakai cast enum
+        // (p_status dikirim sebagai text, kolom status bertipe form_status).
+        // PostgREST menangani cast enum secara otomatis, jadi UPDATE langsung
+        // ini tetap berhasil. Baris yang benar-benar berubah tetap diverifikasi
+        // agar RLS yang memfilter diam-diam tidak tampak seperti sukses.
         const rpcMismatch =
             error.code === "PGRST202" ||
             /(does not exist|not found|could not find the function|schema cache)/i.test(error.message) ||
             /is of type .* but expression is of type/i.test(error.message)
         if (rpcMismatch) {
-            const baseUpdate = {
-                title,
-                description: description || null,
-                duration: duration === "" ? null : duration,
-                passing_score: passingScore === "" ? 70 : passingScore,
-                status,
-            }
             const { data, error: fallbackError } = await supabase
                 .from("forms")
-                .update({ ...baseUpdate, header_image: header })
+                .update({
+                    title,
+                    description: description || null,
+                    duration: duration === "" ? null : duration,
+                    passing_score: passingScore === "" ? 70 : passingScore,
+                    status,
+                })
                 .eq("id", id)
                 .select("id")
                 .maybeSingle()
 
-            // Kolom header_image belum ada (migrasi belum diterapkan): simpan
-            // ulang tanpa header agar perubahan lain tidak ikut gagal.
-            if (fallbackError && /could not find the .* column|PGRST204/i.test(fallbackError.message)) {
-                const { data: retried, error: retryError } = await supabase
-                    .from("forms")
-                    .update(baseUpdate)
-                    .eq("id", id)
-                    .select("id")
-                    .maybeSingle()
-                if (retryError) throw new Error(retryError.message)
-                if (!retried) throw new Error("Perubahan tidak tersimpan. Pastikan migrasi RPC update_form sudah diterapkan di database.")
-                showAlert("Header gambar belum tersimpan karena migrasi kolom header_image belum diterapkan di database.", "info")
-                return
-            }
             if (fallbackError) throw new Error(fallbackError.message)
-            if (!data) throw new Error("Perubahan tidak tersimpan. Pastikan migrasi RPC update_form sudah diterapkan di database.")
+            if (!data) throw new Error("Perubahan tidak tersimpan. Pastikan kamu pemilik form ini.")
             return
         }
         throw new Error(error.message)
@@ -255,15 +290,11 @@ function FormEdit() {
     const handleSave = async (e: React.FormEvent) => {
         e.preventDefault()
         if (!id) return
-        if (headerImage.trim() && !isValidImageUrl(headerImage)) {
-            showAlert("URL gambar header harus diawali http:// atau https://.", "error")
-            return
-        }
         setSaving(true)
 
         try {
             await saveFormData()
-            await syncTags()
+            const newTags = await syncTags()
             if (user && id) {
                 pageSet<FormEditCache>(`formEdit:${user.id}:${id}`, {
                     title,
@@ -271,9 +302,10 @@ function FormEdit() {
                     duration,
                     passingScore,
                     status,
-                    tags,
+                    tags: newTags,
                     createdAt,
                     headerImage,
+                    headerColor,
                 })
             }
             alertSaveSuccess()
@@ -291,150 +323,153 @@ function FormEdit() {
         <>
             <Loading show={loading} />
             {!loading && (
-        <div className="flex flex-col items-center px-3.5 sm:px-6 pt-5 sm:py-10 lg:h-[100dvh] lg:overflow-hidden">
-            <div className="w-full xl:max-w-7xl lg:max-w-5xl lg:h-full lg:flex lg:flex-col">
-                <BackButton to="/creator" />
+                <div className="flex flex-col items-center px-3.5 sm:px-6 pt-5 sm:py-10 lg:h-[100dvh] lg:overflow-hidden">
+                    <div className="w-full xl:max-w-7xl lg:max-w-5xl lg:h-full lg:flex lg:flex-col">
+                        <BackButton to="/creator" />
 
-                <FormTabs id={id} active="detail" />
+                        <FormTabs id={id} active="detail" />
 
-                {/* Layout ala YouTube player: tiap panel punya tinggi layar sendiri
+                        {/* Layout ala YouTube player: tiap panel punya tinggi layar sendiri
                     dan scroll action-nya terpisah dari panel sebelahnya. */}
-                <div className="flex flex-col lg:flex-row items-start gap-6 lg:flex-1 lg:min-h-0 lg:overflow-hidden lg:mt-2 mb-5">
-                    <div className="w-full lg:w-[45%] lg:h-full lg:min-h-0 lg:overflow-y-auto lg:overscroll-contain">
-                        <form onSubmit={handleSave} className="space-y-3 bg-white border border-second p-3 lg:p-6 sm:p-4 shadow-sm rounded-xl">
-                    <div>
-                        <span className="inline-flex items-center gap-1.5 text-xs text-tinted mb-3 sm:mb-5 ml-1">
-                                Dibuat pada {createdAt ? new Date(createdAt).toLocaleDateString("id-ID", { day: "numeric", month: "short", year: "numeric" }) : ""}
-                            </span>
-                        <input type="text" required className={inputCls} value={title} onChange={(e) => setTitle(e.target.value)} />
-                    </div>
+                        <div className="flex flex-col lg:flex-row items-start gap-6 lg:flex-1 lg:min-h-0 lg:overflow-hidden lg:mt-2">
+                            <div className="relative w-full lg:w-[45%] lg:h-full lg:min-h-0">
+                                <div className="scrollbar-none h-full lg:pb-3 lg:overflow-y-auto lg:overscroll-contain">
+                                    <form onSubmit={handleSave} className="space-y-3 bg-white border border-second p-3 lg:p-6 sm:p-4 shadow-sm rounded-xl">
+                                        {/* Pratinjau header (read-only) — sama seperti tampilan di daftar form
+                                    & halaman responden. Nilainya diatur lewat tab Settings. */}
+                                        <div className="overflow-hidden rounded-lg border border-second">
+                                            <FormHeader formId={id ?? ""} title={title} headerImage={headerImage} headerColor={headerColor} />
+                                        </div>
 
-                    <div>
-                        {/* <label className="block text-sm font-medium text-darks mb-1.5">Deskripsi</label> */}
-                        <RichTextEditor
-                            value={description}
-                            onChange={setDescription}
-                            placeholder="Deskripsi Form..."
-                        />
-                    </div>
+                                        <div>
+                                            <span className="inline-flex items-center gap-1.5 text-xs text-tinted mb-3 sm:mb-2 ml-1">
+                                                Dibuat pada {createdAt ? new Date(createdAt).toLocaleDateString("id-ID", { day: "numeric", month: "short", year: "numeric" }) : ""}
+                                            </span>
+                                            <input type="text" required className={inputCls} value={title} onChange={(e) => setTitle(e.target.value)} />
+                                        </div>
 
-                    <ImageUrlInput
-                        label="URL Gambar Header"
-                        placeholder="https://... (tampil di halaman deskripsi form)"
-                        value={headerImage}
-                        onChange={setHeaderImage}
-                    />
+                                        <div>
+                                            {/* <label className="block text-sm font-medium text-darks mb-1.5">Deskripsi</label> */}
+                                            <RichTextEditor
+                                                value={description}
+                                                onChange={setDescription}
+                                                placeholder="Deskripsi Form..."
+                                            />
+                                        </div>
 
-                    <div className="grid grid-cols-2 gap-4">
-                        <div>
-                            <label className="block text-sm font-medium text-darks mb-1.5">Durasi (menit)</label>
-                            <input
-                                type="number"
-                                min={0}
-                                step={1}
-                                className={inputWithVal}
-                                value={duration}
-                                onFocus={(e) => e.target.select()}
-                                onChange={(e) => {
-                                    const val = e.target.value
-                                    setDuration(val === "" ? "" : Number(val))
-                                }}
-                                placeholder="0"
-                            />
-                        </div>
-                        <div>
-                            <label className="block text-sm font-medium text-darks mb-1.5">Nilai Minimum</label>
-                            <input
-                                type="number"
-                                min={0}
-                                max={100}
-                                step={1}
-                                className={inputWithVal}
-                                value={passingScore}
-                                onFocus={(e) => e.target.select()}
-                                onChange={(e) => {
-                                    const val = e.target.value
-                                    setPassingScore(val === "" ? "" : Number(val))
-                                }}
-                                placeholder="0"
-                            />
-                        </div>
-                    </div>
+                                        <div className="grid grid-cols-2 gap-4">
+                                            <div>
+                                                <label className="block text-sm font-medium text-darks mb-1.5">Durasi (menit)</label>
+                                                <input
+                                                    type="number"
+                                                    min={0}
+                                                    step={1}
+                                                    className={inputWithVal}
+                                                    value={duration}
+                                                    onFocus={(e) => e.target.select()}
+                                                    onChange={(e) => {
+                                                        const val = e.target.value
+                                                        setDuration(val === "" ? "" : Number(val))
+                                                    }}
+                                                    placeholder="0"
+                                                />
+                                            </div>
+                                            <div>
+                                                <label className="block text-sm font-medium text-darks mb-1.5">Nilai Minimum</label>
+                                                <input
+                                                    type="number"
+                                                    min={0}
+                                                    max={100}
+                                                    step={1}
+                                                    className={inputWithVal}
+                                                    value={passingScore}
+                                                    onFocus={(e) => e.target.select()}
+                                                    onChange={(e) => {
+                                                        const val = e.target.value
+                                                        setPassingScore(val === "" ? "" : Number(val))
+                                                    }}
+                                                    placeholder="0"
+                                                />
+                                            </div>
+                                        </div>
 
-                    <div>
-                        <label className="block text-sm font-medium text-darks mb-1.5">Status</label>
-                        <select className="select select-bordered w-full bg-base border-second focus:border-done focus:outline-none" value={status} onChange={(e) => setStatus(e.target.value)}>
-                            <option value="draft">Draft</option>
-                            <option value="published">Public</option>
-                        </select>
-                        <p className="text-xs text-tinted mt-1.5 hidden sm:block">
-                            Hanya form berstatus <span className="font-medium text-darks">Public</span> yang bisa diakses orang lain, termasuk lewat tag.
-                        </p>
-                    </div>
+                                        <div>
+                                            <label className="block text-sm font-medium text-darks mb-1.5">Status</label>
+                                            <select className="select select-bordered w-full bg-base border-second focus:border-done focus:outline-none" value={status} onChange={(e) => setStatus(e.target.value)}>
+                                                <option value="draft">Draft</option>
+                                                <option value="published">Public</option>
+                                            </select>
+                                            <p className="text-xs text-tinted mt-1.5 hidden sm:block">
+                                                Hanya form berstatus <span className="font-medium text-darks">Public</span> yang bisa diakses orang lain, termasuk lewat tag.
+                                            </p>
+                                        </div>
 
-                    <div>
-                        <label className="flex items-center gap-1.5 text-sm font-medium text-darks mb-1.5">
-                            Tag
-                        </label>
-                        <div className="flex gap-2">
-                            <input
-                                type="text"
-                                className="input flex-1 bg-base border-second focus:border-done focus:outline-none transition-colors"
-                                placeholder="Form akan bisa ditemukan di beranda dengan memasukkan tag ini."
-                                value={tagInput}
-                                onChange={(e) => setTagInput(e.target.value)}
-                                onKeyDown={(e) => {
-                                    if (e.key === "Enter") {
-                                        e.preventDefault()
-                                        addTag()
-                                    }
-                                }}
-                            />
-                            <button type="button" onClick={addTag} className="btn bg-base text-darks border border-second hover:bg-second">
-                                Tambah
-                            </button>
-                        </div>
-                        {tags.length > 0 && (
-                            <div className="flex flex-wrap gap-2 mt-3">
-                                {tags.map((t) => (
-                                    <span key={t} className="badge gap-1 py-3 rounded-full bg-done/10 text-done border-none">
-                                        @{t}
+                                        <div>
+                                            <label className="flex items-center gap-1.5 text-sm font-medium text-darks mb-1.5">
+                                                Tag
+                                            </label>
+                                            <div className="flex gap-2">
+                                                <input
+                                                    type="text"
+                                                    className="input flex-1 bg-base border-second focus:border-done focus:outline-none transition-colors"
+                                                    placeholder="Form akan bisa ditemukan di beranda dengan memasukkan tag ini."
+                                                    value={tagInput}
+                                                    onChange={(e) => setTagInput(e.target.value)}
+                                                    onKeyDown={(e) => {
+                                                        if (e.key === "Enter") {
+                                                            e.preventDefault()
+                                                            addTag()
+                                                        }
+                                                    }}
+                                                />
+                                                <button type="button" onClick={addTag} className="btn bg-base text-darks border border-second hover:bg-second">
+                                                    Tambah
+                                                </button>
+                                            </div>
+                                            {tags.length > 0 && (
+                                                <div className="flex flex-wrap gap-2 mt-3">
+                                                    {tags.map((t) => (
+                                                        <span key={t} className="badge gap-1 py-3 rounded-full bg-done/10 text-done border-none">
+                                                            @{t}
+                                                            <button
+                                                                type="button"
+                                                                onClick={() => removeTag(t)}
+                                                                className="hover:text-wrong transition-colors"
+                                                                aria-label={`Hapus tag ${t}`}
+                                                            >
+                                                                <X className="h-3 w-3" />
+                                                            </button>
+                                                        </span>
+                                                    ))}
+                                                </div>
+                                            )}
+                                            <p className="text-xs text-tinted mt-2 hidden sm:block">
+                                                Tag pertama dipakai sebagai link singkat form, contoh: <span className="font-medium text-darks">/form/CODEVERSE</span>.
+                                            </p>
+                                        </div>
+
                                         <button
-                                            type="button"
-                                            onClick={() => removeTag(t)}
-                                            className="hover:text-wrong transition-colors"
-                                            aria-label={`Hapus tag ${t}`}
+                                            type="submit"
+                                            disabled={saving}
+                                            className="btn bg-darks text-base border-none w-full hover:opacity-90 transition-opacity disabled:opacity-60 mb-3 mt-5"
                                         >
-                                            <X className="h-3 w-3" />
+                                            {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
+                                            Simpan Perubahan
                                         </button>
-                                    </span>
-                                ))}
+                                    </form>
+                                </div>
                             </div>
-                        )}
-                        <p className="text-xs text-tinted mt-2 hidden sm:block">
-                            Tag pertama dipakai sebagai link singkat form, contoh: <span className="font-medium text-darks">/form/CODEVERSE</span>.
-                        </p>
-                    </div>
 
-                    <button
-                        type="submit"
-                        disabled={saving}
-                        className="btn bg-darks text-base border-none w-full hover:opacity-90 transition-opacity disabled:opacity-60 mb-3 mt-5"
-                    >
-                        {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
-                        Simpan Perubahan
-                    </button>
-                    </form>
-                </div>
-
-                <div className="w-full lg:flex-1 min-w-0 lg:h-full lg:overflow-y-auto lg:overscroll-contain">
-                    <div className="hidden lg:block pr-1">
-                        <Questions embedded />
+                            <div className="relative w-full lg:flex-1 min-w-0 lg:h-full lg:min-h-0">
+                                <div className="scrollbar-none h-full lg:overflow-y-auto lg:overscroll-contain">
+                                    <div className="hidden lg:block pb-3">
+                                        <Questions embedded />
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
-            </div>
-            </div>
-            </div>
             )}
         </>
     )

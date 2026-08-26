@@ -19,6 +19,7 @@ interface HistoryItem {
         passing_score: number | null
         show_score: boolean
         header_image: string | null
+        header_color: string | null
     }
 }
 
@@ -42,7 +43,7 @@ function History() {
             .select(`
                 id, form_id, total_score,
                 forms (
-                    id, title, duration, passing_score, show_score_to_respondent, header_image,
+                    id, title, duration, passing_score, show_score_to_respondent, header_image, header_color,
                     users:creator_id ( name ),
                     questions ( id )
                 )
@@ -52,7 +53,7 @@ function History() {
 
         if (data) {
             setItems((data as unknown as HistoryRow[]).map((item) => {
-                const f = item.forms as unknown as { title: string; duration: number; passing_score?: number | null; show_score_to_respondent?: boolean | null; header_image?: string | null; users?: { name: string } | null; questions?: { id: string }[] | null }
+                const f = item.forms as unknown as { title: string; duration: number; passing_score?: number | null; show_score_to_respondent?: boolean | null; header_image?: string | null; header_color?: string | null; users?: { name: string } | null; questions?: { id: string }[] | null }
                 return {
                     id: item.id,
                     form_id: item.form_id,
@@ -65,6 +66,7 @@ function History() {
                         passing_score: f?.passing_score ?? null,
                         show_score: f?.show_score_to_respondent !== false,
                         header_image: f?.header_image || null,
+                        header_color: f?.header_color || null,
                     },
                 }
             }))
@@ -139,6 +141,7 @@ function History() {
                                             passingScore={item.forms?.passing_score ?? null}
                                             hideScore={!item.forms?.show_score}
                                             headerImage={item.forms?.header_image || null}
+                                            headerColor={item.forms?.header_color}
                                             to={`/form/result/${item.id}`}
 
                                         />

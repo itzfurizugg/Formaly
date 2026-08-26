@@ -51,7 +51,9 @@ function FormTabs({ id, active }: { id?: string; active: FormTabKey }) {
                             : "bg-base text-darks border border-second hover:bg-white hover:shadow-sm"
                     }${key === "questions" && active !== "questions" ? " lg:hidden" : ""}`}
                 >
-                    <Icon className="h-3.5 w-3.5" /> <span className="hidden sm:block">{label}</span>
+                    <Icon className="h-3.5 w-3.5" />
+                    {/* Mobile: label hanya di tab aktif; sm ke atas semua label tampil */}
+                    <span className={`${active === key ? "inline" : "hidden"} sm:inline`}>{label}</span>
                 </button>
             ))}
         </div>

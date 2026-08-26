@@ -57,8 +57,9 @@ function ResultPage() {
     const [error, setError] = useState<string | null>(null)
     const [filter, setFilter] = useState("")
 
-    // Header gambar form diambil diam-diam; error diabaikan agar halaman tetap jalan.
+    // Header gambar & warna form diambil diam-diam; error diabaikan agar halaman tetap jalan.
     const [headerImage, setHeaderImage] = useState<string | null>(null)
+    const [headerColor, setHeaderColor] = useState<string | null>(null)
 
     useEffect(() => {
         const fid = info?.form?.id
@@ -66,12 +67,14 @@ function ResultPage() {
         let cancelled = false
         supabase
             .from("forms")
-            .select("header_image")
+            .select("header_image, header_color")
             .eq("id", fid)
             .single()
             .then(({ data }) => {
                 if (cancelled) return
-                setHeaderImage((data as { header_image?: string | null } | null)?.header_image || null)
+                const row = data as { header_image?: string | null; header_color?: string | null } | null
+                setHeaderImage(row?.header_image || null)
+                setHeaderColor(row?.header_color || null)
             })
         return () => {
             cancelled = true
@@ -202,7 +205,7 @@ function ResultPage() {
                             <BackButton to="/history" />
                             {info?.form && (
                                 <div className="rounded-xl overflow-hidden border border-second shadow-sm mb-3 lg:mb-4">
-                                    <FormHeader formId={info.form.id} title={info.form.title} headerImage={headerImage} />
+                                    <FormHeader formId={info.form.id} title={info.form.title} headerImage={headerImage} headerColor={headerColor} />
                                 </div>
                             )}
 

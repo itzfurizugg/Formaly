@@ -23,9 +23,13 @@ interface FormHeaderProps {
     formId: string
     title: string
     headerImage?: string | null
+    /** Warna latar hex pilihan creator; dipakai bila headerImage tidak diatur. */
+    headerColor?: string | null
 }
 
-function FormHeader({ formId, title, headerImage }: FormHeaderProps) {
+const HEX_COLOR_RE = /^#(?:[0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/
+
+function FormHeader({ formId, title, headerImage, headerColor }: FormHeaderProps) {
     const [failed, setFailed] = useState(false)
 
     if (headerImage && !failed) {
@@ -41,11 +45,16 @@ function FormHeader({ formId, title, headerImage }: FormHeaderProps) {
     }
 
     const gradient = GRADIENTS[formId ? hashString(formId) % GRADIENTS.length : 0]
+    // Warna kustom menang atas gradien acak; tetap pakai dekorasi titik & lingkaran.
+    const useCustomColor = !!headerColor && HEX_COLOR_RE.test(headerColor)
 
     return (
         <div
             aria-hidden="true"
-            className={`relative flex w-full aspect-[3105/1100] items-center overflow-hidden border-b border-second bg-gradient-to-br ${gradient} px-5 sm:px-10`}
+            className={`relative flex w-full aspect-[3105/1100] items-center overflow-hidden border-b border-second px-5 sm:px-10 ${
+                useCustomColor ? "" : `bg-gradient-to-br ${gradient}`
+            }`}
+            style={useCustomColor ? { backgroundColor: headerColor! } : undefined}
         >
             <div
                 className="absolute inset-0 opacity-[0.08]"

@@ -16,6 +16,14 @@
 /* Animasi yang sebelumnya di sini (loadingbar, page-enter, fade-in, slide-up,
    scale-in) sudah dimigrasi ke motion.dev (motion.div/motion.button/AnimatePresence). */
 
+/* Sembunyikan scrollbar tapi konten tetap bisa di-scroll */
+@utility scrollbar-none {
+  scrollbar-width: none;
+  &::-webkit-scrollbar {
+    display: none;
+  }
+}
+
 /* Hormati preferensi "kurangi gerakan" pengguna */
 @media (prefers-reduced-motion: reduce) {
   *,

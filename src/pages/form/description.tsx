@@ -38,6 +38,7 @@ function FormDescriptionPage() {
     const [alreadySubmitted, setAlreadySubmitted] = useState(false)
 
     const [headerImage, setHeaderImage] = useState<string | null>(null)
+    const [headerColor, setHeaderColor] = useState<string | null>(null)
     const [loading, setLoading] = useState(false)
     const [showTokenModal, setShowTokenModal] = useState(false)
 
@@ -113,17 +114,20 @@ function FormDescriptionPage() {
             })
     }, [formId, user, authLoading])
 
-    // Ambil header image saja — tidak perlu requires_token, biarkan RPC yang memutuskan.
+    // Ambil header image + warna header saja — tidak perlu requires_token, biarkan RPC yang memutuskan.
     useEffect(() => {
         if (!formId) return
         let cancelled = false
         supabase
             .from("forms")
-            .select("header_image")
+            .select("header_image, header_color")
             .eq("id", formId)
             .single()
             .then(({ data }) => {
-                if (!cancelled) setHeaderImage((data as { header_image?: string | null } | null)?.header_image || null)
+                if (cancelled) return
+                const row = data as { header_image?: string | null; header_color?: string | null } | null
+                setHeaderImage(row?.header_image || null)
+                setHeaderColor(row?.header_color || null)
             })
         return () => { cancelled = true }
     }, [formId])
@@ -167,7 +171,7 @@ function FormDescriptionPage() {
 
                     <div className="w-full sm:max-w-3xl px-3.5 sm:px-0">
                         <div className="rounded-xl overflow-hidden border border-second shadow-sm">
-                            <FormHeader formId={form.id} title={form.title} headerImage={headerImage} />
+                            <FormHeader formId={form.id} title={form.title} headerImage={headerImage} headerColor={headerColor} />
                         </div>
                     </div>
 
