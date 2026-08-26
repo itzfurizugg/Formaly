@@ -6,6 +6,7 @@ import { supabase } from "../../lib/supabase"
 import { useAuth } from "../../lib/auth-context"
 import Filter from "../../components/filter"
 import { RichText } from "../../components/richText"
+import Loading from "../../components/loading"
 import { listContainer, listItem } from "../../lib/motion"
 import BackButton from "../../components/backButton"
 import FormHeader from "../../components/creator/formHeader"
@@ -188,6 +189,7 @@ function ResultPage() {
 
     return (
         <>
+            <Loading show={authLoading || (!!user && loading)} />
             {!authLoading && !loading && (
                 error ? (
                     <div className="flex flex-col items-center px-3.5 py-5 sm:py-10">

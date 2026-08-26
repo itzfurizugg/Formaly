@@ -6,6 +6,7 @@ import { supabase } from "../../lib/supabase"
 import { useAuth } from "../../lib/auth-context"
 import BackButton from "../../components/backButton"
 import FormHeader from "../../components/creator/formHeader"
+import Loading from "../../components/loading"
 import { listContainer, listItem } from "../../lib/motion"
 import { showAlert } from "../../lib/alerts"
 
@@ -58,6 +59,8 @@ function CreatorResponden() {
                     <h1 className="text-3xl lg:text-5xl font-bold font-display text-darks mb-1">Responden</h1>
                     <p className="text-sm text-tinted mb-6">Pilih form untuk melihat submission-nya.</p>
                 </div>
+
+                <Loading show={loading} inline />
 
                 {!loading && error && (
                     <p className="text-sm text-tinted mb-4">{error}</p>

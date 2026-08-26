@@ -9,6 +9,7 @@ import { supabase } from "../../lib/supabase"
 import { useAuth } from "../../lib/auth-context"
 import { easeOutExpo } from "../../lib/motion"
 import BackButton from "../../components/backButton"
+import Loading from "../../components/loading"
 import { showAlert } from "../../lib/alerts"
 
 interface AnswerRow {
@@ -142,6 +143,7 @@ function SubmissionDetail() {
 
     return (
         <>
+            <Loading show={loading} />
             {!loading && (
         <div className="flex flex-col items-center px-3.5 sm:px-6 py-5 sm:py-10">
             <div className="w-full xl:max-w-7xl lg:max-w-5xl">

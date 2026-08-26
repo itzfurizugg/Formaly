@@ -16,6 +16,7 @@ import {
 import { useAuth } from "../lib/auth-context"
 import { supabase } from "../lib/supabase"
 import { showAlert } from "../lib/alerts"
+import Loading from "../components/loading"
 import ModalPortal from "../components/modalPortal"
 import { AnimatePresence, motion } from "motion/react"
 import { modalBackdrop, modalPanel } from "../lib/motion"
@@ -217,6 +218,7 @@ function Profile() {
         navigate("/login")
     }
 
+    if (authLoading) return <Loading show label="Memuat profil..." />
     if (!user) return null
 
     const role = (profile?.role as string | undefined) || "user"

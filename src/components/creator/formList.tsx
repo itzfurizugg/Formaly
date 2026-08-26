@@ -9,6 +9,7 @@ import { RichText } from "../richText"
 import FormHeader from "./formHeader"
 import { pageGet, pageSet } from "../../lib/pageCache"
 import { easeOutExpo } from "../../lib/motion"
+import Loading from "../loading"
 
 interface FormRow {
     id: string
@@ -99,6 +100,7 @@ function FormList() {
 
     return (
         <>
+            <Loading show={loading} />
             {!loading && (
                 error ? (
                     <p className="text-sm text-tinted">{error}</p>

@@ -82,7 +82,7 @@ function CreatorSidebar() {
                 key={to}
                 to={to}
                 onClick={() => open && closeNav()}
-                className={`relative flex items-center gap-3 h-11 px-4 text-sm font-medium transition-colors ${active ? "text-base" : "text-darks hover:bg-base-200"
+                className={`relative flex items-center gap-3 h-11 px-4 py-7 text-[16px] font-medium transition-colors ${active ? "text-base" : "text-darks hover:bg-base-200"
                     }`}
             >
                 {active && (
@@ -109,7 +109,7 @@ function CreatorSidebar() {
     return (
         <>
             {/* ---- Sidebar desktop (lg ke atas): fixed di kiri ---- */}
-            <aside className="hidden lg:flex fixed inset-y-0 left-0 z-40 w-64 flex-col bg-base-200 border-r border-second">
+            <aside className="hidden lg:flex fixed inset-y-0 left-0 z-40 w-72 flex-col bg-base-200 border-r border-second">
                 <div className="flex items-center h-16 px-5 border-b border-second shrink-0">
                     <Link to="/" onClick={() => open && closeNav()}>
                         <img src={logo} alt="Formaly" className="h-6 w-auto ml-2 mt-2" />
@@ -128,7 +128,7 @@ function CreatorSidebar() {
                             </span>
                         </div>
                         <div className="min-w-0">
-                            <p className="text-sm font-semibold text-darks truncate">{profile?.name || "User"}</p>
+                            <p className="text-lg font-semibold text-darks truncate">{profile?.name || "User"}</p>
                         </div>
                     </div>
                 </div>

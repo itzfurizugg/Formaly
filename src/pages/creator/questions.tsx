@@ -15,6 +15,7 @@ import { pageGet, pageSet } from "../../lib/pageCache"
 import { easeOutExpo, panelSlide } from "../../lib/motion"
 import BackButton from "../../components/backButton"
 import FormTabs from "../../components/creator/formTabs"
+import Loading from "../../components/loading"
 
 interface Option {
     id: string | null
@@ -478,6 +479,8 @@ function Questions({ embedded = false }: { embedded?: boolean }) {
 
     return (
         <div className={embedded ? "w-full min-w-0 pb-8" : "flex flex-col items-center px-3.5 sm:px-6 py-5 sm:py-10"}>
+            {/* Embedded (di dalam formEdit) pakai varian inline agar tidak menutupi halaman induk */}
+            <Loading show={loading} inline={embedded} />
             {!loading && (
             <div className={embedded ? "" : "w-full xl:max-w-7xl lg:max-w-5xl"}>
                 {!embedded && (

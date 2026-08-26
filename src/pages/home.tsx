@@ -2,6 +2,7 @@ import { useEffect, useState } from "react"
 import { useNavigate, useLocation } from "react-router-dom"
 import { motion } from "motion/react"
 import Search from "../components/search"
+import Loading from "../components/loading"
 import { supabase } from "../lib/supabase"
 import { useAuth } from "../lib/auth-context"
 import { loginUrl } from "../lib/redirect"
@@ -102,10 +103,9 @@ function Home() {
         }
     }
 
-    if (authLoading || !user) return null
-
     return (
         <>
+            <Loading show={authLoading} />
             {!authLoading && user && (
                 <div className="flex flex-col items-center justify-center min-h-[60vh] px-3.5 py-10 text-left lg:text-center">
                     <div className="w-full max-w-xl">

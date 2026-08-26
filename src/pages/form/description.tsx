@@ -8,6 +8,7 @@ import { useAuth } from "../../lib/auth-context"
 import { loginUrl } from "../../lib/redirect"
 import { startFormSubmission } from "../../lib/formStart"
 import TokenInputModal from "../../components/TokenInputModal"
+import Loading from "../../components/loading"
 import BackButton from "../../components/backButton"
 import FormHeader from "../../components/creator/formHeader"
 
@@ -159,6 +160,7 @@ function FormDescriptionPage() {
 
     return (
         <>
+            <Loading show={loading} />
             {!loading && form && (
                 <div className="flex flex-col items-center min-h-screen sm:min-h-[80vh] sm:justify-center pt-6 pb-28 sm:px-4 sm:py-10 bg-base-300 sm:bg-transparent">
                     {locationState?.form && (

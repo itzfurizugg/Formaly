@@ -2,6 +2,7 @@ import { useEffect, useState, useCallback } from "react"
 import { motion } from "motion/react"
 import { FileText, RefreshCw } from "lucide-react"
 import { RichText } from "../../components/richText"
+import Loading from "../../components/loading"
 import { supabase } from "../../lib/supabase"
 import { easeOutExpo } from "../../lib/motion"
 
@@ -44,6 +45,7 @@ function AdminForms() {
 
     return (
         <>
+            <Loading show={loading} label="Memuat daftar form..." />
             {!loading && (
         <div className="flex flex-col items-center px-3.5 py-10 rounded-xl">
             <div className="max-w-4xl w-full rounded-xl">
