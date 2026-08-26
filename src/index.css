@@ -359,14 +359,9 @@
   text-shadow: 0 1px 2px rgba(0, 0, 0, 0.6);
 }
 
-/* iframe video (hasil YT.Player maupun Google Drive preview) mengisi penuh
-   wrapper agar tidak terpotong. pointer-events TIDAK dimatikan di sini:
-   iframe YouTube mendapatkannya inline via videoGui.ts (klik ditangani GUI
-   custom), sedangkan iframe Drive justru butuh klik untuk kontrol native. */
-.video-player > iframe {
-  position: absolute;
-  inset: 0;
+/* iframe YouTube yang dibuat ulang oleh YT.Player diisi penuh ke wrapper,
+   bukan ukuran tetap 640x360 agar tidak terpotong di sisi kanan */
+.video-player .video-player-stage iframe {
   width: 100% !important;
   height: 100% !important;
-  border: none;
 }

@@ -3,7 +3,6 @@ import { useNavigate } from "react-router-dom"
 import { motion } from "motion/react"
 import { Search, Library, FileText } from "lucide-react"
 import Card from "../components/card"
-import Loading from "../components/loading"
 import { supabase } from "../lib/supabase"
 import { useAuth } from "../lib/auth-context"
 import { easeOutExpo } from "../lib/motion"
@@ -72,9 +71,10 @@ function Available() {
             f.author_name.toLowerCase().includes(search.toLowerCase())
     )
 
+    if (authLoading || !user) return null
+
     return (
         <>
-            <Loading show={loading} />
             {!authLoading && user && !loading && (
         <div className="flex flex-col items-center px-3.5 py-10">
             <div className="max-w-4xl w-full">

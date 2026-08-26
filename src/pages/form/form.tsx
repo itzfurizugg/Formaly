@@ -8,7 +8,6 @@ import { supabase } from "../../lib/supabase"
 import { useAuth } from "../../lib/auth-context"
 import { loginUrl } from "../../lib/redirect"
 import ModalPortal from "../../components/modalPortal"
-import Loading from "../../components/loading"
 // import FormHeader from "../../components/creator/formHeader"
 import { alertPop, modalBackdrop, modalPanel } from "../../lib/motion"
 
@@ -336,7 +335,6 @@ function FormPage() {
 
     return (
         <>
-            <Loading show={authLoading || (!!user && loading)} label="Menyiapkan soal..." />
             {!authLoading && !loading && (
                 notFound ? (
                     <div className="flex flex-col items-center justify-center min-h-screen px-3.5">

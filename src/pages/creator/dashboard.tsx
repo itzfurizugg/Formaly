@@ -9,7 +9,6 @@ import { colors } from "../../lib/colorbase"
 import { pageGet, pageSet } from "../../lib/pageCache"
 import { easeOutExpo } from "../../lib/motion"
 import BackButton from "../../components/backButton"
-import Loading from "../../components/loading"
 
 interface Stats {
     total: number
@@ -130,8 +129,6 @@ function CreatorDashboard() {
                     )}
                 </div>
 
-                <Loading show={loading} inline label="Memuat statistik..." />
-
                 {!loading && (
                     <div className="flex flex-col">
                         <div className="grid grid-cols-2 lg:grid-cols-3 gap-3 w-full">
@@ -141,7 +138,7 @@ function CreatorDashboard() {
                                     <div className="min-w-0">
                                         <div className="text-tinted text-[11px] sm:text-sm leading-tight">Total Form</div>
                                         <div className="text-darks text-3xl sm:text-4xl font-bold mt-1 break-words">{stats.total}</div>
-                                        <div className="text-tinted text-xs mt-1 hidden sm:block">Semua formulir kamu yang kamu miliki</div>
+                                        <div className="text-tinted text-xs mt-1 hidden sm:block">Semua formulir kamu</div>
                                     </div>
                                     <div className="shrink-0 rounded-full bg-darks/10 text-darks p-1.5 sm:p-2 flex">
                                         <FileText className="h-5 w-5" />
@@ -155,7 +152,7 @@ function CreatorDashboard() {
                                     <div className="min-w-0">
                                         <div className="text-tinted text-[11px] sm:text-sm leading-tight">Form Aktif</div>
                                         <div className="text-darks text-3xl sm:text-4xl font-bold mt-1 break-words">{stats.active}</div>
-                                        <div className="text-tinted text-xs mt-1 hidden sm:block">Form anda dengan status publik</div>
+                                        <div className="text-tinted text-xs mt-1 hidden sm:block">Status public</div>
                                     </div>
                                     <div className="shrink-0 rounded-full bg-done/10 text-done p-1.5 sm:p-2 flex">
                                         <CheckCircle2 className="h-5 w-5" />
@@ -168,7 +165,7 @@ function CreatorDashboard() {
                                 <div className="absolute -right-3 -top-3 h-16 w-16 rounded-full bg-second/40" />
                                 <div className="relative flex items-start justify-between gap-2">
                                     <div className="min-w-0">
-                                        <div className="text-tinted text-[11px] sm:text-sm leading-tight">Total Responden</div>
+                                        <div className="text-tinted text-[11px] sm:text-sm leading-tight">Total Submission</div>
                                         <div className="text-darks text-3xl sm:text-4xl font-bold mt-1 break-words">{stats.submissions}</div>
                                         <div className="text-tinted text-xs mt-1 hidden sm:block">Jumlah pengerjaan</div>
                                     </div>

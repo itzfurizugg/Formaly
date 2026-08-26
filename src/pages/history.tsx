@@ -3,7 +3,6 @@ import { useNavigate } from "react-router-dom"
 import { motion } from "motion/react"
 import { FileText } from "lucide-react"
 import HistoryCard from "../components/historyCard"
-import Loading from "../components/loading"
 import { supabase } from "../lib/supabase"
 import { useAuth } from "../lib/auth-context"
 import { easeOutExpo } from "../lib/motion"
@@ -84,9 +83,10 @@ function History() {
 
     const filtered = items
 
+    if (authLoading || !user) return null
+
     return (
         <>
-            <Loading show={authLoading || (!!user && loading)} />
             {!authLoading && user && !loading && (
                 <div className="flex flex-col items-center px-3.5 sm:px-6 py-5">
                     <div className="max-w-6xl grid w-full lg:mt-10">

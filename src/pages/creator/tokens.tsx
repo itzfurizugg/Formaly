@@ -8,7 +8,6 @@ import { confirmDelete, showAlert } from "../../lib/alerts"
 import { easeOutExpo, panelSlide } from "../../lib/motion"
 import BackButton from "../../components/backButton"
 import FormTabs from "../../components/creator/formTabs"
-import Loading from "../../components/loading"
 
 interface Token {
     id: string
@@ -26,7 +25,6 @@ function Tokens() {
 
     const [tokens, setTokens] = useState<Token[]>([])
     const [copiedId, setCopiedId] = useState<string | null>(null)
-    const [loading, setLoading] = useState(true)
 
     const [showCreate, setShowCreate] = useState(false)
     const [tokenCode, setTokenCode] = useState("")
@@ -55,14 +53,15 @@ function Tokens() {
         }
 
         // Status saklar gerbang token milik form ini.
-        const { data: formData } = await supabase
+        supabase
             .from("forms")
             .select("requires_token")
             .eq("id", id)
             .single()
-        setRequiresToken(!!(formData as { requires_token?: boolean } | null)?.requires_token)
+            .then(({ data }) => {
+                setRequiresToken(!!(data as { requires_token?: boolean } | null)?.requires_token)
+            })
 
-        setLoading(false)
     }, [user, id])
 
     useEffect(() => {
@@ -165,14 +164,16 @@ function Tokens() {
 
     const fmtDate = (d: string | null) => (d ? new Date(d).toLocaleDateString("id-ID") : "Tanpa batas")
 
+    // if (loading) {
+    //     return <Loading />
+    // }
+
     return (
         <div className="flex flex-col items-center px-3.5 sm:px-6 py-5 sm:py-10">
             <div className="w-full xl:max-w-7xl lg:max-w-5xl">
                 <BackButton to="/creator" />
 
                 <FormTabs id={id} active="tokens" />
-
-                <Loading show={loading} inline />
 
                 <div className="flex justify-end mb-4">
                     {!showCreate && (
@@ -183,7 +184,6 @@ function Tokens() {
                 </div>
 
                 {/* Saklar gerbang: peserta wajib memasukkan token sebelum mulai */}
-                {!loading && (
                 <div className="bg-white border border-second p-4 sm:p-5 shadow-sm rounded-xl mb-4 flex items-center justify-between gap-3">
                     <div className="min-w-0">
                         <p className="text-sm font-medium text-darks">Wajibkan token untuk mengerjakan</p>
@@ -200,7 +200,6 @@ function Tokens() {
                         aria-label="Wajibkan token untuk mengerjakan"
                     />
                 </div>
-                )}
 
                 <AnimatePresence>
                 {showCreate && (
@@ -269,7 +268,7 @@ function Tokens() {
                 )}
                 </AnimatePresence>
 
-                {!loading && (tokens.length === 0 ? (
+                {tokens.length === 0 ? (
                     <div className="text-center py-16">
                         <p className="text-tinted mb-4">Belum ada token.</p>
                     </div>
@@ -320,7 +319,7 @@ function Tokens() {
                             )
                         })}
                     </div>
-                ))}
+                )}
             </div>
         </div>
     )

@@ -3,7 +3,6 @@ import { useNavigate, useParams, useLocation } from "react-router-dom"
 import { supabase } from "../../lib/supabase"
 import { useAuth } from "../../lib/auth-context"
 import { loginUrl } from "../../lib/redirect"
-import Loading from "../../components/loading"
 import FormPage from "./form"
 
 function FormResolver() {
@@ -92,7 +91,6 @@ function FormResolver() {
 
     return (
         <>
-            <Loading show={mode === "loading"} label="Mencari formulir..." />
             {mode !== "loading" && (
             mode === "exam" ? (
                 <FormPage />
