@@ -175,10 +175,11 @@ function Tokens() {
 
                 <FormTabs id={id} active="tokens" />
 
-                <div className="flex justify-end mb-4">
+                <div className="flex justify-between mb-4 px-3">
+                    <h1 className="text text-darks text-4xl font-default font-bold">Token</h1>
                     {!showCreate && (
-                        <button onClick={() => setShowCreate(true)} className="btn bg-darks text-base border-none h-9 min-h-0">
-                            <Plus className="h-4 w-4" /> Buat Token
+                        <button onClick={() => setShowCreate(true)} className="btn bg-darks text-base border-none rounded-full h-9 min-h-0 my-auto">
+                            <Plus className="h-4 w-4" /> <span className="hidden sm:block">Buat Token</span>
                         </button>
                     )}
                 </div>

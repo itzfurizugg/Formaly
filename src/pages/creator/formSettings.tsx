@@ -150,6 +150,10 @@ function FormSettings() {
 
                         <FormTabs id={id} active="settings" />
 
+                        <div className="bg-white border border-second p-3 lg:p-6 sm:p-4 shadow-sm rounded-xl max-w-8xl mb-3">
+
+                        </div>
+
                         <div className="bg-white border border-second p-3 lg:p-6 sm:p-4 shadow-sm rounded-xl max-w-8xl">
                             <div className="flex items-center gap-2 mb-1 mt-2 ml-2">
                                 <h2 className="font-semibold text-darks">Pengaturan Form</h2>

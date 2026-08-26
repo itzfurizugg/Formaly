@@ -488,7 +488,8 @@ function Questions({ embedded = false }: { embedded?: boolean }) {
                     </>
                 )}
 
-                <div className={`flex justify-end gap-2 ${embedded ? "mb-3" : "mb-4"}`}>
+                <div className={`flex justify-between px-3 gap-2 my-auto ${embedded ? "mb-3" : "mb-4"}`}>
+                    <h1 className="text text-darks text-4xl font-default font-bold">Soal</h1>
                     {!showEditor && (
                         <CreateButton onCreate={startAdd} onImport={() => setShowImport(true)} />
                     )}
