@@ -1,4 +1,4 @@
-![alt text](src/assets/banner.png)
+<img width="2718" height="817" alt="banner" src="https://github.com/user-attachments/assets/077936ea-c30a-42b6-8a57-18c586fbe207" />
 
 # Formaly
 
