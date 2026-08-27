@@ -1,4 +1,4 @@
-<img width="2718" height="817" alt="banner" src="https://github.com/user-attachments/assets/077936ea-c30a-42b6-8a57-18c586fbe207" />
+<img width="2718" height="817" alt="banneeeer" src="https://github.com/user-attachments/assets/f10c3f96-d90c-40fb-a3ba-184d3fb2ffc7" />
 
 # Formaly
 
