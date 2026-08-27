@@ -135,7 +135,7 @@ function Navbar() {
                         {(role === "creator" || role === "admin") && (
                             <Link
                                 to="/creator"
-                                className={`btn ${pathname === "/creator" ? "bg-darks text-base border-none hover:bg-darks" : "btn-ghost text-darks"}`}
+                                className={`btn ml-5 ${pathname === "/creator" ? "bg-darks text-base border-none hover:bg-darks" : "btn-ghost text-darks"}`}
                             >
                                 <LayoutDashboard className="h-4 w-auto" />
                             </Link>

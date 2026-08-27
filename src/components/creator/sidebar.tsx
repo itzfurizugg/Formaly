@@ -88,7 +88,7 @@ function CreatorSidebar() {
                 {active && (
                     <motion.span
                         layoutId={pillId}
-                        className="absolute inset-0 rounded-lg bg-darks"
+                        className="absolute inset-0 p-3 rounded-sm bg-darks"
                         transition={{ type: "spring", stiffness: 400, damping: 30 }}
                     />
                 )}
