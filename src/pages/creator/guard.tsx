@@ -49,7 +49,7 @@ function RequireCreator({ children, preload }: { children: ReactNode; preload?: 
         <>
             {/* Saat pertama kali membuka dashboard (role belum ter-cache), tampilkan
                 loading alih-alih layar kosong menunggu query role selesai. */}
-            {allowed ? <>{children}</> : user && !authLoading ? <LoadingPage label="Memeriksa akses..." /> : null}
+            {allowed ? <>{children}</> : <LoadingPage label="Memeriksa akses..." />}
         </>
     )
 }
