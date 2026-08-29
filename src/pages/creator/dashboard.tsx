@@ -40,14 +40,9 @@ function CreatorDashboard() {
     const navigate = useNavigate()
     // Cache ringkasan dashboard supaya kembali dari halaman lain cukup fade-in
     // tanpa overlay loading; data di-refresh diam-diam di background.
-    const [cached] = useState<DashboardCache | undefined>(() => {
-        if (!user) return undefined
-        try {
-            return pageGet<DashboardCache>(`dashboard:${user.id}`)
-        } catch {
-            return undefined
-        }
-    })
+    const [cached] = useState<DashboardCache | undefined>(() =>
+        user ? pageGet<DashboardCache>(`dashboard:${user.id}`) : undefined
+    )
     const [stats, setStats] = useState<Stats>(cached?.stats ?? { total: 0, active: 0, submissions: 0, score: 0 })
     const [loading, setLoading] = useState(!cached)
     const [barData, setBarData] = useState<BarDatum[]>(cached?.barData ?? [])
