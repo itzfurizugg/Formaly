@@ -60,7 +60,7 @@ function AdminForms() {
                     <motion.div
                         initial={{ opacity: 0, y: -6 }}
                         animate={{ opacity: 1, y: 0 }}
-                        transition={{ duration: 0.25, ease: "easeOut" }}
+                        transition={{ duration: 0.25, ease: easeOutExpo }}
                         className="text-sm text-wrong bg-wrong/5 border border-wrong/20 rounded-xl px-3.5 py-3 mb-4"
                     >
                         <p>{error}</p>

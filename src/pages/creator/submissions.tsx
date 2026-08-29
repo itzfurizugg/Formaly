@@ -519,7 +519,7 @@ function Submissions() {
                                                 <>
                                                     <div style={{ overflowX: "auto" }}>
                                                         <div style={{ width: `max(100%, ${Math.max(1, perQuestionStats.length) * 64}px)`, height: 280 }}>
-                                                            <ResponsiveContainer width="100%" height="100%">
+                                                            <ResponsiveContainer width="100%" height="100%" debounce={100}>
                                                                 <BarChart data={perQuestionStats} margin={{ top: 8, right: 16, left: -14, bottom: 0 }}>
                                                                     <XAxis dataKey="name" tick={{ fontSize: 11, fill: colors.tinted }} axisLine={false} tickLine={false} interval={0} />
                                                                     <YAxis tick={{ fontSize: 11, fill: colors.tinted }} axisLine={false} tickLine={false} allowDecimals={false} />
@@ -564,7 +564,7 @@ function Submissions() {
                                                 <>
                                                     <div style={{ overflowX: "auto" }}>
                                                         <div style={{ width: `max(100%, ${Math.max(1, barData.length) * 56}px)`, height: 280 }}>
-                                                            <ResponsiveContainer width="100%" height="100%">
+                                                            <ResponsiveContainer width="100%" height="100%" debounce={100}>
                                                                 <BarChart data={barData} margin={{ top: 8, right: 16, left: -14, bottom: 0 }}>
                                                                     <XAxis dataKey="name" tick={{ fontSize: 11, fill: colors.tinted }} axisLine={false} tickLine={false} interval={0} />
                                                                     <YAxis tick={{ fontSize: 11, fill: colors.tinted }} axisLine={false} tickLine={false} allowDecimals={false} />

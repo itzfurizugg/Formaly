@@ -91,7 +91,7 @@ function History() {
         <>
             {!authLoading && user && !loading && (
                 <div className="flex flex-col items-center px-3.5 sm:px-6 py-5">
-                    <div className="max-w-6xl grid w-full lg:mt-10">
+                    <div className="max-w-6xl grid w-full lg:mt-3">
                         <div className="ml-2 sm:ml-3 lg:ml-0">
                             <div className="flex items-center gap-2 mb-1">
                                 <h1 className="text-2xl lg:text-4xl text-darks font-bold font-display">Riwayat</h1>
@@ -100,21 +100,6 @@ function History() {
                                 Formulir yang pernah kamu kerjakan.
                             </p>
                         </div>
-
-                        {/* {!loading && (
-                    <div className="join w-full mb-6">
-                        <div className="join-item flex-1 relative">
-                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-tinted pointer-events-none" />
-                            <input
-                                type="text"
-                                placeholder="Memuat..."
-                                className="input w-full pl-5 bg-base focus:outline-none transition-colors"
-                                value={search}
-                                onChange={(e) => setSearch(e.target.value)}
-                            />
-                        </div>
-                    </div>
-                )} */}
 
                         {filtered.length === 0 ? (
                             <div className="text-center py-20">
@@ -126,10 +111,10 @@ function History() {
                                 {filtered.map((item, index) => (
                                     <motion.div
                                         key={item.id}
-                                        className="h-full"
                                         initial={{ opacity: 0, y: 12 }}
                                         animate={{ opacity: 1, y: 0 }}
                                         transition={{ duration: 0.35, ease: easeOutExpo, delay: Math.min(index * 0.06, 0.4) }}
+                                        className="h-full"
                                     >
                                         <HistoryCard
                                             formId={item.form_id}
@@ -143,7 +128,6 @@ function History() {
                                             headerImage={item.forms?.header_image || null}
                                             headerColor={item.forms?.header_color}
                                             to={`/form/result/${item.id}`}
-
                                         />
                                     </motion.div>
                                 ))}

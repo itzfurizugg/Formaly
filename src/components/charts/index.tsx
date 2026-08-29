@@ -1,3 +1,4 @@
+import { memo } from "react"
 import {
     Bar, BarChart, ResponsiveContainer,
     Tooltip, XAxis, YAxis, PieChart, Pie, Cell, Legend, LabelList,
@@ -53,7 +54,7 @@ function ChartTooltip({ active, payload, label }: TooltipContentProps) {
     )
 }
 
-export function DistributionChart({
+export const DistributionChart = memo(function DistributionChart({
     title,
     subtitle,
     data,
@@ -63,7 +64,7 @@ export function DistributionChart({
 }: DistributionChartProps) {
     return (
         <Card title={title} subtitle={subtitle} height={height}>
-            <ResponsiveContainer width="100%" height="100%">
+            <ResponsiveContainer width="100%" height="100%" debounce={100}>
                 <BarChart data={data} margin={{ top: 8, right: 8, left: -14, bottom: 0 }}>
                     <XAxis dataKey="name" tick={{ fontSize: 11, fill: colors.tinted }} axisLine={false} tickLine={false} />
                     <YAxis tick={{ fontSize: 11, fill: colors.tinted }} axisLine={false} tickLine={false} allowDecimals={false} />
@@ -72,6 +73,7 @@ export function DistributionChart({
                         dataKey="value"
                         radius={[6, 6, 0, 0]}
                         fill={barColor}
+                        isAnimationActive={false}
                         style={onBarClick ? { cursor: "pointer" } : undefined}
                         onClick={(data) => {
                             const formId = (data.payload as BarDatum | undefined)?.formId
@@ -82,7 +84,7 @@ export function DistributionChart({
             </ResponsiveContainer>
         </Card>
     )
-}
+})
 
 export interface MiniDistributionChartProps {
     title?: string
@@ -94,7 +96,7 @@ export interface MiniDistributionChartProps {
 
 /** Varian ringkas DistributionChart untuk layar kecil (mobile): tanpa sumbu Y,
  * nilai ditampilkan di atas batang supaya tetap terbaca di ruang sempit. */
-export function MiniDistributionChart({
+export const MiniDistributionChart = memo(function MiniDistributionChart({
     title = "Responden per Form",
     data,
     barColor = colors.done,
@@ -105,7 +107,7 @@ export function MiniDistributionChart({
         <div className="bg-white border border-second rounded-xl px-3.5 pt-3 pb-2">
             {title && <p className="text-xs font-semibold text-darks mb-2">{title}</p>}
             <div style={{ height }}>
-                <ResponsiveContainer width="100%" height="100%">
+                <ResponsiveContainer width="100%" height="100%" debounce={100}>
                     <BarChart data={data} margin={{ top: 12, right: 4, left: 4, bottom: 0 }}>
                         <XAxis dataKey="name" tick={{ fontSize: 10, fill: colors.tinted }} axisLine={false} tickLine={false} />
                         <Tooltip cursor={{ fill: colors.second }} content={ChartTooltip} />
@@ -113,6 +115,7 @@ export function MiniDistributionChart({
                             dataKey="value"
                             radius={[5, 5, 0, 0]}
                             fill={barColor}
+                            isAnimationActive={false}
                             style={onBarClick ? { cursor: "pointer" } : undefined}
                             onClick={(data) => {
                                 const formId = (data.payload as BarDatum | undefined)?.formId
@@ -126,7 +129,7 @@ export function MiniDistributionChart({
             </div>
         </div>
     )
-}
+})
 
 export interface MiniStackSeries {
     key: string
@@ -171,7 +174,7 @@ export function MiniStackedBarChart({
             )}
             <div style={{ overflowX: "auto" }}>
                 <div style={{ width: `max(100%, ${Math.max(1, rows.length) * pxPerBar}px)`, height }}>
-                    <ResponsiveContainer width="100%" height="100%">
+                    <ResponsiveContainer width="100%" height="100%" debounce={100}>
                         <BarChart data={rows} margin={{ top: 8, right: 4, left: 4, bottom: 0 }}>
                             <XAxis dataKey="name" tick={{ fontSize: 9, fill: colors.tinted }} axisLine={false} tickLine={false} interval={0} />
                             <Tooltip cursor={{ fill: colors.second }} content={tooltip} />
@@ -182,6 +185,7 @@ export function MiniStackedBarChart({
                                     stackId="mini"
                                     name={s.label}
                                     fill={s.color}
+                                    isAnimationActive={false}
                                     radius={i === series.length - 1 ? [3, 3, 0, 0] : undefined}
                                 />
                             ))}
@@ -214,9 +218,9 @@ export interface DonutChartProps {
 
 export function DonutChart({ title, subtitle, data, height = 260, bare = false, showLegend = true }: DonutChartProps) {
     const pie = (
-        <ResponsiveContainer width="100%" height="100%">
+        <ResponsiveContainer width="100%" height="100%" debounce={100}>
             <PieChart>
-                <Pie data={data} dataKey="value" nameKey="name" innerRadius="55%" outerRadius="80%" paddingAngle={2} strokeWidth={0}>
+                <Pie data={data} dataKey="value" nameKey="name" isAnimationActive={false} innerRadius="55%" outerRadius="80%" paddingAngle={2} strokeWidth={0}>
                     {data.map((d, i) => (
                         <Cell key={i} fill={d.color ?? colors.done} />
                     ))}

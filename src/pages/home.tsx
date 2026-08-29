@@ -5,6 +5,7 @@ import Search from "../components/search"
 import { supabase } from "../lib/supabase"
 import { useAuth } from "../lib/auth-context"
 import { loginUrl } from "../lib/redirect"
+import { easeOutExpo } from "../lib/motion"
 
 interface FormData {
     id: string
@@ -112,40 +113,28 @@ function Home() {
                         <motion.h1
                             initial={{ opacity: 0, y: 16 }}
                             animate={{ opacity: 1, y: 0 }}
-                            transition={{ duration: 0.45, ease: [0.22, 1, 0.36, 1] }}
+                            transition={{ duration: 0.45, ease: easeOutExpo }}
                             className="w-full text-4xl md:text-7xl font-display font-bold uppercase text-darks"
                         >
                             Mulai mengerjakan!
                         </motion.h1>
                         <motion.p
-                            initial={{ opacity: 0 }}
-                            animate={{ opacity: 1 }}
-                            transition={{ duration: 0.4, ease: "easeOut", delay: 0.1 }}
+                            initial={{ opacity: 0, y: 16 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ duration: 0.45, ease: easeOutExpo, delay: 0.1 }}
                             className="w-full text-tinted mt-3"
                         >
                             Cari formulir berdasarkan tag yang kamu ketahui, lalu kerjakan.
                         </motion.p>
 
                         <motion.div
-                            initial={{ opacity: 0 }}
-                            animate={{ opacity: 1 }}
-                            transition={{ duration: 0.4, ease: "easeOut", delay: 0.2 }}
+                            initial={{ opacity: 0, y: 16 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ duration: 0.45, ease: easeOutExpo, delay: 0.2 }}
                             className="mt-8"
                         >
                             <Search onSearch={handleTagSearch} loading={searching} />
                             {error && <p className="text-sm text-wrong mt-3">{error}</p>}
-                            {/* {activeTag && !error && (
-                        <div className="flex items-center justify-start lg:justify-center gap-2 mt-3">
-                            <span className="text-sm text-tinted">Tag:</span>
-                            <button
-                                onClick={clearTag}
-                                className="badge badge-ghost text-tinted rounded-full text-xs cursor-pointer hover:text-wrong"
-                                title="Hapus tag"
-                            >
-                                {activeTag} &times;
-                            </button>
-                        </div>
-                    )} */}
                         </motion.div>
                     </div>
                 </div>

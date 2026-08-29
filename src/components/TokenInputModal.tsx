@@ -3,20 +3,18 @@ import { AnimatePresence, motion, type Variants } from "motion/react"
 import { KeyRound, X } from "lucide-react"
 import { startFormSubmission } from "../lib/formStart"
 import { showAlert } from "../lib/alerts"
+import { easeOutExpo } from "../lib/motion"
 import ModalPortal from "./modalPortal"
-
-// Easing konsisten dengan komponen lain di project.
-const EASE: [number, number, number, number] = [0.22, 1, 0.36, 1]
 
 const backdropVariants: Variants = {
     hidden: { opacity: 0 },
-    show: { opacity: 1, transition: { duration: 0.25, ease: EASE } },
+    show: { opacity: 1, transition: { duration: 0.25, ease: easeOutExpo } },
     exit: { opacity: 0, transition: { duration: 0.2, ease: "easeIn" } },
 }
 
 const panelVariants: Variants = {
     hidden: { opacity: 0, scale: 0.95, y: 24 },
-    show: { opacity: 1, scale: 1, y: 0, transition: { duration: 0.3, ease: EASE } },
+    show: { opacity: 1, scale: 1, y: 0, transition: { duration: 0.3, ease: easeOutExpo } },
     exit: { opacity: 0, scale: 0.96, y: 16, transition: { duration: 0.18, ease: "easeIn" } },
 }
 

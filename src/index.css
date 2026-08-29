@@ -24,6 +24,20 @@
   }
 }
 
+/* Sembunyikan scrollbar dokumen di SEMUA halaman (bukan hanya container tertentu).
+   Konten tetap bisa di-scroll lewat wheel/trackpad; indicator scrollbar tidak pernah
+   dimunculkan sehingga tidak ada scrollbar yang kedap-kedip saat transisi halaman. */
+html {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+html::-webkit-scrollbar,
+body::-webkit-scrollbar {
+  width: 0;
+  height: 0;
+  display: none;
+}
+
 /* Hormati preferensi "kurangi gerakan" pengguna */
 @media (prefers-reduced-motion: reduce) {
   *,

@@ -1,6 +1,7 @@
 import { motion, type Variants } from "motion/react"
 import { Users, Layers, Heart, Sparkles } from "lucide-react"
 import logo from "../assets/logo.svg"
+import { easeOutExpo } from "../lib/motion"
 import BackButton from "../components/backButton"
 
 interface Member {
@@ -38,7 +39,7 @@ const item: Variants = {
     show: {
         opacity: 1,
         y: 0,
-        transition: { duration: 0.4, ease: [0.22, 1, 0.36, 1] },
+        transition: { duration: 0.4, ease: easeOutExpo },
     },
 }
 
@@ -52,7 +53,7 @@ function CreditPage() {
                 <motion.div
                     initial={{ opacity: 0, y: 16 }}
                     animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.45, ease: [0.22, 1, 0.36, 1] }}
+                    transition={{ duration: 0.45, ease: easeOutExpo }}
                     className="bg-white border border-second rounded-2xl lg:rounded-xl mb-3 px-3.5 py-10 flex flex-col items-center text-center"
                 >
                     <img src={logo} alt="Formaly" className="h-10 w-auto mb-5" />
@@ -134,9 +135,9 @@ function CreditPage() {
 
                 {/* Footer */}
                 <motion.p
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    transition={{ duration: 0.4, delay: 0.3 }}
+                    initial={{ opacity: 0, y: 8 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.35, ease: easeOutExpo, delay: 0.3 }}
                     className="text-center text-xs text-tinted mt-4 flex items-center justify-center gap-1"
                 >
                     Dibuat dengan <Heart className="h-3 w-3 text-wrong fill-wrong" /> oleh Tim Formaly ©{" "}

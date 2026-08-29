@@ -6,7 +6,7 @@ import logo from "../../assets/logo.svg"
 import { supabase } from "../../lib/supabase"
 import { useAuth } from "../../lib/auth-context"
 import PasswordInput from "../../components/passwordInput"
-import { alertPop } from "../../lib/motion"
+import { alertPop, easeOutExpo } from "../../lib/motion"
 import { showAlert } from "../../lib/alerts"
 
 function friendlyError(message: string): string {
@@ -116,7 +116,7 @@ function ResetPassword() {
                                 initial={{ opacity: 0, y: 12 }}
                                 animate={{ opacity: 1, y: 0 }}
                                 exit={{ opacity: 0 }}
-                                transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }}
+                                transition={{ duration: 0.3, ease: easeOutExpo }}
                                 className="flex flex-col items-center justify-center py-16 px-3.5"
                             >
                                 <div className="w-full max-w-xs">
@@ -137,7 +137,7 @@ function ResetPassword() {
                                 initial={{ opacity: 0, y: 12 }}
                                 animate={{ opacity: 1, y: 0 }}
                                 exit={{ opacity: 0, y: -8 }}
-                                transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }}
+                                transition={{ duration: 0.3, ease: easeOutExpo }}
                                 className="flex flex-col items-center text-center py-6"
                             >
                                 <CheckCircle2 className="h-12 w-12 text-done mb-4" />
@@ -158,7 +158,7 @@ function ResetPassword() {
                                 initial={{ opacity: 0, y: 12 }}
                                 animate={{ opacity: 1, y: 0 }}
                                 exit={{ opacity: 0, y: -8 }}
-                                transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }}
+                                transition={{ duration: 0.3, ease: easeOutExpo }}
                             >
                                 <div className="flex items-center gap-2 mb-1">
                                     <KeyRound className="h-8 w-auto text-wrong" />
@@ -186,7 +186,7 @@ function ResetPassword() {
                                 initial={{ opacity: 0, y: 12 }}
                                 animate={{ opacity: 1, y: 0 }}
                                 exit={{ opacity: 0, y: -8 }}
-                                transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }}
+                                transition={{ duration: 0.3, ease: easeOutExpo }}
                             >
                                 <div className="flex items-center gap-2 mb-1">
                                     <h2 className="text-3xl font-bold text-darks">Reset Password</h2>

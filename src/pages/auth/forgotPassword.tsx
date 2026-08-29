@@ -4,7 +4,7 @@ import { AnimatePresence, motion } from "motion/react"
 import { MailCheck, KeyRound } from "lucide-react"
 import logo from "../../assets/logo.svg"
 import { useAuth } from "../../lib/auth-context"
-import { alertPop, fadeSlide } from "../../lib/motion"
+import { alertPop, easeOutExpo, fadeSlide } from "../../lib/motion"
 import BackButton from "../../components/backButton"
 
 function ForgotPassword() {
@@ -74,7 +74,7 @@ function ForgotPassword() {
                                 initial={{ opacity: 0, y: 12 }}
                                 animate={{ opacity: 1, y: 0 }}
                                 exit={{ opacity: 0, y: -8 }}
-                                transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }}
+                                transition={{ duration: 0.3, ease: easeOutExpo }}
                                 className="flex flex-col items-center text-center py-6"
                             >
                                 <MailCheck className="h-12 w-12 text-done mb-4" />
@@ -96,7 +96,7 @@ function ForgotPassword() {
                                 initial={{ opacity: 0, y: 12 }}
                                 animate={{ opacity: 1, y: 0 }}
                                 exit={{ opacity: 0, y: -8 }}
-                                transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }}
+                                transition={{ duration: 0.3, ease: easeOutExpo }}
                             >
                                 <AnimatePresence>
                                 {error && (

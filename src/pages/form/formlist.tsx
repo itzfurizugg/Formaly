@@ -1,5 +1,6 @@
 import { useNavigate, useLocation } from "react-router-dom"
 import { motion } from "motion/react"
+import { easeOutExpo } from "../../lib/motion"
 
 interface Question {
     id: string
@@ -67,9 +68,9 @@ function FormList() {
                                 onClick={() => {
                                     backToForm(index)
                                 }}
-                                initial={{ opacity: 0 }}
-                                animate={{ opacity: 1 }}
-                                transition={{ duration: 0.4, ease: "easeOut", delay: Math.min(index * 20, 240) / 1000 }}
+                                initial={{ opacity: 0, y: 12 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                transition={{ duration: 0.3, ease: easeOutExpo, delay: Math.min(index * 20, 240) / 1000 }}
                                 className={`relative aspect-square w-full h-full p-3 rounded-xl flex items-center justify-center text-xl lg:text-sm font-medium cursor-pointer transition-all duration-300 active:scale-[0.95]
                                     ${isCurrent
                                         ? "ring-2 ring-done ring-offset-2 bg-darks text-white shadow-lg shadow-darks/10"

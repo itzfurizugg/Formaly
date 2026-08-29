@@ -4,6 +4,7 @@ import { motion } from "motion/react"
 import logo from "../assets/logo.svg"
 import { House, RotateCcwClock, UserRound, LayoutDashboard, X, LogOut } from "lucide-react"
 import { useAuth } from "../lib/auth-context"
+import { easeOutExpo } from "../lib/motion"
 
 const baseLinks = [
     { to: "/", label: "Beranda", icon: House },
@@ -113,7 +114,7 @@ function Navbar() {
                         <motion.div
                             initial={false}
                             animate={{ opacity: open ? 0 : 1, rotate: open ? 90 : 0, scale: open ? 0.75 : 1 }}
-                            transition={{ duration: 0.3, ease: "easeOut" }}
+                            transition={{ duration: 0.3, ease: easeOutExpo }}
                         >
                             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="2" stroke="currentColor" className="h-5 w-5">
                                 <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5M3.75 17.25h16.5" />
@@ -122,7 +123,7 @@ function Navbar() {
                         <motion.div
                             initial={false}
                             animate={{ opacity: open ? 1 : 0, rotate: open ? 0 : -90, scale: open ? 1 : 0.75 }}
-                            transition={{ duration: 0.3, ease: "easeOut" }}
+                            transition={{ duration: 0.3, ease: easeOutExpo }}
                             className="absolute inset-0 flex items-center justify-center"
                         >
                             <X className="h-5 w-5" />
@@ -160,7 +161,7 @@ function Navbar() {
             <motion.aside
                 initial={false}
                 animate={{ x: open ? "0%" : "100%" }}
-                transition={{ duration: 0.3, ease: "easeOut" }}
+                transition={{ duration: 0.3, ease: easeOutExpo }}
                 className="fixed top-0 right-0 z-[70] h-full w-72 max-w-[85vw] bg-white shadow-xl hidden max-[380px]:flex min-[381px]:max-[767px]:hidden md:flex lg:hidden flex-col"
                 role="dialog"
                 aria-modal="true"
@@ -187,7 +188,7 @@ function Navbar() {
                     </button>
                 </div>
 
-                <nav className="flex-1 overflow-y-auto p-3 flex flex-col gap-1.5">
+                <nav className="flex-1 overflow-y-auto scrollbar-none p-3 flex flex-col gap-1.5">
                     {navLinks
                         .filter(({ to }) => to !== "/creator")
                         .map(({ to, label, icon: Icon }) => (

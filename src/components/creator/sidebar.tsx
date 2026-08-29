@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react"
 import { Link, useLocation, useNavigate } from "react-router-dom"
-import { motion } from "motion/react"
+import { motion, type Variants } from "motion/react"
+import { easeOutExpo, listItem } from "../../lib/motion"
 import {
     House,
     LayoutDashboard,
@@ -16,6 +17,13 @@ interface NavItem {
     label: string
     icon: typeof House
     active: boolean
+}
+
+// Orkestrasi reveal item nav setelah sidebar selesai menggelincir masuk:
+// delay kecil dulu (guarded slide), lalu item muncul fade + angkat ringan.
+const sidebarNav: Variants = {
+    hidden: {},
+    show: { transition: { delayChildren: 0.18, staggerChildren: 0.05 } },
 }
 
 // Sidebar vertikal khusus area /creator. Dirender sebagai pengganti Navbar
@@ -98,9 +106,17 @@ function CreatorSidebar() {
         )
     }
 
-    const renderNav = (pillId: string) => (
+    const renderNav = (pillId: string, animate = false) => (
         <div className="flex flex-col gap-1.5">
-            {navItems.map((item) => renderLink(item, pillId))}
+            {navItems.map((item) =>
+                animate ? (
+                    <motion.div key={item.to} variants={listItem}>
+                        {renderLink(item, pillId)}
+                    </motion.div>
+                ) : (
+                    renderLink(item, pillId)
+                )
+            )}
         </div>
     )
 
@@ -108,17 +124,27 @@ function CreatorSidebar() {
 
     return (
         <>
-            {/* ---- Sidebar desktop (lg ke atas): fixed di kiri ---- */}
-            <aside className="hidden lg:flex fixed inset-y-0 left-0 z-40 w-64 flex-col bg-base-200 border-r border-second">
+            {/* ---- Sidebar desktop (lg ke atas): fixed di kiri, slide masuk kiri->kanan ---- */}
+            <motion.aside
+                initial={{ x: "-100%" }}
+                animate={{ x: "0%" }}
+                transition={{ duration: 0.45, ease: easeOutExpo }}
+                className="hidden lg:flex fixed inset-y-0 left-0 z-40 w-64 flex-col bg-base-200 border-r border-second"
+            >
                 <div className="flex items-center h-16 px-5 border-b border-second shrink-0">
                     <Link to="/" onClick={() => open && closeNav()}>
                         <img src={logo} alt="Formaly" className="h-6 w-auto ml-2 mt-2" />
                     </Link>
                 </div>
 
-                <nav className="flex-1 overflow-y-auto p-3 flex flex-col gap-1.5">
-                    {renderNav("creator-sidebar-active-desktop")}
-                </nav>
+                <motion.nav
+                    className="flex-1 overflow-y-auto scrollbar-none p-3 flex flex-col gap-1.5"
+                    variants={sidebarNav}
+                    initial="hidden"
+                    animate="show"
+                >
+                    {renderNav("creator-sidebar-active-desktop", true)}
+                </motion.nav>
 
                 <div className="p-3 border-t border-second flex flex-col gap-1.5 shrink-0 mb-3 ml-2">
                     <div className="flex items-center gap-3 px-1 py-1 min-w-0">
@@ -132,7 +158,7 @@ function CreatorSidebar() {
                         </div>
                     </div>
                 </div>
-            </aside>
+            </motion.aside>
 
             {/* ---- Backdrop sidebar mobile ---- */}
             {showContent && (
@@ -150,7 +176,7 @@ function CreatorSidebar() {
             <motion.aside
                 initial={false}
                 animate={{ x: open ? "0%" : "-100%" }}
-                transition={{ duration: 0.3, ease: "easeOut" }}
+                transition={{ duration: 0.3, ease: easeOutExpo }}
                 className="fixed top-0 left-0 z-[70] h-full w-72 max-w-[85vw] bg-base-300 shadow-xl lg:hidden flex flex-col"
                 role="dialog"
                 aria-modal="true"
@@ -176,7 +202,7 @@ function CreatorSidebar() {
                     </button>
                 </div>
 
-                <nav className="flex-1 overflow-y-auto p-3 flex flex-col gap-1.5">
+                <nav className="flex-1 overflow-y-auto scrollbar-none p-3 flex flex-col gap-1.5">
                     {renderNav("creator-sidebar-active-mobile")}
                 </nav>
 

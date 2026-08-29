@@ -35,9 +35,25 @@ interface DashboardCache {
     barData: BarDatum[]
 }
 
+// Hanya chart yang sesuai breakpoint yang di-mount, supaya chart tersembunyi
+// (sebelumnya `lg:hidden`/`hidden lg:block`) tidak ikut menghitung ukuran ulang
+// dan merender saat resize.
+function useIsLg() {
+    const [isLg, setIsLg] = useState(
+        typeof window !== "undefined" ? window.innerWidth >= 1024 : false
+    )
+    useEffect(() => {
+        const onResize = () => setIsLg(window.innerWidth >= 1024)
+        window.addEventListener("resize", onResize)
+        return () => window.removeEventListener("resize", onResize)
+    }, [])
+    return isLg
+}
+
 function CreatorDashboard() {
     const { user } = useAuth()
     const navigate = useNavigate()
+    const isLg = useIsLg()
     // Cache ringkasan dashboard supaya kembali dari halaman lain cukup fade-in
     // tanpa overlay loading; data di-refresh diam-diam di background.
     const [cached] = useState<DashboardCache | undefined>(() =>
@@ -77,10 +93,16 @@ function CreatorDashboard() {
 
         const total = formRows.length
         const active = formRows.filter((f) => String(f.status).toLowerCase() === "published").length
+        // Hitung banyak submission per form dalam satu pass (Map), menghindari
+        // filter bersarang O(form × submission) saat data besar.
+        const countByForm = new Map<string, number>()
+        for (const s of subRows) {
+            countByForm.set(s.form_id, (countByForm.get(s.form_id) ?? 0) + 1)
+        }
         const nextBarData = formRows
             .map((f) => ({
                 name: f.title.length > 14 ? f.title.slice(0, 14) + "…" : f.title,
-                value: subRows.filter((s) => s.form_id === f.id).length,
+                value: countByForm.get(f.id) ?? 0,
                 formId: f.id,
             }))
             .filter((d) => d.value > 0)
@@ -103,6 +125,12 @@ function CreatorDashboard() {
         loadStats()
     }, [user, loadStats])
 
+    // Handler dipanggil dari chart (recharts). Reference disetabilkan supaya
+    // prop chart tetap sama antar render dan React.memo pada chart bekerja.
+    const goToForm = useCallback((id: string) => {
+        navigate(`/creator/forms/${id}`)
+    }, [navigate])
+
     return (
         <div className="flex flex-col items-center px-3.5 sm:px-6 py-5 sm:py-10 lg:py-23">
             <div className="xl:max-w-7xl lg:max-w-5xl w-full">
@@ -115,19 +143,21 @@ function CreatorDashboard() {
                     <p className="text-xs sm:text-lg text-tinted mb-4 sm:mb-6">Ringkasan formulir milik kamu.</p>
                 </div>
 
-                <div className="lg:hidden mt-3 mb-4">
-                    {barData.length > 0 ? (
-                        <MiniDistributionChart
-                            data={barData}
-                            barColor={colors.done}
-                            onBarClick={(id) => navigate(`/creator/forms/${id}`)}
-                        />
-                    ) : (
-                        <div className="bg-white border border-second p-5 shadow-sm rounded-xl flex items-center justify-center h-44 sm:h-[260px]">
-                            <p className="text-sm text-tinted">Belum ada submission untuk ditampilkan.</p>
-                        </div>
-                    )}
-                </div>
+                {!isLg && (
+                    <div className="mt-3 mb-4">
+                        {barData.length > 0 ? (
+                            <MiniDistributionChart
+                                data={barData}
+                                barColor={colors.done}
+                                onBarClick={goToForm}
+                            />
+                        ) : (
+                            <div className="bg-white border border-second p-5 shadow-sm rounded-xl flex items-center justify-center h-44 sm:h-[260px]">
+                                <p className="text-sm text-tinted">Belum ada submission untuk ditampilkan.</p>
+                            </div>
+                        )}
+                    </div>
+                )}
 
                 {!loading && (
                     <div className="flex flex-col">
@@ -192,22 +222,24 @@ function CreatorDashboard() {
                             </div> */}
                         </div>
 
-                        {/* Chart hanya tampil di rentang layar lg saja */}
-                        <div className="rounded-xl hidden lg:block mt-3">
-                            {barData.length > 0 ? (
-                                <DistributionChart
-                                    title="Responden per Form"
-                                    subtitle="Jumlah responden tiap formulir."
-                                    data={barData}
-                                    barColor={colors.done}
-                                    onBarClick={(id) => navigate(`/creator/forms/${id}`)}
-                                />
-                            ) : (
-                                <div className="bg-white border border-second p-5 shadow-sm rounded-lg flex items-center justify-center h-[260px]">
-                                    <p className="text-sm text-tinted">Belum ada submission untuk ditampilkan.</p>
-                                </div>
-                            )}
-                        </div>
+                        {/* Chart hanya tampil di layar lg ke atas (dan hanya yang ter-mount satu) */}
+                        {isLg && (
+                            <div className="rounded-xl mt-3">
+                                {barData.length > 0 ? (
+                                    <DistributionChart
+                                        title="Responden per Form"
+                                        subtitle="Jumlah responden tiap formulir."
+                                        data={barData}
+                                        barColor={colors.done}
+                                        onBarClick={goToForm}
+                                    />
+                                ) : (
+                                    <div className="bg-white border border-second p-5 shadow-sm rounded-lg flex items-center justify-center h-[260px]">
+                                        <p className="text-sm text-tinted">Belum ada submission untuk ditampilkan.</p>
+                                    </div>
+                                )}
+                            </div>
+                        )}
 
                         {/* Di mobile tidak ada sidebar, jadi akses halaman lewat dashboard. */}
                         <div className="lg:hidden flex flex-col gap-2.5 sm:gap-3 border-t border-dashed border-second pt-5">

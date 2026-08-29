@@ -1,6 +1,7 @@
 import { Routes, Route, useLocation } from "react-router-dom"
 import { lazy, Suspense, useEffect, useState } from "react"
 import { AnimatePresence, MotionConfig, motion } from "motion/react"
+import { easeOutExpo } from "./lib/motion"
 import { AuthProvider } from "./lib/auth"
 import Navbar from "./components/navbar"
 import Dock from "./components/dock"
@@ -57,6 +58,13 @@ function App() {
   const location = useLocation()
   const isMobile = useIsMobile()
   const isCreator = location.pathname.startsWith("/creator")
+  // Reveal lengkap (sidebar geser + konten terdorong) hanya saat MASUK area creator:
+  // pertama kali atau kembali dari halaman luar. Selama berada di dalam creator
+  // (pindah antar halaman) reveal dikunci supaya tidak terulang; di-reset saat keluar.
+  const [creatorRevealed, setCreatorRevealed] = useState(false)
+  useEffect(() => {
+    if (!isCreator) setCreatorRevealed(false)
+  }, [isCreator])
   const hideNav =
     hideNavPaths.includes(location.pathname) ||
     /^\/form\/[^/]+$/.test(location.pathname) ||
@@ -74,10 +82,10 @@ function App() {
             <motion.div
               key="nav-general"
               className="sticky top-0 z-50"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
+              initial={{ opacity: 0, y: -8 }}
+              animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0 }}
-              transition={{ duration: 0.2, ease: "easeOut" }}
+              transition={{ duration: 0.35, ease: easeOutExpo }}
             >
               <Navbar />
             </motion.div>
@@ -85,7 +93,9 @@ function App() {
           {!hideNav && isCreator && (
             <motion.div
               key="nav-creator"
-              initial={{ opacity: 0 }}
+              // initial=false: biar slide-in dikerjakan oleh sidebar-nya sendiri
+              // (motion.aside x: -100% -> 0), bukan fade wrapper. exit tetap fade-out.
+              initial={false}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               transition={{ duration: 0.2, ease: "easeOut" }}
@@ -99,9 +109,9 @@ function App() {
           <motion.div
             key={location.pathname}
             className={`flex-1 ${showDock ? "pb-24 md:pb-0" : ""}`}
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.45, ease: easeOutExpo }}
           >
             <Routes>
             <Route path="/" element={<Home />} />
@@ -113,7 +123,14 @@ function App() {
             <Route path="/form/:formId" element={<FormResolver />} />
             <Route path="/form/list" element={<FormList />} />
             <Route path="/form/result/:submissionId" element={<ResultPage />} />
-            <Route element={<CreatorLayout />}>
+            <Route
+              element={
+                <CreatorLayout
+                  reveal={isCreator && !creatorRevealed}
+                  onRevealed={() => setCreatorRevealed(true)}
+                />
+              }
+            >
               <Route
                 path="/creator"
                 element={

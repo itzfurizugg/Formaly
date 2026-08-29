@@ -9,7 +9,7 @@ import { useAuth } from "../../lib/auth-context"
 import { loginUrl } from "../../lib/redirect"
 import ModalPortal from "../../components/modalPortal"
 // import FormHeader from "../../components/creator/formHeader"
-import { alertPop, modalBackdrop, modalPanel } from "../../lib/motion"
+import { alertPop, easeOutExpo, modalBackdrop, modalPanel } from "../../lib/motion"
 
 interface Option {
     id: string
@@ -371,7 +371,7 @@ function FormPage() {
                                 key={current}
                                 initial={{ opacity: 0, y: 16 }}
                                 animate={{ opacity: 1, y: 0 }}
-                                transition={{ duration: 0.45, ease: [0.22, 1, 0.36, 1] }}
+                                transition={{ duration: 0.45, ease: easeOutExpo }}
                                 className="bg-base-300 lg:bg-white border border-second p-1 lg:p-6 lg:shadow-sm rounded-xl"
                             >
                                 <div className="flex items-center justify-between mb-3">
