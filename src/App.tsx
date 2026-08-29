@@ -1,5 +1,5 @@
 import { Routes, Route, useLocation } from "react-router-dom"
-import { lazy, Suspense, useEffect, useState } from "react"
+import { Component, lazy, Suspense, useEffect, useState, type ReactNode } from "react"
 import { AnimatePresence, MotionConfig, motion } from "motion/react"
 import { AuthProvider } from "./lib/auth"
 import Navbar from "./components/navbar"
@@ -53,6 +53,27 @@ function useIsMobile() {
   return isMobile
 }
 
+// Error boundary agar error render pada satu rute tidak mengosongkan seluruh
+// halaman (blank putih). Menampilkan fallback + tombol muat ulang alih-alih
+// layar mati. Ini juga mencegah "tiada apa-apa" saat chunk gagal dimuat.
+class RouteErrorBoundary extends Component<{ children: ReactNode }, { hasError: boolean }> {
+  state = { hasError: false }
+  static getDerivedStateFromError() {
+    return { hasError: true }
+  }
+  componentDidCatch(error: unknown) {
+    console.error("Route error:", error)
+  }
+  render() {
+    if (this.state.hasError) {
+      return (
+        <LoadingPage label="Terjadi kesalahan. Coba muat ulang halaman." />
+      )
+    }
+    return this.props.children
+  }
+}
+
 function App() {
   const location = useLocation()
   const isMobile = useIsMobile()
@@ -95,15 +116,9 @@ function App() {
           )}
         </AnimatePresence>
         <Suspense fallback={<LoadingPage />}>
-          {/* Key = pathname agar tiap pindah halaman me-replay animasi pembukaan halaman */}
-          <motion.div
-            key={location.pathname}
-            className={`flex-1 ${showDock ? "pb-24 md:pb-0" : ""}`}
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
-          >
-            <Routes>
+          <RouteErrorBoundary>
+            <div className={`flex-1 ${showDock ? "pb-24 md:pb-0" : ""}`}>
+              <Routes>
             <Route path="/" element={<Home />} />
             <Route path="/history" element={<History />} />
             <Route path="/profile" element={<Profile />} />
@@ -208,7 +223,8 @@ function App() {
             <Route path="/forgot-password" element={<ForgotPassword />} />
             <Route path="/reset-password" element={<ResetPassword />} />
           </Routes>
-          </motion.div>
+            </div>
+          </RouteErrorBoundary>
         </Suspense>
         {showDock && <Dock />}
       </div>
