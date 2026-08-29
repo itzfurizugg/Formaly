@@ -37,7 +37,6 @@ function Dock() {
                     {items.map(({ to, label, icon: Icon }) => {
                         const isActive = pathname === to
                         return (
-                            <>
                             <Link
                                 key={to}
                                 to={to}
@@ -64,7 +63,6 @@ function Dock() {
                                     </span>
                                 )}
                             </Link>
-                            </>
                         )
                     })}
                 </nav>

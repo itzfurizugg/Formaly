@@ -19,7 +19,7 @@ interface NavItem {
     active: boolean
 }
 
-// Orkestrasi reveal item nav setelah sidebar selesai menggelincir masuk:
+// Orkestrasi item nav setelah sidebar selesai menggelincir masuk:
 // delay kecil dulu (guarded slide), lalu item muncul fade + angkat ringan.
 const sidebarNav: Variants = {
     hidden: {},
@@ -129,7 +129,7 @@ function CreatorSidebar() {
                 initial={{ x: "-100%" }}
                 animate={{ x: "0%" }}
                 transition={{ duration: 0.45, ease: easeOutExpo }}
-                className="hidden lg:flex fixed inset-y-0 left-0 z-40 w-64 flex-col bg-base-200 border-r border-second"
+                className="hidden lg:flex fixed inset-y-0 left-0 z-40 w-[16.666vw] flex-col bg-base-200 border-r border-second"
             >
                 <div className="flex items-center h-16 px-5 border-b border-second shrink-0">
                     <Link to="/" onClick={() => open && closeNav()}>

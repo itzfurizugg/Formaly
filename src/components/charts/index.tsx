@@ -27,7 +27,7 @@ interface ChartCardProps {
 
 function Card({ title, subtitle, children, height = 260 }: ChartCardProps) {
     return (
-        <div className="bg-white border border-second p-5 shadow-sm rounded-lg">
+        <div className="bg-white border border-second p-5 shadow-sm rounded-xl">
             <p className="font-semibold text-darks mb-0.5">{title}</p>
             {subtitle && <p className="text-xs text-tinted mb-4">{subtitle}</p>}
             <div style={{ height }}>{children}</div>

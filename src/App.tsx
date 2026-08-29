@@ -3,10 +3,12 @@ import { lazy, Suspense, useEffect, useState } from "react"
 import { AnimatePresence, MotionConfig, motion } from "motion/react"
 import { easeOutExpo } from "./lib/motion"
 import { AuthProvider } from "./lib/auth"
+import { useAuth } from "./lib/auth-context"
 import Navbar from "./components/navbar"
 import Dock from "./components/dock"
 import CreatorSidebar from "./components/creator/sidebar"
 import LoadingPage from "./components/loadingPage"
+import AppSplash from "./components/AppSplash"
 import { AlertToaster } from "./lib/alerts"
 
 const Login = lazy(() => import("./pages/auth/login"))
@@ -23,22 +25,24 @@ const FormDescription = lazy(() => import("./pages/form/description"))
 const FormResolver = lazy(() => import("./pages/form/resolver"))
 const FormList = lazy(() => import("./pages/form/formlist"))
 const ResultPage = lazy(() => import("./pages/form/result"))
-const CreatorGuard = lazy(() => import("./pages/creator/guard"))
-// Loader dipisah agar bisa dipakai ulang untuk preload chunk saat guard
-// mengecek role (unduhan bundle paralel dengan query role, bukan menunggu).
-const loadCreatorDashboard = () => import("./pages/creator/dashboard")
-const CreatorDashboard = lazy(loadCreatorDashboard)
-const CreatorForms = lazy(() => import("./pages/creator/forms"))
-const CreatorResponden = lazy(() => import("./pages/creator/responden"))
-const CreatorFormNew = lazy(() => import("./pages/creator/formNew"))
-const CreatorFormEdit = lazy(() => import("./pages/creator/formEdit"))
-const CreatorQuestions = lazy(() => import("./pages/creator/questions"))
-const CreatorFormSettings = lazy(() => import("./pages/creator/formSettings"))
-const CreatorTokens = lazy(() => import("./pages/creator/tokens"))
-const CreatorSubmissions = lazy(() => import("./pages/creator/submissions"))
-const CreatorSubmissionDetail = lazy(() => import("./pages/creator/submissionDetail"))
-const CreatorShared = lazy(() => import("./pages/creator/shared"))
-const CreatorLayout = lazy(() => import("./pages/creator/layout"))
+// SATU titik lazy() untuk seluruh area /creator: semua halaman & guard diimpor
+// eager lewat modul ini, jadi ketika chunk pertama kali diunduh, seluruh area
+// creator ikut tersedia — bukan tiga chunk berurutan (layout → guard → halaman).
+// Preload chunk terpisah sudah tidak diperlukan lagi.
+const creatorEntry = () => import("./pages/creator/index")
+const CreatorGuard = lazy(() => creatorEntry().then((m) => ({ default: m.CreatorGuard })))
+const CreatorDashboard = lazy(() => creatorEntry().then((m) => ({ default: m.CreatorDashboard })))
+const CreatorForms = lazy(() => creatorEntry().then((m) => ({ default: m.CreatorForms })))
+const CreatorResponden = lazy(() => creatorEntry().then((m) => ({ default: m.CreatorResponden })))
+const CreatorFormNew = lazy(() => creatorEntry().then((m) => ({ default: m.CreatorFormNew })))
+const CreatorFormEdit = lazy(() => creatorEntry().then((m) => ({ default: m.CreatorFormEdit })))
+const CreatorQuestions = lazy(() => creatorEntry().then((m) => ({ default: m.CreatorQuestions })))
+const CreatorFormSettings = lazy(() => creatorEntry().then((m) => ({ default: m.CreatorFormSettings })))
+const CreatorTokens = lazy(() => creatorEntry().then((m) => ({ default: m.CreatorTokens })))
+const CreatorSubmissions = lazy(() => creatorEntry().then((m) => ({ default: m.CreatorSubmissions })))
+const CreatorSubmissionDetail = lazy(() => creatorEntry().then((m) => ({ default: m.CreatorSubmissionDetail })))
+const CreatorShared = lazy(() => creatorEntry().then((m) => ({ default: m.CreatorShared })))
+const CreatorLayout = lazy(() => creatorEntry().then((m) => ({ default: m.CreatorLayout })))
 
 const hideNavPaths = ["/login", "/register", "/auth", "/forgot-password", "/reset-password", "/form/description", "/form", "/form/list", "/form/result", "/credit"]
 
@@ -54,17 +58,25 @@ function useIsMobile() {
   return isMobile
 }
 
+// App hanya menyediakan provider. Konten asli (gated auth) ada di AppShell,
+// biar useAuth() bisa dipanggil di dalam cakupan AuthProvider.
 function App() {
+  return (
+    <AuthProvider>
+      <AppShell />
+      <AlertToaster />
+    </AuthProvider>
+  )
+}
+
+// Isi app yang sesungguhnya. Selama auth masih dicek di first load / refresh,
+// yang dirender hanya AppSplash — Router & semua halaman belum di-mount sama
+// sekali, sehingga tidak ada flash UI-lalu-loading-lalu-UI.
+function AppShell() {
+  const { loading: authLoading } = useAuth()
   const location = useLocation()
   const isMobile = useIsMobile()
   const isCreator = location.pathname.startsWith("/creator")
-  // Reveal lengkap (sidebar geser + konten terdorong) hanya saat MASUK area creator:
-  // pertama kali atau kembali dari halaman luar. Selama berada di dalam creator
-  // (pindah antar halaman) reveal dikunci supaya tidak terulang; di-reset saat keluar.
-  const [creatorRevealed, setCreatorRevealed] = useState(false)
-  useEffect(() => {
-    if (!isCreator) setCreatorRevealed(false)
-  }, [isCreator])
   const hideNav =
     hideNavPaths.includes(location.pathname) ||
     /^\/form\/[^/]+$/.test(location.pathname) ||
@@ -73,8 +85,9 @@ function App() {
   // dashboard maupun halaman yang menyembunyikan navigasi (auth, form resolver, dll).
   const showDock = !hideNav && !isCreator
 
+  if (authLoading) return <AppSplash />
+
   return (
-    <AuthProvider>
       <MotionConfig reducedMotion="user">
       <div className="bg-second min-h-screen flex flex-col">
         <AnimatePresence mode="wait" initial={false}>
@@ -124,20 +137,11 @@ function App() {
             <Route path="/form/list" element={<FormList />} />
             <Route path="/form/result/:submissionId" element={<ResultPage />} />
             <Route
-              element={
-                <CreatorLayout
-                  reveal={isCreator && !creatorRevealed}
-                  onRevealed={() => setCreatorRevealed(true)}
-                />
-              }
+              element={<CreatorLayout />}
             >
               <Route
                 path="/creator"
-                element={
-                  <CreatorGuard preload={loadCreatorDashboard}>
-                    <CreatorDashboard />
-                  </CreatorGuard>
-                }
+                element={<CreatorDashboard />}
               />              <Route
                 path="/creator/forms"
                 element={
@@ -230,8 +234,6 @@ function App() {
         {showDock && <Dock />}
       </div>
       </MotionConfig>
-      <AlertToaster />
-    </AuthProvider>
   )
 }
 

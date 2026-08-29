@@ -6,6 +6,7 @@ import { supabase } from "../lib/supabase"
 import { useAuth } from "../lib/auth-context"
 import { loginUrl } from "../lib/redirect"
 import { easeOutExpo } from "../lib/motion"
+import charGirl from "../assets/char-girl.png"
 
 interface FormData {
     id: string
@@ -108,35 +109,43 @@ function Home() {
     return (
         <>
             {!authLoading && user && (
-                <div className="flex flex-col items-center justify-center min-h-[60vh] px-3.5 py-10 text-left lg:text-center">
-                    <div className="w-full max-w-xl">
-                        <motion.h1
-                            initial={{ opacity: 0, y: 16 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            transition={{ duration: 0.45, ease: easeOutExpo }}
-                            className="w-full text-4xl md:text-7xl font-display font-bold uppercase text-darks"
-                        >
-                            Mulai mengerjakan!
-                        </motion.h1>
-                        <motion.p
-                            initial={{ opacity: 0, y: 16 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            transition={{ duration: 0.45, ease: easeOutExpo, delay: 0.1 }}
-                            className="w-full text-tinted mt-3"
-                        >
-                            Cari formulir berdasarkan tag yang kamu ketahui, lalu kerjakan.
-                        </motion.p>
+                <div className="flex flex-col items-center px-3.5 sm:px-6 py-10 sm:py-14 lg:py-20">
+                    <div className="w-full max-w-3xl flex flex-col items-start lg:items-center text-left lg:text-center">
+                        <div className="bg-white w-full p-6 sm:p-10 rounded-xl">
+                            <motion.div
+                                initial={{ opacity: 0, y: 16 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                transition={{ duration: 0.45, ease: easeOutExpo }}
+                                className="flex flex-col items-start lg:items-center"
+                            >
+                                <h1 className="text-5xl sm:text-6xl md:text-7xl font-display font-bold uppercase text-darks leading-[1.05]">
+                                    Mulai
+                                </h1>
+                                <h1 className="text-5xl sm:text-6xl md:text-7xl font-display font-bold uppercase text-darks leading-[1.05]">
+                                    Mengerjakan
+                                </h1>
+                            </motion.div>
+                        </div>
 
                         <motion.div
                             initial={{ opacity: 0, y: 16 }}
                             animate={{ opacity: 1, y: 0 }}
-                            transition={{ duration: 0.45, ease: easeOutExpo, delay: 0.2 }}
-                            className="mt-8"
+                            transition={{ duration: 0.45, ease: easeOutExpo, delay: 0.15 }}
+                            className="w-full max-w-xl mt-8"
                         >
                             <Search onSearch={handleTagSearch} loading={searching} />
                             {error && <p className="text-sm text-wrong mt-3">{error}</p>}
                         </motion.div>
                     </div>
+
+                    <motion.div
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ duration: 0.5, ease: easeOutExpo, delay: 0.25 }}
+                        className="flex items-end justify-center mt-8 sm:mt-10 pb-4 sm:pb-10"
+                    >
+                        <img src={charGirl} className="h-56 sm:h-72 md:h-96 w-auto" />
+                    </motion.div>
                 </div>
             )}
         </>

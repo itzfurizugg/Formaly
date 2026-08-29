@@ -598,11 +598,11 @@ function Submissions() {
                             </div>
                         )}
 
-                {submissions.length === 0 ? (
-                    <div className="text-center py-16">
-                        <p className="text-tinted">Belum ada submission.</p>
-                    </div>
-                ) : (
+                        {submissions.length === 0 ? (
+                            <div className="text-center py-16">
+                                <p className="text-tinted">Belum ada submission.</p>
+                            </div>
+                        ) : (
                             <div className="space-y-3">
                                 {submissions.map((s) => (
                                     <div key={s.id} className="bg-white border border-second p-5 shadow-sm rounded-xl">

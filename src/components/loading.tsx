@@ -13,6 +13,48 @@ const SHOW_DELAY = 250
 const MIN_DURATION = 1000
 const FADE_MS = 500
 
+// Spinner 8-blade ala iOS UIActivityIndicatorView: tiap blade menyala lalu
+// meredup bergantian, memberi ilusi berputar tanpa benar-benar rotate.
+const SPIN_DURATION = 1
+const BLADE_COUNT = 8
+const BLADE_STEP = SPIN_DURATION / BLADE_COUNT
+
+function ActivitySpinner({ size = 28 }: { size?: number }) {
+    const radius = size * 0.32
+    const bladeLength = size * 0.28
+    const bladeWidth = Math.max(2, size * 0.09)
+
+    return (
+        <div className="relative" style={{ width: size, height: size }}>
+            {Array.from({ length: BLADE_COUNT }).map((_, i) => {
+                const angle = (360 / BLADE_COUNT) * i
+                return (
+                    <motion.span
+                        key={i}
+                        className="absolute top-1/2 left-1/2 rounded-full bg-darks"
+                        style={{
+                            width: bladeWidth,
+                            height: bladeLength,
+                            marginLeft: -bladeWidth / 2,
+                            marginTop: -radius - bladeLength,
+                            transformOrigin: `${bladeWidth / 2}px ${radius + bladeLength}px`,
+                            transform: `rotate(${angle}deg)`,
+                        }}
+                        animate={{ opacity: [1, 0.15] }}
+                        transition={{
+                            duration: 0.4,
+                            ease: "linear",
+                            repeat: Infinity,
+                            repeatDelay: SPIN_DURATION - 0.4,
+                            delay: i * BLADE_STEP,
+                        }}
+                    />
+                )
+            })}
+        </div>
+    )
+}
+
 function Loading({ show = true, label = "Memuat...", inline = false }: LoadingProps) {
     const [mounted, setMounted] = useState(false)
     const [opaque, setOpaque] = useState(false)
@@ -59,14 +101,7 @@ function Loading({ show = true, label = "Memuat...", inline = false }: LoadingPr
             animate={{ opacity: opaque ? 1 : 0 }}
             transition={{ duration: FADE_MS / 1000, ease: "easeOut" }}
         >
-            <div className="relative h-1 w-44 max-w-full overflow-hidden rounded-full bg-white/70">
-                <motion.div
-                    className="absolute h-full w-1/3 rounded-full bg-darks"
-                    initial={{ left: "-35%", right: "100%" }}
-                    animate={{ left: ["-35%", "0%", "100%"], right: ["100%", "0%", "-35%"] }}
-                    transition={{ duration: 1.2, ease: "easeInOut", repeat: Infinity }}
-                />
-            </div>
+            <ActivitySpinner size={inline ? 26 : 30} />
             <p className="text-xs text-tinted">{label}</p>
         </motion.div>
     )

@@ -105,8 +105,14 @@ function SubmissionDetail() {
         return "Pilihan Tunggal"
     }
 
-    const fmtDate = (d: string | null) => (d ? new Date(d).toLocaleString("id-ID") : "-")
-
+    const fmtDate = (d: string | null) => {
+        if (!d) return "-"
+        const date = new Date(d)
+        const tanggal = date.toLocaleDateString("id-ID", { day: "numeric", month: "long", year: "numeric" })
+        const jam = date.toLocaleTimeString("id-ID", { hour: "2-digit", minute: "2-digit", second: "2-digit" }).replace(/:/g, ".")
+        return `${tanggal}   -   ${jam}`
+    }
+    
     const hasCorrectAnswer = (a: AnswerRow) => {
         const q = a.question
         if (!q || q.question_type === "text") return false
@@ -143,157 +149,160 @@ function SubmissionDetail() {
     return (
         <>
             {!loading && (
-        <div className="flex flex-col items-center px-3.5 sm:px-6 py-5 sm:py-10">
-            <div className="w-full xl:max-w-7xl lg:max-w-5xl">
-                <BackButton to={`/creator/forms/${id}/submissions`} />
+                <div className="flex flex-col items-center px-3.5 sm:px-6 py-5 sm:py-10">
+                    <div className="w-full xl:max-w-7xl lg:max-w-5xl">
+                        <BackButton to={`/creator/forms/${id}/submissions`} showOnDesktop />
 
-                <h1 className="text-2xl lg:text-4xl font-bold text-darks mb-1">Detail Submission</h1>
-                <p className="text-sm text-tinted mb-6">
-                    {info?.user?.name || "Pengguna"} &middot; {info?.form?.title || "Form"} &middot; {fmtDate(info?.submitted_at || null)}
-                </p>
-
-                {info && info.total_score != null && (
-                    <div className="bg-white border border-second p-5 shadow-sm rounded-xl mb-6">
-                        <div className="flex items-center justify-between gap-6">
-                            <div className="flex-1">
-                                <p className="text-xs text-tinted">Total Skor</p>
-                                <p className={`text-3xl font-bold ${info.form?.passing_score != null && info.total_score < info.form.passing_score ? "text-wrong" : "text-pass"}`}>
-                                    {info.total_score}
-                                </p>
-                                <span
-                                    className={`badge rounded-full text-xs mt-2 ${
-                                        info.form?.passing_score != null && info.total_score < info.form.passing_score
-                                            ? "bg-wrong/10 text-wrong border-none"
-                                            : info.status === "SUBMITTED"
-                                            ? "bg-pass/10 text-pass border-none"
-                                            : "badge-ghost text-tinted"
-                                    }`}
-                                >
-                                    {info.form?.passing_score != null && info.total_score < info.form.passing_score
-                                        ? "Gagal"
-                                        : info.status}
-                                </span>
-                            </div>
-                            {scoredCount > 0 && (
-                                <div className="w-28 h-28 shrink-0">
-                                    <DonutChart
-                                        bare
-                                        showLegend={false}
-                                        height={112}
-                                        data={[
-                                            { name: "Benar", value: correctCount, color: colors.pass },
-                                            { name: "Salah", value: wrongCount, color: colors.wrong },
-                                        ]}
-                                    />
-                                </div>
-                            )}
+                        <div className="ml-2 lg:ml-3">
+                            <h1 className="text-3xl lg:text-4xl font-bold text-darks mb-1">Detail Submission</h1>
+                            <p className="text-sm text-tinted">
+                                {info?.user?.name || "Pengguna"} &middot; {info?.form?.title || "Form"}
+                            </p>
+                            <p className="text-sm text-tinted mb-6">
+                                {fmtDate(info?.submitted_at || null)}
+                            </p>
                         </div>
-                        <div className="mt-4 pt-4 border-t border-second text-sm text-tinted flex items-center justify-between">
-                            <span>{answers.length} soal</span>
-                            <span>
-                                <span className="text-pass font-semibold">{correctCount} benar ({correctPct}%)</span> &middot;{" "}
-                                <span className="text-wrong font-semibold">{wrongCount} salah ({wrongPct}%)</span>
-                                {textCount > 0 && <>&nbsp;&middot;&nbsp;<span className="text-tinted">{textCount} isian</span></>}
-                            </span>
-                        </div>
-                    </div>
-                )}
 
-                {answers.length === 0 ? (
-                    <div className="text-center py-16">
-                        <p className="text-tinted">Belum ada jawaban.</p>
-                    </div>
-                ) : (
-                    <div className="space-y-3">
-                        {answers.map((a, idx) => (
-                            <motion.div
-                                key={a.id}
-                                initial={{ opacity: 0, y: 12 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                transition={{ duration: 0.35, ease: easeOutExpo, delay: Math.min(idx * 0.06, 0.4) }}
-                            >
-                            <div className="bg-white border border-second p-5 shadow-sm rounded-xl transition-colors hover:bg-base-200">
-                                <div className="flex items-center gap-2 flex-wrap mb-1">
-                                    <span className="text-sm font-bold text-darks">Soal {idx + 1}</span>
-                                    <span className="badge badge-ghost text-tinted rounded-full text-xs">{typeLabel(a.question?.question_type || "")}</span>
-                                    {a.question?.question_type !== "text" &&
-                                        (hasCorrectAnswer(a) ? (
-                                            isCorrect(a) ? (
-                                                <span className="text-xs text-pass font-medium flex items-center gap-1">
-                                                    <Check className="h-3 w-3" /> Benar
-                                                </span>
-                                            ) : (
-                                                <span className="text-xs text-wrong font-medium flex items-center gap-1">
-                                                    <X className="h-3 w-3" /> Salah
-                                                </span>
-                                            )
-                                        ) : (
-                                            <span className="text-xs text-tinted font-medium">Tanpa Penilaian</span>
-                                        ))}
-                                    {Number(a.score_obtained) > 0 && (
-                                        <span className="text-xs text-done font-medium">+{a.score_obtained} poin</span>
+                        {info && info.total_score != null && (
+                            <div className="bg-white border border-second p-5 shadow-sm rounded-xl mb-6">
+                                <div className="flex items-center justify-between gap-6">
+                                    <div className="flex-1">
+                                        <p className="text-xs text-tinted">Total Skor</p>
+                                        <p className={`text-3xl font-bold ${info.form?.passing_score != null && info.total_score < info.form.passing_score ? "text-wrong" : "text-pass"}`}>
+                                            {info.total_score}
+                                        </p>
+                                        <span
+                                            className={`badge rounded-full text-xs mt-2 ${info.form?.passing_score != null && info.total_score < info.form.passing_score
+                                                ? "bg-wrong/10 text-wrong border-none"
+                                                : info.status === "SUBMITTED"
+                                                    ? "bg-pass/10 text-pass border-none"
+                                                    : "badge-ghost text-tinted"
+                                                }`}
+                                        >
+                                            {info.form?.passing_score != null && info.total_score < info.form.passing_score
+                                                ? "Gagal"
+                                                : info.status}
+                                        </span>
+                                    </div>
+                                    {scoredCount > 0 && (
+                                        <div className="w-28 h-28 shrink-0">
+                                            <DonutChart
+                                                bare
+                                                showLegend={false}
+                                                height={112}
+                                                data={[
+                                                    { name: "Benar", value: correctCount, color: colors.pass },
+                                                    { name: "Salah", value: wrongCount, color: colors.wrong },
+                                                ]}
+                                            />
+                                        </div>
                                     )}
                                 </div>
-                                <div className="text-sm text-darks"><RichText html={a.question?.question_text} /></div>
-                                {a.question?.image_question && (
-                                    <img src={a.question.image_question} alt="Soal" className="max-h-40 object-contain mt-2 border border-second rounded-lg" />
-                                )}
-
-                                {a.question?.question_type === "text" ? (
-                                    <div className="mt-3 text-sm text-darks bg-base border border-second rounded-lg px-3.5 py-2">
-                                        {a.answer_text || "-"}
-                                    </div>
-                                ) : (
-                                    <div className="mt-3 space-y-1.5">
-                                        {(a.question?.question_options || []).map((o) => {
-                                            const selected = a.question?.question_type === "multiple_choice"
-                                                ? (a.selected_options || []).includes(o.id)
-                                                : a.selected_option_id === o.id
-                                            const graded = hasCorrectAnswer(a)
-                                            const isCorrectOption = o.is_correct
-                                            return (
-                                                <div
-                                                    key={o.id}
-                                                    className={`flex items-center gap-2 text-sm rounded-lg px-3.5 py-1.5 border ${
-                                                        graded
-                                                            ? isCorrectOption
-                                                                ? selected
-                                                                    ? "border-pass/40 bg-pass/5 text-pass"
-                                                                    : "border-done/40 bg-done/5 text-done"
-                                                                : selected
-                                                                ? "border-wrong/40 bg-wrong/5 text-wrong"
-                                                                : "border-second text-tinted"
-                                                            : selected
-                                                            ? "border-darks/30 bg-darks/5 text-darks"
-                                                            : "border-second text-tinted"
-                                                    }`}
-                                                >
-                                                    {graded ? (
-                                                        isCorrectOption ? (
-                                                            <Check className="h-3.5 w-3.5 shrink-0" />
-                                                        ) : selected ? (
-                                                            <X className="h-3.5 w-3.5 shrink-0" />
-                                                        ) : (
-                                                            <span className="w-3.5 h-3.5 shrink-0" />
-                                                        )
-                                                    ) : selected ? (
-                                                        <span className="h-2 w-2 shrink-0 rounded-full bg-darks/50" />
-                                                    ) : (
-                                                        <span className="w-3.5 h-3.5 shrink-0" />
-                                                    )}
-                                                    <RichText as="span" html={o.option_text} />
-                                                </div>
-                                            )
-                                        })}
-                                    </div>
-                                )}
+                                <div className="mt-4 pt-4 border-t border-second text-sm text-tinted flex items-center justify-between">
+                                    <span>{answers.length} soal</span>
+                                    <span>
+                                        <span className="text-pass font-semibold">{correctCount} benar ({correctPct}%)</span> &middot;{" "}
+                                        <span className="text-wrong font-semibold">{wrongCount} salah ({wrongPct}%)</span>
+                                        {textCount > 0 && <>&nbsp;&middot;&nbsp;<span className="text-tinted">{textCount} isian</span></>}
+                                    </span>
+                                </div>
                             </div>
-                            </motion.div>
-                        ))}
+                        )}
+
+                        {answers.length === 0 ? (
+                            <div className="text-center py-16">
+                                <p className="text-tinted">Belum ada jawaban.</p>
+                            </div>
+                        ) : (
+                            <div className="space-y-3">
+                                {answers.map((a, idx) => (
+                                    <motion.div
+                                        key={a.id}
+                                        initial={{ opacity: 0, y: 12 }}
+                                        animate={{ opacity: 1, y: 0 }}
+                                        transition={{ duration: 0.35, ease: easeOutExpo, delay: Math.min(idx * 0.06, 0.4) }}
+                                    >
+                                        <div className="bg-white border border-second p-5 shadow-sm rounded-xl transition-colors hover:bg-base-200">
+                                            <div className="flex items-center gap-2 flex-wrap mb-1">
+                                                <span className="text-sm font-bold text-darks">Soal {idx + 1}</span>
+                                                <span className="badge badge-ghost text-tinted rounded-full text-xs">{typeLabel(a.question?.question_type || "")}</span>
+                                                {a.question?.question_type !== "text" &&
+                                                    (hasCorrectAnswer(a) ? (
+                                                        isCorrect(a) ? (
+                                                            <span className="text-xs text-pass font-medium flex items-center gap-1">
+                                                                <Check className="h-3 w-3" /> Benar
+                                                            </span>
+                                                        ) : (
+                                                            <span className="text-xs text-wrong font-medium flex items-center gap-1">
+                                                                <X className="h-3 w-3" /> Salah
+                                                            </span>
+                                                        )
+                                                    ) : (
+                                                        <span className="text-xs text-tinted font-medium">Tanpa Penilaian</span>
+                                                    ))}
+                                                {Number(a.score_obtained) > 0 && (
+                                                    <span className="text-xs text-done font-medium">+{a.score_obtained} poin</span>
+                                                )}
+                                            </div>
+                                            <div className="text-sm text-darks"><RichText html={a.question?.question_text} /></div>
+                                            {a.question?.image_question && (
+                                                <img src={a.question.image_question} alt="Soal" className="max-h-40 object-contain mt-2 border border-second rounded-lg" />
+                                            )}
+
+                                            {a.question?.question_type === "text" ? (
+                                                <div className="mt-3 text-sm text-darks bg-base border border-second rounded-lg px-3.5 py-2">
+                                                    {a.answer_text || "-"}
+                                                </div>
+                                            ) : (
+                                                <div className="mt-3 space-y-1.5">
+                                                    {(a.question?.question_options || []).map((o) => {
+                                                        const selected = a.question?.question_type === "multiple_choice"
+                                                            ? (a.selected_options || []).includes(o.id)
+                                                            : a.selected_option_id === o.id
+                                                        const graded = hasCorrectAnswer(a)
+                                                        const isCorrectOption = o.is_correct
+                                                        return (
+                                                            <div
+                                                                key={o.id}
+                                                                className={`flex items-center gap-2 text-sm rounded-lg px-3.5 py-1.5 border ${graded
+                                                                    ? isCorrectOption
+                                                                        ? selected
+                                                                            ? "border-pass/40 bg-pass/5 text-pass"
+                                                                            : "border-done/40 bg-done/5 text-done"
+                                                                        : selected
+                                                                            ? "border-wrong/40 bg-wrong/5 text-wrong"
+                                                                            : "border-second text-tinted"
+                                                                    : selected
+                                                                        ? "border-darks/30 bg-darks/5 text-darks"
+                                                                        : "border-second text-tinted"
+                                                                    }`}
+                                                            >
+                                                                {graded ? (
+                                                                    isCorrectOption ? (
+                                                                        <Check className="h-3.5 w-3.5 shrink-0" />
+                                                                    ) : selected ? (
+                                                                        <X className="h-3.5 w-3.5 shrink-0" />
+                                                                    ) : (
+                                                                        <span className="w-3.5 h-3.5 shrink-0" />
+                                                                    )
+                                                                ) : selected ? (
+                                                                    <span className="h-2 w-2 shrink-0 rounded-full bg-darks/50" />
+                                                                ) : (
+                                                                    <span className="w-3.5 h-3.5 shrink-0" />
+                                                                )}
+                                                                <RichText as="span" html={o.option_text} />
+                                                            </div>
+                                                        )
+                                                    })}
+                                                </div>
+                                            )}
+                                        </div>
+                                    </motion.div>
+                                ))}
+                            </div>
+                        )}
                     </div>
-                )}
-            </div>
-        </div>
+                </div>
             )}
         </>
     )
