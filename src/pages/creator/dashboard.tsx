@@ -153,6 +153,7 @@ function CreatorDashboard() {
         {
             label: "Total Form",
             value: stats.total,
+            desc: "Form yang anda miliki",
             blobClass: "bg-darks/5",
             iconWrap: "bg-darks/10 text-darks",
             icon: FileText,
@@ -160,6 +161,7 @@ function CreatorDashboard() {
         {
             label: "Form Aktif",
             value: stats.active,
+            desc: "Form yang dapat diakses",
             blobClass: "bg-done/10",
             iconWrap: "bg-done/10 text-done",
             icon: CheckCircle2,
@@ -167,6 +169,7 @@ function CreatorDashboard() {
         {
             label: "Total Submission",
             value: stats.submissions,
+            desc: "Responden form anda",
             blobClass: "bg-gradient-to-br from-done/5 to-second/30",
             iconWrap: "bg-gradient-to-br from-done/10 to-darks/5 text-done",
             icon: ClipboardList,
@@ -329,7 +332,7 @@ function CreatorDashboard() {
                                     </div>
                                     {forms.length > 0 ? (
                                         <div className="flex flex-col gap-2.5">
-                                            {forms.slice(0, 5).map((f, index) => {
+                                            {forms.slice(0, 3).map((f, index) => {
                                                 const isPublished = String(f.status).toLowerCase() === "published"
                                                 return (
                                                     <motion.div
@@ -340,12 +343,12 @@ function CreatorDashboard() {
                                                     >
                                                         <button
                                                             onClick={() => goToForm(f.id)}
-                                                            className="w-full flex items-center gap-3 bg-white border border-second rounded-xl shadow-sm p-3 transition-all active:scale-[0.96] text-left"
+                                                            className="w-full flex items-center gap-3 bg-base-200 border border-second rounded-xl p-3 transition-all active:scale-[0.96] text-left"
                                                         >
                                                             <span className="flex-1 min-w-0">
                                                                 <span className="block text-sm font-bold text-darks truncate">{f.title}</span>
                                                                 <span className="flex items-center gap-2 mt-1">
-                                                                    <span className={`badge rounded-full text-[10px] ${isPublished ? "bg-done/10 text-done border-none" : "badge-ghost text-tinted"}`}>
+                                                                    <span className={`badge rounded-full text-[10px] ${isPublished ? "bg-done/10 text-done border-none" : "badge-ghost bg-black/10 text-darks"}`}>
                                                                         {isPublished ? "Public" : "Draft"}
                                                                     </span>
                                                                     <span className="text-xs text-tinted">{f.submissions} responden</span>

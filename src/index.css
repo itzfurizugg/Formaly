@@ -55,14 +55,19 @@ body::-webkit-scrollbar {
   border: 1px solid var(--color-second);
   border-radius: 0.75rem;
   background: #fff;
+  box-shadow: 0 1px 2px rgb(0 0 0 / 0.04);
   /* Tidak pakai overflow:hidden: akan memotong dropdown heading (.ql-picker-options)
      saat expand. Sudut tetap rapi lewat border-radius di toolbar & container. */
-  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease, transform 0.15s ease;
+}
+
+.rich-editor:hover {
+  border-color: color-mix(in srgb, var(--color-done) 45%, var(--color-second));
 }
 
 .rich-editor:focus-within {
   border-color: var(--color-done);
-  box-shadow: 0 0 0 3px rgb(0 125 204 / 0.12);
+  box-shadow: 0 0 0 3px rgb(0 125 204 / 0.12), 0 2px 8px rgb(0 0 0 / 0.04);
 }
 
 .rich-editor .ql-toolbar.ql-snow {
@@ -70,11 +75,24 @@ body::-webkit-scrollbar {
   border-bottom: 1px solid var(--color-second);
   border-radius: 0.75rem 0.75rem 0 0;
   background: var(--color-base);
-  padding: 0.35rem 0.5rem;
+  padding: 0.4rem 0.55rem;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.2rem;
 }
 
 .rich-editor .ql-toolbar.ql-snow .ql-formats {
-  margin-right: 0.25rem;
+  margin-right: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.05rem;
+}
+
+/* pemisah antar grup tombol */
+.rich-editor .ql-toolbar.ql-snow .ql-formats + .ql-formats {
+  margin-left: 0.35rem;
+  padding-left: 0.35rem;
+  border-left: 1px solid var(--color-second);
 }
 
 .rich-editor .ql-snow .ql-picker,
@@ -85,6 +103,8 @@ body::-webkit-scrollbar {
 
 .rich-editor .ql-toolbar.ql-snow button {
   border-radius: 0.375rem;
+  height: 26px;
+  width: 28px;
 }
 
 .rich-editor .ql-toolbar.ql-snow button:hover {
@@ -109,6 +129,22 @@ body::-webkit-scrollbar {
 
 .rich-editor .ql-toolbar.ql-snow button.ql-active .ql-fill {
   fill: #fff;
+}
+
+.rich-editor .ql-toolbar.ql-snow .ql-picker {
+  height: 26px;
+}
+
+.rich-editor .ql-toolbar.ql-snow .ql-picker-label {
+  display: flex;
+  align-items: center;
+  height: 26px;
+}
+
+/* tombol formula custom konsisten ukurannya dgn tombol lain di toolbar */
+.rich-editor .ql-toolbar.ql-snow .formaly-tex-trigger {
+  width: 28px;
+  height: 26px;
 }
 
 .rich-editor .ql-container.ql-snow {
@@ -176,6 +212,61 @@ body::-webkit-scrollbar {
 
 .rich-editor-compact .ql-toolbar.ql-snow .ql-formats {
   margin-right: 0;
+}
+
+/* ---- Tombol "Sisipkan Rumus LaTeX" di toolbar Quill ---- */
+.rich-editor .ql-toolbar.ql-snow .formaly-tex-trigger {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 24px;
+  padding: 3px 5px;
+  background: transparent;
+  color: var(--color-darks);
+  border: none;
+  border-radius: 0.375rem;
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+.rich-editor .ql-toolbar.ql-snow .formaly-tex-trigger:hover,
+.rich-editor .ql-toolbar.ql-snow .formaly-tex-trigger:focus-visible {
+  background: var(--color-second);
+  color: var(--color-done);
+}
+
+.rich-editor .ql-toolbar.ql-snow .formaly-tex-trigger svg {
+  display: block;
+}
+
+/* Rumus KaTeX di dalam editor.
+   INLINE (tanpa penanda \displaystyle): tampil normal menempel mengikuti baris
+   kalimat — dipaksa inline-block + vertical-align agar tidak "turun" ke baris
+   sendiri. BLOCK (diawali \displaystyle): dirender di baris sendiri, rata tengah. */
+.rich-editor .ql-editor .ql-formula {
+  display: inline-block;
+  vertical-align: middle;
+  font-size: 1.05em;
+}
+
+.rich-editor .ql-editor .ql-formula[data-value^="\\displaystyle"] {
+  display: block;
+  text-align: center;
+  margin: 0.35em auto;
+}
+
+/* Rumus di dalam editor bisa diklik untuk RE-EDIT — beri isyarat interaktif */
+.rich-editor .ql-editor .ql-formula {
+  cursor: pointer;
+  border-radius: 0.25rem;
+  transition: box-shadow 0.15s ease, background 0.15s ease;
+  padding: 0 0.05em;
+}
+
+.rich-editor .ql-editor .ql-formula:hover {
+  background: rgb(0 125 204 / 0.08);
+  box-shadow: 0 0 0 2px rgb(0 125 204 / 0.15);
 }
 
 /* ---- Preview (editor non-aktif) ---- */

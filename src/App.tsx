@@ -6,6 +6,7 @@ import { AuthProvider } from "./lib/auth"
 import { useAuth } from "./lib/auth-context"
 import Navbar from "./components/navbar"
 import Dock from "./components/dock"
+import AppBanner from "./components/appBanner"
 import CreatorSidebar from "./components/creator/sidebar"
 import LoadingPage from "./components/loadingPage"
 import AppSplash from "./components/AppSplash"
@@ -232,6 +233,7 @@ function AppShell() {
           </motion.div>
         </Suspense>
         {showDock && <Dock />}
+        <AppBanner />
       </div>
       </MotionConfig>
   )

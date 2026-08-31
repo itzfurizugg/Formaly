@@ -422,7 +422,7 @@ function Questions({ embedded = false }: { embedded?: boolean }) {
                         <label className="text-sm font-medium text-darks">Pilihan Jawaban</label>
                         <button onClick={addOption} className="btn btn-sm bg-base text-darks border border-second hover:bg-second">
                             <Plus className="h-3.5 w-3.5" /> Tambah Pilihan
-                        </button>
+                        </button>Soal
                     </div>
                     <div className="space-y-2">
                         {options.map((opt, index) => (

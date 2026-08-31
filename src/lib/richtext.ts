@@ -46,6 +46,10 @@ function normalizeCodeBlocks(html: string): string {
 /**
  * Render rumus KaTeX yang disimpan Quill sebagai
  * `<span class="ql-formula" data-value="...">...</span>` menjadi HTML KaTeX.
+ *
+ * Mode tampilan ditentukan oleh penanda LaTeX:
+ *  - diawali `\displaystyle`  → mode DISPLAY (baris sendiri, rata tengah)
+ *  - selain itu               → mode INLINE (menempel di dalam kalimat)
  */
 function renderFormula(html: string): string {
     if (!/<span[^>]*class="[^"]*\bql-formula\b[^"]*"[^>]*>/i.test(html)) return html
@@ -53,8 +57,12 @@ function renderFormula(html: string): string {
     doc.querySelectorAll<HTMLElement>("span.ql-formula").forEach((el) => {
         const dataValue = el.getAttribute("data-value")
         if (dataValue == null) return
+        const display = /^\\displaystyle\s*/.test(dataValue)
         const out = document.createElement("span")
-        out.innerHTML = katex.renderToString(dataValue, { throwOnError: false })
+        out.innerHTML = katex.renderToString(dataValue, {
+            throwOnError: false,
+            displayMode: display,
+        })
         el.replaceWith(out)
     })
     return doc.body.innerHTML

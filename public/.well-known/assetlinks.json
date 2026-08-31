@@ -1,0 +1,12 @@
+[
+    {
+        "relation": ["delegate_permission/common.handle_all_urls"],
+        "target": {
+            "namespace": "android_app",
+            "package_name": "com.formaly.edu",
+            "sha256_cert_fingerprints": [
+                "0B:5B:BF:3A:05:02:6A:9D:EF:37:F2:5B:CA:6E:1E:4A:3B:24:24:4B:69:A7:2A:E2:69:92:79:9C:95:FD:2B:1C"
+            ]
+        }
+    }
+]

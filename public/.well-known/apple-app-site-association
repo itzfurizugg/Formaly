@@ -1,0 +1,12 @@
+{
+    "applinks": {
+        "details": [
+            {
+                "appIDs": ["com.formaly.edu"],
+                "components": [
+                    { "/": "*" }
+                ]
+            }
+        ]
+    }
+}

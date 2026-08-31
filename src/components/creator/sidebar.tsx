@@ -155,6 +155,8 @@ function CreatorSidebar() {
                         </div>
                         <div className="min-w-0">
                             <p className="text-sm font-semibold text-darks truncate">{profile?.name || "User"}</p>
+                            <p className="text-xs text-darks truncate">{profile?.email || "user@email.com"}</p>
+
                         </div>
                     </div>
                 </div>

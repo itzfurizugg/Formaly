@@ -122,10 +122,10 @@ export default function QuestionImportModal({ formId, startingOrder, onClose, on
             aria-modal="true"
             aria-labelledby="import-title"
         >
-            <motion.div variants={modalPanel} className="w-full max-w-6xl max-h-[90vh] overflow-hidden bg-white border border-second shadow-xl rounded-xl flex flex-col">
+            <motion.div variants={modalPanel} className="w-full max-w-4xl max-h-[90vh] overflow-hidden bg-white border border-second shadow-xl rounded-xl flex flex-col">
                 <div className="flex items-start justify-between gap-4 p-5 border-b border-second">
                     <div>
-                        <h2 id="import-title" className="font-semibold text-darks">Impor Soal</h2>
+                        <h2 id="import-title" className="text-lg sm:text-2xl font-semibold text-darks">Impor Soal</h2>
                         <p className="text-sm text-tinted mt-1">Unggah DOCX, CSV, atau XLSX. Periksa dan perbaiki data sebelum disimpan.</p>
                     </div>
                     <button onClick={onClose} className="btn btn-sm btn-ghost text-tinted" aria-label="Tutup"><X className="h-4 w-4" /></button>
@@ -174,7 +174,7 @@ export default function QuestionImportModal({ formId, startingOrder, onClose, on
                 </div>
 
                 <div className="flex justify-end gap-2 p-5 border-t border-second">
-                    <button onClick={onClose} className="btn bg-base border border-second text-darks">{summary ? "Tutup" : "Batal"}</button>
+                    <button onClick={onClose} className="btn lg:hidden bg-base border border-second text-darks">{summary ? "Tutup" : "Batal"}</button>
                     {!summary && rows.length > 0 && <button onClick={saveImport} disabled={saving} className="btn bg-darks text-base border-none disabled:opacity-60">{saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Upload className="h-4 w-4" />} Impor soal yang valid</button>}
                 </div>
             </motion.div>

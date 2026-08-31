@@ -206,153 +206,161 @@ function FormSettings() {
 
                         <FormTabs id={id} active="settings" />
 
-                        <div className="bg-white border border-second p-3 lg:p-6 sm:p-4 shadow-sm rounded-xl max-w-8xl mb-3">
-                            {/* <div className="flex items-center gap-2 mb-1 mt-2 ml-2">
-                                <h2 className="font-semibold text-darks">Warna Header</h2>
-                            </div>
-                            <p className="text-sm text-tinted mb-4 ml-2">
-                                Warna dipakai sebagai latar header form bila gambar header (tab Detail) tidak diatur.
-                            </p> */}
-
-                            {/* Pratinjau langsung */}
-                            <div className="px-3.5 sm:px-1 mb-4">
-                                <div
-                                    className={`relative h-20 rounded-xl overflow-hidden flex items-center px-4 ${
-                                        headerColor ? "" : "bg-gradient-to-br from-slate-600 to-slate-800"
-                                    }`}
-                                    style={headerColor ? { backgroundColor: headerColor } : undefined}
-                                >
-                                    <div
-                                        className="absolute inset-0 opacity-[0.08]"
-                                        style={{ backgroundImage: "radial-gradient(circle, white 1px, transparent 1px)", backgroundSize: "16px 16px" }}
-                                    />
-                                    <span className="relative z-10 text-lg font-semibold text-white drop-shadow-sm">Pratinjau Banner</span>
-                                    <span className="relative z-10 ml-auto text-xs font-mono text-white/80">{headerColor || "gradien acak"}</span>
-                                </div>
-                            </div>
-
-                            {/* Swatch warna preset + kustom */}
-                            <div className="px-3.5 sm:px-1 pb-1">
-                                <div className="flex flex-wrap items-center gap-2.5">
-                                    {PRESET_HEADER_COLORS.map((color) => (
-                                        <button
-                                            key={color}
-                                            type="button"
-                                            aria-label={`Pilih warna ${color}`}
-                                            onClick={() => setHeaderColor(color)}
-                                            style={{ backgroundColor: color }}
-                                            className={`h-9 w-9 rounded-full transition-transform hover:scale-110 ${
-                                                headerColor.toLowerCase() === color.toLowerCase()
-                                                    ? "ring-2 ring-darks ring-offset-2 ring-offset-white"
-                                                    : ""
-                                            }`}
-                                        />
-                                    ))}
-
-                                    {/* Warna kustom via native color picker */}
-                                    <label
-                                        title="Warna kustom"
-                                        className={`relative h-9 w-9 rounded-full overflow-hidden cursor-pointer border border-dashed border-second bg-base items-center justify-center hover:bg-second transition-colors ${
-                                            headerColor && !PRESET_HEADER_COLORS.some((c) => c.toLowerCase() === headerColor.toLowerCase())
-                                                ? "ring-2 ring-darks ring-offset-2 ring-offset-white"
-                                                : ""
-                                        } hidden sm:flex`}
-                                    >
-                                        <input
-                                            type="color"
-                                            aria-label="Warna kustom"
-                                            value={/^#(?:[0-9a-fA-F]{6})$/.test(headerColor) ? headerColor : "#007dcc"}
-                                            onChange={(e) => setHeaderColor(e.target.value)}
-                                            className="absolute inset-0 opacity-0 cursor-pointer"
-                                        />
-                                        <Pipette className="h-4 w-4 text-tinted pointer-events-none" />
-                                    </label>
-
-                                    <button
-                                        type="button"
-                                        onClick={() => setHeaderColor("")}
-                                        disabled={!headerColor}
-                                        className="btn btn-sm rounded-full bg-base text-tinted border border-second hover:bg-white disabled:opacity-50"
-                                    >
-                                        Reset
-                                    </button>
-                                </div>
-                            </div>
-
-                            {/* Header gambar (dipindah dari tab Detail). Bila diisi,
-                                gambar ini menang atas warna di atas. */}
-                            <div className="px-3.5 sm:px-1 pb-1 mt-5">
-                                <ImageUrlInput
-                                    label="URL Gambar Header"
-                                    placeholder="https://... (tampil di halaman deskripsi form)"
-                                    value={headerImage}
-                                    onChange={setHeaderImage}
-                                />
-                            </div>
-                        </div>
-
-                        <div className="bg-white border border-second p-3 lg:p-6 sm:p-4 shadow-sm rounded-xl max-w-8xl">
-                            <div className="flex items-center gap-2 mb-1 mt-2 ml-2">
-                                <h2 className="font-semibold text-darks">Pengaturan Form</h2>
-                            </div>
-                            <p className="text-sm text-tinted mb-4 ml-2">
-                                Atur apa yang dilihat responden dan bagaimana form dikerjakan.
-                            </p>
-
-                            <div className="px-3.5 sm:px-1">
-                                {SETTING_ROWS.map((row) => (
-                                    <div key={row.key} className="flex items-start justify-between gap-4 py-4">
-                                        <div className="flex items-start gap-3 min-w-0">
-                                            <div className="shrink-0 bg-base rounded-lg p-2 mt-0.5">
-                                                <row.icon className="h-4 w-4 text-darks" />
-                                            </div>
-                                            <div className="min-w-0">
-                                                <p className="text-sm font-medium text-darks">{row.title}</p>
-                                                <p className="text-xs text-tinted mt-1 leading-relaxed">{row.description}</p>
-                                                {row.hint && <p className="text-xs text-tinted/70 mt-1 italic hidden sm:block">{row.hint}</p>}
-                                            </div>
-                                        </div>
-                                        <input
-                                            type="checkbox"
-                                            aria-label={row.title}
-                                            checked={settings[row.key]}
-                                            onChange={() => toggleSetting(row.key)}
-                                            className="toggle mt-1 shrink-0 border-second bg-tinted/30 checked:border-darks/50 checked:bg-darks/50"
-                                        />
+                        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-stretch">
+                            {/* 1. Tampilan Banner (Kiri Atas di Desktop, Paling Atas di Mobile) */}
+                            <div className="lg:col-span-5 bg-white border border-second p-3 lg:p-6 sm:p-4 shadow-sm rounded-xl flex flex-col justify-between">
+                                <div>
+                                    <div className="flex items-center gap-2 mb-1 mt-2 ml-2">
+                                        <h2 className="font-semibold text-darks text-lg">Tampilan Banner</h2>
                                     </div>
-                                ))}
+                                    <p className="text-sm text-tinted mb-4 ml-2">
+                                        Sesuaikan warna tema banner atau gunakan gambar kustom.
+                                    </p>
+
+                                    {/* Pratinjau langsung */}
+                                    <div className="px-3.5 sm:px-1 mb-4">
+                                        <div
+                                            className={`relative h-20 rounded-xl overflow-hidden flex items-center px-4 ${
+                                                headerColor ? "" : "bg-gradient-to-br from-slate-600 to-slate-800"
+                                            }`}
+                                            style={headerColor ? { backgroundColor: headerColor } : undefined}
+                                        >
+                                            <div
+                                                className="absolute inset-0 opacity-[0.08]"
+                                                style={{ backgroundImage: "radial-gradient(circle, white 1px, transparent 1px)", backgroundSize: "16px 16px" }}
+                                            />
+                                            <span className="relative z-10 text-sm font-semibold text-white drop-shadow-sm">Pratinjau Banner</span>
+                                            <span className="relative z-10 ml-auto text-xs font-mono text-white/80">{headerColor || "gradien acak"}</span>
+                                        </div>
+                                    </div>
+
+                                    {/* Swatch warna preset + kustom */}
+                                    <div className="px-3.5 sm:px-1 pb-1">
+                                        <div className="flex flex-wrap items-center gap-2">
+                                            {PRESET_HEADER_COLORS.map((color) => (
+                                                <button
+                                                    key={color}
+                                                    type="button"
+                                                    aria-label={`Pilih warna ${color}`}
+                                                    onClick={() => setHeaderColor(color)}
+                                                    style={{ backgroundColor: color }}
+                                                    className={`h-8 w-8 rounded-full transition-transform hover:scale-110 ${
+                                                        headerColor.toLowerCase() === color.toLowerCase()
+                                                            ? "ring-2 ring-darks ring-offset-2 ring-offset-white"
+                                                            : ""
+                                                    }`}
+                                                />
+                                            ))}
+
+                                            {/* Warna kustom via native color picker */}
+                                            <label
+                                                title="Warna kustom"
+                                                className={`relative h-8 w-8 rounded-full overflow-hidden cursor-pointer border border-dashed border-second bg-base items-center justify-center hover:bg-second transition-colors ${
+                                                    headerColor && !PRESET_HEADER_COLORS.some((c) => c.toLowerCase() === headerColor.toLowerCase())
+                                                        ? "ring-2 ring-darks ring-offset-2 ring-offset-white"
+                                                        : ""
+                                                } hidden sm:flex`}
+                                            >
+                                                <input
+                                                    type="color"
+                                                    aria-label="Warna kustom"
+                                                    value={/^#(?:[0-9a-fA-F]{6})$/.test(headerColor) ? headerColor : "#007dcc"}
+                                                    onChange={(e) => setHeaderColor(e.target.value)}
+                                                    className="absolute inset-0 opacity-0 cursor-pointer"
+                                                />
+                                                <Pipette className="h-3.5 w-3.5 text-tinted pointer-events-none" />
+                                            </label>
+
+                                            <button
+                                                type="button"
+                                                onClick={() => setHeaderColor("")}
+                                                disabled={!headerColor}
+                                                className="btn btn-sm rounded-full bg-base text-tinted border border-second hover:bg-white disabled:opacity-50 text-xs py-1 h-8 min-h-0"
+                                            >
+                                                Reset
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {/* Header gambar */}
+                                <div className="px-3.5 sm:px-1 pb-1 mt-4">
+                                    <ImageUrlInput
+                                        label="URL Gambar Header"
+                                        placeholder="https://... (tampil di halaman deskripsi form)"
+                                        value={headerImage}
+                                        onChange={setHeaderImage}
+                                    />
+                                </div>
                             </div>
 
-                            <button
-                                type="button"
-                                onClick={handleSave}
-                                disabled={saving}
-                                className="btn bg-darks text-base border-none w-full hover:opacity-90 transition-opacity disabled:opacity-60 mb-3 mt-2"
-                            >
-                                {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <p>Simpan Pengaturan</p>}
-                                {/* Simpan Pengaturan */}
-                            </button>
-                        </div>
+                            {/* 2. Pengaturan Utama (Kanan di Desktop, Tengah di Mobile) */}
+                            <div className="lg:col-span-7 lg:row-span-2 bg-white border border-second p-3 lg:p-6 sm:p-4 shadow-sm rounded-xl flex flex-col justify-between">
+                                <div>
+                                    <div className="flex items-center gap-2 mb-1 mt-2 ml-2">
+                                        <h2 className="font-semibold text-darks text-lg">Pengaturan Form</h2>
+                                    </div>
+                                    <p className="text-sm text-tinted mb-4 ml-2">
+                                        Atur apa yang dilihat responden dan bagaimana form dikerjakan.
+                                    </p>
 
-                        {/* Zona destruktif: hapus form permanen beserta seluruh datanya. */}
-                        <div className="bg-white border border-second p-3 lg:p-6 sm:p-4 shadow-sm rounded-xl max-w-8xl mt-3">
-                            <div className="flex items-center gap-2 mb-1 mt-2 ml-2">
-                                <h2 className="font-semibold text-wrong">Hapus Form</h2>
+                                    <div className="px-3.5 sm:px-1 divide-y divide-second/60">
+                                        {SETTING_ROWS.map((row) => (
+                                            <div key={row.key} className="flex items-start justify-between gap-4 py-4.5 first:pt-2 last:pb-6">
+                                                <div className="flex items-start gap-3 min-w-0">
+                                                    <div className="shrink-0 bg-base rounded-lg p-2 mt-0.5">
+                                                        <row.icon className="h-4.5 w-4.5 text-darks" />
+                                                    </div>
+                                                    <div className="min-w-0">
+                                                        <p className="text-sm font-semibold text-darks">{row.title}</p>
+                                                        <p className="text-xs text-tinted mt-1 leading-relaxed">{row.description}</p>
+                                                        {row.hint && <p className="text-xs text-tinted/70 mt-1.5 italic hidden sm:block">{row.hint}</p>}
+                                                    </div>
+                                                </div>
+                                                <input
+                                                    type="checkbox"
+                                                    aria-label={row.title}
+                                                    checked={settings[row.key]}
+                                                    onChange={() => toggleSetting(row.key)}
+                                                    className="toggle mt-1 shrink-0 border-second bg-tinted/30 checked:border-darks/50 checked:bg-darks/50"
+                                                />
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+
+                                <button
+                                    type="button"
+                                    onClick={handleSave}
+                                    disabled={saving}
+                                    className="btn bg-darks text-base border-none w-full hover:opacity-90 transition-opacity disabled:opacity-60 mt-6"
+                                >
+                                    {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <p>Simpan Pengaturan</p>}
+                                </button>
                             </div>
-                            <p className="text-sm text-tinted mb-4 ml-2 leading-relaxed">
-                                Menghapus form ini secara permanen bersama semua soal, token, submission, dan
-                                jawaban responden. Tindakan ini tidak bisa dibatalkan.
-                            </p>
 
-                            <button
-                                type="button"
-                                onClick={handleDeleteForm}
-                                disabled={deleting}
-                                className="btn bg-wrong/10 text-wrong border border-wrong/20 hover:bg-wrong/20 transition-colors w-full mb-3"
-                            >
-                                {deleting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Trash2 className="h-4 w-4" />}
-                                Hapus Form
-                            </button>
+                            {/* 3. Zona Destruktif (Kiri Bawah di Desktop, Paling Bawah di Mobile) */}
+                            <div className="lg:col-span-5 bg-white border border-second p-3 lg:p-6 sm:p-4 shadow-sm rounded-xl flex flex-col justify-between">
+                                <div>
+                                    <div className="flex items-center gap-2 mb-1 mt-2 ml-2">
+                                        <h2 className="font-semibold text-wrong text-lg">Hapus Form</h2>
+                                    </div>
+                                    <p className="text-sm text-tinted mb-4 ml-2 leading-relaxed">
+                                        Menghapus form ini secara permanen bersama semua soal, token, submission, dan
+                                        jawaban responden. Tindakan ini tidak bisa dibatalkan.
+                                    </p>
+                                </div>
+
+                                <button
+                                    type="button"
+                                    onClick={handleDeleteForm}
+                                    disabled={deleting}
+                                    className="btn bg-wrong/10 text-wrong border border-wrong/20 hover:bg-wrong/20 transition-colors w-full mt-4"
+                                >
+                                    {deleting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Trash2 className="h-4 w-4" />}
+                                    Hapus Form
+                                </button>
+                            </div>
                         </div>
                     </div>
                 </div>
