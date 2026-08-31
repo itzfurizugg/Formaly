@@ -3,6 +3,7 @@ import { Link, useLocation, useNavigate } from "react-router-dom"
 import { AnimatePresence, motion } from "motion/react"
 import { UserPlus } from "lucide-react"
 import logo from "../../assets/logo.svg"
+import ash from "../../assets/ash.png"
 import { useAuth } from "../../lib/auth-context"
 import { safeNext } from "../../lib/redirect"
 import PasswordInput from "../../components/passwordInput"
@@ -48,9 +49,10 @@ function Register() {
 
     return (
         <div className="min-h-screen flex bg-base">
-            <div className="hidden lg:flex flex-1 flex-col justify-center px-3.5 bg-gradient-to-br from-darks/5 via-base to-darks/5">
+            <div className="hidden lg:flex flex-1 flex-col justify-center px-3.5 bg-white from-darks/5 via-base to-darks/5">
                 <div className="max-w-lg ml-20">
-                    <img src={logo} alt="Formaly" className="h-10 w-auto mb-8" />
+                    <img src={ash} alt="Ilustrasi" className="mb-8 h-72 object-contain" />
+                    <img src={logo} alt="Formaly" className="h-10 w-auto mb-2" />
                     <h1 className="text-4xl font-bold text-darks leading-tight">
                         Buat lebih mudah.
                     </h1>

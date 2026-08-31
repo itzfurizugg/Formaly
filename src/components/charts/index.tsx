@@ -22,7 +22,7 @@ interface ChartCardProps {
     title?: string
     subtitle?: string
     children: React.ReactNode
-    height?: number
+    height?: number | string
 }
 
 function Card({ title, subtitle, children, height = 260 }: ChartCardProps) {
@@ -40,7 +40,7 @@ export interface DistributionChartProps {
     subtitle?: string
     data: BarDatum[]
     barColor?: string
-    height?: number
+    height?: number | string
     onBarClick?: (formId: string) => void
 }
 
@@ -90,7 +90,7 @@ export interface MiniDistributionChartProps {
     title?: string
     data: BarDatum[]
     barColor?: string
-    height?: number
+    height?: number | string
     onBarClick?: (formId: string) => void
 }
 
@@ -112,7 +112,7 @@ export const MiniDistributionChart = memo(function MiniDistributionChart({
                         <XAxis dataKey="name" tick={{ fontSize: 10, fill: colors.tinted }} axisLine={false} tickLine={false} />
                         <Tooltip cursor={{ fill: colors.second }} content={ChartTooltip} />
                         <Bar
-                            dataKey="value"
+                             dataKey="value"
                             radius={[5, 5, 0, 0]}
                             fill={barColor}
                             isAnimationActive={false}
@@ -142,7 +142,7 @@ export interface MiniStackedBarChartProps {
     subtitle?: string
     data: object[]
     series: MiniStackSeries[]
-    height?: number
+    height?: number | string
     /** Lebar minimum per batang (px) sebelum chart di-scroll horizontal. */
     pxPerBar?: number
     showLegend?: boolean
@@ -211,7 +211,7 @@ export interface DonutChartProps {
     title?: string
     subtitle?: string
     data: PieDatum[]
-    height?: number
+    height?: number | string
     bare?: boolean
     showLegend?: boolean
 }
@@ -232,7 +232,7 @@ export function DonutChart({ title, subtitle, data, height = 260, bare = false, 
     )
 
     if (bare) {
-        return <div style={{ height }}>{pie}</div>
+        return <div className="w-full" style={{ height }}>{pie}</div>
     }
     return (
         <Card title={title} subtitle={subtitle} height={height}>

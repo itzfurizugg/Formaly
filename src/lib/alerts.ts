@@ -51,15 +51,28 @@ type ConfirmDeleteOptions = {
 
 let activeDialog: { close: () => void } | null = null
 
+const CLOSE_MS = 200
+
 function DeleteDialog({ options, onClose }: { options: ConfirmDeleteOptions; onClose: () => void }) {
     const [isDeleting, setIsDeleting] = useState(false)
+    const [show, setShow] = useState(false)
+    const [closing, setClosing] = useState(false)
+    useEffect(() => {
+        requestAnimationFrame(() => setShow(true))
+    }, [])
+    const handleClose = () => {
+        if (closing) return
+        setShow(false)
+        setClosing(true)
+        setTimeout(onClose, CLOSE_MS)
+    }
     useEffect(() => {
         const previouslyFocused = document.activeElement as HTMLElement | null
         document.getElementById("delete-dialog-cancel")?.focus()
 
         const onKeyDown = (event: KeyboardEvent) => {
             if (event.key === "Escape" && !isDeleting) {
-                onClose()
+                handleClose()
                 return
             }
             if (event.key !== "Tab") return
@@ -91,7 +104,7 @@ function DeleteDialog({ options, onClose }: { options: ConfirmDeleteOptions; onC
         try {
             await options.onConfirm()
             showAlert("Data berhasil dihapus.", "success")
-            onClose()
+            handleClose()
         } catch (error) {
             showAlert(error instanceof Error ? error.message : "Gagal menghapus data.", "error")
             setIsDeleting(false)
@@ -100,7 +113,7 @@ function DeleteDialog({ options, onClose }: { options: ConfirmDeleteOptions; onC
 
     return createElement(
         "div",
-        { className: "fixed inset-0 z-[100] flex items-center justify-center bg-darks/45 p-4" },
+        { className: `fixed inset-0 z-[100] flex items-center justify-center bg-darks/45 p-4 transition-opacity duration-200 ${show && !closing ? "opacity-100" : "opacity-0"}` },
         createElement(
             "div",
             {
@@ -109,7 +122,7 @@ function DeleteDialog({ options, onClose }: { options: ConfirmDeleteOptions; onC
                 "aria-modal": true,
                 "aria-labelledby": "delete-dialog-title",
                 "aria-describedby": "delete-dialog-description",
-                className: "w-full max-w-md rounded-xl border border-second bg-white p-6 font-sans shadow-xl",
+                className: `w-full max-w-md rounded-xl border border-second bg-white p-6 font-sans shadow-xl transition-all duration-200 ${show && !closing ? "opacity-100 scale-100" : "opacity-0 scale-95"}`,
             },
             createElement("h2", { id: "delete-dialog-title", className: "text-lg font-semibold text-darks" }, options.title),
             createElement("p", { id: "delete-dialog-description", className: "mt-2 text-sm leading-relaxed text-tinted" }, options.description),
@@ -121,7 +134,7 @@ function DeleteDialog({ options, onClose }: { options: ConfirmDeleteOptions; onC
                     {
                         id: "delete-dialog-cancel",
                         type: "button",
-                        onClick: onClose,
+                        onClick: handleClose,
                         disabled: isDeleting,
                         className: "btn rounded-xl border border-second bg-base text-darks hover:bg-second disabled:opacity-60",
                     },
@@ -174,6 +187,17 @@ type PromptTextOptions = {
 
 function PromptDialog({ options, onClose }: { options: PromptTextOptions; onClose: (value: string | null) => void }) {
     const [value, setValue] = useState(options.defaultValue ?? "")
+    const [show, setShow] = useState(false)
+    const [closing, setClosing] = useState(false)
+    useEffect(() => {
+        requestAnimationFrame(() => setShow(true))
+    }, [])
+    const handleClose = (result: string | null) => {
+        if (closing) return
+        setShow(false)
+        setClosing(true)
+        setTimeout(() => onClose(result), CLOSE_MS)
+    }
 
     useEffect(() => {
         const previouslyFocused = document.activeElement as HTMLElement | null
@@ -181,11 +205,11 @@ function PromptDialog({ options, onClose }: { options: PromptTextOptions; onClos
 
         const onKeyDown = (event: KeyboardEvent) => {
             if (event.key === "Escape") {
-                onClose(null)
+                handleClose(null)
                 return
             }
             if (event.key === "Enter") {
-                onClose(value)
+                handleClose(value)
             }
         }
 
@@ -194,18 +218,19 @@ function PromptDialog({ options, onClose }: { options: PromptTextOptions; onClos
             document.removeEventListener("keydown", onKeyDown)
             previouslyFocused?.focus()
         }
-    }, [value, onClose])
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [value])
 
     return createElement(
         "div",
-        { className: "formaly-dialog fixed inset-0 z-[100] flex items-center justify-center bg-darks/45 p-4" },
+        { className: `formaly-dialog fixed inset-0 z-[100] flex items-center justify-center bg-darks/45 p-4 transition-opacity duration-200 ${show && !closing ? "opacity-100" : "opacity-0"}` },
         createElement(
             "div",
             {
                 role: "alertdialog",
                 "aria-modal": true,
                 "aria-labelledby": "prompt-dialog-title",
-                className: "w-full max-w-md rounded-xl border border-second bg-white p-6 font-sans shadow-xl",
+                className: `w-full max-w-md rounded-xl border border-second bg-white p-6 font-sans shadow-xl transition-all duration-200 ${show && !closing ? "opacity-100 scale-100" : "opacity-0 scale-95"}`,
             },
             createElement("h2", { id: "prompt-dialog-title", className: "text-lg font-semibold text-darks" }, options.title),
             options.description
@@ -224,12 +249,12 @@ function PromptDialog({ options, onClose }: { options: PromptTextOptions; onClos
                 { className: "mt-6 flex justify-end gap-3" },
                 createElement(
                     "button",
-                    { type: "button", onClick: () => onClose(null), className: "btn rounded-xl border border-second bg-base text-darks hover:bg-second" },
+                    { type: "button", onClick: () => handleClose(null), className: "btn rounded-xl border border-second bg-base text-darks hover:bg-second" },
                     options.cancelLabel ?? "Batal"
                 ),
                 createElement(
                     "button",
-                    { type: "button", onClick: () => onClose(value), className: "btn rounded-xl border-none bg-darks text-base hover:opacity-90" },
+                    { type: "button", onClick: () => handleClose(value), className: "btn rounded-xl border-none bg-darks text-base hover:opacity-90" },
                     options.confirmLabel ?? "OK"
                 )
             )

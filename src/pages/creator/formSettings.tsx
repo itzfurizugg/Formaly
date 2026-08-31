@@ -41,35 +41,35 @@ const SETTING_ROWS: {
     description: string
     hint?: string
 }[] = [
-    {
-        key: "show_score_to_respondent",
-        icon: Eye,
-        title: "Tampilkan nilai kepada responden",
-        description: "Responden bisa melihat total skor setelah mengirim jawaban.",
-        hint: "Jika dimatikan, riwayat & hasil hanya menampilkan status pengerjaan tanpa angka nilai.",
-    },
-    {
-        key: "show_answers_to_respondent",
-        icon: BookOpenText,
-        title: "Tampilkan jawaban kepada responden",
-        description: "Responden bisa melihat rincian jawabannya beserta koreksi benar/salah di halaman hasil.",
-        hint: "Cocok dimatikan untuk ujian agar kunci jawaban tidak tersebar.",
-    },
-    {
-        key: "show_correct_filter_to_respondent",
-        icon: ListFilter,
-        title: "Tampilkan filter benar/salah di halaman hasil",
-        description: "Responden bisa memfilter rincian jawaban berdasarkan status benar, salah, isian, atau tanpa penilaian.",
-        hint: "Hanya berlaku jika rincian jawaban ditampilkan.",
-    },
-    {
-        key: "randomize_questions",
-        icon: Shuffle,
-        title: "Acak urutan soal",
-        description: "Urutan soal dirandom secara acak setiap kali responden mengerjakan.",
-        hint: "Hanya mengubah urutan tampil saat pengerjaan, urutan asli di editor tidak berubah.",
-    },
-]
+        {
+            key: "show_score_to_respondent",
+            icon: Eye,
+            title: "Tampilkan nilai kepada responden",
+            description: "Responden bisa melihat total skor setelah mengirim jawaban.",
+            hint: "Jika dimatikan, riwayat & hasil hanya menampilkan status pengerjaan tanpa angka nilai.",
+        },
+        {
+            key: "show_answers_to_respondent",
+            icon: BookOpenText,
+            title: "Tampilkan jawaban kepada responden",
+            description: "Responden bisa melihat rincian jawabannya beserta koreksi benar/salah di halaman hasil.",
+            hint: "Cocok dimatikan untuk ujian agar kunci jawaban tidak tersebar.",
+        },
+        {
+            key: "show_correct_filter_to_respondent",
+            icon: ListFilter,
+            title: "Tampilkan filter benar/salah di halaman hasil",
+            description: "Responden bisa memfilter rincian jawaban berdasarkan status benar, salah, isian, atau tanpa penilaian.",
+            hint: "Hanya berlaku jika rincian jawaban ditampilkan.",
+        },
+        {
+            key: "randomize_questions",
+            icon: Shuffle,
+            title: "Acak urutan soal",
+            description: "Urutan soal dirandom secara acak setiap kali responden mengerjakan.",
+            hint: "Hanya mengubah urutan tampil saat pengerjaan, urutan asli di editor tidak berubah.",
+        },
+    ]
 
 function FormSettings() {
     const { id } = useParams()
@@ -208,7 +208,7 @@ function FormSettings() {
 
                         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-stretch">
                             {/* 1. Tampilan Banner (Kiri Atas di Desktop, Paling Atas di Mobile) */}
-                            <div className="lg:col-span-5 bg-white border border-second p-3 lg:p-6 sm:p-4 shadow-sm rounded-xl flex flex-col justify-between">
+                            <div className="lg:col-span-5 bg-white border border-second p-3 sm:p-4 lg:p-6 shadow-sm rounded-xl flex flex-col justify-between">
                                 <div>
                                     <div className="flex items-center gap-2 mb-1 mt-2 ml-2">
                                         <h2 className="font-semibold text-darks text-lg">Tampilan Banner</h2>
@@ -220,9 +220,8 @@ function FormSettings() {
                                     {/* Pratinjau langsung */}
                                     <div className="px-3.5 sm:px-1 mb-4">
                                         <div
-                                            className={`relative h-20 rounded-xl overflow-hidden flex items-center px-4 ${
-                                                headerColor ? "" : "bg-gradient-to-br from-slate-600 to-slate-800"
-                                            }`}
+                                            className={`relative h-20 rounded-xl overflow-hidden flex items-center px-4 ${headerColor ? "" : "bg-gradient-to-br from-slate-600 to-slate-800"
+                                                }`}
                                             style={headerColor ? { backgroundColor: headerColor } : undefined}
                                         >
                                             <div
@@ -244,22 +243,20 @@ function FormSettings() {
                                                     aria-label={`Pilih warna ${color}`}
                                                     onClick={() => setHeaderColor(color)}
                                                     style={{ backgroundColor: color }}
-                                                    className={`h-8 w-8 rounded-full transition-transform hover:scale-110 ${
-                                                        headerColor.toLowerCase() === color.toLowerCase()
+                                                    className={`h-8 w-8 rounded-full transition-all duration-150 hover:scale-110 ${headerColor.toLowerCase() === color.toLowerCase()
                                                             ? "ring-2 ring-darks ring-offset-2 ring-offset-white"
                                                             : ""
-                                                    }`}
+                                                        }`}
                                                 />
                                             ))}
 
                                             {/* Warna kustom via native color picker */}
                                             <label
                                                 title="Warna kustom"
-                                                className={`relative h-8 w-8 rounded-full overflow-hidden cursor-pointer border border-dashed border-second bg-base items-center justify-center hover:bg-second transition-colors ${
-                                                    headerColor && !PRESET_HEADER_COLORS.some((c) => c.toLowerCase() === headerColor.toLowerCase())
+                                                className={`relative h-8 w-8 rounded-full overflow-hidden cursor-pointer border border-dashed border-second bg-base items-center justify-center hover:bg-second transition-colors ${headerColor && !PRESET_HEADER_COLORS.some((c) => c.toLowerCase() === headerColor.toLowerCase())
                                                         ? "ring-2 ring-darks ring-offset-2 ring-offset-white"
                                                         : ""
-                                                } hidden sm:flex`}
+                                                    } flex`}
                                             >
                                                 <input
                                                     type="color"
@@ -275,7 +272,7 @@ function FormSettings() {
                                                 type="button"
                                                 onClick={() => setHeaderColor("")}
                                                 disabled={!headerColor}
-                                                className="btn btn-sm rounded-full bg-base text-tinted border border-second hover:bg-white disabled:opacity-50 text-xs py-1 h-8 min-h-0"
+                                                className="btn btn-sm rounded-full bg-base text-tinted border border-second hover:bg-white disabled:opacity-50 transition-all duration-200 text-xs py-1 h-8 min-h-0"
                                             >
                                                 Reset
                                             </button>
@@ -295,7 +292,7 @@ function FormSettings() {
                             </div>
 
                             {/* 2. Pengaturan Utama (Kanan di Desktop, Tengah di Mobile) */}
-                            <div className="lg:col-span-7 lg:row-span-2 bg-white border border-second p-3 lg:p-6 sm:p-4 shadow-sm rounded-xl flex flex-col justify-between">
+                            <div className="lg:col-span-7 lg:row-span-2 bg-white border border-second p-3 sm:p-4 lg:p-6 shadow-sm rounded-xl flex flex-col justify-between">
                                 <div>
                                     <div className="flex items-center gap-2 mb-1 mt-2 ml-2">
                                         <h2 className="font-semibold text-darks text-lg">Pengaturan Form</h2>
@@ -306,10 +303,10 @@ function FormSettings() {
 
                                     <div className="px-3.5 sm:px-1 divide-y divide-second/60">
                                         {SETTING_ROWS.map((row) => (
-                                            <div key={row.key} className="flex items-start justify-between gap-4 py-4.5 first:pt-2 last:pb-6">
+                                            <div key={row.key} className="flex items-start justify-between gap-4 py-4 first:pt-2 last:pb-6">
                                                 <div className="flex items-start gap-3 min-w-0">
                                                     <div className="shrink-0 bg-base rounded-lg p-2 mt-0.5">
-                                                        <row.icon className="h-4.5 w-4.5 text-darks" />
+                                                         <row.icon className="h-4 w-4 text-darks" />
                                                     </div>
                                                     <div className="min-w-0">
                                                         <p className="text-sm font-semibold text-darks">{row.title}</p>
@@ -322,7 +319,7 @@ function FormSettings() {
                                                     aria-label={row.title}
                                                     checked={settings[row.key]}
                                                     onChange={() => toggleSetting(row.key)}
-                                                    className="toggle mt-1 shrink-0 border-second bg-tinted/30 checked:border-darks/50 checked:bg-darks/50"
+                                                    className="toggle mt-1 shrink-0 border-second bg-tinted/30 checked:border-darks/50 checked:bg-darks/50 transition-colors duration-200"
                                                 />
                                             </div>
                                         ))}
@@ -333,14 +330,14 @@ function FormSettings() {
                                     type="button"
                                     onClick={handleSave}
                                     disabled={saving}
-                                    className="btn bg-darks text-base border-none w-full hover:opacity-90 transition-opacity disabled:opacity-60 mt-6"
+                                    className="btn bg-darks text-base border-none w-[60%] m-3 sm:w-full hover:opacity-90 transition-all duration-200 hover:scale-[1.02] active:scale-[0.98] disabled:opacity-60 mt-4 mb-4 mx-auto rounded-full"
                                 >
                                     {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <p>Simpan Pengaturan</p>}
                                 </button>
                             </div>
 
                             {/* 3. Zona Destruktif (Kiri Bawah di Desktop, Paling Bawah di Mobile) */}
-                            <div className="lg:col-span-5 bg-white border border-second p-3 lg:p-6 sm:p-4 shadow-sm rounded-xl flex flex-col justify-between">
+                            <div className="lg:col-span-5 bg-white border border-second p-3 sm:p-4 lg:p-6 shadow-sm rounded-xl flex flex-col justify-between mb-10 sm:mb-0">
                                 <div>
                                     <div className="flex items-center gap-2 mb-1 mt-2 ml-2">
                                         <h2 className="font-semibold text-wrong text-lg">Hapus Form</h2>
@@ -351,15 +348,17 @@ function FormSettings() {
                                     </p>
                                 </div>
 
-                                <button
-                                    type="button"
-                                    onClick={handleDeleteForm}
-                                    disabled={deleting}
-                                    className="btn bg-wrong/10 text-wrong border border-wrong/20 hover:bg-wrong/20 transition-colors w-full mt-4"
-                                >
-                                    {deleting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Trash2 className="h-4 w-4" />}
-                                    Hapus Form
-                                </button>
+                                <div className="flex sm:justify-end">
+                                    <button
+                                        type="button"
+                                        onClick={handleDeleteForm}
+                                        disabled={deleting}
+                                        className="btn rounded-full bg-wrong/10 text-wrong border border-wrong/20 hover:bg-wrong/20 transition-all duration-200 hover:scale-[1.02] active:scale-[0.98] w-fit justify-end ml-2 mb-2"
+                                    >
+                                        {deleting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Trash2 className="h-4 w-4" />}
+                                        Hapus Form
+                                    </button>
+                                </div>
                             </div>
                         </div>
                     </div>

@@ -391,211 +391,271 @@ function Submissions() {
                         )}
 
                         {submissions.length > 0 && (
-                            <div className="space-y-4 mb-6">
-                                {/* Baris 1: Total Responded + Rata-rata Benar/Salah + Benar vs Salah.
-                                    Mobile/tablet: satu kartu split view — Total Responded di kiri,
-                                    kedua donut ringkas di kanan. Di lg ke atas tampil sebagai
-                                    tiga kartu sejajar seperti stats di dashboard. */}
-                                <div className="sm:hidden bg-white border border-second p-4 sm:p-5 shadow-sm rounded-xl grid grid-cols-[1fr_1.35fr] sm:grid-cols-[260px_1fr] gap-3 sm:gap-6">
-                                    <div className="flex flex-col items-center justify-center text-center border-r border-dashed border-second pr-1 sm:pr-2">
-                                        <p className="text-xs sm:text-sm font-semibold text-darks">Total Responded</p>
-                                        <p className="text-5xl font-bold text-darks leading-none mt-2">{submissions.length}</p>
-                                        <p className="text-xs text-tinted mt-1.5">responden</p>
-                                    </div>
-                                    <div className="flex flex-col justify-between min-w-0">
-                                        <div className="min-w-0">
-                                            <div className="flex items-baseline justify-between gap-2">
-                                                <p className="text-[10px] font-medium text-tinted truncate">Rata-rata Benar vs Salah</p>
-                                                <p className="text-[10px] text-tinted whitespace-nowrap">
-                                                    <span className="inline-block h-1.5 w-1.5 rounded-full align-middle mr-0.5" style={{ background: colors.pass }} />
-                                                    {avgCorrect}
-                                                    <span className="mx-1">·</span>
-                                                    <span className="inline-block h-1.5 w-1.5 rounded-full align-middle mr-0.5" style={{ background: colors.wrong }} />
-                                                    {avgWrong}
-                                                </p>
+                                <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 items-stretch mb-6">
+                                    {/* Kolom Kiri: Statistik Ringkas */}
+                                    <div className="lg:col-span-4 flex flex-col gap-4 justify-between h-full">
+                                        {/* Mobile view (< sm) */}
+                                        <div className="sm:hidden bg-white border border-second p-3.5 shadow-sm rounded-xl grid grid-cols-[1fr_1.35fr] sm:grid-cols-[260px_1fr] gap-3 sm:gap-6">
+                                            <div className="flex flex-col items-center justify-center text-center border-r border-dashed border-second pr-1 sm:pr-2">
+                                                <p className="text-xs sm:text-sm font-semibold text-darks">Total Responded</p>
+                                                <p className="text-5xl font-bold text-darks leading-none mt-2">{submissions.length}</p>
+                                                <p className="text-xs text-tinted mt-1.5">responden</p>
                                             </div>
-                                            <SplitProgress valueA={avgCorrect} valueB={avgWrong} colorA={colors.pass} colorB={colors.wrong} />
-                                        </div>
-                                        <div className="min-w-0">
-                                            <div className="flex items-baseline justify-between gap-2">
-                                                <p className="text-[10px] font-medium text-tinted truncate">Total Benar vs Salah</p>
-                                                <p className="text-[10px] text-tinted whitespace-nowrap">
-                                                    <span className="inline-block h-1.5 w-1.5 rounded-full align-middle mr-0.5" style={{ background: colors.pass }} />
-                                                    {totalCorrect}
-                                                    <span className="mx-1">·</span>
-                                                    <span className="inline-block h-1.5 w-1.5 rounded-full align-middle mr-0.5" style={{ background: colors.wrong }} />
-                                                    {totalWrong}
-                                                </p>
-                                            </div>
-                                            <SplitProgress valueA={totalCorrect} valueB={totalWrong} colorA={colors.pass} colorB={colors.wrong} />
-                                        </div>
-                                    </div>
-                                </div>
-                                {/* Varian lg ke atas: tetap satu kartu, tiga bagian sejajar
-                                    (Responded | Rata-rata | Total) dipisah garis putus-putus */}
-                                <div className="hidden sm:grid bg-white border border-second p-5 shadow-sm rounded-xl grid-cols-[220px_1fr_1fr] gap-6">
-                                    <div className="flex flex-col items-center justify-center text-center border-r border-dashed border-second pr-2">
-                                        <p className="text-sm font-semibold text-darks">Total Responded</p>
-                                        <p className="text-5xl font-bold text-darks leading-none mt-2">{submissions.length}</p>
-                                        <p className="text-xs text-tinted mt-1.5">responden</p>
-                                    </div>
-                                    <div className="flex flex-col min-w-0">
-                                        <div className="flex items-baseline justify-between gap-2">
-                                            <p className="text-xs font-medium text-tinted truncate">Rata-rata Benar vs Salah</p>
-                                            <p className="text-xs text-tinted whitespace-nowrap">
-                                                <span className="inline-block h-2 w-2 rounded-full align-middle mr-1" style={{ background: colors.pass }} />
-                                                {avgCorrect}
-                                                <span className="mx-1.5">·</span>
-                                                <span className="inline-block h-2 w-2 rounded-full align-middle mr-1" style={{ background: colors.wrong }} />
-                                                {avgWrong}
-                                            </p>
-                                        </div>
-                                        <DonutChart
-                                            bare
-                                            showLegend={false}
-                                            height={150}
-                                            data={[
-                                                { name: "Rata-rata Benar", value: avgCorrect, color: colors.pass },
-                                                { name: "Rata-rata Salah", value: avgWrong, color: colors.wrong },
-                                            ]}
-                                        />
-                                    </div>
-                                    <div className="flex flex-col min-w-0">
-                                        <div className="flex items-baseline justify-between gap-2">
-                                            <p className="text-xs font-medium text-tinted truncate">Total Benar vs Salah</p>
-                                            <p className="text-xs text-tinted whitespace-nowrap">
-                                                <span className="inline-block h-2 w-2 rounded-full align-middle mr-1" style={{ background: colors.pass }} />
-                                                {totalCorrect}
-                                                <span className="mx-1.5">·</span>
-                                                <span className="inline-block h-2 w-2 rounded-full align-middle mr-1" style={{ background: colors.wrong }} />
-                                                {totalWrong}
-                                            </p>
-                                        </div>
-                                        <DonutChart
-                                            bare
-                                            showLegend={false}
-                                            height={150}
-                                            data={[
-                                                { name: "Benar", value: totalCorrect, color: colors.pass },
-                                                { name: "Salah", value: totalWrong, color: colors.wrong },
-                                            ]}
-                                        />
-                                    </div>
-                                </div>
-                                {/* Baris 2: Statistik per Soal & Distribusi Opsi (switch) */}
-                                {(perQuestionStats.length > 0 || barData.length > 0) && (
-                                    <div className="bg-white border border-second p-5 shadow-sm rounded-xl">
-                                        <div className="flex items-start justify-between gap-3 flex-wrap mb-4">
-                                            <div>
-                                                <p className="font-semibold text-darks mb-0.5">
-                                                    {chartView === "statistik" ? "Statistik Jawaban per Soal" : "Distribusi Opsi Jawaban"}
-                                                </p>
-                                                <p className="text-xs text-tinted">
-                                                    {chartView === "statistik"
-                                                        ? "Jumlah jawaban benar, salah, dan kosong (tidak dijawab) untuk tiap soal dari seluruh submission."
-                                                        : "Jumlah pilihan tiap opsi per soal dari seluruh submission (soal isian tidak dihitung)."}
-                                                </p>
-                                            </div>
-                                            <div className="flex items-center gap-1 p-1 bg-base border border-second rounded-full shrink-0">
-                                                <button
-                                                    onClick={() => setChartView("distribusi")}
-                                                    className={`px-3.5 py-1.5 text-xs font-medium rounded-full transition-colors ${chartView === "distribusi" ? "bg-darks text-base" : "text-tinted hover:text-darks"
-                                                        }`}
-                                                >
-                                                    Distribusi
-                                                </button>
-                                                <button
-                                                    onClick={() => setChartView("statistik")}
-                                                    className={`px-3.5 py-1.5 text-xs font-medium rounded-full transition-colors ${chartView === "statistik" ? "bg-darks text-base" : "text-tinted hover:text-darks"
-                                                        }`}
-                                                >
-                                                    Statistik
-                                                </button>
+                                            <div className="flex flex-col justify-between min-w-0">
+                                                <div className="min-w-0">
+                                                    <div className="flex items-baseline justify-between gap-2">
+                                                        <p className="text-[10px] font-medium text-tinted truncate">Rata-rata Benar vs Salah</p>
+                                                        <p className="text-[10px] text-tinted whitespace-nowrap">
+                                                            <span className="inline-block h-1.5 w-1.5 rounded-full align-middle mr-0.5" style={{ background: colors.pass }} />
+                                                            {avgCorrect}
+                                                            <span className="mx-1">·</span>
+                                                            <span className="inline-block h-1.5 w-1.5 rounded-full align-middle mr-0.5" style={{ background: colors.wrong }} />
+                                                            {avgWrong}
+                                                        </p>
+                                                    </div>
+                                                    <SplitProgress valueA={avgCorrect} valueB={avgWrong} colorA={colors.pass} colorB={colors.wrong} />
+                                                </div>
+                                                <div className="min-w-0">
+                                                    <div className="flex items-baseline justify-between gap-2">
+                                                        <p className="text-[10px] font-medium text-tinted truncate">Total Benar vs Salah</p>
+                                                        <p className="text-[10px] text-tinted whitespace-nowrap">
+                                                            <span className="inline-block h-1.5 w-1.5 rounded-full align-middle mr-0.5" style={{ background: colors.pass }} />
+                                                            {totalCorrect}
+                                                            <span className="mx-1">·</span>
+                                                            <span className="inline-block h-1.5 w-1.5 rounded-full align-middle mr-0.5" style={{ background: colors.wrong }} />
+                                                            {totalWrong}
+                                                        </p>
+                                                    </div>
+                                                    <SplitProgress valueA={totalCorrect} valueB={totalWrong} colorA={colors.pass} colorB={colors.wrong} />
+                                                </div>
                                             </div>
                                         </div>
 
-                                        {chartView === "statistik" && perQuestionStats.length > 0 && (
-                                            isLg ? (
-                                                <>
-                                                    <div style={{ overflowX: "auto" }}>
-                                                        <div style={{ width: `max(100%, ${Math.max(1, perQuestionStats.length) * 64}px)`, height: 280 }}>
-                                                            <ResponsiveContainer width="100%" height="100%" debounce={100}>
-                                                                <BarChart data={perQuestionStats} margin={{ top: 8, right: 16, left: -14, bottom: 0 }}>
-                                                                    <XAxis dataKey="name" tick={{ fontSize: 11, fill: colors.tinted }} axisLine={false} tickLine={false} interval={0} />
-                                                                    <YAxis tick={{ fontSize: 11, fill: colors.tinted }} axisLine={false} tickLine={false} allowDecimals={false} />
-                                                                    <Tooltip cursor={{ fill: colors.second }} content={renderPerQuestionTooltip} />
-                                                                    <Bar dataKey="benar" stackId="q" name="Benar" fill={colors.pass} />
-                                                                    <Bar dataKey="salah" stackId="q" name="Salah" fill={colors.wrong} />
-                                                                    <Bar dataKey="kosong" stackId="q" name="Kosong" fill={colors.tinted} radius={[4, 4, 0, 0]} />
-                                                                </BarChart>
-                                                            </ResponsiveContainer>
-                                                        </div>
-                                                    </div>
-                                                    <div className="mt-3 flex flex-wrap gap-x-4 gap-y-1.5">
-                                                        <span className="inline-flex items-center gap-1.5 text-xs text-tinted">
-                                                            <span className="h-2.5 w-2.5 rounded-full shrink-0" style={{ background: colors.pass }} />
-                                                            Benar
-                                                        </span>
-                                                        <span className="inline-flex items-center gap-1.5 text-xs text-tinted">
-                                                            <span className="h-2.5 w-2.5 rounded-full shrink-0" style={{ background: colors.wrong }} />
-                                                            Salah
-                                                        </span>
-                                                        <span className="inline-flex items-center gap-1.5 text-xs text-tinted">
-                                                            <span className="h-2.5 w-2.5 rounded-full shrink-0" style={{ background: colors.tinted }} />
-                                                            Kosong
-                                                        </span>
-                                                    </div>
-                                                </>
-                                            ) : (
-                                                <MiniStackedBarChart
-                                                    data={perQuestionStats}
-                                                    series={[
-                                                        { key: "benar", label: "Benar", color: colors.pass },
-                                                        { key: "salah", label: "Salah", color: colors.wrong },
-                                                        { key: "kosong", label: "Kosong", color: colors.tinted },
+                                        {/* Tablet view (sm to lg) */}
+                                        <div className="hidden sm:grid lg:hidden bg-white border border-second p-3.5 shadow-sm rounded-xl grid-cols-[220px_1fr_1fr] gap-6">
+                                            <div className="flex flex-col items-center justify-center text-center border-r border-dashed border-second pr-2">
+                                                <p className="text-sm font-semibold text-darks">Total Responded</p>
+                                                <p className="text-5xl font-bold text-darks leading-none mt-2">{submissions.length}</p>
+                                                <p className="text-xs text-tinted mt-1.5">responden</p>
+                                            </div>
+                                            <div className="flex flex-col min-w-0">
+                                                <div className="flex items-baseline justify-between gap-2">
+                                                    <p className="text-xs font-medium text-tinted truncate">Rata-rata Benar vs Salah</p>
+                                                    <p className="text-xs text-tinted whitespace-nowrap">
+                                                        <span className="inline-block h-2 w-2 rounded-full align-middle mr-1" style={{ background: colors.pass }} />
+                                                        {avgCorrect}
+                                                        <span className="mx-1.5">·</span>
+                                                        <span className="inline-block h-2 w-2 rounded-full align-middle mr-1" style={{ background: colors.wrong }} />
+                                                        {avgWrong}
+                                                    </p>
+                                                </div>
+                                                <DonutChart
+                                                    bare
+                                                    showLegend={false}
+                                                    height={150}
+                                                    data={[
+                                                        { name: "Rata-rata Benar", value: avgCorrect, color: colors.pass },
+                                                        { name: "Rata-rata Salah", value: avgWrong, color: colors.wrong },
                                                     ]}
-                                                    tooltip={renderPerQuestionTooltip}
                                                 />
-                                            )
-                                        )}
+                                            </div>
+                                            <div className="flex flex-col min-w-0">
+                                                <div className="flex items-baseline justify-between gap-2">
+                                                    <p className="text-xs font-medium text-tinted truncate">Total Benar vs Salah</p>
+                                                    <p className="text-xs text-tinted whitespace-nowrap">
+                                                        <span className="inline-block h-2 w-2 rounded-full align-middle mr-1" style={{ background: colors.pass }} />
+                                                        {totalCorrect}
+                                                        <span className="mx-1.5">·</span>
+                                                        <span className="inline-block h-2 w-2 rounded-full align-middle mr-1" style={{ background: colors.wrong }} />
+                                                        {totalWrong}
+                                                    </p>
+                                                </div>
+                                                <DonutChart
+                                                    bare
+                                                    showLegend={false}
+                                                    height={150}
+                                                    data={[
+                                                        { name: "Benar", value: totalCorrect, color: colors.pass },
+                                                        { name: "Salah", value: totalWrong, color: colors.wrong },
+                                                    ]}
+                                                />
+                                            </div>
+                                        </div>
 
-                                        {chartView === "distribusi" && barData.length > 0 && (
-                                            isLg ? (
-                                                <>
-                                                    <div style={{ overflowX: "auto" }}>
-                                                        <div style={{ width: `max(100%, ${Math.max(1, barData.length) * 56}px)`, height: 280 }}>
-                                                            <ResponsiveContainer width="100%" height="100%" debounce={100}>
-                                                                <BarChart data={barData} margin={{ top: 8, right: 16, left: -14, bottom: 0 }}>
-                                                                    <XAxis dataKey="name" tick={{ fontSize: 11, fill: colors.tinted }} axisLine={false} tickLine={false} interval={0} />
-                                                                    <YAxis tick={{ fontSize: 11, fill: colors.tinted }} axisLine={false} tickLine={false} allowDecimals={false} />
-                                                                    <Tooltip cursor={{ fill: colors.second }} content={renderTooltip} />
-                                                                    {barSeries.map((s) => (
-                                                                        <Bar key={s.key} dataKey={s.key} stackId="opt" name={s.label} fill={s.color} />
-                                                                    ))}
-                                                                </BarChart>
-                                                            </ResponsiveContainer>
-                                                        </div>
-                                                    </div>
-                                                    <div className="mt-3 flex flex-wrap gap-x-4 gap-y-1.5">
-                                                        {barSeries.map((s) => (
-                                                            <span key={s.key} className="inline-flex items-center gap-1.5 text-xs text-tinted">
-                                                                <span className="h-2.5 w-2.5 rounded-full shrink-0" style={{ background: s.color }} />
-                                                                {s.label}
-                                                            </span>
-                                                        ))}
-                                                    </div>
-                                                </>
-                                            ) : (
-                                                <MiniStackedBarChart
-                                                    data={barData}
-                                                    series={barSeries}
-                                                    tooltip={renderTooltip}
-                                                />
-                                            )
-                                        )}
+                                        {/* Desktop view (lg ke atas): 3 kartu terpisah vertikal */}
+                                        <div className="hidden lg:flex flex-col gap-3 h-full w-fit">
+                                            {/* Kartu 1: Total Responded */}
+                                            <div className="bg-white border border-second p-3 shadow-sm rounded-xl flex flex-col items-center justify-center text-center h-[100px] shrink-0">
+                                                <p className="text-[10px] font-bold uppercase tracking-wider text-tinted">Total Responded</p>
+                                                <p className="text-4xl font-extrabold text-darks mt-1.5 leading-none">{submissions.length}</p>
+                                                <p className="text-[10px] text-tinted/90 mt-1">responden aktif</p>
+                                            </div>
+
+                                            {/* Kartu 2: Rata-rata Benar vs Salah */}
+                                            <div className="bg-white border border-second p-3 shadow-sm rounded-xl flex flex-col justify-between flex-1 min-h-[135px]">
+                                                <div className="flex items-center justify-between gap-2 mb-1">
+                                                    <p className="text-[10px] font-bold uppercase tracking-wider text-tinted truncate">Rata-rata</p>
+                                                    <p className="text-[10px] font-semibold text-darks bg-base border border-second px-2 py-0.5 rounded-lg whitespace-nowrap">
+                                                        <span className="text-done">{avgCorrect} B</span>
+                                                        <span className="mx-1 text-second">·</span>
+                                                        <span className="text-wrong">{avgWrong} S</span>
+                                                    </p>
+                                                </div>
+                                                <div className="flex-1 flex items-center justify-center w-full min-h-0">
+                                                    <DonutChart
+                                                        bare
+                                                        showLegend={false}
+                                                        height={90}
+                                                        data={[
+                                                            { name: "Rata-rata Benar", value: avgCorrect, color: colors.pass },
+                                                            { name: "Rata-rata Salah", value: avgWrong, color: colors.wrong },
+                                                        ]}
+                                                    />
+                                                </div>
+                                            </div>
+
+                                            {/* Kartu 3: Total Benar vs Salah */}
+                                            <div className="bg-white border border-second p-3 shadow-sm rounded-xl flex flex-col justify-between flex-1 min-h-[135px]">
+                                                <div className="flex items-center justify-between gap-2 mb-1">
+                                                    <p className="text-[10px] font-bold uppercase tracking-wider text-tinted truncate">Total Jawaban</p>
+                                                    <p className="text-[10px] font-semibold text-darks bg-base border border-second px-2 py-0.5 rounded-lg whitespace-nowrap">
+                                                        <span className="text-done">{totalCorrect} B</span>
+                                                        <span className="mx-1 text-second">·</span>
+                                                        <span className="text-wrong">{totalWrong} S</span>
+                                                    </p>
+                                                </div>
+                                                <div className="flex-1 flex items-center justify-center w-full min-h-0">
+                                                    <DonutChart
+                                                        bare
+                                                        showLegend={false}
+                                                        height={90}
+                                                        data={[
+                                                            { name: "Benar", value: totalCorrect, color: colors.pass },
+                                                            { name: "Salah", value: totalWrong, color: colors.wrong },
+                                                        ]}
+                                                    />
+                                                </div>
+                                            </div>
+                                        </div>
                                     </div>
-                                )}
-                            </div>
+
+                                    {/* Kolom Kanan: Detail Charts */}
+                                    {(perQuestionStats.length > 0 || barData.length > 0) && (
+                                        <div className="lg:col-span-8 bg-white border border-second p-3.5 shadow-sm rounded-xl flex flex-col">
+                                            <div className="flex items-start justify-between gap-3 flex-wrap mb-4 shrink-0">
+                                                <div>
+                                                    <p className="font-semibold text-darks mb-0.5">
+                                                        {chartView === "statistik" ? "Statistik Jawaban per Soal" : "Distribusi Opsi Jawaban"}
+                                                    </p>
+                                                    <p className="text-xs text-tinted/90">
+                                                        {chartView === "statistik"
+                                                            ? "Jumlah jawaban benar, salah, dan kosong (tidak dijawab) untuk tiap soal dari seluruh submission."
+                                                            : "Jumlah pilihan tiap opsi per soal dari seluruh submission (soal isian tidak dihitung)."}
+                                                    </p>
+                                                </div>
+                                                <div className="flex items-center gap-1 p-1 bg-base border border-second rounded-full shrink-0">
+                                                    <button
+                                                        onClick={() => setChartView("distribusi")}
+                                                        className={`px-3.5 py-1.5 text-xs font-semibold rounded-full transition-all ${chartView === "distribusi" ? "bg-darks text-white shadow-sm" : "text-tinted hover:text-darks"
+                                                            }`}
+                                                    >
+                                                        Distribusi
+                                                    </button>
+                                                    <button
+                                                        onClick={() => setChartView("statistik")}
+                                                        className={`px-3.5 py-1.5 text-xs font-semibold rounded-full transition-all ${chartView === "statistik" ? "bg-darks text-white shadow-sm" : "text-tinted hover:text-darks"
+                                                            }`}
+                                                    >
+                                                        Statistik
+                                                    </button>
+                                                </div>
+                                            </div>
+
+                                            {/* Chart area: flex-1 fills remaining card height */}
+                                            <div className="flex-1 flex flex-col min-h-0">
+                                                {chartView === "statistik" && perQuestionStats.length > 0 && (
+                                                    isLg ? (
+                                                        <div className="flex flex-col flex-1 min-h-0">
+                                                            <div className="flex-1 min-h-[200px]" style={{ overflowX: "auto" }}>
+                                                                <div className="h-full" style={{ width: `max(100%, ${Math.max(1, perQuestionStats.length) * 64}px)` }}>
+                                                                    <ResponsiveContainer width="100%" height="100%" debounce={100}>
+                                                                        <BarChart data={perQuestionStats} margin={{ top: 8, right: 16, left: -14, bottom: 0 }}>
+                                                                            <XAxis dataKey="name" tick={{ fontSize: 11, fill: colors.tinted }} axisLine={false} tickLine={false} interval={0} />
+                                                                            <YAxis tick={{ fontSize: 11, fill: colors.tinted }} axisLine={false} tickLine={false} allowDecimals={false} />
+                                                                            <Tooltip cursor={{ fill: colors.second }} content={renderPerQuestionTooltip} />
+                                                                            <Bar dataKey="benar" stackId="q" name="Benar" fill={colors.pass} />
+                                                                            <Bar dataKey="salah" stackId="q" name="Salah" fill={colors.wrong} />
+                                                                            <Bar dataKey="kosong" stackId="q" name="Kosong" fill={colors.tinted} radius={[4, 4, 0, 0]} />
+                                                                        </BarChart>
+                                                                    </ResponsiveContainer>
+                                                                </div>
+                                                            </div>
+                                                            <div className="mt-4 flex flex-wrap gap-2 shrink-0">
+                                                                <span className="inline-flex items-center gap-1.5 text-xs font-medium text-darks bg-base border border-second px-2.5 py-1 rounded-lg">
+                                                                    <span className="h-2 w-2 rounded-full shrink-0" style={{ background: colors.pass }} />
+                                                                    Benar
+                                                                </span>
+                                                                <span className="inline-flex items-center gap-1.5 text-xs font-medium text-darks bg-base border border-second px-2.5 py-1 rounded-lg">
+                                                                    <span className="h-2 w-2 rounded-full shrink-0" style={{ background: colors.wrong }} />
+                                                                    Salah
+                                                                </span>
+                                                                <span className="inline-flex items-center gap-1.5 text-xs font-medium text-darks bg-base border border-second px-2.5 py-1 rounded-lg">
+                                                                    <span className="h-2 w-2 rounded-full shrink-0" style={{ background: colors.tinted }} />
+                                                                    Kosong
+                                                                </span>
+                                                            </div>
+                                                        </div>
+                                                    ) : (
+                                                        <MiniStackedBarChart
+                                                            data={perQuestionStats}
+                                                            series={[
+                                                                { key: "benar", label: "Benar", color: colors.pass },
+                                                                { key: "salah", label: "Salah", color: colors.wrong },
+                                                                { key: "kosong", label: "Kosong", color: colors.tinted },
+                                                            ]}
+                                                            tooltip={renderPerQuestionTooltip}
+                                                        />
+                                                    )
+                                                )}
+
+                                                {chartView === "distribusi" && barData.length > 0 && (
+                                                    isLg ? (
+                                                        <div className="flex flex-col flex-1 min-h-0">
+                                                            <div className="flex-1 min-h-[200px]" style={{ overflowX: "auto" }}>
+                                                                <div className="h-full" style={{ width: `max(100%, ${Math.max(1, barData.length) * 56}px)` }}>
+                                                                    <ResponsiveContainer width="100%" height="100%" debounce={100}>
+                                                                        <BarChart data={barData} margin={{ top: 8, right: 16, left: -14, bottom: 0 }}>
+                                                                            <XAxis dataKey="name" tick={{ fontSize: 11, fill: colors.tinted }} axisLine={false} tickLine={false} interval={0} />
+                                                                            <YAxis tick={{ fontSize: 11, fill: colors.tinted }} axisLine={false} tickLine={false} allowDecimals={false} />
+                                                                            <Tooltip cursor={{ fill: colors.second }} content={renderTooltip} />
+                                                                            {barSeries.map((s) => (
+                                                                                <Bar key={s.key} dataKey={s.key} stackId="opt" name={s.label} fill={s.color} />
+                                                                            ))}
+                                                                        </BarChart>
+                                                                    </ResponsiveContainer>
+                                                                </div>
+                                                            </div>
+                                                            <div className="mt-3 flex flex-wrap gap-x-4 gap-y-1.5 shrink-0">
+                                                                {barSeries.map((s) => (
+                                                                    <span key={s.key} className="inline-flex items-center gap-1.5 text-xs text-tinted">
+                                                                        <span className="h-2.5 w-2.5 rounded-full shrink-0" style={{ background: s.color }} />
+                                                                        {s.label}
+                                                                    </span>
+                                                                ))}
+                                                            </div>
+                                                        </div>
+                                                    ) : (
+                                                        <MiniStackedBarChart
+                                                            data={barData}
+                                                            series={barSeries}
+                                                            tooltip={renderTooltip}
+                                                        />
+                                                    )
+                                                )}
+                                            </div>
+                                        </div>
+                                    )}
+                                </div>
                         )}
 
                         {submissions.length === 0 ? (

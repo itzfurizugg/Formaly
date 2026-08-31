@@ -122,7 +122,7 @@ export default function QuestionImportModal({ formId, startingOrder, onClose, on
             aria-modal="true"
             aria-labelledby="import-title"
         >
-            <motion.div variants={modalPanel} className="w-full max-w-4xl max-h-[90vh] overflow-hidden bg-white border border-second shadow-xl rounded-xl flex flex-col">
+            <motion.div variants={modalPanel} className="w-full max-w-2xl max-h-[90vh] overflow-hidden bg-white border border-second shadow-xl rounded-xl flex flex-col">
                 <div className="flex items-start justify-between gap-4 p-5 border-b border-second">
                     <div>
                         <h2 id="import-title" className="text-lg sm:text-2xl font-semibold text-darks">Impor Soal</h2>
