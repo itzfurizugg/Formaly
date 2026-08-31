@@ -5,7 +5,7 @@ const config: CapacitorConfig = {
   appName: 'Formaly',
   webDir: 'dist',
   server: {
-    hostname: 'formaly-gamma.vercel.app',
+    hostname: 'formaly.my.id',
     androidScheme: 'https'
   }
 };
