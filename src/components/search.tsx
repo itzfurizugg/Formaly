@@ -43,12 +43,12 @@ function Search({ onSearch, loading = false }: SearchProps) {
                     }`}
             >
                 <div className="flex-1 relative flex items-center min-w-0">
-                    <span
+                    {/* <span
                         className={`absolute left-4 text-base font-medium pointer-events-none select-none transition-colors duration-200 ${focused ? "text-darks" : "text-tinted"
                             }`}
                     >
                         @
-                    </span>
+                    </span> */}
 
                     <input
                         ref={inputRef}
@@ -59,7 +59,7 @@ function Search({ onSearch, loading = false }: SearchProps) {
                         onFocus={() => setFocused(true)}
                         onBlur={() => setFocused(false)}
                         onKeyDown={(e) => e.key === "Enter" && handleJoin()}
-                        className="w-full pl-11 pr-9 py-3 border-none outline-none bg-transparent placeholder:text-tinted"
+                        className="w-full pl-5 pr-9 py-3 border-none outline-none bg-transparent placeholder:text-tinted"
                     />
 
                     {tag && (
@@ -85,7 +85,7 @@ function Search({ onSearch, loading = false }: SearchProps) {
                     ) : (
                         <>
                             <SearchIcon className="h-4 w-4" />
-                            Cari
+                            <span className="hidden sm:block">Cari</span>
                         </>
                     )}
                 </button>
