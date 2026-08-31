@@ -1,7 +1,6 @@
 import { useEffect, useState } from "react"
 import { useNavigate, useLocation } from "react-router-dom"
 import { AnimatePresence, motion } from "motion/react"
-import { Clock, HelpCircle } from "lucide-react"
 import { supabase } from "../lib/supabase"
 import { useAuth } from "../lib/auth-context"
 import { loginUrl } from "../lib/redirect"
