@@ -5,6 +5,7 @@ import { startFormSubmission } from "../lib/formStart"
 import { showAlert } from "../lib/alerts"
 import { easeOutExpo } from "../lib/motion"
 import ModalPortal from "./modalPortal"
+import { Spinner } from "./loading"
 
 const backdropVariants: Variants = {
     hidden: { opacity: 0 },
@@ -133,7 +134,7 @@ function TokenInputModal({ open, onClose, formId, onStarted }: TokenInputModalPr
                                     disabled={starting || !code.trim()}
                                     className="btn flex w-fit mx-auto bg-darks text-base border-none px-4 mt-2 hover:opacity-90 transition-opacity disabled:opacity-60 rounded-full lg:rounded-xl"
                                 >
-                                    {starting && <span className="loading loading-spinner loading-sm" />}
+                                    {starting && <Spinner size={16} />}
                                     {starting ? "Memulai..." : "Verifikasi & Mulai"}
                                 </button>
                             </form>

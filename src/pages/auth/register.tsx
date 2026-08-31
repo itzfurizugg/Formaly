@@ -8,6 +8,7 @@ import { useAuth } from "../../lib/auth-context"
 import { safeNext } from "../../lib/redirect"
 import PasswordInput from "../../components/passwordInput"
 import { alertPop, fadeSlide } from "../../lib/motion"
+import { Spinner } from "../../components/loading"
 
 function Register() {
     const navigate = useNavigate()
@@ -164,7 +165,7 @@ function Register() {
                                 className="btn bg-darks text-base border-none w-full mt-2 hover:opacity-90 transition-opacity disabled:opacity-60 rounded-full lg:rounded-xl"
                             >
                                 {loading ? (
-                                    <span className="loading loading-spinner loading-sm" />
+                                    <Spinner size={16} />
                                 ) : (
                                     <UserPlus className="h-4 w-4" />
                                 )}

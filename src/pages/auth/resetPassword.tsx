@@ -8,6 +8,7 @@ import { useAuth } from "../../lib/auth-context"
 import PasswordInput from "../../components/passwordInput"
 import { alertPop, easeOutExpo } from "../../lib/motion"
 import { showAlert } from "../../lib/alerts"
+import { Spinner } from "../../components/loading"
 
 function friendlyError(message: string): string {
     const msg = message.toLowerCase()
@@ -247,7 +248,7 @@ function ResetPassword() {
                                         className="btn bg-darks text-base border-none w-full mt-2 hover:opacity-90 transition-opacity disabled:opacity-60 rounded-full lg:rounded-xl"
                                     >
                                         {loading ? (
-                                            <span className="loading loading-spinner loading-sm" />
+                                            <Spinner size={16} />
                                         ) : (
                                             <a></a>
                                         )}

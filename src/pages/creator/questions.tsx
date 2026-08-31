@@ -1,7 +1,7 @@
 import { useEffect, useState, useCallback, useMemo, type DragEvent } from "react"
 import { useParams } from "react-router-dom"
 import { AnimatePresence, motion } from "motion/react"
-import { Plus, Pencil, Trash2, Save, X, Loader2, Check, GripVertical } from "lucide-react"
+import { Plus, Pencil, Trash2, Save, X, Check, GripVertical } from "lucide-react"
 import { supabase } from "../../lib/supabase"
 import { useAuth } from "../../lib/auth-context"
 import QuestionImportModal from "../../components/creator/QuestionImportModal"
@@ -15,6 +15,7 @@ import { pageGet, pageSet } from "../../lib/pageCache"
 import { easeOutExpo, panelSlide } from "../../lib/motion"
 import BackButton from "../../components/backButton"
 import FormTabs from "../../components/creator/formTabs"
+import { Spinner } from "../../components/loading"
 
 interface Option {
     id: string | null
@@ -470,7 +471,7 @@ function Questions({ embedded = false }: { embedded?: boolean }) {
                 disabled={saving}
                 className="btn bg-darks text-base border-none w-full hover:opacity-90 transition-opacity disabled:opacity-60 mb-3 mt-2"
             >
-                {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
+                {saving ? <Spinner size={16} /> : <Save className="h-4 w-4" />}
                 Simpan Soal
             </button>
         </motion.div>

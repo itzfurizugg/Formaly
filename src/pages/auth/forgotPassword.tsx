@@ -6,6 +6,7 @@ import logo from "../../assets/logo.svg"
 import { useAuth } from "../../lib/auth-context"
 import { alertPop, easeOutExpo, fadeSlide } from "../../lib/motion"
 import BackButton from "../../components/backButton"
+import { Spinner } from "../../components/loading"
 
 function ForgotPassword() {
     const { resetPassword } = useAuth()
@@ -137,7 +138,7 @@ function ForgotPassword() {
                                         className="btn bg-darks text-base border-none w-full mt-2 hover:opacity-90 transition-opacity disabled:opacity-60 rounded-full lg:rounded-xl"
                                     >
                                         {loading ? (
-                                            <span className="loading loading-spinner loading-sm" />
+                                            <Spinner size={16} />
                                         ) : (
                                             <KeyRound className="h-4 w-4" />
                                         )}

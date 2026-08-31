@@ -5,6 +5,7 @@ import { useAuth } from "../../lib/auth-context"
 import BackButton from "../../components/backButton"
 import { alertSaveError, alertSaveSuccess } from "../../lib/alerts"
 import RichTextEditor from "../../components/richText"
+import { Spinner } from "../../components/loading"
 
 function FormNew() {
     const navigate = useNavigate()
@@ -118,7 +119,7 @@ function FormNew() {
                         disabled={loading}
                         className="btn bg-darks text-base justify-center mt-2 mb-1 h-11 rounded-xl border-none w-1/2 sm:w-full hover:opacity-90 transition-opacity disabled:opacity-60"
                     >
-                        {loading ? <span className="loading loading-spinner loading-sm" /> : "Simpan & Lanjut"}
+                        {loading ? <Spinner size={16} /> : "Simpan & Lanjut"}
                     </button>
                 </form>
             </div>

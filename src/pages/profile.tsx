@@ -18,6 +18,7 @@ import { supabase } from "../lib/supabase"
 import { showAlert } from "../lib/alerts"
 import ModalPortal from "../components/modalPortal"
 import { AnimatePresence, motion } from "motion/react"
+import { Spinner } from "../components/loading"
 import { modalBackdrop, modalPanel } from "../lib/motion"
 
 const ROLE_LABEL: Record<string, string> = {
@@ -259,7 +260,7 @@ function Profile() {
                             className="btn bg-wrong/10 text-wrong border-none hidden lg:flex sm:ml-auto hover:opacity-90 transition-opacity shrink-0 rounded-full"
                         >
                             {loggingOut ? (
-                                <span className="loading loading-spinner loading-sm" />
+                                <Spinner size={16} />
                             ) : (
                                 <LogOut className="h-4 w-4" />
                             )}
@@ -318,7 +319,7 @@ function Profile() {
                     className="btn flex w-full py-6 mx-auto bg-base text-wrong border-wrong/20 border-2 mt-2 lg:hidden hover:opacity-90 transition-opacity rounded-2xl"
                 >
                     {loggingOut ? (
-                        <span className="loading loading-spinner loading-sm" />
+                        <Spinner size={16} />
                     ) : (
                         <LogOut className="h-4 w-4" />
                     )}
@@ -378,7 +379,7 @@ function Profile() {
                         className="btn bg-darks text-base border-none w-full mt-2 hover:opacity-90 transition-opacity disabled:opacity-60 rounded-full lg:rounded-xl"
                     >
                         {saving ? (
-                            <span className="loading loading-spinner loading-sm" />
+                            <Spinner size={16} />
                         ) : (
                             <Save className="h-4 w-4" />
                         )}
@@ -445,7 +446,7 @@ function Profile() {
                         className="btn bg-darks text-base border-none w-full hover:opacity-90 transition-opacity disabled:opacity-60 rounded-full lg:rounded-xl"
                     >
                         {pwSaving ? (
-                            <span className="loading loading-spinner loading-sm" />
+                            <Spinner size={16} />
                         ) : (
                             <Lock className="h-4 w-4" />
                         )}

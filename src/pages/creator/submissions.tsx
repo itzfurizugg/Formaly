@@ -1,6 +1,6 @@
 import { useEffect, useState, useCallback } from "react"
 import { useNavigate, useParams } from "react-router-dom"
-import { Eye, Trash2, Loader2 } from "lucide-react"
+import { Eye, Trash2 } from "lucide-react"
 import { supabase } from "../../lib/supabase"
 import { useAuth } from "../../lib/auth-context"
 import { confirmDelete, showAlert } from "../../lib/alerts"
@@ -10,6 +10,7 @@ import { getOptionColor } from "../../lib/optionColors"
 import { DonutChart, MiniStackedBarChart } from "../../components/charts"
 import { Bar, BarChart, ResponsiveContainer, Tooltip, XAxis, YAxis, type TooltipContentProps } from "recharts"
 import BackButton from "../../components/backButton"
+import { Spinner } from "../../components/loading"
 import FormTabs from "../../components/creator/formTabs"
 
 /** Deteksi layar lg ke atas (1024px) untuk memilih varian chart secara
@@ -696,7 +697,7 @@ function Submissions() {
                                                         className="btn btn-sm bg-wrong/10 text-wrong border-none hover:opacity-90 disabled:opacity-60"
                                                     >
                                                         {deletingId === s.id ? (
-                                                            <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                                                            <Spinner size={16} />
                                                         ) : (
                                                             <Trash2 className="h-3.5 w-3.5" />
                                                         )}

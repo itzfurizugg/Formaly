@@ -10,6 +10,7 @@ import { startFormSubmission } from "../../lib/formStart"
 import TokenInputModal from "../../components/TokenInputModal"
 import BackButton from "../../components/backButton"
 import FormHeader from "../../components/creator/formHeader"
+import { Spinner } from "../../components/loading"
 
 interface FormItem {
     id: string
@@ -215,7 +216,7 @@ function FormDescriptionPage() {
                             className="hidden sm:flex w-full py-3.5 bg-darks text-white font-bold rounded-lg hover:opacity-90 transition-opacity items-center justify-center gap-2 text-sm disabled:opacity-60"
                         >
                             {loading ? (
-                                <span className="loading loading-spinner loading-sm" />
+                                <Spinner size={16} />
                             ) : (
                                 alreadySubmitted ? "Lihat Riwayat" : "Mulai Mengerjakan"
                             )}
@@ -236,7 +237,7 @@ function FormDescriptionPage() {
                                 className="w-auto p-6 h-16 bg-darks text-lg text-white font-bold rounded-full hover:opacity-90 transition-opvalidacity flex items-center justify-center gap-2 mb-4 mx-auto pointer-events-auto disabled:pointer-events-none"
                             >
                                 {loading ? (
-                                    <span className="loading loading-spinner loading-sm" />
+                                    <Spinner size={16} />
                                 ) : (
                                     alreadySubmitted ? "Lihat Riwayat" : "Mulai Mengerjakan"
                                 )}

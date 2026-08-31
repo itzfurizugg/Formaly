@@ -4,7 +4,6 @@ import {
     BookOpenText,
     Eye,
     ListFilter,
-    Loader2,
     Pipette,
     Shuffle,
     Trash2,
@@ -18,7 +17,7 @@ import { pageGet, pageSet } from "../../lib/pageCache"
 import ImageUrlInput from "../../components/creator/imageUrlInput"
 import BackButton from "../../components/backButton"
 import FormTabs from "../../components/creator/formTabs"
-import Loading from "../../components/loading"
+import Loading, { Spinner } from "../../components/loading"
 
 interface FormSettingsData {
     show_score_to_respondent: boolean
@@ -332,7 +331,7 @@ function FormSettings() {
                                     disabled={saving}
                                     className="btn bg-darks text-base border-none w-[60%] m-3 sm:w-full hover:opacity-90 transition-all duration-200 hover:scale-[1.02] active:scale-[0.98] disabled:opacity-60 mt-4 mb-4 mx-auto rounded-full"
                                 >
-                                    {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <p>Simpan Pengaturan</p>}
+                                    {saving ? <Spinner size={16} /> : <p>Simpan Pengaturan</p>}
                                 </button>
                             </div>
 
@@ -355,7 +354,7 @@ function FormSettings() {
                                         disabled={deleting}
                                         className="btn rounded-full bg-wrong/10 text-wrong border border-wrong/20 hover:bg-wrong/20 transition-all duration-200 hover:scale-[1.02] active:scale-[0.98] w-fit justify-end ml-2 mb-2"
                                     >
-                                        {deleting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Trash2 className="h-4 w-4" />}
+                                        {deleting ? <Spinner size={16} /> : <Trash2 className="h-4 w-4" />}
                                         Hapus Form
                                     </button>
                                 </div>

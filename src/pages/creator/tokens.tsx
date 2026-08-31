@@ -1,13 +1,14 @@
 import { useEffect, useState, useCallback } from "react"
 import { useParams } from "react-router-dom"
 import { AnimatePresence, motion } from "motion/react"
-import { Plus, Trash2, X, Loader2, Copy, Check } from "lucide-react"
+import { Plus, Trash2, X, Copy, Check } from "lucide-react"
 import { supabase } from "../../lib/supabase"
 import { useAuth } from "../../lib/auth-context"
 import { confirmDelete, showAlert } from "../../lib/alerts"
 import { easeOutExpo, panelSlide } from "../../lib/motion"
 import BackButton from "../../components/backButton"
 import FormTabs from "../../components/creator/formTabs"
+import { Spinner } from "../../components/loading"
 
 interface Token {
     id: string
@@ -262,7 +263,7 @@ function Tokens() {
                             disabled={saving || !tokenCode.trim()}
                             className="btn bg-darks text-base border-none w-full hover:opacity-90 transition-opacity disabled:opacity-60"
                         >
-                            {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Plus className="h-4 w-4" />}
+                            {saving ? <Spinner size={16} /> : <Plus className="h-4 w-4" />}
                             Simpan Token
                         </button>
                     </motion.div>

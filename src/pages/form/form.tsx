@@ -10,6 +10,7 @@ import { loginUrl } from "../../lib/redirect"
 import ModalPortal from "../../components/modalPortal"
 // import FormHeader from "../../components/creator/formHeader"
 import { alertPop, easeOutExpo, modalBackdrop, modalPanel } from "../../lib/motion"
+import { Spinner } from "../../components/loading"
 
 interface Option {
     id: string
@@ -465,7 +466,7 @@ function FormPage() {
                                         className="btn text-white h-12 min-h-0 px-3.5 bg-done border-none rounded-xl hover:opacity-90 disabled:opacity-25"
                                     >
                                         {submitting ? (
-                                            <span className="loading loading-spinner loading-sm" />
+                                            <Spinner size={16} />
                                         ) : (
                                             <Check className="h-4 w-4" />
                                         )}
@@ -502,7 +503,7 @@ function FormPage() {
                                             className="btn text-white h-12 min-h-0 px-3.5 bg-done border-none rounded-full hover:opacity-90 disabled:opacity-25"
                                         >
                                             {submitting ? (
-                                                <span className="loading loading-spinner loading-sm" />
+                                                <Spinner size={16} />
                                             ) : (
                                                 <Check className="h-4 w-4" />
                                             )}

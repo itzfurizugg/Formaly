@@ -1,6 +1,6 @@
 import { useEffect, useState, useCallback } from "react"
 import { useNavigate, useParams } from "react-router-dom"
-import { Save, Loader2, X } from "lucide-react"
+import { Save, X } from "lucide-react"
 import { supabase } from "../../lib/supabase"
 import { useAuth } from "../../lib/auth-context"
 import { alertSaveError, alertSaveSuccess, showAlert } from "../../lib/alerts"
@@ -10,7 +10,7 @@ import { pageGet, pageSet } from "../../lib/pageCache"
 import BackButton from "../../components/backButton"
 import FormTabs from "../../components/creator/formTabs"
 import FormHeader from "../../components/creator/formHeader"
-import Loading from "../../components/loading"
+import Loading, { Spinner } from "../../components/loading"
 
 interface FormEditCache {
     title: string
@@ -485,7 +485,7 @@ function FormEdit() {
                                             disabled={saving}
                                             className="btn bg-darks text-base border-none w-full hover:opacity-90 transition-opacity disabled:opacity-60 mb-3 mt-5"
                                         >
-                                            {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
+                                            {saving ? <Spinner size={16} /> : <Save className="h-4 w-4" />}
                                             Simpan Perubahan
                                         </button>
                                     </form>

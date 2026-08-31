@@ -19,7 +19,7 @@ const SPIN_DURATION = 1
 const BLADE_COUNT = 8
 const BLADE_STEP = SPIN_DURATION / BLADE_COUNT
 
-function ActivitySpinner({ size = 28 }: { size?: number }) {
+export function Spinner({ size = 28 }: { size?: number }) {
     const radius = size * 0.32
     const bladeLength = size * 0.28
     const bladeWidth = Math.max(2, size * 0.09)
@@ -101,7 +101,7 @@ function Loading({ show = true, label = "Memuat...", inline = false }: LoadingPr
             animate={{ opacity: opaque ? 1 : 0 }}
             transition={{ duration: FADE_MS / 1000, ease: "easeOut" }}
         >
-            <ActivitySpinner size={inline ? 26 : 30} />
+            <Spinner size={inline ? 26 : 30} />
             <p className="text-xs text-tinted">{label}</p>
         </motion.div>
     )

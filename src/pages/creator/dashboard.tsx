@@ -8,7 +8,7 @@ import { DistributionChart, MiniDistributionChart, type BarDatum } from "../../c
 import { colors } from "../../lib/colorbase"
 import { pageGet, pageSet } from "../../lib/pageCache"
 import { easeOutExpo, listContainer, listItem } from "../../lib/motion"
-import LinearProgress from "../../components/LinearProgress"
+import Loading from "../../components/loading"
 import BackButton from "../../components/backButton"
 
 interface Stats {
@@ -70,7 +70,7 @@ function CreatorDashboard() {
         if (!cached) setLoading(true)
 
         // Satu round-trip menggabungkan cek role + seluruh data dashboard
-        // sekaligus, sehingga cuma ada SATU loading state (LinearProgress di
+        // sekaligus, sehingga cuma ada SATU loading state (Loading di
         // bawah) — bukan "Memeriksa akses..." terpisah dari guard lagi.
         const [roleRes, formsRes, subCountRes, scoreRes] = await Promise.all([
             supabase.from("users").select("role").eq("id", user.id).single(),
@@ -191,9 +191,7 @@ function CreatorDashboard() {
                 {loading ? (
                     // Satu bar tipis di atas, bukan card/halaman loading terpisah —
                     // biar enggak numpuk sama splash/loading lain yang lebih di luar.
-                    <div className="w-full">
-                        <LinearProgress trackClassName="w-full" />
-                    </div>
+                    <Loading inline />
                 ) : (
                     <motion.div
                         className="flex flex-col"

@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect } from "react"
 import { Search as SearchIcon } from "lucide-react"
+import { Spinner } from "./loading"
 
 interface SearchProps {
     onSearch: (tag: string) => void
@@ -81,7 +82,7 @@ function Search({ onSearch, loading = false }: SearchProps) {
                     disabled={loading || !tag.trim()}
                 >
                     {loading ? (
-                        <span className="loading loading-spinner loading-xs"></span>
+                        <Spinner size={16} />
                     ) : (
                         <>
                             <SearchIcon className="h-4 w-4" />

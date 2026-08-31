@@ -8,6 +8,7 @@ import { safeNext } from "../../lib/redirect"
 import type { EmailOtpType } from "@supabase/supabase-js"
 import { alertPop, easeOutExpo, fadeSlide } from "../../lib/motion"
 import BackButton from "../../components/backButton"
+import { Spinner } from "../../components/loading"
 
 const OTP_LENGTH = 6
 
@@ -252,7 +253,7 @@ function Otp() {
                                 className="btn bg-darks text-base border-none w-full mt-6 hover:opacity-90 transition-opacity disabled:opacity-60 rounded-full lg:rounded-xl"
                             >
                                 {loading ? (
-                                    <span className="loading loading-spinner loading-sm" />
+                                    <Spinner size={16} />
                                 ) : (
                                     <ShieldCheck className="h-4 w-4" />
                                 )}
@@ -267,7 +268,7 @@ function Otp() {
                             className="btn bg-base text-darks border border-second hover:bg-second transition-colors w-full mt-2 disabled:opacity-60 rounded-full lg:rounded-xl"
                         >
                             {resendLoading ? (
-                                <span className="loading loading-spinner loading-sm" />
+                                <Spinner size={16} />
                             ) : (
                                 <RotateCcw className="h-4 w-4" />
                             )}

@@ -1,11 +1,12 @@
 import { useRef, useState } from "react"
 import { motion } from "motion/react"
-import { CheckCircle2, FileUp, Loader2, Pencil, Upload, X } from "lucide-react"
+import { CheckCircle2, FileUp, Pencil, Upload, X } from "lucide-react"
 import { type ParsedQuestion, validateParsedQuestion } from "../../lib/parsers/types"
 import { supabase } from "../../lib/supabase"
 import { showAlert } from "../../lib/alerts"
 import ModalPortal from "../modalPortal"
 import { easeOutExpo, modalBackdrop, modalPanel } from "../../lib/motion"
+import { Spinner } from "../loading"
 
 interface QuestionImportModalProps {
     formId: string
@@ -141,7 +142,7 @@ export default function QuestionImportModal({ formId, startingOrder, onClose, on
                     )}
                     <input ref={inputRef} type="file" accept=".docx,.csv,.xlsx" className="hidden" onChange={(event) => chooseFile(event.target.files?.[0])} />
 
-                    {parsing && <div className="py-12 text-center text-tinted"><Loader2 className="h-5 w-5 animate-spin inline mr-2" />Membaca file…</div>}
+                    {parsing && <div className="py-12 text-center text-tinted"><Spinner size={20} /></div>}
                     {summary && <div role="status" className="mt-4 text-sm text-done bg-done/5 border border-done/20 px-4 py-3 flex gap-2"><CheckCircle2 className="h-4 w-4 shrink-0" />{summary}</div>}
 
                     {rows.length > 0 && (
@@ -175,7 +176,7 @@ export default function QuestionImportModal({ formId, startingOrder, onClose, on
 
                 <div className="flex justify-end gap-2 p-5 border-t border-second">
                     <button onClick={onClose} className="btn lg:hidden bg-base border border-second text-darks">{summary ? "Tutup" : "Batal"}</button>
-                    {!summary && rows.length > 0 && <button onClick={saveImport} disabled={saving} className="btn bg-darks text-base border-none disabled:opacity-60">{saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Upload className="h-4 w-4" />} Impor soal yang valid</button>}
+                    {!summary && rows.length > 0 && <button onClick={saveImport} disabled={saving} className="btn bg-darks text-base border-none disabled:opacity-60">{saving ? <Spinner size={16} /> : <Upload className="h-4 w-4" />} Impor soal yang valid</button>}
                 </div>
             </motion.div>
         </motion.div>
