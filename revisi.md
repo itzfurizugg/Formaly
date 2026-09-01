@@ -77,3 +77,6 @@ Saat user/creator mengubah nama, email, atau password di halaman profile, peruba
 ## 10. Export Jawaban dari 1 Akun Responden
 
 - [ ] Creator bisa export jawaban milik satu akun responden tertentu saja (bukan seluruh responden).
+
+## 11. Buat kalo menyisipkan link video jadi pake popup modal seperti yang lain
+- [ ] Popup modal untuk semua fitur WYSIWYG

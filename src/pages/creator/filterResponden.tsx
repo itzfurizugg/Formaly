@@ -57,6 +57,7 @@ function CreatorFilterResponden() {
     const { user } = useAuth()
 
     const [formTitle, setFormTitle] = useState("")
+    const [passingScore, setPassingScore] = useState(70)
     const [questions, setQuestions] = useState<Question[]>([])
     const [submissions, setSubmissions] = useState<Submission[]>([])
     const [answers, setAnswers] = useState<AnswerRecord[]>([])
@@ -65,6 +66,7 @@ function CreatorFilterResponden() {
 
     // Filter controls
     const [statusFilter, setStatusFilter] = useState("all")
+    const [resultFilter, setResultFilter] = useState("all")
     const [searchQuery, setSearchQuery] = useState("")
     const [selectedQuestionId, setSelectedQuestionId] = useState<string>("")
     const [selectedOptionId, setSelectedOptionId] = useState<string>("")
@@ -79,7 +81,7 @@ function CreatorFilterResponden() {
             // 1. Fetch form
             const { data: formData, error: formErr } = await supabase
                 .from("forms")
-                .select("id, title, creator_id")
+                .select("id, title, passing_score, creator_id")
                 .eq("id", id)
                 .single()
 
@@ -89,6 +91,7 @@ function CreatorFilterResponden() {
                 return
             }
             setFormTitle(formData.title)
+            setPassingScore(Number(formData.passing_score) || 70)
 
             // 2. Fetch questions
             const { data: qData, error: qErr } = await supabase
@@ -191,6 +194,7 @@ function CreatorFilterResponden() {
 
     const handleResetAllFilters = () => {
         setStatusFilter("all")
+        setResultFilter("all")
         setSearchQuery("")
         setActiveQuestionFilters([])
         setSelectedQuestionId("")
@@ -203,6 +207,15 @@ function CreatorFilterResponden() {
             // Status filter
             if (statusFilter !== "all" && sub.status !== statusFilter) {
                 return false
+            }
+
+            // Result filter: lolos / tidak lolos berdasarkan passing_score.
+            // Submisi yang belum selesai tidak termasuk keduanya.
+            if (resultFilter !== "all") {
+                if (sub.status !== "SUBMITTED") return false
+                if (sub.total_score == null) return false
+                if (resultFilter === "passed" && sub.total_score < passingScore) return false
+                if (resultFilter === "failed" && sub.total_score >= passingScore) return false
             }
 
             // Search query filter (name or email)
@@ -238,7 +251,7 @@ function CreatorFilterResponden() {
 
             return true
         })
-    }, [submissions, statusFilter, searchQuery, activeQuestionFilters, submissionAnswersMap, questionsMap])
+    }, [submissions, statusFilter, resultFilter, passingScore, searchQuery, activeQuestionFilters, submissionAnswersMap, questionsMap])
 
     const handleExport = async () => {
         if (!id) return
@@ -260,8 +273,8 @@ function CreatorFilterResponden() {
     const fmtDate = (d: string | null) => (d ? new Date(d).toLocaleString("id-ID") : "-")
 
     const selectedQuestion = questions.find((q) => q.id === selectedQuestionId)
-    const hasActiveFilters = statusFilter !== "all" || !!searchQuery.trim() || activeQuestionFilters.length > 0
-    const activeFilterCount = (statusFilter !== "all" ? 1 : 0) + (searchQuery.trim() ? 1 : 0) + activeQuestionFilters.length
+    const hasActiveFilters = statusFilter !== "all" || resultFilter !== "all" || !!searchQuery.trim() || activeQuestionFilters.length > 0
+    const activeFilterCount = (statusFilter !== "all" ? 1 : 0) + (resultFilter !== "all" ? 1 : 0) + (searchQuery.trim() ? 1 : 0) + activeQuestionFilters.length
 
     return (
         <>
@@ -382,6 +395,20 @@ function CreatorFilterResponden() {
                                                     </select>
                                                 </div>
 
+                                                {/* Hasil kelulusan */}
+                                                <div>
+                                                    <label className="block text-xs font-medium text-tinted mb-1">Hasil Kelulusan</label>
+                                                    <select
+                                                        value={resultFilter}
+                                                        onChange={(e) => setResultFilter(e.target.value)}
+                                                        className="select select-sm w-full bg-base border-second rounded-lg text-xs focus:outline-none focus:border-darks/40 transition-colors"
+                                                    >
+                                                        <option value="all">Semua Hasil</option>
+                                                        <option value="passed">Lolos (nilai ≥ {passingScore})</option>
+                                                        <option value="failed">Tidak Lolos</option>
+                                                    </select>
+                                                </div>
+
                                                 {/* Select Question */}
                                                 <div>
                                                     <label className="block text-xs font-medium text-tinted mb-1">Pertanyaan</label>
@@ -467,6 +494,18 @@ function CreatorFilterResponden() {
                                         Status: {statusFilter === "SUBMITTED" ? "Selesai" : "Proses"}
                                         <button
                                             onClick={() => setStatusFilter("all")}
+                                            className="text-tinted hover:text-wrong transition-colors"
+                                        >
+                                            <X className="h-3 w-3" />
+                                        </button>
+                                    </span>
+                                )}
+
+                                {resultFilter !== "all" && (
+                                    <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs bg-base text-darks border border-second">
+                                        Hasil: {resultFilter === "passed" ? `Lolos (nilai ≥ ${passingScore})` : "Tidak Lolos"}
+                                        <button
+                                            onClick={() => setResultFilter("all")}
                                             className="text-tinted hover:text-wrong transition-colors"
                                         >
                                             <X className="h-3 w-3" />
@@ -581,6 +620,17 @@ function CreatorFilterResponden() {
                                                         >
                                                             {sub.status === "SUBMITTED" ? "Selesai" : "Proses"}
                                                         </span>
+                                                        {sub.status === "SUBMITTED" && sub.total_score != null && (
+                                                            <span
+                                                                className={`badge rounded-full text-xs ${
+                                                                    sub.total_score >= passingScore
+                                                                        ? "bg-done/10 text-done border-none"
+                                                                        : "bg-wrong/10 text-wrong border-none"
+                                                                }`}
+                                                            >
+                                                                {sub.total_score >= passingScore ? "Lolos" : "Tidak Lolos"}
+                                                            </span>
+                                                        )}
                                                     </div>
                                                     {sub.user?.email && (
                                                         <p className="text-xs text-tinted mt-0.5">{sub.user.email}</p>

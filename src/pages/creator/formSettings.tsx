@@ -6,6 +6,7 @@ import {
     ListFilter,
     Pipette,
     Repeat,
+    Save,
     Shuffle,
     Trash2,
 } from "lucide-react"
@@ -87,6 +88,7 @@ function FormSettings() {
 
     const [loading, setLoading] = useState(true)
     const [saving, setSaving] = useState(false)
+    const [savingBanner, setSavingBanner] = useState(false)
     const [deleting, setDeleting] = useState(false)
     const [settings, setSettings] = useState<FormSettingsData>(DEFAULTS)
     const [headerColor, setHeaderColor] = useState("")
@@ -130,6 +132,22 @@ function FormSettings() {
         setSettings((prev) => ({ ...prev, [key]: !prev[key] }))
     }
 
+    const syncBannerCaches = () => {
+        if (!user || !id) return
+        const cachedFormEdit = pageGet<Record<string, unknown> | undefined>(`formEdit:${user.id}:${id}`)
+        if (cachedFormEdit) {
+            pageSet(`formEdit:${user.id}:${id}`, {
+                ...cachedFormEdit,
+                headerImage: headerImage.trim(),
+                headerColor: headerColor || "",
+            })
+        }
+        const cachedFormList = pageGet<{ id: string; header_color?: string | null; header_image?: string | null }[] | undefined>(`formList:${user.id}`)
+        if (cachedFormList) {
+            pageSet(`formList:${user.id}`, cachedFormList.map((f) => f.id === id ? { ...f, header_color: headerColor || null, header_image: headerImage.trim() || null } : f))
+        }
+    }
+
     const handleSave = async () => {
         if (!id) return
         // Validasi sama seperti aturan ImageUrlInput: link langsung ke file gambar.
@@ -158,20 +176,7 @@ function FormSettings() {
             if (error) throw new Error(error.message)
             if (!data) throw new Error("Perubahan tidak tersimpan. Pastikan kamu pemilik form ini.")
 
-            if (user) {
-                const cachedFormEdit = pageGet<Record<string, unknown> | undefined>(`formEdit:${user.id}:${id}`)
-                if (cachedFormEdit) {
-                    pageSet(`formEdit:${user.id}:${id}`, {
-                        ...cachedFormEdit,
-                        headerImage: headerImage.trim(),
-                        headerColor: headerColor || "",
-                    })
-                }
-                const cachedFormList = pageGet<{ id: string; header_color?: string | null; header_image?: string | null }[] | undefined>(`formList:${user.id}`)
-                if (cachedFormList) {
-                    pageSet(`formList:${user.id}`, cachedFormList.map((f) => f.id === id ? { ...f, header_color: headerColor || null, header_image: headerImage.trim() || null } : f))
-                }
-            }
+            syncBannerCaches()
             alertSaveSuccess("Pengaturan berhasil disimpan.")
         } catch (err) {
             const msg = err instanceof Error ? err.message : "Gagal menyimpan pengaturan."
@@ -182,6 +187,43 @@ function FormSettings() {
             alertSaveError(msg)
         } finally {
             setSaving(false)
+        }
+    }
+
+    // Tombol simpan khusus untuk warna/gambar header — hanya menyimpan banner,
+    // tidak menyentuh toggle pengaturan di bawah.
+    const handleSaveBanner = async () => {
+        if (!id) return
+        if (headerImage.trim() && !isValidImageUrl(headerImage)) {
+            showAlert("URL gambar header harus diawali http:// atau https://.", "error")
+            return
+        }
+        setSavingBanner(true)
+        try {
+            const { data, error } = await supabase
+                .from("forms")
+                .update({
+                    header_color: headerColor || null,
+                    header_image: headerImage.trim() || null,
+                })
+                .eq("id", id)
+                .select("id")
+                .maybeSingle()
+
+            if (error) throw new Error(error.message)
+            if (!data) throw new Error("Perubahan tidak tersimpan. Pastikan kamu pemilik form ini.")
+
+            syncBannerCaches()
+            showAlert("Warna header berhasil disimpan.", "success")
+        } catch (err) {
+            const msg = err instanceof Error ? err.message : "Gagal menyimpan warna header."
+            if (/could not find the .* column|does not exist|PGRST204/i.test(msg)) {
+                showAlert("Kolom warna header belum ada di database. Terapkan migration di supabase/migrations terlebih dahulu.", "error")
+                return
+            }
+            alertSaveError(msg)
+        } finally {
+            setSavingBanner(false)
         }
     }
 
@@ -301,6 +343,19 @@ function FormSettings() {
                                         value={headerImage}
                                         onChange={setHeaderImage}
                                     />
+                                </div>
+
+                                {/* Simpan khusus banner: warna + gambar header langsung tersimpan. */}
+                                <div className="px-3.5 sm:px-1 mt-3 pb-1">
+                                    <button
+                                        type="button"
+                                        onClick={handleSaveBanner}
+                                        disabled={savingBanner}
+                                        className="btn w-full bg-darks text-base border-none rounded-full hover:opacity-90 transition-all duration-200 hover:scale-[1.02] active:scale-[0.98] disabled:opacity-60"
+                                    >
+                                        {savingBanner ? <Spinner size={16} /> : <Save className="h-4 w-4" />}
+                                        Simpan Warna Header
+                                    </button>
                                 </div>
                             </div>
 

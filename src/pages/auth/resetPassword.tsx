@@ -33,6 +33,14 @@ function ResetPassword() {
     useEffect(() => {
         let mounted = true
 
+        // Fallback: kalau sesi recovery tidak terdeteksi (link kadaluarsa,
+        // token tidak ada, atau event terlewat), berhenti menampilkan
+        // "Memeriksa tautan..." lalu tampilkan layar link tidak valid.
+        const timer = window.setTimeout(() => {
+            if (!mounted) return
+            setChecking(false)
+        }, 7000)
+
         supabase.auth.getSession().then(({ data: { session } }) => {
             if (!mounted) return
             if (session) {
@@ -50,6 +58,7 @@ function ResetPassword() {
 
         return () => {
             mounted = false
+            window.clearTimeout(timer)
             subscription.unsubscribe()
         }
     }, [])
