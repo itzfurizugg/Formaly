@@ -32,12 +32,23 @@ const HEX_COLOR_RE = /^#(?:[0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/
 function FormHeader({ formId, title, headerImage, headerColor }: FormHeaderProps) {
     const [failed, setFailed] = useState(false)
 
-    // Warna kustom dari creator menang atas gradien acak.
+    // Gambar header menang atas warna kustom: kalau link foto sudah ada,
+    // gunakan versi foto. Warna hanya dipakai bila gambar kosong/gagal dimuat.
+    if (headerImage && !failed) {
+        return (
+            <img
+                src={headerImage}
+                alt={`Header ${title}`}
+                loading="lazy"
+                onError={() => setFailed(true)}
+                className="w-full aspect-[3105/1100] object-cover border-b border-second"
+            />
+        )
+    }
+
+    // Warna kustom dari creator dipakai bila tidak ada gambar (atau gagal dimuat).
     const useCustomColor = !!headerColor && HEX_COLOR_RE.test(headerColor)
 
-    // Warna kustom juga menang atas gambar header: mengubah warna di
-    // Pengaturan harus terlihat di semua halaman (responden/hasil/deskripsi).
-    // Gambar hanya tampil bila creator belum memilih warna sendiri.
     if (useCustomColor) {
         return (
             <div
@@ -59,18 +70,6 @@ function FormHeader({ formId, title, headerImage, headerColor }: FormHeaderProps
                     {title}
                 </span>
             </div>
-        )
-    }
-
-    if (headerImage && !failed) {
-        return (
-            <img
-                src={headerImage}
-                alt={`Header ${title}`}
-                loading="lazy"
-                onError={() => setFailed(true)}
-                className="w-full aspect-[3105/1100] object-cover border-b border-second"
-            />
         )
     }
 
