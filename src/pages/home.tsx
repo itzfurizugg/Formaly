@@ -89,6 +89,7 @@ function Home() {
         if (!query) return
         setSearching(true)
         setError("")
+
         try {
             const { data: tagRow } = await supabase
                 .from("tags")
@@ -112,6 +113,7 @@ function Home() {
             }
 
             const ids = rel.map((r) => r.form_id as string)
+
             const { data } = await supabase
                 .from("forms")
                 .select(`
@@ -138,7 +140,9 @@ function Home() {
             }))
 
             if (matches.length >= 1) {
-                navigate("/form/description", { state: { form: matches[0] as FormData } })
+                navigate("/form/description", {
+                    state: { form: matches[0] as FormData }
+                })
             } else {
                 setError(`Tag "${query}" tidak ditemukan.`)
             }
@@ -150,9 +154,9 @@ function Home() {
     if (authLoading || !user) return null
 
     return (
-        <div className="relative min-h-[90vh] flex flex-col items-center justify-start px-4 pt-12 lg:pt-30 pb-1 lg:pb-10 overflow-hidden">
-            {/* Background Decorative Elements */}
+        <div className="relative min-h-full flex flex-col items-center justify-start px-4 pt-12 lg:pt-30 pb-1 lg:pb-10 overflow-hidden">
             <div className="w-full max-w-4xl mx-auto flex flex-col items-center justify">
+
                 {/* Header & Hero Card */}
                 <motion.section
                     initial={{ opacity: 0, y: 20 }}
@@ -160,20 +164,22 @@ function Home() {
                     transition={{ duration: 0.5, ease: easeOutExpo }}
                     className="w-full text-center flex flex-col items-center"
                 >
-                    {/* Interactive Showcase Card */}
-                    <div className="relative w-full max-w-4xl mx-auto rounded-xl bg-base-300 p-4 sm:p-6 py-12 mb-8 overflow-hidden flex flex-row items-center justify-between gap-2 sm:gap-0 aspect-[1/1] sm:aspect-[24/9] scale-80 sm:scale-90 lg:scale-100 order-1 sm:order-2">
 
-                        {/* Left Side: Mockup Quiz Preview Card */}
+                    {/* Interactive Showcase Card */}
+                    <div className="relative w-full max-w-4xl mx-auto rounded-xl bg-base-300 p-5 sm:p-4 mb-4 overflow-hidden flex flex-col sm:flex-row items-center justify-between gap-6 sm:gap-8 order-1 sm:order-2">
+
+                        {/* Form Decoy */}
                         <motion.div
                             initial={{ scale: 0.95, rotate: -2 }}
                             animate={{ scale: 1, rotate: 0 }}
                             transition={{ duration: 0.3 }}
-                            className="relative z-10 w-52 rounded-xl bg-white p-2.5 sm:p-3.5 shadow-2xl shadow-darks/10 text-left shrink-0 scale-130 origin-center transition-transform duration-500 ml-6 lg:ml-35"
+                            className="relative z-10 w-80 sm:w-56 rounded-xl bg-white p-2.5 sm:p-3.5 shadow-2xl shadow-darks/10 text-left shrink-0 sm:ml-6 sm:scale-105 lg:scale-120 sm:ml-30 lg:ml-30"
                         >
                             <div className="flex items-center gap-2 mb-2">
                                 <div className="w-6 h-6 rounded-lg bg-done/10 text-done flex items-center justify-center font-bold text-xs">
                                     F
                                 </div>
+
                                 <div className="min-w-0">
                                     <AnimatePresence mode="wait">
                                         <motion.p
@@ -187,15 +193,14 @@ function Home() {
                                             {formItems[formIndex].title}
                                         </motion.p>
                                     </AnimatePresence>
-                                    <p className="text-[9px] text-tinted">{formItems[formIndex].author}</p>
+
+                                    <p className="text-[9px] text-tinted">
+                                        {formItems[formIndex].author}
+                                    </p>
                                 </div>
                             </div>
 
                             <div className="space-y-1.5 pt-1">
-                                {/* <div className="flex items-center justify-between text-[9px] text-tinted font-medium">
-                                    <span className="flex items-center gap-1"><HelpCircle className="w-2.5 h-[#6366f1]" /> 10 Soal</span>
-                                    <span className="flex items-center gap-1"><Clock className="w-2.5 h-[#6366f1]" /> 15 Min</span>
-                                </div> */}
                                 <AnimatePresence mode="wait">
                                     <motion.div
                                         key={formIndex}
@@ -208,6 +213,7 @@ function Home() {
                                         {formItems[formIndex].question}
                                     </motion.div>
                                 </AnimatePresence>
+
                                 <div className="space-y-1">
                                     <AnimatePresence mode="wait">
                                         <motion.div
@@ -218,10 +224,14 @@ function Home() {
                                             transition={{ duration: 0.2 }}
                                             className="px-2 py-1 rounded-lg bg-done text-white text-[11px] font-medium flex items-center justify-between shadow-sm"
                                         >
-                                            <span>{formItems[formIndex].options[0]}</span>
+                                            <span>
+                                                {formItems[formIndex].options[0]}
+                                            </span>
+
                                             <span className="w-1.5 h-1.5 rounded-full bg-white" />
                                         </motion.div>
                                     </AnimatePresence>
+
                                     <div className="px-2 py-1 rounded-lg bg-second/30 text-darks text-[11px] font-medium">
                                         {formItems[formIndex].options[1]}
                                     </div>
@@ -229,20 +239,17 @@ function Home() {
                             </div>
                         </motion.div>
 
-                        {/* Right Side: Character Illustration */}
-                        <div className="hidden sm:block relative z-0 flex-1 flex justify-end items-end h-full -mt-30 mr-20">
-                            <img
-                                src={charGirl}
-                                alt="Ilustrasi Karakter"
-                                className="h-90 lg:h-130 object-contain transition-transform duration-500"
-                            />
+                        {/* Character Illustration */}
+                        <div className="relative z-0 hidden sm:flex flex-1 justify-center sm:justify-end items-end">
+                            <img src={charGirl} alt="Ilustrasi Karakter" className="sm:h-90 sm:scale-120 lg:scale-130 object-contain sm:mr-20 lg:mr-20" />
                         </div>
                     </div>
 
                     <div className="text-center order-2 sm:order-1 w-full">
-                        <h1 className="text-4xl sm:text-6xl font-black tracking-tight text-darks mb-3 leading-[1.1]">
+                        <h1 className="text-4xl sm:text-6xl font-black tracking-tight text-darks mb-2 leading-[1.1]">
                             Mulai Mengerjakan!
                         </h1>
+
                         <p className="text-sm text-darks px-3 mx-auto mb-8 font-normal">
                             Mulai Mengerjakan formulir dengan memasukkan tag di bawah.
                         </p>
@@ -253,10 +260,17 @@ function Home() {
                 <motion.div
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.5, ease: easeOutExpo, delay: 0.1 }}
+                    transition={{
+                        duration: 0.5,
+                        ease: easeOutExpo,
+                        delay: 0.1
+                    }}
                     className="w-3.5/4 max-w-xl"
                 >
-                    <Search onSearch={handleTagSearch} loading={searching} />
+                    <Search
+                        onSearch={handleTagSearch}
+                        loading={searching}
+                    />
 
                     {/* Error Banner */}
                     {error && (
