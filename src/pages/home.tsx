@@ -150,7 +150,7 @@ function Home() {
     if (authLoading || !user) return null
 
     return (
-        <div className="relative min-h-[calc(90vh-3.5rem)] flex flex-col items-center justify-center px-4 py-10 overflow-hidden">
+        <div className="relative min-h-[90vh] flex flex-col items-center justify-start px-4 pt-30 pb-10 overflow-hidden">
             {/* Background Decorative Elements */}
             <div className="w-full max-w-4xl mx-auto flex flex-col items-center justify">
                 {/* Header & Hero Card */}
@@ -158,17 +158,8 @@ function Home() {
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.5, ease: easeOutExpo }}
-                    className="w-full text-center flex flex-col-reverse sm:flex-col items-center"
+                    className="w-full text-center flex flex-col items-center"
                 >
-                    <div className="text-center order-2 sm:order-1">
-                        <h1 className="text-4xl sm:text-6xl font-black tracking-tight text-darks mb-3 leading-[1.1]">
-                            Mulai Mengerjakan!
-                        </h1>
-                        <p className="text-sm text-darks px-3 mx-auto mb-8 font-normal">
-                            Mulai Mengerjakan formulir dengan memasukkan tag di bawah.
-                        </p>
-                    </div>
-
                     {/* Interactive Showcase Card */}
                     <div className="relative w-full max-w-4xl mx-auto rounded-xl bg-base-300 p-4 sm:p-6 py-12 mb-8 overflow-hidden flex flex-row items-center justify-between gap-2 sm:gap-0 aspect-[18/9] sm:aspect-[24/9] order-1 sm:order-2">
 
@@ -246,6 +237,15 @@ function Home() {
                                 className="h-90 sm:scale-100 lg:scale-120 object-contain transition-transform duration-500 hover:scale-150"
                             />
                         </div>
+                    </div>
+
+                    <div className="text-center order-2 sm:order-1 w-full">
+                        <h1 className="text-4xl sm:text-6xl font-black tracking-tight text-darks mb-3 leading-[1.1]">
+                            Mulai Mengerjakan!
+                        </h1>
+                        <p className="text-sm text-darks px-3 mx-auto mb-8 font-normal">
+                            Mulai Mengerjakan formulir dengan memasukkan tag di bawah.
+                        </p>
                     </div>
                 </motion.section>
 
