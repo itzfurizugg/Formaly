@@ -41,7 +41,7 @@ function Home() {
             title: "Kuesioner Kepuasan",
             author: "Formaly Team",
             question: "Apakah anda menyukai Formaly: a form maker?",
-            options: ["Sangat puas", "Tidak puas"]
+            options: ["Sangat suka", "Tidak suka"]
         },
         {
             title: "Ujian Matematika",
@@ -150,25 +150,34 @@ function Home() {
     if (authLoading || !user) return null
 
     return (
-        <div className="relative min-h-full mt-12 flex flex-col items-center justify-center px-4 pt-0 sm:pt-2 pb-10 sm:pb-14 overflow-hidden">
+        <div className="relative min-h-[calc(90vh-3.5rem)] flex flex-col items-center justify-center px-4 py-10 overflow-hidden">
             {/* Background Decorative Elements */}
-            <div className="w-full max-w-4xl mx-auto flex flex-col items-center">
+            <div className="w-full max-w-4xl mx-auto flex flex-col items-center justify">
                 {/* Header & Hero Card */}
                 <motion.section
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.5, ease: easeOutExpo }}
-                    className="w-full text-center"
+                    className="w-full text-center flex flex-col-reverse sm:flex-col items-center"
                 >
+                    <div className="text-center order-2 sm:order-1">
+                        <h1 className="text-4xl sm:text-6xl font-black tracking-tight text-darks mb-3 leading-[1.1]">
+                            Mulai Mengerjakan!
+                        </h1>
+                        <p className="text-sm text-darks px-3 mx-auto mb-8 font-normal">
+                            Mulai Mengerjakan formulir dengan memasukkan tag di bawah.
+                        </p>
+                    </div>
+
                     {/* Interactive Showcase Card */}
-                    <div className="relative w-full max-w-4xl mx-auto rounded-xl bg-white p-4 sm:p-6 py-12 mb-8 overflow-hidden flex flex-row items-center justify-between gap-2 sm:gap-0 sm:aspect-[24/9]">
+                    <div className="relative w-full max-w-4xl mx-auto rounded-xl bg-base-300 p-4 sm:p-6 py-12 mb-8 overflow-hidden flex flex-row items-center justify-between gap-2 sm:gap-0 aspect-[18/9] sm:aspect-[24/9] order-1 sm:order-2">
 
                         {/* Left Side: Mockup Quiz Preview Card */}
                         <motion.div
                             initial={{ scale: 0.95, rotate: -2 }}
                             animate={{ scale: 1, rotate: -2 }}
                             transition={{ duration: 0.3 }}
-                            className="relative z-10 w-44 sm:w-48 lg:w-52 rounded-xl bg-base-300 p-2.5 sm:p-3.5 shadow-2xl ml-2 sm:mx-12 lg:mx-12 shadow-darks/10 text-left shrink-0 scale-100 sm:scale-130 origin-center hover:scale-150 transition-transform duration-500"
+                            className="relative z-10 w-38 sm:w-48 lg:w-52 rounded-xl bg-white p-2.5 sm:p-3.5 shadow-2xl ml-2 sm:mx-19 lg:mx-12 shadow-darks/10 text-left shrink-0 scale-80 sm:scale-100 100sm:scale-130 origin-center hover:scale-150 transition-transform duration-500 lg:ml-30"
                         >
                             <div className="flex items-center gap-2 mb-2">
                                 <div className="w-6 h-6 rounded-lg bg-done/10 text-done flex items-center justify-center font-bold text-xs">
@@ -230,22 +239,14 @@ function Home() {
                         </motion.div>
 
                         {/* Right Side: Character Illustration */}
-                        <div className="relative z-0 flex-1 flex justify-end items-end h-full sm:mt-25 lg:mt-20 pl-4 sm:pl-12 lg:pl-20">
+                        <div className="relative z-0 flex-1 flex justify-end items-end h-full mt-80 sm:mt-50 lg:mt-50 lg:mr-25">
                             <img
                                 src={charGirl}
                                 alt="Ilustrasi Karakter"
-                                className="h-52 sm:h-70 lg:h-80 object-contain transition-transform duration-500 hover:scale-110"
+                                className="h-90 sm:scale-100 lg:scale-120 object-contain transition-transform duration-500 hover:scale-150"
                             />
                         </div>
                     </div>
-
-                    <h1 className="text-4xl sm:text-6xl font-black tracking-tight text-darks mb-3 leading-[1.1] uppercase">
-                        Mulai Mengerjakan!
-                    </h1>
-                    <p className="text-sm text-darks px-3 mx-auto mb-8 font-normal">
-                        Cari formulir yang ingin anda kerjakan dengan memasukkan tag di bawah.
-                    </p>
-
                 </motion.section>
 
                 {/* Search Bar Section */}
