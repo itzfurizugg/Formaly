@@ -14,7 +14,6 @@ import {
     Info,
 } from "lucide-react"
 import { useAuth } from "../lib/auth-context"
-import { supabase } from "../lib/supabase"
 import { showAlert } from "../lib/alerts"
 import ModalPortal from "../components/modalPortal"
 import { AnimatePresence, motion } from "motion/react"
@@ -114,7 +113,7 @@ function Modal({
 
 function Profile() {
     const navigate = useNavigate()
-    const { user, profile, logout, updateProfile, loading: authLoading } = useAuth()
+    const { user, profile, logout, updateProfile, updatePassword, loading: authLoading } = useAuth()
     const [loggingOut, setLoggingOut] = useState(false)
 
     const [showAccountModal, setShowAccountModal] = useState(false)
@@ -173,13 +172,11 @@ function Profile() {
             await updateProfile(name.trim(), email.trim())
             showAlert(
                 emailChanged
-                    ? "Email kamu akan diubah. Periksa email baru untuk konfirmasi perubahan."
+                    ? "Profil berhasil diperbarui. Periksa email baru jika konfirmasi diperlukan."
                     : "Profil berhasil diperbarui.",
                 "success"
             )
-            if (!emailChanged) {
-                setTimeout(() => setShowAccountModal(false), 1500)
-            }
+            setTimeout(() => setShowAccountModal(false), 1200)
         } catch (err) {
             showAlert(err instanceof Error ? err.message : "Gagal memperbarui profil.", "error")
         } finally {
@@ -199,12 +196,11 @@ function Profile() {
         }
         setPwSaving(true)
         try {
-            const { error: pwErr } = await supabase.auth.updateUser({ password: newPassword })
-            if (pwErr) throw pwErr
+            await updatePassword(newPassword)
             showAlert("Kata sandi berhasil diubah.", "success")
             setNewPassword("")
             setConfirmPassword("")
-            setTimeout(() => closePasswordModal(), 1500)
+            setTimeout(() => closePasswordModal(), 1200)
         } catch (err) {
             showAlert(err instanceof Error ? err.message : "Gagal mengubah kata sandi.", "error")
         } finally {

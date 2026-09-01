@@ -1,16 +1,17 @@
 import { useEffect, useState, useCallback } from "react"
 import { useNavigate, useParams } from "react-router-dom"
-import { Eye, Trash2 } from "lucide-react"
+import { Download, Eye, ListFilter, Trash2 } from "lucide-react"
 import { supabase } from "../../lib/supabase"
 import { useAuth } from "../../lib/auth-context"
 import { confirmDelete, showAlert } from "../../lib/alerts"
+import { exportFormXlsx } from "../../lib/exportForm"
 import { richTextToPlain } from "../../lib/richtext"
 import { colors } from "../../lib/colorbase"
 import { getOptionColor } from "../../lib/optionColors"
 import { DonutChart, MiniStackedBarChart } from "../../components/charts"
 import { Bar, BarChart, ResponsiveContainer, Tooltip, XAxis, YAxis, type TooltipContentProps } from "recharts"
 import BackButton from "../../components/backButton"
-import { Spinner } from "../../components/loading"
+import Loading, { Spinner } from "../../components/loading"
 import FormTabs from "../../components/creator/formTabs"
 
 /** Deteksi layar lg ke atas (1024px) untuk memilih varian chart secara
@@ -33,7 +34,7 @@ interface Submission {
     status: string
     started_at: string | null
     submitted_at: string | null
-    user: { name: string } | null
+    user: { name: string; email?: string } | null
     token: { token_code: string } | null
 }
 
@@ -104,12 +105,15 @@ function Submissions() {
     const [perQuestionStats, setPerQuestionStats] = useState<PerQuestionStat[]>([])
     const [chartView, setChartView] = useState<"statistik" | "distribusi">("distribusi")
 
+    // --- Export data responden (revisi #4) ---
+    const [exporting, setExporting] = useState(false)
+
     const loadAll = useCallback(async () => {
         if (!user || !id) return
 
         const { data: subs, error: err } = await supabase
             .from("submissions")
-            .select("id, total_score, status, started_at, submitted_at, user:user_id ( name ), token:token_id ( token_code )")
+            .select("id, total_score, status, started_at, submitted_at, user:user_id ( name, email ), token:token_id ( token_code )")
             .eq("form_id", id)
             .order("submitted_at", { ascending: false })
         if (err) {
@@ -375,8 +379,27 @@ function Submissions() {
         })
     }
 
+    const handleExport = async () => {
+        if (!id) return
+        setExporting(true)
+        try {
+            const { data: f } = await supabase.from("forms").select("title").eq("id", id).single()
+            await exportFormXlsx({
+                formId: id,
+                formTitle: (f as { title?: string } | null)?.title || "form",
+                data: submissions,
+            })
+            showAlert("Data berhasil diexport.", "success")
+        } catch (e) {
+            showAlert(e instanceof Error ? e.message : "Gagal mengexport data.", "error")
+        } finally {
+            setExporting(false)
+        }
+    }
+
     return (
         <>
+            <Loading show={loading} />
             {!loading && (
                 <div className="flex flex-col items-center px-3.5 sm:px-6 py-5 sm:py-10">
                     <div className="w-full xl:max-w-7xl lg:max-w-5xl">
@@ -435,10 +458,10 @@ function Submissions() {
                                     {/* Desktop: satu kartu gabung stats + donut (lg ke atas) */}
                                     <div className="hidden lg:flex flex-col bg-white border border-second p-3 shadow-sm rounded-xl h-full">
                                         {/* Total Responded */}
-                                        <div className="flex flex-col items-center justify-center text-center pb-3 border-b border-dashed border-second">
-                                            <p className="text-[10px] font-bold uppercase tracking-wider text-tinted">Total Responded</p>
-                                            <p className="text-4xl font-extrabold text-darks mt-1.5 leading-none">{submissions.length}</p>
-                                            <p className="text-[10px] text-tinted/90 mt-1">responden aktif</p>
+                                        <div className="flex flex-col items-start justify-center text-center pb-3 border-b border-dashed border-second">
+                                            <p className="text-[10px] font-bold uppercase tracking-wider text-tinted ml-2 mt-2">Total Responded</p>
+                                            <p className="text-5xl font-extrabold text-darks mt-1.5 ml-3 leading-none">{submissions.length}</p>
+                                            <p className="text-[10px] text-tinted/90 mt-1 ml-2">responden aktif</p>
                                         </div>
 
                                         {/* Rata-rata Benar vs Salah + donut */}
@@ -613,13 +636,35 @@ function Submissions() {
                             </div>
                         ) : (
                             <div className="space-y-3 py-2">
+                                <div className="flex flex-wrap items-center justify-between gap-3 mt-2 mb-4">
+                                    <h1 className="text-2xl sm:text-3xl ml-2 font-bold font-default text-darks">Responden anda</h1>
+                                    <div className="flex items-center gap-2 mr-1">
+                                        <button
+                                            onClick={() => navigate(`/creator/forms/${id}/filter`)}
+                                            className="btn h-10 min-h-0 rounded-full bg-base text-darks border border-second hover:bg-white hover:shadow-sm px-4"
+                                        >
+                                            <ListFilter className="h-4 w-4" />
+                                            <span>Filter Responden</span>
+                                        </button>
+                                        <button
+                                            onClick={handleExport}
+                                            disabled={exporting}
+                                            className="btn h-10 min-h-0 rounded-full bg-darks text-base border-none hover:opacity-90 disabled:opacity-60 px-4"
+                                        >
+                                            {exporting ? <Spinner size={16} /> : <Download className="h-4 w-4" />}
+                                            <span>Export Excel</span>
+                                        </button>
+                                    </div>
+                                </div>
                                 {submissions.map((s) => (
                                     <>
-                                        <h1 className="text-2xl sm:text-3xl ml-2 mt-5 font-bold font-default">Responden anda</h1>
                                         <div key={s.id} className="bg-white border border-second p-5 shadow-sm rounded-xl">
                                             <div className="flex items-start justify-between gap-2">
                                                 <div className="min-w-0">
                                                     <p className="font-semibold text-darks">{s.user?.name || "Pengguna"}</p>
+                                                    {s.user?.email && (
+                                                        <p className="text-xs text-tinted mt-0.5">{s.user.email}</p>
+                                                    )}
                                                     {s.total_score != null && (
                                                         <p className="text-sm text-darks mt-1">Skor: <span className="font-bold">{s.total_score}</span></p>
                                                     )}

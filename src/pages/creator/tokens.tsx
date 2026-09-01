@@ -5,10 +5,11 @@ import { Plus, Trash2, X, Copy, Check } from "lucide-react"
 import { supabase } from "../../lib/supabase"
 import { useAuth } from "../../lib/auth-context"
 import { confirmDelete, showAlert } from "../../lib/alerts"
-import { easeOutExpo, panelSlide } from "../../lib/motion"
+import { easeOutExpo, modalBackdrop, modalPanel } from "../../lib/motion"
+import ModalPortal from "../../components/modalPortal"
 import BackButton from "../../components/backButton"
 import FormTabs from "../../components/creator/formTabs"
-import { Spinner } from "../../components/loading"
+import Loading, { Spinner } from "../../components/loading"
 
 interface Token {
     id: string
@@ -25,6 +26,7 @@ function Tokens() {
     const { user } = useAuth()
 
     const [tokens, setTokens] = useState<Token[]>([])
+    const [loading, setLoading] = useState(true)
     const [copiedId, setCopiedId] = useState<string | null>(null)
 
     const [showCreate, setShowCreate] = useState(false)
@@ -54,21 +56,30 @@ function Tokens() {
         }
 
         // Status saklar gerbang token milik form ini.
-        supabase
-            .from("forms")
-            .select("requires_token")
-            .eq("id", id)
-            .single()
-            .then(({ data }) => {
-                setRequiresToken(!!(data as { requires_token?: boolean } | null)?.requires_token)
-            })
-
+        try {
+            const { data } = await supabase
+                .from("forms")
+                .select("requires_token")
+                .eq("id", id)
+                .single()
+            setRequiresToken(!!(data as { requires_token?: boolean } | null)?.requires_token)
+        } catch {
+            // abaikan, biarkan default false
+        }
+        setLoading(false)
     }, [user, id])
 
     useEffect(() => {
         if (!user || !id) return
         loadAll()
     }, [user, id, loadAll])
+
+    const openCreateModal = () => {
+        setTokenCode(generateCode())
+        setMaxUsage(1)
+        setExpiresAt("")
+        setShowCreate(true)
+    }
 
     const generateCode = () => {
         const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ0123456789"
@@ -133,6 +144,7 @@ function Tokens() {
         setMaxUsage(1)
         setExpiresAt("")
         setShowCreate(false)
+        showAlert("Token berhasil dibuat.", "success")
         loadAll()
     }
 
@@ -156,119 +168,144 @@ function Tokens() {
             },
         })
     }
-
+    
     const handleCopy = (t: Token) => {
         navigator.clipboard.writeText(t.token_code)
         setCopiedId(t.id)
         setTimeout(() => setCopiedId(null), 1500)
     }
-
+    
     const fmtDate = (d: string | null) => (d ? new Date(d).toLocaleDateString("id-ID") : "Tanpa batas")
-
-    // if (loading) {
-    //     return <Loading />
-    // }
-
+    
     return (
-        <div className="flex flex-col items-center px-3.5 sm:px-6 py-5 sm:py-10">
-            <div className="w-full xl:max-w-7xl lg:max-w-5xl">
-                <BackButton to="/creator" />
+        <>
+            <Loading show={loading} />
+            {!loading && (
+                <div className="flex flex-col items-center px-3.5 sm:px-6 py-5 sm:py-10">
+                    <div className="w-full xl:max-w-7xl lg:max-w-5xl">
+                        <BackButton to="/creator" />
 
-                <FormTabs id={id} active="tokens" />
+                        <FormTabs id={id} active="tokens" />
 
-                <div className="flex justify-between mb-4 px-3">
-                    <h1 className="text text-darks text-4xl font-default font-bold">Token</h1>
-                    {!showCreate && (
-                        <button onClick={() => setShowCreate(true)} className="btn bg-darks text-base border-none rounded-full h-9 min-h-0 my-auto">
-                            <Plus className="h-4 w-4" /> <span className="hidden sm:block">Buat Token</span>
-                        </button>
-                    )}
-                </div>
-
-                {/* Saklar gerbang: peserta wajib memasukkan token sebelum mulai */}
-                <div className="bg-white border border-second p-4 sm:p-5 shadow-sm rounded-xl mb-4 flex items-center justify-between gap-3">
-                    <div className="min-w-0">
-                        <p className="text-sm font-medium text-darks">Wajibkan token untuk mengerjakan</p>
-                        <p className="text-xs text-tinted mt-0.5">
-                            Kalau aktif, halaman deskripsi form akan meminta token sebelum tombol "Mulai Mengerjakan" bisa dipakai.
-                        </p>
-                    </div>
-                    <input
-                        type="checkbox"
-                        checked={requiresToken}
-                        onChange={handleToggleRequires}
-                        disabled={togglingRequires}
-                        className="toggle shrink-0 border-second checked:bg-darks checked:border-darks"
-                        aria-label="Wajibkan token untuk mengerjakan"
-                    />
-                </div>
-
-                <AnimatePresence>
-                {showCreate && (
-                    <motion.div
-                        key="create-token"
-                        variants={panelSlide}
-                        initial="hidden"
-                        animate="show"
-                        exit="exit"
-                        className="bg-white border border-second p-6 shadow-sm rounded-2xl mb-6 space-y-4"
-                    >
-                        <div className="flex items-center justify-between">
-                            <h2 className="font-semibold text-darks">Buat Token Baru</h2>
-                            <button onClick={() => setShowCreate(false)} className="btn btn-sm btn-ghost text-tinted">
-                                <X className="h-4 w-4" />
+                        <div className="flex justify-between items-center mb-4 px-1">
+                            <h1 className="text text-darks text-3xl sm:text-4xl font-default font-bold">Token</h1>
+                            <button
+                                onClick={openCreateModal}
+                                className="btn bg-darks text-base border-none rounded-full h-10 min-h-0 px-4 hover:opacity-90 transition-opacity flex items-center gap-1.5"
+                            >
+                                <Plus className="h-4 w-4" /> <span>Buat Token</span>
                             </button>
                         </div>
 
-                        <div>
-                            <label className="block text-sm font-medium text-darks mb-1.5">Kode Token</label>
-                            <div className="flex gap-2">
-                                <input
-                                    type="text"
-                                    className="input flex-1 bg-base border-second focus:border-done focus:outline-none uppercase"
-                                    value={tokenCode}
-                                    onChange={(e) => setTokenCode(e.target.value.toUpperCase())}
-                                    placeholder="8 karakter"
-                                />
-                                <button onClick={() => setTokenCode(generateCode())} className="btn bg-base text-darks border border-second hover:bg-second">
-                                    Acak
-                                </button>
+                        {/* Saklar gerbang: peserta wajib memasukkan token sebelum mulai */}
+                        <div className="bg-white border border-second p-4 sm:p-5 shadow-sm rounded-xl mb-4 flex items-center justify-between gap-3">
+                            <div className="min-w-0">
+                                <p className="text-sm font-medium text-darks">Wajibkan token untuk mengerjakan</p>
+                                <p className="text-xs text-tinted mt-0.5">
+                                    Kalau aktif, halaman deskripsi form akan meminta token sebelum tombol "Mulai Mengerjakan" bisa dipakai.
+                                </p>
                             </div>
+                            <input
+                                type="checkbox"
+                                checked={requiresToken}
+                                onChange={handleToggleRequires}
+                                disabled={togglingRequires}
+                                className="toggle shrink-0 border-second checked:bg-darks checked:border-darks"
+                                aria-label="Wajibkan token untuk mengerjakan"
+                            />
                         </div>
 
-                        <div className="grid grid-cols-2 gap-4">
-                            <div>
-                                <label className="block text-sm font-medium text-darks mb-1.5">Maks Penggunaan</label>
-                                <input
-                                    type="number"
-                                    min={1}
-                                    className="input w-full bg-base border-second focus:border-done focus:outline-none"
-                                    value={maxUsage}
-                                    onChange={(e) => setMaxUsage(Number(e.target.value))}
-                                />
-                            </div>
-                            <div>
-                                <label className="block text-sm font-medium text-darks mb-1.5">Kadaluarsa (opsional)</label>
-                                <input
-                                    type="datetime-local"
-                                    className="input w-full bg-base border-second focus:border-done focus:outline-none"
-                                    value={expiresAt}
-                                    onChange={(e) => setExpiresAt(e.target.value)}
-                                />
-                            </div>
-                        </div>
+                        <AnimatePresence>
+                        {showCreate && (
+                            <ModalPortal key="create-token-modal">
+                                <motion.div
+                                    variants={modalBackdrop}
+                                    initial="hidden"
+                                    animate="show"
+                                    exit="exit"
+                                    className="fixed inset-0 z-50 flex items-center justify-center px-3.5"
+                                    role="dialog"
+                                    aria-modal="true"
+                                >
+                                    <div className="absolute inset-0 bg-darks/50" onClick={() => !saving && setShowCreate(false)} />
+                                    <motion.div
+                                        variants={modalPanel}
+                                        className="relative bg-white border border-second p-6 shadow-xl rounded-2xl w-full max-w-md space-y-4"
+                                    >
+                                        <div className="flex items-center justify-between">
+                                            <h2 className="text-base font-bold text-darks">Buat Token Baru</h2>
+                                            <button onClick={() => setShowCreate(false)} className="btn btn-sm btn-ghost text-tinted p-1">
+                                                <X className="h-4 w-4" />
+                                            </button>
+                                        </div>
 
-                        <button
-                            onClick={handleCreate}
-                            disabled={saving || !tokenCode.trim()}
-                            className="btn bg-darks text-base border-none w-full hover:opacity-90 transition-opacity disabled:opacity-60"
-                        >
-                            {saving ? <Spinner size={16} /> : <Plus className="h-4 w-4" />}
-                            Simpan Token
-                        </button>
-                    </motion.div>
-                )}
-                </AnimatePresence>
+                                        <div>
+                                            <label className="block text-xs font-medium text-darks mb-1.5">Kode Token</label>
+                                            <div className="flex gap-2">
+                                                <input
+                                                    type="text"
+                                                    className="input flex-1 bg-base border-second focus:border-done focus:outline-none uppercase font-mono font-bold"
+                                                    value={tokenCode}
+                                                    onChange={(e) => setTokenCode(e.target.value.toUpperCase())}
+                                                    placeholder="8 karakter"
+                                                    maxLength={12}
+                                                />
+                                                <button
+                                                    type="button"
+                                                    onClick={() => setTokenCode(generateCode())}
+                                                    className="btn bg-base text-darks border border-second hover:bg-second rounded-lg text-xs"
+                                                    >
+                                                    Acak
+                                                </button>
+                                            </div>
+                                        </div>
+
+                                        <div className="grid grid-cols-2 gap-4">
+                                            <div>
+                                                <label className="block text-xs font-medium text-darks mb-1.5">Maks Penggunaan</label>
+                                                <input
+                                                    type="number"
+                                                    min={1}
+                                                    className="input w-full bg-base border-second focus:border-done focus:outline-none text-xs"
+                                                    value={maxUsage}
+                                                    onChange={(e) => setMaxUsage(Number(e.target.value))}
+                                                    />
+                                            </div>
+                                            <div>
+                                                <label className="block text-xs font-medium text-darks mb-1.5">Kedaluwarsa (opsional)</label>
+                                                <input
+                                                    type="datetime-local"
+                                                    className="input w-full bg-base border-second focus:border-done focus:outline-none text-xs"
+                                                    value={expiresAt}
+                                                    onChange={(e) => setExpiresAt(e.target.value)}
+                                                />
+                                            </div>
+                                        </div>
+
+                                        <div className="flex gap-2 pt-2">
+                                            <button
+                                                type="button"
+                                                onClick={() => setShowCreate(false)}
+                                                disabled={saving}
+                                                className="btn flex-1 bg-base text-darks border border-second hover:bg-second rounded-full lg:rounded-xl text-xs"
+                                            >
+                                                Batal
+                                            </button>
+                                            <button
+                                                type="button"
+                                                onClick={handleCreate}
+                                                disabled={saving || !tokenCode.trim()}
+                                                className="btn flex-1 bg-darks text-base border-none hover:opacity-90 transition-opacity disabled:opacity-60 rounded-full lg:rounded-xl text-xs"
+                                                >
+                                                {saving ? <Spinner size={16} /> : <Plus className="h-4 w-4" />}
+                                                Simpan Token
+                                            </button>
+                                        </div>
+                                    </motion.div>
+                                </motion.div>
+                            </ModalPortal>
+                        )}
+                        </AnimatePresence>
 
                 {tokens.length === 0 ? (
                     <div className="text-center py-16">
@@ -284,7 +321,7 @@ function Tokens() {
                                     initial={{ opacity: 0, y: 12 }}
                                     animate={{ opacity: 1, y: 0 }}
                                     transition={{ duration: 0.35, ease: easeOutExpo, delay: Math.min(index * 0.06, 0.4) }}
-                                >
+                                    >
                                 <div className="bg-white border border-second p-5 shadow-sm rounded-2xl transition-colors hover:bg-base-200">
                                     <div className="flex items-start justify-between gap-2">
                                         <div className="min-w-0">
@@ -293,9 +330,9 @@ function Tokens() {
                                                 <span
                                                     className={`badge rounded-full text-xs ${
                                                         !t.is_active || expired
-                                                            ? "badge-ghost text-tinted"
+                                                        ? "badge-ghost text-tinted"
                                                             : "badge bg-done/10 text-done border-none"
-                                                    }`}
+                                                        }`}
                                                 >
                                                     {!t.is_active ? "Nonaktif" : expired ? "Kadaluarsa" : "Aktif"}
                                                 </span>
@@ -324,6 +361,8 @@ function Tokens() {
                 )}
             </div>
         </div>
+            )}
+        </>
     )
 }
 

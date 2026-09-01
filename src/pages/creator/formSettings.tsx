@@ -5,6 +5,7 @@ import {
     Eye,
     ListFilter,
     Pipette,
+    Repeat,
     Shuffle,
     Trash2,
 } from "lucide-react"
@@ -24,6 +25,7 @@ interface FormSettingsData {
     show_answers_to_respondent: boolean
     show_correct_filter_to_respondent: boolean
     randomize_questions: boolean
+    allow_multiple_submissions: boolean
 }
 
 const DEFAULTS: FormSettingsData = {
@@ -31,6 +33,7 @@ const DEFAULTS: FormSettingsData = {
     show_answers_to_respondent: false,
     show_correct_filter_to_respondent: true,
     randomize_questions: false,
+    allow_multiple_submissions: false,
 }
 
 const SETTING_ROWS: {
@@ -68,6 +71,13 @@ const SETTING_ROWS: {
             description: "Urutan soal dirandom secara acak setiap kali responden mengerjakan.",
             hint: "Hanya mengubah urutan tampil saat pengerjaan, urutan asli di editor tidak berubah.",
         },
+        {
+            key: "allow_multiple_submissions",
+            icon: Repeat,
+            title: "Izinkan dikerjakan lebih dari sekali",
+            description: "Responden yang sama boleh mengerjakan form ini berkali-kali.",
+            hint: "Jika dimatikan, satu akun hanya bisa mengerjakan form satu kali.",
+        },
     ]
 
 function FormSettings() {
@@ -104,6 +114,7 @@ function FormSettings() {
             show_answers_to_respondent: data.show_answers_to_respondent ?? DEFAULTS.show_answers_to_respondent,
             show_correct_filter_to_respondent: data.show_correct_filter_to_respondent ?? DEFAULTS.show_correct_filter_to_respondent,
             randomize_questions: data.randomize_questions ?? DEFAULTS.randomize_questions,
+            allow_multiple_submissions: data.allow_multiple_submissions ?? DEFAULTS.allow_multiple_submissions,
         })
         setHeaderColor(typeof data.header_color === "string" ? data.header_color : "")
         setHeaderImage(typeof data.header_image === "string" ? data.header_image : "")
@@ -135,6 +146,7 @@ function FormSettings() {
                     show_answers_to_respondent: settings.show_answers_to_respondent,
                     show_correct_filter_to_respondent: settings.show_correct_filter_to_respondent,
                     randomize_questions: settings.randomize_questions,
+                    allow_multiple_submissions: settings.allow_multiple_submissions,
                     header_color: headerColor || null,
                     header_image: headerImage.trim() || null,
                 })
@@ -146,16 +158,18 @@ function FormSettings() {
             if (error) throw new Error(error.message)
             if (!data) throw new Error("Perubahan tidak tersimpan. Pastikan kamu pemilik form ini.")
 
-            // Sinkronkan cache tab Detail supaya pratinjau header di formEdit
-            // langsung segar saat user pindah tab tanpa menunggu refetch.
             if (user) {
                 const cachedFormEdit = pageGet<Record<string, unknown> | undefined>(`formEdit:${user.id}:${id}`)
                 if (cachedFormEdit) {
                     pageSet(`formEdit:${user.id}:${id}`, {
                         ...cachedFormEdit,
                         headerImage: headerImage.trim(),
-                        headerColor,
+                        headerColor: headerColor || "",
                     })
+                }
+                const cachedFormList = pageGet<{ id: string; header_color?: string | null; header_image?: string | null }[] | undefined>(`formList:${user.id}`)
+                if (cachedFormList) {
+                    pageSet(`formList:${user.id}`, cachedFormList.map((f) => f.id === id ? { ...f, header_color: headerColor || null, header_image: headerImage.trim() || null } : f))
                 }
             }
             alertSaveSuccess("Pengaturan berhasil disimpan.")

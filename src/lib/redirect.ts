@@ -9,3 +9,4 @@ export function safeNext(value: string | null | undefined): string {
     if (value && value.startsWith("/") && !value.startsWith("//")) return value
     return "/"
 }
+

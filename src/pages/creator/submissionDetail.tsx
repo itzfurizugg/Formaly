@@ -1,15 +1,17 @@
 import { useEffect, useState, useCallback } from "react"
 import { useParams } from "react-router-dom"
 import { motion } from "motion/react"
-import { Check, X } from "lucide-react"
+import { Check, Download, X } from "lucide-react"
 import { RichText } from "../../components/richText"
 import { DonutChart } from "../../components/charts"
 import { colors } from "../../lib/colorbase"
 import { supabase } from "../../lib/supabase"
 import { useAuth } from "../../lib/auth-context"
+import { exportSubmissionXlsx } from "../../lib/exportForm"
 import { easeOutExpo } from "../../lib/motion"
 import BackButton from "../../components/backButton"
 import { showAlert } from "../../lib/alerts"
+import { Spinner } from "../../components/loading"
 
 interface AnswerRow {
     id: string
@@ -47,6 +49,7 @@ function SubmissionDetail() {
     const [answers, setAnswers] = useState<AnswerRow[]>([])
     const [loading, setLoading] = useState(true)
     const [error, setError] = useState<string | null>(null)
+    const [exporting, setExporting] = useState(false)
 
     const loadAll = useCallback(async () => {
         if (!user || !id || !submissionId) return
@@ -98,6 +101,23 @@ function SubmissionDetail() {
         if (!user || !id || !submissionId) return
         loadAll()
     }, [user, id, submissionId, loadAll])
+
+    const handleExport = async () => {
+        if (!id || !submissionId) return
+        setExporting(true)
+        try {
+            await exportSubmissionXlsx({
+                formId: id,
+                submissionId,
+                formTitle: info?.form?.title || "form",
+            })
+            showAlert("Jawaban responden berhasil diexport.", "success")
+        } catch (e) {
+            showAlert(e instanceof Error ? e.message : "Gagal mengexport jawaban.", "error")
+        } finally {
+            setExporting(false)
+        }
+    }
 
     const typeLabel = (t: string) => {
         if (t === "multiple_choice") return "Pilihan Ganda"
@@ -153,14 +173,25 @@ function SubmissionDetail() {
                     <div className="w-full xl:max-w-7xl lg:max-w-5xl">
                         <BackButton to={`/creator/forms/${id}/submissions`} showOnDesktop />
 
-                        <div className="ml-2 lg:ml-3">
-                            <h1 className="text-3xl lg:text-4xl font-bold text-darks mb-1">Detail Submission</h1>
-                            <p className="text-sm text-tinted">
-                                {info?.user?.name || "Pengguna"} &middot; {info?.form?.title || "Form"}
-                            </p>
-                            <p className="text-sm text-tinted mb-6">
-                                {fmtDate(info?.submitted_at || null)}
-                            </p>
+                        <div className="flex flex-wrap items-start justify-between gap-3 ml-2 lg:ml-3 mb-1">
+                            <div>
+                                <h1 className="text-3xl lg:text-4xl font-bold text-darks mb-1">Detail Submission</h1>
+                                <p className="text-sm text-tinted">
+                                    {info?.user?.name || "Pengguna"} &middot; {info?.form?.title || "Form"}
+                                </p>
+                                <p className="text-sm text-tinted mb-6">
+                                    {fmtDate(info?.submitted_at || null)}
+                                </p>
+                            </div>
+
+                            <button
+                                onClick={handleExport}
+                                disabled={exporting}
+                                className="btn h-10 min-h-0 rounded-full bg-darks text-base border-none hover:opacity-90 disabled:opacity-60 px-4 shrink-0"
+                            >
+                                {exporting ? <Spinner size={16} /> : <Download className="h-4 w-4" />}
+                                <span>Export Jawaban</span>
+                            </button>
                         </div>
 
                         {info && info.total_score != null && (

@@ -13,25 +13,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   // request hanya dikirim sekali per sesi (updateProfile memaksa refresh).
   const profileReqRef = useRef<{ userId: string; promise: Promise<void> } | null>(null)
 
-  useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setUser(session?.user ?? null)
-      if (session?.user) fetchProfile(session.user)
-      setLoading(false)
-    })
-
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      setUser(session?.user ?? null)
-      if (session?.user) fetchProfile(session.user)
-      else {
-        setProfile(null)
-        profileReqRef.current = null
-      }
-    })
-
-    return () => subscription.unsubscribe()
-  }, [])
-
   function fetchProfile(u: User, force = false): Promise<void> {
     const existing = profileReqRef.current
     if (!force && existing && existing.userId === u.id) return existing.promise
@@ -55,6 +36,25 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     profileReqRef.current = entry
     return entry.promise
   }
+
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setUser(session?.user ?? null)
+      if (session?.user) fetchProfile(session.user)
+      setLoading(false)
+    })
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      setUser(session?.user ?? null)
+      if (session?.user) fetchProfile(session.user)
+      else {
+        setProfile(null)
+        profileReqRef.current = null
+      }
+    })
+
+    return () => subscription.unsubscribe()
+  }, [])
 
   async function login(email: string, password: string) {
     const { error } = await supabase.auth.signInWithPassword({ email, password })
@@ -123,22 +123,47 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const { data } = await supabase.auth.getSession()
     const current = data.session?.user ?? user
 
-    if (email && email !== current.email) {
-      const { error } = await supabase.auth.updateUser({ email })
-      if (error) throw error
-    }
+    let authUser = current
     if (name && name !== (profile?.name ?? "")) {
-      const { error } = await supabase.auth.updateUser({ data: { name } })
+      const { data: authData, error } = await supabase.auth.updateUser({ data: { name } })
       if (error) throw error
+      if (authData?.user) authUser = authData.user
     }
-    const { error } = await supabase
-      .from("users")
-      .update({ name, email })
-      .eq("id", current.id)
-    if (error) throw error
+    if (email && email !== current.email) {
+      const { data: authData, error } = await supabase.auth.updateUser({ email })
+      if (error && !String(error.message).toLowerCase().includes("already registered")) {
+        throw error
+      }
+      if (authData?.user) authUser = authData.user
+    }
 
-    const { data: fresh } = await supabase.auth.getSession()
-    if (fresh.session?.user) await fetchProfile(fresh.session.user, true)
+    const updatedName = name || profile?.name || authUser.user_metadata?.name || "User"
+    const updatedEmail = email || profile?.email || authUser.email || ""
+
+    // Simpan ke tabel users lewat RPC SECURITY DEFINER (bebas hambatan RLS,
+    // pola yang sama dengan apply_as_creator/set_form_tags/delete_form).
+    // Fungsi ini memverifikasi auth.uid() di sisi server dan hanya mengubah
+    // baris milik user yang sedang login, lalu mengembalikan baris terbaru.
+    const { data: updateData, error: updateErr } = await supabase.rpc("update_my_profile", {
+      p_name: updatedName,
+      p_email: updatedEmail,
+    })
+    if (updateErr) {
+      throw new Error(String(updateErr.message || "Gagal menyimpan profil ke database."))
+    }
+    if (!updateData) {
+      throw new Error("Perubahan tidak tersimpan. Pastikan migration update_my_profile sudah dijalankan di Supabase.")
+    }
+
+    setUser(authUser)
+    const newProfile: Profile = {
+      name: updateData.name || updatedName,
+      email: updateData.email || updatedEmail,
+      role: updateData.role ?? profile?.role ?? "user",
+      created_at: updateData.created_at ?? profile?.created_at,
+    }
+    setProfile(newProfile)
+    profileReqRef.current = null
   }
 
   async function logout() {

@@ -37,6 +37,7 @@ function FormDescriptionPage() {
     const formIdParam = params.get("formId")
     const [form, setForm] = useState<FormItem | null>(locationState?.form || null)
     const [alreadySubmitted, setAlreadySubmitted] = useState(false)
+    const [allowMultiple, setAllowMultiple] = useState(false)
 
     const [headerImage, setHeaderImage] = useState<string | null>(null)
     const [headerColor, setHeaderColor] = useState<string | null>(null)
@@ -100,7 +101,8 @@ function FormDescriptionPage() {
         }
     }, [form, formIdParam, user, authLoading, navigate, location])
 
-    // Cek apakah user sudah pernah mengerjakan form ini
+    // Cek apakah user sudah pernah mengerjakan form ini (hanya bila form
+    // tidak mengizinkan dikerjakan lebih dari sekali).
     useEffect(() => {
         if (authLoading || !user || !formId) return
         supabase
@@ -108,27 +110,32 @@ function FormDescriptionPage() {
             .select("id")
             .eq("user_id", user.id)
             .eq("form_id", formId)
-            .single()
+            .maybeSingle()
             .then(({ data }) => {
-                setAlreadySubmitted(!!data)
-                if (data) showAlert("Kamu sudah pernah mengerjakan form ini.", "error")
+                const hasSubmission = !!data
+                setAlreadySubmitted(hasSubmission && !allowMultiple)
+                if (hasSubmission && !allowMultiple) {
+                    showAlert("Kamu sudah pernah mengerjakan form ini.", "error")
+                }
             })
-    }, [formId, user, authLoading])
+    }, [formId, user, authLoading, allowMultiple])
 
-    // Ambil header image + warna header saja — tidak perlu requires_token, biarkan RPC yang memutuskan.
+    // Ambil header image + warna header + pengaturan "boleh dikerjakan ulang".
+    // requires_token tidak perlu diambil di sini — biarkan RPC yang memutuskan.
     useEffect(() => {
         if (!formId) return
         let cancelled = false
         supabase
             .from("forms")
-            .select("header_image, header_color")
+            .select("header_image, header_color, allow_multiple_submissions")
             .eq("id", formId)
             .single()
             .then(({ data }) => {
                 if (cancelled) return
-                const row = data as { header_image?: string | null; header_color?: string | null } | null
+                const row = data as { header_image?: string | null; header_color?: string | null; allow_multiple_submissions?: boolean | null } | null
                 setHeaderImage(row?.header_image || null)
                 setHeaderColor(row?.header_color || null)
+                setAllowMultiple(!!row?.allow_multiple_submissions)
             })
         return () => { cancelled = true }
     }, [formId])

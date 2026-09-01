@@ -23,7 +23,7 @@ interface FormHeaderProps {
     formId: string
     title: string
     headerImage?: string | null
-    /** Warna latar hex pilihan creator; dipakai bila headerImage tidak diatur. */
+    /** Warna latar hex pilihan creator; menang atas gambar header bila diatur. */
     headerColor?: string | null
 }
 
@@ -31,6 +31,36 @@ const HEX_COLOR_RE = /^#(?:[0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/
 
 function FormHeader({ formId, title, headerImage, headerColor }: FormHeaderProps) {
     const [failed, setFailed] = useState(false)
+
+    // Warna kustom dari creator menang atas gradien acak.
+    const useCustomColor = !!headerColor && HEX_COLOR_RE.test(headerColor)
+
+    // Warna kustom juga menang atas gambar header: mengubah warna di
+    // Pengaturan harus terlihat di semua halaman (responden/hasil/deskripsi).
+    // Gambar hanya tampil bila creator belum memilih warna sendiri.
+    if (useCustomColor) {
+        return (
+            <div
+                aria-hidden="true"
+                className="relative flex w-full aspect-[3105/1100] items-center overflow-hidden border-b border-second px-5 sm:px-10"
+                style={{ backgroundColor: headerColor! }}
+            >
+                <div
+                    className="absolute inset-0 opacity-[0.08]"
+                    style={{
+                        backgroundImage: "radial-gradient(circle, white 1px, transparent 1px)",
+                        backgroundSize: "16px 16px",
+                    }}
+                />
+                <div className="absolute -top-10 -right-10 h-35 w-35 rounded-full bg-white/15" />
+                <div className="absolute -bottom-12 -left-8 h-30 w-30 rounded-full bg-white/10" />
+
+                <span className="relative z-10 line-clamp-2 max-w-[85%] text-xl font-semibold text-white drop-shadow-sm sm:text-4xl">
+                    {title}
+                </span>
+            </div>
+        )
+    }
 
     if (headerImage && !failed) {
         return (
@@ -45,16 +75,11 @@ function FormHeader({ formId, title, headerImage, headerColor }: FormHeaderProps
     }
 
     const gradient = GRADIENTS[formId ? hashString(formId) % GRADIENTS.length : 0]
-    // Warna kustom menang atas gradien acak; tetap pakai dekorasi titik & lingkaran.
-    const useCustomColor = !!headerColor && HEX_COLOR_RE.test(headerColor)
 
     return (
         <div
             aria-hidden="true"
-            className={`relative flex w-full aspect-[3105/1100] items-center overflow-hidden border-b border-second px-5 sm:px-10 ${
-                useCustomColor ? "" : `bg-gradient-to-br ${gradient}`
-            }`}
-            style={useCustomColor ? { backgroundColor: headerColor! } : undefined}
+            className={`relative flex w-full aspect-[3105/1100] items-center overflow-hidden border-b border-second px-5 sm:px-10 bg-gradient-to-br ${gradient}`}
         >
             <div
                 className="absolute inset-0 opacity-[0.08]"

@@ -64,6 +64,7 @@ function FormPage() {
     const [submitting, setSubmitting] = useState(false)
     const [error, setError] = useState<string | null>(null)
     const [modalImage, setModalImage] = useState<string | null>(null)
+    const [showSubmitConfirm, setShowSubmitConfirm] = useState(false)
     const [hasTimer, setHasTimer] = useState(false)
     const autoSubmitted = useRef(false)
     const deadlineRef = useRef<number | null>(null)
@@ -187,6 +188,31 @@ function FormPage() {
         setSubmitting(false)
         navigate("/history")
     }, [user, formId, questions, answers, navigate])
+
+    // Tombol "Kirim" hanya membuka modal konfirmasi; pengiriman asli tetap
+    // lewat handleSubmit (juga dipakai auto-submit saat waktu habis, tanpa konfirmasi).
+    const requestSubmit = () => {
+        if (submitting) return
+        const unanswered = questions.find((q) => {
+            if (!q.is_required) return false
+            const ans = answers[q.id]
+            if (ans === undefined) return true
+            if (Array.isArray(ans)) return ans.length === 0
+            return String(ans).trim() === ""
+        })
+        if (unanswered) {
+            setError("Masih ada soal wajib yang belum dijawab. Periksa soal bertanda *.")
+            setCurrent(questions.indexOf(unanswered))
+            return
+        }
+        setError(null)
+        setShowSubmitConfirm(true)
+    }
+
+    const confirmSubmit = async () => {
+        setShowSubmitConfirm(false)
+        await handleSubmit()
+    }
 
     const loadForm = useCallback(async () => {
         setLoading(true)
@@ -461,7 +487,7 @@ function FormPage() {
                                 <PageIndicator total={total} current={current} onPrev={prev} onNext={next} onListClick={goToList} />
                                 {current === total - 1 && (
                                     <button
-                                        onClick={() => handleSubmit()}
+                                        onClick={requestSubmit}
                                         disabled={submitting}
                                         className="btn text-white h-12 min-h-0 px-3.5 bg-done border-none rounded-xl hover:opacity-90 disabled:opacity-25"
                                     >
@@ -498,7 +524,7 @@ function FormPage() {
                                     <PageIndicator total={total} current={current} onPrev={prev} onNext={next} onListClick={goToList} />
                                     {current === total - 1 && (
                                         <button
-                                            onClick={() => handleSubmit()}
+                                            onClick={requestSubmit}
                                             disabled={submitting}
                                             className="btn text-white h-12 min-h-0 px-3.5 bg-done border-none rounded-full hover:opacity-90 disabled:opacity-25"
                                         >
@@ -552,6 +578,61 @@ function FormPage() {
                                                 alt="Zoom Preview"
                                                 className="max-w-full max-h-[85vh] object-contain rounded-lg shadow-2xl bg-white"
                                             />
+                                        </motion.div>
+                                    </motion.div>
+                                </ModalPortal>
+                            )}
+                        </AnimatePresence>
+
+                        {/* Modal Konfirmasi Kirim Jawaban */}
+                        <AnimatePresence>
+                            {showSubmitConfirm && (
+                                <ModalPortal key="submit-confirm-modal">
+                                    <motion.div
+                                        initial={{ opacity: 0 }}
+                                        animate={{ opacity: 1 }}
+                                        exit={{ opacity: 0 }}
+                                        transition={{ duration: 0.2 }}
+                                        className="fixed inset-0 z-50 flex items-center justify-center px-3.5"
+                                        role="dialog"
+                                        aria-modal="true"
+                                    >
+                                        <div
+                                            className="absolute inset-0 bg-darks/50"
+                                            onClick={() => setShowSubmitConfirm(false)}
+                                        />
+                                        <motion.div
+                                            initial={{ opacity: 0, scale: 0.95, y: 16 }}
+                                            animate={{ opacity: 1, scale: 1, y: 0 }}
+                                            exit={{ opacity: 0, scale: 0.96, y: 12 }}
+                                            transition={{ duration: 0.25 }}
+                                            className="relative bg-white border border-second rounded-2xl w-full max-w-sm p-5 shadow-xl"
+                                        >
+                                            <div className="text-center">
+                                                <div className="w-12 h-12 mx-auto rounded-full bg-done/10 flex items-center justify-center mb-3">
+                                                    <Check className="h-5 w-5 text-done" />
+                                                </div>
+                                                <h3 className="text-base font-bold text-darks">Kirim Jawaban</h3>
+                                                <p className="text-sm text-tinted mt-1.5">
+                                                    Apakah anda yakin ingin mengirim jawaban anda?
+                                                </p>
+                                            </div>
+                                            <div className="mt-5 flex gap-3">
+                                                <button
+                                                    onClick={() => setShowSubmitConfirm(false)}
+                                                    disabled={submitting}
+                                                    className="btn flex-1 rounded-full bg-base text-darks border border-second hover:bg-second disabled:opacity-60"
+                                                >
+                                                    Batal
+                                                </button>
+                                                <button
+                                                    onClick={confirmSubmit}
+                                                    disabled={submitting}
+                                                    className="btn flex-1 rounded-full bg-done text-white border-none hover:opacity-90 disabled:opacity-60"
+                                                >
+                                                    {submitting ? <Spinner size={16} /> : "Ya, Kirim"}
+                                                </button>
+                                            </div>
                                         </motion.div>
                                     </motion.div>
                                 </ModalPortal>

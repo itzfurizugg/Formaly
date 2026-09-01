@@ -1,9 +1,10 @@
-import { Routes, Route, useLocation } from "react-router-dom"
+import { Routes, Route, useLocation, useNavigate } from "react-router-dom"
 import { lazy, Suspense, useEffect, useState } from "react"
 import { AnimatePresence, MotionConfig, motion } from "motion/react"
 import { easeOutExpo } from "./lib/motion"
 import { AuthProvider } from "./lib/auth"
 import { useAuth } from "./lib/auth-context"
+import { supabase } from "./lib/supabase"
 import Navbar from "./components/navbar"
 import Dock from "./components/dock"
 import CreatorSidebar from "./components/creator/sidebar"
@@ -49,6 +50,7 @@ const CreatorFormSettings = lazy(() => creatorEntry().then((m) => ({ default: m.
 const CreatorTokens = lazy(() => creatorEntry().then((m) => ({ default: m.CreatorTokens })))
 const CreatorSubmissions = lazy(() => creatorEntry().then((m) => ({ default: m.CreatorSubmissions })))
 const CreatorSubmissionDetail = lazy(() => creatorEntry().then((m) => ({ default: m.CreatorSubmissionDetail })))
+const CreatorFilterResponden = lazy(() => creatorEntry().then((m) => ({ default: m.CreatorFilterResponden })))
 const CreatorShared = lazy(() => creatorEntry().then((m) => ({ default: m.CreatorShared })))
 const CreatorLayout = lazy(() => creatorEntry().then((m) => ({ default: m.CreatorLayout })))
 
@@ -83,7 +85,21 @@ function App() {
 function AppShell() {
   const { loading: authLoading } = useAuth()
   const location = useLocation()
+  const navigate = useNavigate()
   const isMobile = useIsMobile()
+
+  // Kalau user tiba lewat link reset (mungkin jatuh ke home/route lain karena
+  // Site URL default), sesi recovery tetap diproses oleh supabase-js dan
+  // memicu event PASSWORD_RECOVERY. Listener global ini memastikan user
+  // selalu diarahkan ke /reset-password dari halaman mana pun.
+  useEffect(() => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
+      if (event === "PASSWORD_RECOVERY" && location.pathname !== "/reset-password") {
+        navigate("/reset-password", { replace: true })
+      }
+    })
+    return () => subscription.unsubscribe()
+  }, [location.pathname, navigate])
   const isCreator = location.pathname.startsWith("/creator")
   const hideNav =
     hideNavPaths.includes(location.pathname) ||
@@ -212,6 +228,14 @@ function AppShell() {
                 element={
                   <CreatorGuard>
                     <CreatorSubmissions />
+                  </CreatorGuard>
+                }
+              />
+              <Route
+                path="/creator/forms/:id/filter"
+                element={
+                  <CreatorGuard>
+                    <CreatorFilterResponden />
                   </CreatorGuard>
                 }
               />

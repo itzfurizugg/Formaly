@@ -150,7 +150,7 @@ function Home() {
     if (authLoading || !user) return null
 
     return (
-        <div className="relative min-h-[90vh] flex flex-col items-center justify-start px-4 pt-30 pb-10 overflow-hidden">
+        <div className="relative min-h-[90vh] flex flex-col items-center justify-start px-4 pt-12 lg:pt-30 pb-1 lg:pb-10 overflow-hidden">
             {/* Background Decorative Elements */}
             <div className="w-full max-w-4xl mx-auto flex flex-col items-center justify">
                 {/* Header & Hero Card */}
@@ -161,14 +161,14 @@ function Home() {
                     className="w-full text-center flex flex-col items-center"
                 >
                     {/* Interactive Showcase Card */}
-                    <div className="relative w-full max-w-4xl mx-auto rounded-xl bg-base-300 p-4 sm:p-6 py-12 mb-8 overflow-hidden flex flex-row items-center justify-between gap-2 sm:gap-0 aspect-[18/9] sm:aspect-[24/9] order-1 sm:order-2">
+                    <div className="relative w-full max-w-4xl mx-auto rounded-xl bg-base-300 p-4 sm:p-6 py-12 mb-8 overflow-hidden flex flex-row items-center justify-between gap-2 sm:gap-0 aspect-[1/1] sm:aspect-[24/9] scale-80 sm:scale-90 lg:scale-100 order-1 sm:order-2">
 
                         {/* Left Side: Mockup Quiz Preview Card */}
                         <motion.div
                             initial={{ scale: 0.95, rotate: -2 }}
-                            animate={{ scale: 1, rotate: -2 }}
+                            animate={{ scale: 1, rotate: 0 }}
                             transition={{ duration: 0.3 }}
-                            className="relative z-10 w-38 sm:w-48 lg:w-52 rounded-xl bg-white p-2.5 sm:p-3.5 shadow-2xl ml-2 sm:mx-19 lg:mx-12 shadow-darks/10 text-left shrink-0 scale-80 sm:scale-100 100sm:scale-130 origin-center hover:scale-150 transition-transform duration-500 lg:ml-30"
+                            className="relative z-10 w-52 rounded-xl bg-white p-2.5 sm:p-3.5 shadow-2xl shadow-darks/10 text-left shrink-0 scale-130 origin-center transition-transform duration-500 ml-6 lg:ml-35"
                         >
                             <div className="flex items-center gap-2 mb-2">
                                 <div className="w-6 h-6 rounded-lg bg-done/10 text-done flex items-center justify-center font-bold text-xs">
@@ -203,7 +203,7 @@ function Home() {
                                         animate={{ opacity: 1 }}
                                         exit={{ opacity: 0 }}
                                         transition={{ duration: 0.3 }}
-                                        className="py-2 rounded-xl bg-second/50 border border-second/80 text-[14px] font-medium text-darks leading-tight"
+                                        className="py-2 rounded-xl ml-1 text-[14px] font-medium text-darks leading-tight"
                                     >
                                         {formItems[formIndex].question}
                                     </motion.div>
@@ -230,11 +230,11 @@ function Home() {
                         </motion.div>
 
                         {/* Right Side: Character Illustration */}
-                        <div className="relative z-0 flex-1 flex justify-end items-end h-full mt-80 sm:mt-50 lg:mt-50 lg:mr-25">
+                        <div className="hidden sm:block relative z-0 flex-1 flex justify-end items-end h-full -mt-30 mr-20">
                             <img
                                 src={charGirl}
                                 alt="Ilustrasi Karakter"
-                                className="h-90 sm:scale-100 lg:scale-120 object-contain transition-transform duration-500 hover:scale-150"
+                                className="h-90 lg:h-130 object-contain transition-transform duration-500"
                             />
                         </div>
                     </div>
