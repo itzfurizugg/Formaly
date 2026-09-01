@@ -11,6 +11,14 @@ import LoadingPage from "./components/loadingPage"
 import AppSplash from "./components/AppSplash"
 import { AlertToaster } from "./lib/alerts"
 
+function ScrollToTop() {
+  const { pathname } = useLocation()
+  useEffect(() => {
+    window.scrollTo(0, 0)
+  }, [pathname])
+  return null
+}
+
 const Login = lazy(() => import("./pages/auth/login"))
 const Register = lazy(() => import("./pages/auth/register"))
 const Otp = lazy(() => import("./pages/auth/otp"))
@@ -90,6 +98,7 @@ function AppShell() {
   return (
       <MotionConfig reducedMotion="user">
       <div className="bg-second min-h-screen flex flex-col">
+        <ScrollToTop />
         <AnimatePresence mode="wait" initial={false}>
           {!hideNav && !isCreator && (
             <motion.div
