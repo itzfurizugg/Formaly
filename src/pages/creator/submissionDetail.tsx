@@ -3,8 +3,6 @@ import { useParams } from "react-router-dom"
 import { motion } from "motion/react"
 import { Check, Download, X } from "lucide-react"
 import { RichText } from "../../components/richText"
-import { DonutChart } from "../../components/charts"
-import { colors } from "../../lib/colorbase"
 import { supabase } from "../../lib/supabase"
 import { useAuth } from "../../lib/auth-context"
 import { exportSubmissionXlsx } from "../../lib/exportForm"
@@ -154,9 +152,6 @@ function SubmissionDetail() {
     const textCount = answers.filter((a) => a.question?.question_type === "text").length
     const noAnswerCount = answers.filter((a) => a.question?.question_type !== "text" && !hasCorrectAnswer(a)).length
     const wrongCount = answers.length - correctCount - textCount - noAnswerCount
-    const scoredCount = answers.length - textCount - noAnswerCount
-    const correctPct = scoredCount > 0 ? Math.round((correctCount / scoredCount) * 100) : 0
-    const wrongPct = scoredCount > 0 ? Math.round((wrongCount / scoredCount) * 100) : 0
 
     if (error) {
         return (
