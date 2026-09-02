@@ -1,16 +1,18 @@
 import { useState } from "react"
-import { Plus, FileText, FileUp } from "lucide-react"
+import { Plus, FileText, FileUp, FileDown } from "lucide-react"
 import { AnimatePresence, motion } from "motion/react"
 
 interface CreateButtonProps {
     onCreate: () => void
     onImport: () => void
+    onDownload?: () => void
     label?: string
 }
 
-// Tombol Create dengan dropdown berisi "Buat Soal" & "Import Soal".
-// Dropdown di-animasi dengan motion.dev (AnimatePresence untuk enter/exit).
-function CreateButton({ onCreate, onImport, label = "Buat" }: CreateButtonProps) {
+// Tombol Create dengan dropdown berisi "Buat Soal", "Import Soal", dan
+// (opsional) "Download Template". Dropdown di-animasi dengan motion.dev
+// (AnimatePresence untuk enter/exit).
+function CreateButton({ onCreate, onImport, onDownload, label = "Buat" }: CreateButtonProps) {
     const [open, setOpen] = useState(false)
 
     const pick = (fn: () => void) => {
@@ -65,6 +67,15 @@ function CreateButton({ onCreate, onImport, label = "Buat" }: CreateButtonProps)
                         >
                             <FileUp className="h-4 w-4 text-done" /> Import Soal
                         </button>
+                        {onDownload && (
+                            <button
+                                role="menuitem"
+                                onClick={() => pick(onDownload)}
+                                className="w-full flex items-center gap-3 px-4 py-3 text-sm text-darks hover:bg-base transition-colors text-left border-t border-base"
+                            >
+                                <FileDown className="h-4 w-4 text-done" /> Download Template (.docx)
+                            </button>
+                        )}
                     </motion.div>
                 )}
             </AnimatePresence>

@@ -1,6 +1,6 @@
 import { useRef, useState } from "react"
 import { motion } from "motion/react"
-import { CheckCircle2, FileUp, Pencil, Upload, X } from "lucide-react"
+import { CheckCircle2, FileDown, FileUp, Pencil, Upload, X } from "lucide-react"
 import { type ParsedQuestion, validateParsedQuestion } from "../../lib/parsers/types"
 import { supabase } from "../../lib/supabase"
 import { showAlert } from "../../lib/alerts"
@@ -141,6 +141,17 @@ export default function QuestionImportModal({ formId, startingOrder, onClose, on
                         </button>
                     )}
                     <input ref={inputRef} type="file" accept=".docx,.csv,.xlsx" className="hidden" onChange={(event) => chooseFile(event.target.files?.[0])} />
+
+                    {!rows.length && !parsing && (
+                        <a
+                            href="/template-soal.docx"
+                            download="template-soal.docx"
+                            className="inline-flex items-center gap-1.5 text-xs text-done hover:text-darks transition-colors mt-3"
+                        >
+                            <FileDown className="h-3.5 w-3.5" />
+                            Belum punya file? Download template soal (.docx)
+                        </a>
+                    )}
 
                     {parsing && <div className="py-12 text-center text-tinted"><Spinner size={20} /></div>}
                     {summary && <div role="status" className="mt-4 text-sm text-done bg-done/5 border border-done/20 px-4 py-3 flex gap-2"><CheckCircle2 className="h-4 w-4 shrink-0" />{summary}</div>}

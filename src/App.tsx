@@ -29,6 +29,7 @@ const Home = lazy(() => import("./pages/home"))
 const History = lazy(() => import("./pages/history"))
 const Profile = lazy(() => import("./pages/profile"))
 const CreditPage = lazy(() => import("./pages/credit"))
+const UpgradeToCreator = lazy(() => import("./pages/upgradeToCreator"))
 const AdminForms = lazy(() => import("./pages/admin/forms"))
 const FormDescription = lazy(() => import("./pages/form/description"))
 const FormResolver = lazy(() => import("./pages/form/resolver"))
@@ -50,7 +51,6 @@ const CreatorFormSettings = lazy(() => creatorEntry().then((m) => ({ default: m.
 const CreatorTokens = lazy(() => creatorEntry().then((m) => ({ default: m.CreatorTokens })))
 const CreatorSubmissions = lazy(() => creatorEntry().then((m) => ({ default: m.CreatorSubmissions })))
 const CreatorSubmissionDetail = lazy(() => creatorEntry().then((m) => ({ default: m.CreatorSubmissionDetail })))
-const CreatorFilterResponden = lazy(() => creatorEntry().then((m) => ({ default: m.CreatorFilterResponden })))
 const CreatorShared = lazy(() => creatorEntry().then((m) => ({ default: m.CreatorShared })))
 const CreatorLayout = lazy(() => creatorEntry().then((m) => ({ default: m.CreatorLayout })))
 
@@ -156,6 +156,7 @@ function AppShell() {
             <Route path="/history" element={<History />} />
             <Route path="/profile" element={<Profile />} />
             <Route path="/credit" element={<CreditPage />} />
+            <Route path="/upgrade-to-creator" element={<UpgradeToCreator />} />
             <Route path="/admin/forms" element={<AdminForms />} />
             <Route path="/form/description" element={<FormDescription />} />
             <Route path="/form/:formId" element={<FormResolver />} />
@@ -228,14 +229,6 @@ function AppShell() {
                 element={
                   <CreatorGuard>
                     <CreatorSubmissions />
-                  </CreatorGuard>
-                }
-              />
-              <Route
-                path="/creator/forms/:id/filter"
-                element={
-                  <CreatorGuard>
-                    <CreatorFilterResponden />
                   </CreatorGuard>
                 }
               />

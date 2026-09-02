@@ -171,6 +171,23 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     pageClear()
   }
 
+  // Memuat ulang data profil dari database (dipakai setelah upgrade role,
+  // mis. apply_as_creator, supaya role baru langsung terlihat di UI).
+  async function refreshProfile() {
+    if (!user) return
+    try {
+      const { data } = await supabase
+        .from("users")
+        .select("name, email, role, created_at")
+        .eq("id", user.id)
+        .single()
+      if (data) setProfile(data)
+      profileReqRef.current = null
+    } catch {
+      // Gagal jaringan: biarkan profil lama tetap tampil.
+    }
+  }
+
   return (
     <AuthContext.Provider
       value={{
@@ -185,6 +202,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         resetPassword,
         updatePassword,
         updateProfile,
+        refreshProfile,
         logout,
       }}
     >

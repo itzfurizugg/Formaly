@@ -20,6 +20,7 @@ export interface AuthContextType {
   resetPassword: (email: string) => Promise<void>
   updatePassword: (newPassword: string) => Promise<void>
   updateProfile: (name: string, email: string) => Promise<void>
+  refreshProfile: () => Promise<void>
   logout: () => Promise<void>
 }
 

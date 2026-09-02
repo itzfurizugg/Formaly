@@ -129,10 +129,10 @@ function SubmissionDetail() {
         if (!d) return "-"
         const date = new Date(d)
         const tanggal = date.toLocaleDateString("id-ID", { day: "numeric", month: "long", year: "numeric" })
-        const jam = date.toLocaleTimeString("id-ID", { hour: "2-digit", minute: "2-digit", second: "2-digit" }).replace(/:/g, ".")
-        return `${tanggal}   -   ${jam}`
+        const jam = date.toLocaleTimeString("id-ID", { hour: "2-digit", minute: "2-digit", second: "2-digit" }).replace(/\./g, ":")
+        return `${tanggal} · ${jam}`
     }
-    
+
     const hasCorrectAnswer = (a: AnswerRow) => {
         const q = a.question
         if (!q || q.question_type === "text") return false
@@ -176,21 +176,18 @@ function SubmissionDetail() {
                         <div className="flex flex-wrap items-start justify-between gap-3 ml-2 lg:ml-3 mb-1">
                             <div>
                                 <h1 className="text-3xl lg:text-4xl font-bold text-darks mb-1">Detail Submission</h1>
-                                <p className="text-sm text-tinted">
-                                    {info?.user?.name || "Pengguna"} &middot; {info?.form?.title || "Form"}
-                                </p>
                                 <p className="text-sm text-tinted mb-6">
-                                    {fmtDate(info?.submitted_at || null)}
+                                    {info?.form?.title || "Form"}
                                 </p>
                             </div>
 
                             <button
                                 onClick={handleExport}
                                 disabled={exporting}
-                                className="btn h-10 min-h-0 rounded-full bg-darks text-base border-none hover:opacity-90 disabled:opacity-60 px-4 shrink-0"
+                                className="btn h-10 min-h-0 mr-2 rounded-full bg-darks text-base border-none hover:opacity-90 disabled:opacity-60 px-4 shrink-0"
                             >
                                 {exporting ? <Spinner size={16} /> : <Download className="h-4 w-4" />}
-                                <span>Export Jawaban</span>
+                                <span className="hidden sm:block">Export Jawaban</span>
                             </button>
                         </div>
 
@@ -198,42 +195,42 @@ function SubmissionDetail() {
                             <div className="bg-white border border-second p-5 shadow-sm rounded-xl mb-6">
                                 <div className="flex items-center justify-between gap-6">
                                     <div className="flex-1">
-                                        <p className="text-xs text-tinted">Total Skor</p>
-                                        <p className={`text-3xl font-bold ${info.form?.passing_score != null && info.total_score < info.form.passing_score ? "text-wrong" : "text-pass"}`}>
-                                            {info.total_score}
-                                        </p>
-                                        <span
-                                            className={`badge rounded-full text-xs mt-2 ${info.form?.passing_score != null && info.total_score < info.form.passing_score
-                                                ? "bg-wrong/10 text-wrong border-none"
-                                                : info.status === "SUBMITTED"
-                                                    ? "bg-pass/10 text-pass border-none"
-                                                    : "badge-ghost text-tinted"
-                                                }`}
-                                        >
-                                            {info.form?.passing_score != null && info.total_score < info.form.passing_score
-                                                ? "Gagal"
-                                                : info.status}
-                                        </span>
+                                        <div className="flex justify-between">
+                                            <p className="text-darks font-bold">{info?.user?.name || "Pengguna"}</p>
+
+                                            <span
+                                                className={`badge rounded-full text-xs mt-2 ${info.form?.passing_score != null && info.total_score < info.form.passing_score
+                                                    ? "bg-wrong/10 text-wrong border-none"
+                                                    : info.status === "SUBMITTED"
+                                                        ? "bg-pass/10 text-pass border-none"
+                                                        : "badge-ghost text-tinted"
+                                                    }`}
+                                            >
+                                                {info.form?.passing_score != null && info.total_score < info.form.passing_score
+                                                    ? "Gagal"
+                                                    : info.status}
+                                            </span>
+                                        </div>
+                                        <div className="flex justify-between">
+                                            <span>{answers.length} soal</span>
+                                            <div className="">
+                                                <p className="text-xs text-tinted">Total Skor</p>
+                                                <p className={`text-3xl font-bold ${info.form?.passing_score != null && info.total_score < info.form.passing_score ? "text-wrong" : "text-pass"}`}>
+                                                    {info.total_score}
+                                                </p>
+                                            </div>
+                                        </div>
                                     </div>
-                                    {scoredCount > 0 && (
-                                        <div className="w-28 h-28 shrink-0">
-                                            <DonutChart
-                                                bare
-                                                showLegend={false}
-                                                height={112}
-                                                data={[
-                                                    { name: "Benar", value: correctCount, color: colors.pass },
-                                                    { name: "Salah", value: wrongCount, color: colors.wrong },
-                                                ]}
-                                            />
+                                </div>
+                                <div className="mt-4 border-t border-second text-sm text-tinted flex items-center justify-between">
+                                    {info?.submitted_at && (
+                                        <div className="mt-3 text-xs text-tinted">
+                                            {fmtDate(info.submitted_at)}
                                         </div>
                                     )}
-                                </div>
-                                <div className="mt-4 pt-4 border-t border-second text-sm text-tinted flex items-center justify-between">
-                                    <span>{answers.length} soal</span>
                                     <span>
-                                        <span className="text-pass font-semibold">{correctCount} benar ({correctPct}%)</span> &middot;{" "}
-                                        <span className="text-wrong font-semibold">{wrongCount} salah ({wrongPct}%)</span>
+                                        <span className="text-pass font-semibold">{correctCount} benar </span> &middot;{" "}
+                                        <span className="text-wrong font-semibold">{wrongCount} salah</span>
                                         {textCount > 0 && <>&nbsp;&middot;&nbsp;<span className="text-tinted">{textCount} isian</span></>}
                                     </span>
                                 </div>

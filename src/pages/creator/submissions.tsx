@@ -1,11 +1,14 @@
-import { useEffect, useState, useCallback } from "react"
+import { useEffect, useState, useCallback, useMemo } from "react"
 import { useNavigate, useParams } from "react-router-dom"
-import { Download, Eye, ListFilter, Trash2 } from "lucide-react"
+import { Download, Eye, ListFilter, Search, Trash2, X } from "lucide-react"
+import { AnimatePresence, motion } from "motion/react"
 import { supabase } from "../../lib/supabase"
 import { useAuth } from "../../lib/auth-context"
 import { confirmDelete, showAlert } from "../../lib/alerts"
 import { exportFormXlsx } from "../../lib/exportForm"
 import { richTextToPlain } from "../../lib/richtext"
+import ModalPortal from "../../components/modalPortal"
+import { modalBackdrop, modalPanel } from "../../lib/motion"
 import { colors } from "../../lib/colorbase"
 import { getOptionColor } from "../../lib/optionColors"
 import { DonutChart, MiniStackedBarChart } from "../../components/charts"
@@ -72,6 +75,33 @@ interface PerQuestionStat {
     total: number
 }
 
+interface QuestionOption {
+    id: string
+    option_text: string
+    is_correct: boolean
+}
+
+interface Question {
+    id: string
+    question_text: string
+    question_type: string
+    order_index: number
+    score_value: number
+    question_options: QuestionOption[]
+}
+
+interface AnswerRecord {
+    submission_id: string
+    question_id: string
+    selected_option_id: string | null
+    selected_options: string[] | null
+}
+
+interface ActiveQuestionFilter {
+    questionId: string
+    optionId: string
+}
+
 /** Bar proporsi dua nilai (benar vs salah) untuk kartu ringkasan di layar kecil.
  * Tanpa nilai → bar abu netral; sisanya diisi warna kedua. */
 function SplitProgress({ valueA, valueB, colorA, colorB }: { valueA: number; valueB: number; colorA: string; colorB: string }) {
@@ -108,8 +138,43 @@ function Submissions() {
     // --- Export data responden (revisi #4) ---
     const [exporting, setExporting] = useState(false)
 
+    // --- Filter responden (modal popup, hasil ditampilkan di halaman ini) ---
+    const [passingScore, setPassingScore] = useState(70)
+    const [formTitle, setFormTitle] = useState("")
+    const [questions, setQuestions] = useState<Question[]>([])
+    const [answerRecords, setAnswerRecords] = useState<AnswerRecord[]>([])
+    const [statusFilter, setStatusFilter] = useState("all")
+    const [resultFilter, setResultFilter] = useState("all")
+    const [searchQuery, setSearchQuery] = useState("")
+    const [selectedQuestionId, setSelectedQuestionId] = useState<string>("")
+    const [selectedOptionId, setSelectedOptionId] = useState<string>("")
+    const [activeQuestionFilters, setActiveQuestionFilters] = useState<ActiveQuestionFilter[]>([])
+    const [showFilterPanel, setShowFilterPanel] = useState(false)
+
     const loadAll = useCallback(async () => {
         if (!user || !id) return
+
+        // Form detil (judul & passing score) untuk filter kelulusan + export.
+        const { data: formData, error: formErr } = await supabase
+            .from("forms")
+            .select("title, passing_score")
+            .eq("id", id)
+            .single()
+        if (!formErr && formData) {
+            setFormTitle((formData as { title?: string } | null)?.title || "")
+            setPassingScore(Number((formData as { passing_score?: number } | null)?.passing_score) || 70)
+        }
+
+        // Pertanyaan untuk filter jawaban spesifik per soal.
+        const { data: fqData, error: fqErr } = await supabase
+            .from("questions")
+            .select(`
+                id, question_text, question_type, order_index, score_value,
+                question_options ( id, option_text, is_correct )
+            `)
+            .eq("form_id", id)
+            .order("order_index", { ascending: true })
+        if (!fqErr) setQuestions((fqData as Question[]) || [])
 
         const { data: subs, error: err } = await supabase
             .from("submissions")
@@ -145,6 +210,18 @@ function Submissions() {
             (a, b) =>
                 (a.question?.order_index ?? Number.MAX_SAFE_INTEGER) -
                 (b.question?.order_index ?? Number.MAX_SAFE_INTEGER)
+        )
+
+        // Catat jawaban tiap submission untuk filter jawaban spesifik.
+        setAnswerRecords(
+            answers
+                .filter((a) => a.question)
+                .map((a) => ({
+                    submission_id: a.submission_id,
+                    question_id: a.question!.id,
+                    selected_option_id: a.selected_option_id,
+                    selected_options: a.selected_options,
+                }))
         )
 
         // Kelompokkan jawaban per soal, lalu hitung berapa kali tiap opsi dipilih.
@@ -302,6 +379,95 @@ function Submissions() {
         loadAll()
     }, [user, id, loadAll])
 
+    // Tutup modal filter saat tekan Escape.
+    useEffect(() => {
+        if (!showFilterPanel) return
+        const onKey = (e: KeyboardEvent) => e.key === "Escape" && setShowFilterPanel(false)
+        document.addEventListener("keydown", onKey)
+        return () => document.removeEventListener("keydown", onKey)
+    }, [showFilterPanel])
+
+    // Map: submission_id -> Map<question_id, AnswerRecord>
+    const submissionAnswersMap = useMemo(() => {
+        const map = new Map<string, Map<string, AnswerRecord>>()
+        for (const ans of answerRecords) {
+            if (!map.has(ans.submission_id)) map.set(ans.submission_id, new Map())
+            map.get(ans.submission_id)!.set(ans.question_id, ans)
+        }
+        return map
+    }, [answerRecords])
+
+    // Map: question_id -> Question
+    const questionsMap = useMemo(() => {
+        const map = new Map<string, Question>()
+        for (const q of questions) map.set(q.id, q)
+        return map
+    }, [questions])
+
+    const handleAddQuestionFilter = () => {
+        if (!selectedQuestionId || !selectedOptionId) return
+        setActiveQuestionFilters((prev) => {
+            const filtered = prev.filter((f) => f.questionId !== selectedQuestionId)
+            return [...filtered, { questionId: selectedQuestionId, optionId: selectedOptionId }]
+        })
+        setSelectedQuestionId("")
+        setSelectedOptionId("")
+    }
+
+    const handleRemoveQuestionFilter = (questionId: string) => {
+        setActiveQuestionFilters((prev) => prev.filter((f) => f.questionId !== questionId))
+    }
+
+    const handleResetAllFilters = () => {
+        setStatusFilter("all")
+        setResultFilter("all")
+        setSearchQuery("")
+        setActiveQuestionFilters([])
+        setSelectedQuestionId("")
+        setSelectedOptionId("")
+    }
+
+    // Filter submissions berdasarkan semua kriteria (modal popup).
+    const filteredSubmissions = useMemo(() => {
+        return submissions.filter((sub) => {
+            if (statusFilter !== "all" && sub.status !== statusFilter) return false
+
+            // Hasil kelulusan: lolos / tidak lolos berdasarkan passing_score.
+            if (resultFilter !== "all") {
+                if (sub.status !== "SUBMITTED") return false
+                if (sub.total_score == null) return false
+                if (resultFilter === "passed" && sub.total_score < passingScore) return false
+                if (resultFilter === "failed" && sub.total_score >= passingScore) return false
+            }
+
+            if (searchQuery.trim()) {
+                const query = searchQuery.toLowerCase().trim()
+                const name = (sub.user?.name || "").toLowerCase()
+                const email = (sub.user?.email || "").toLowerCase()
+                if (!name.includes(query) && !email.includes(query)) return false
+            }
+
+            if (activeQuestionFilters.length > 0) {
+                const userAns = submissionAnswersMap.get(sub.id)
+                if (!userAns) return false
+                for (const filter of activeQuestionFilters) {
+                    const record = userAns.get(filter.questionId)
+                    if (!record) return false
+                    const q = questionsMap.get(filter.questionId)
+                    if (!q) return false
+                    if (q.question_type === "multiple_choice") {
+                        const opts = record.selected_options || []
+                        if (!opts.includes(filter.optionId)) return false
+                    } else {
+                        if (record.selected_option_id !== filter.optionId) return false
+                    }
+                }
+            }
+
+            return true
+        })
+    }, [submissions, statusFilter, resultFilter, passingScore, searchQuery, activeQuestionFilters, submissionAnswersMap, questionsMap])
+
     const statusLabel = (s: string) => {
         if (s === "SUBMITTED") return "Selesai"
         if (s === "IN_PROGRESS") return "Proses"
@@ -383,11 +549,10 @@ function Submissions() {
         if (!id) return
         setExporting(true)
         try {
-            const { data: f } = await supabase.from("forms").select("title").eq("id", id).single()
             await exportFormXlsx({
                 formId: id,
-                formTitle: (f as { title?: string } | null)?.title || "form",
-                data: submissions,
+                formTitle: formTitle || "form",
+                data: filteredSubmissions,
             })
             showAlert("Data berhasil diexport.", "success")
         } catch (e) {
@@ -396,6 +561,12 @@ function Submissions() {
             setExporting(false)
         }
     }
+
+    const selectedQuestion = questions.find((q) => q.id === selectedQuestionId)
+    const hasActiveFilters =
+        statusFilter !== "all" || resultFilter !== "all" || !!searchQuery.trim() || activeQuestionFilters.length > 0
+    const activeFilterCount =
+        (statusFilter !== "all" ? 1 : 0) + (resultFilter !== "all" ? 1 : 0) + (searchQuery.trim() ? 1 : 0) + activeQuestionFilters.length
 
     return (
         <>
@@ -638,26 +809,278 @@ function Submissions() {
                             <div className="space-y-3 py-2">
                                 <div className="flex flex-wrap items-center justify-between gap-3 mt-2 mb-4">
                                     <h1 className="text-2xl sm:text-3xl ml-2 font-bold font-default text-darks">Responden anda</h1>
-                                    <div className="flex items-center gap-2 mr-1">
+                                    <div className="flex gap-2">
                                         <button
-                                            onClick={() => navigate(`/creator/forms/${id}/filter`)}
-                                            className="btn h-10 min-h-0 rounded-full bg-base text-darks border border-second hover:bg-white hover:shadow-sm px-4"
+                                            type="button"
+                                            onClick={() => setShowFilterPanel(true)}
+                                            className="btn h-10 min-h-0 rounded-full bg-base text-darks border border-second hover:bg-white hover:shadow-sm px-4 gap-2 shrink-0"
                                         >
                                             <ListFilter className="h-4 w-4" />
-                                            <span>Filter Responden</span>
+                                            <span className="hidden sm:block">Filter Tanggapan</span>
+                                            {activeFilterCount > 0 && (
+                                                <span className="badge badge-sm rounded-full border-none bg-darks text-white px-1.5">
+                                                    {activeFilterCount}
+                                                </span>
+                                            )}
                                         </button>
                                         <button
                                             onClick={handleExport}
-                                            disabled={exporting}
+                                            disabled={exporting || filteredSubmissions.length === 0}
                                             className="btn h-10 min-h-0 rounded-full bg-darks text-base border-none hover:opacity-90 disabled:opacity-60 px-4"
                                         >
                                             {exporting ? <Spinner size={16} /> : <Download className="h-4 w-4" />}
-                                            <span>Export Excel</span>
+                                            <span className="hidden sm:block">Export Data</span>
                                         </button>
                                     </div>
                                 </div>
-                                {submissions.map((s) => (
-                                    <>
+
+                                {/* Toolbar: pencarian + tombol buka modal filter */}
+                                <div className="flex flex-col sm:flex-row sm:items-center gap-2.5 mb-3">
+                                    <div className="relative flex-1">
+                                        <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-tinted pointer-events-none" />
+                                        <input
+                                            type="text"
+                                            value={searchQuery}
+                                            onChange={(e) => setSearchQuery(e.target.value)}
+                                            placeholder="Mulai Mencari"
+                                            className="input input-sm w-full pl-4 bg-white border-second rounded-lg text-sm h-10 focus:outline-none focus:border-darks/40 transition-colors"
+                                        />
+                                    </div>
+                                    {/* 
+                                    <button
+                                        type="button"
+                                        onClick={() => setShowFilterPanel(true)}
+                                        className="btn h-10 min-h-0 rounded-full bg-base text-darks border border-second hover:bg-white hover:shadow-sm px-4 gap-2 shrink-0"
+                                    >
+                                        <ListFilter className="h-4 w-4" />
+                                        Filter Tanggapan
+                                        {activeFilterCount > 0 && (
+                                            <span className="badge badge-sm rounded-full border-none bg-darks text-white px-1.5">
+                                                {activeFilterCount}
+                                            </span>
+                                        )}
+                                    </button> */}
+                                </div>
+
+                                {/* Modal filter popup */}
+                                <AnimatePresence>
+                                    {showFilterPanel && (
+                                        <ModalPortal key="filter-responden-modal">
+                                            <motion.div
+                                                variants={modalBackdrop}
+                                                initial="hidden"
+                                                animate="show"
+                                                exit="exit"
+                                                className="fixed inset-0 z-50 flex items-start sm:items-center justify-center px-3.5 pt-16 sm:pt-0"
+                                                role="dialog"
+                                                aria-modal="true"
+                                            >
+                                                <div
+                                                    className="absolute inset-0 bg-darks/50"
+                                                    onClick={() => setShowFilterPanel(false)}
+                                                />
+                                                <motion.div
+                                                    variants={modalPanel}
+                                                    className="relative bg-white border border-second rounded-2xl w-full max-w-lg p-5 sm:p-6 shadow-xl"
+                                                >
+                                                    <div className="flex items-center justify-between mb-4">
+                                                        <div className="flex items-center gap-2.5">
+                                                            <h3 className="text-base font-bold text-darks text-2xl">Filter Tanggapan</h3>
+                                                            {activeFilterCount > 0 && (
+                                                                <span className="badge badge-sm rounded-full border-none bg-darks text-white px-2">{activeFilterCount}</span>
+                                                            )}
+                                                        </div>
+                                                        <button
+                                                            onClick={() => setShowFilterPanel(false)}
+                                                            className="text-tinted hover:text-darks transition-colors p-1"
+                                                            aria-label="Tutup"
+                                                        >
+                                                            <X className="h-4 w-4" />
+                                                        </button>
+                                                    </div>
+
+                                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                                                        {/* Status */}
+                                                        <div>
+                                                            <label className="block text-xs font-medium text-tinted mb-1">Status Pengerjaan</label>
+                                                            <select
+                                                                value={statusFilter}
+                                                                onChange={(e) => setStatusFilter(e.target.value)}
+                                                                className="select select-sm w-full bg-base border-second rounded-lg text-xs focus:outline-none focus:border-darks/40 transition-colors"
+                                                            >
+                                                                <option value="all">Semua Status</option>
+                                                                <option value="SUBMITTED">Selesai</option>
+                                                                <option value="IN_PROGRESS">Sedang Dikerjakan</option>
+                                                            </select>
+                                                        </div>
+
+                                                        {/* Hasil kelulusan */}
+                                                        <div>
+                                                            <label className="block text-xs font-medium text-tinted mb-1">Hasil Kelulusan</label>
+                                                            <select
+                                                                value={resultFilter}
+                                                                onChange={(e) => setResultFilter(e.target.value)}
+                                                                className="select select-sm w-full bg-base border-second rounded-lg text-xs focus:outline-none focus:border-darks/40 transition-colors"
+                                                            >
+                                                                <option value="all">Semua Hasil</option>
+                                                                <option value="passed">Lolos (nilai ≥ {passingScore})</option>
+                                                                <option value="failed">Tidak Lolos</option>
+                                                            </select>
+                                                        </div>
+
+                                                        {/* Select Question */}
+                                                        <div className="md:col-span-2">
+                                                            <label className="block text-xs font-medium text-tinted mb-1">Pertanyaan</label>
+                                                            <select
+                                                                value={selectedQuestionId}
+                                                                onChange={(e) => {
+                                                                    setSelectedQuestionId(e.target.value)
+                                                                    setSelectedOptionId("")
+                                                                }}
+                                                                className="select select-sm w-full bg-base border-second rounded-lg text-xs focus:outline-none focus:border-darks/40 transition-colors"
+                                                            >
+                                                                <option value="">-- Pilih pertanyaan --</option>
+                                                                {questions
+                                                                    .filter((q) => q.question_type !== "text")
+                                                                    .map((q, idx) => {
+                                                                        const text = richTextToPlain(q.question_text)
+                                                                        return (
+                                                                            <option key={q.id} value={q.id} title={text}>
+                                                                                Soal {idx + 1}: {text.length > 45 ? `${text.slice(0, 45).trim()}...` : text}
+                                                                            </option>
+                                                                        )
+                                                                    })}
+                                                            </select>
+                                                        </div>
+                                                    </div>
+
+                                                    {/* Option Selector when a question is selected */}
+                                                    {selectedQuestion && (
+                                                        <div className="p-3.5 bg-base/80 border border-second rounded-xl space-y-2.5 mt-3">
+                                                            <p className="text-xs font-semibold text-darks">
+                                                                <span className="text-darks font-normal">{richTextToPlain(selectedQuestion.question_text)}</span>
+                                                            </p>
+
+                                                            <div className="flex flex-wrap gap-1.5">
+                                                                {selectedQuestion.question_options?.map((opt, oIdx) => (
+                                                                    <button
+                                                                        key={opt.id}
+                                                                        type="button"
+                                                                        onClick={() => setSelectedOptionId(opt.id)}
+                                                                        className={`px-3 py-1.5 flex items-start rounded-sm w-full text-xs border transition-colors ${selectedOptionId === opt.id
+                                                                            ? "bg-darks text-white border-darks"
+                                                                            : "bg-white text-darks border-second hover:bg-second"
+                                                                            }`}
+                                                                    >
+                                                                        {String.fromCharCode(65 + oIdx)}. {richTextToPlain(opt.option_text)}
+                                                                    </button>
+                                                                ))}
+                                                            </div>
+                                                        </div>
+                                                    )}
+
+                                                    <div className="flex items-center justify-end gap-2 pt-4 mt-4 border-t border-dashed border-second">
+                                                        <button
+                                                            type="button"
+                                                            onClick={handleResetAllFilters}
+                                                            disabled={!hasActiveFilters}
+                                                            className="btn btn-sm btn-ghost text-xs text-tinted hover:text-wrong hover:bg-wrong/10 rounded-full disabled:opacity-40 transition-colors"
+                                                        >
+                                                            Hapus Semua
+                                                        </button>
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => {
+                                                                handleAddQuestionFilter()
+                                                                setShowFilterPanel(false)
+                                                            }}
+                                                            disabled={!hasActiveFilters && (!selectedQuestionId || !selectedOptionId)}
+                                                            className="btn btn-sm bg-darks text-white border-none rounded-full px-4 hover:opacity-90 transition-all duration-200 hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50 disabled:hover:scale-100 text-xs"
+                                                        >
+                                                            Terapkan
+                                                        </button>
+                                                    </div>
+                                                </motion.div>
+                                            </motion.div>
+                                        </ModalPortal>
+                                    )}
+                                </AnimatePresence>
+
+                                {/* Active filter chips */}
+                                {hasActiveFilters && (
+                                    <div className="flex flex-wrap items-center gap-2 mb-4">
+                                        {statusFilter !== "all" && (
+                                            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs bg-base text-darks border border-second">
+                                                Status: {statusFilter === "SUBMITTED" ? "Selesai" : "Proses"}
+                                                <button
+                                                    onClick={() => setStatusFilter("all")}
+                                                    className="text-tinted hover:text-wrong transition-colors"
+                                                >
+                                                    <X className="h-3 w-3" />
+                                                </button>
+                                            </span>
+                                        )}
+
+                                        {resultFilter !== "all" && (
+                                            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs bg-base text-darks border border-second">
+                                                Hasil: {resultFilter === "passed" ? `Lolos (nilai ≥ ${passingScore})` : "Tidak Lolos"}
+                                                <button
+                                                    onClick={() => setResultFilter("all")}
+                                                    className="text-tinted hover:text-wrong transition-colors"
+                                                >
+                                                    <X className="h-3 w-3" />
+                                                </button>
+                                            </span>
+                                        )}
+
+                                        {searchQuery.trim() && (
+                                            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs bg-base text-darks border border-second">
+                                                Cari: "{searchQuery}"
+                                                <button
+                                                    onClick={() => setSearchQuery("")}
+                                                    className="text-tinted hover:text-wrong transition-colors"
+                                                >
+                                                    <X className="h-3 w-3" />
+                                                </button>
+                                            </span>
+                                        )}
+
+                                        {activeQuestionFilters.map((af) => {
+                                            const q = questionsMap.get(af.questionId)
+                                            const qIdx = questions.findIndex((item) => item.id === af.questionId)
+                                            const opt = q?.question_options.find((o) => o.id === af.optionId)
+                                            const optIdx = q?.question_options.findIndex((o) => o.id === af.optionId) ?? 0
+                                            return (
+                                                <span
+                                                    key={af.questionId}
+                                                    className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs bg-done/10 text-done border border-done/20 font-medium"
+                                                >
+                                                    Soal {qIdx + 1} = Opsi {String.fromCharCode(65 + optIdx)} ({richTextToPlain(opt?.option_text || "").slice(0, 20)})
+                                                    <button
+                                                        onClick={() => handleRemoveQuestionFilter(af.questionId)}
+                                                        className="hover:text-wrong transition-colors"
+                                                    >
+                                                        <X className="h-3 w-3" />
+                                                    </button>
+                                                </span>
+                                            )
+                                        })}
+                                    </div>
+                                )}
+
+                                {filteredSubmissions.length === 0 ? (
+                                    <div className="text-center py-16 bg-white border border-second shadow-sm rounded-xl">
+                                        <p className="text-darks font-semibold">Tidak ada responden yang cocok dengan kriteria filter.</p>
+                                        <p className="text-xs text-tinted mt-1">Coba ubah opsi jawaban atau reset filter di atas.</p>
+                                        <button
+                                            onClick={handleResetAllFilters}
+                                            className="btn btn-sm bg-darks text-white border-none rounded-full mt-4 px-4 hover:opacity-90"
+                                        >
+                                            Reset Filter
+                                        </button>
+                                    </div>
+                                ) : (
+                                    filteredSubmissions.map((s) => (
                                         <div key={s.id} className="bg-white border border-second p-5 shadow-sm rounded-xl">
                                             <div className="flex items-start justify-between gap-2">
                                                 <div className="min-w-0">
@@ -673,12 +1096,22 @@ function Submissions() {
                                                     </p>
                                                 </div>
                                                 <div className="flex flex-col items-end gap-2 shrink-0">
-                                                    <span
-                                                        className={`badge rounded-full text-xs ${s.status === "SUBMITTED" ? "bg-done/10 text-done border-none" : "badge-ghost text-tinted"
-                                                            }`}
-                                                    >
-                                                        {statusLabel(s.status)}
-                                                    </span>
+                                                    <div className="flex items-center gap-1.5 flex-wrap justify-end">
+                                                        <span
+                                                            className={`badge rounded-full text-xs ${s.status === "SUBMITTED" ? "bg-done/10 text-done border-none" : "badge-ghost text-tinted"
+                                                                }`}
+                                                        >
+                                                            {statusLabel(s.status)}
+                                                        </span>
+                                                        {s.status === "SUBMITTED" && s.total_score != null && (
+                                                            <span
+                                                                className={`badge rounded-full text-xs ${s.total_score >= passingScore ? "bg-done/10 text-done border-none" : "bg-wrong/10 text-wrong border-none"
+                                                                    }`}
+                                                            >
+                                                                {s.total_score >= passingScore ? "Lolos" : "Tidak Lolos"}
+                                                            </span>
+                                                        )}
+                                                    </div>
                                                     <div className="flex items-center gap-1">
                                                         <button
                                                             onClick={() => navigate(`/creator/forms/${id}/submissions/${s.id}`)}
@@ -702,8 +1135,8 @@ function Submissions() {
                                                 </div>
                                             </div>
                                         </div>
-                                    </>
-                                ))}
+                                    ))
+                                )}
                             </div>
                         )}
                     </div>
