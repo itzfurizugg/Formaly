@@ -1,0 +1,7 @@
+tunnel: id_tunnel
+credentials-file: /home/rizuki/.cloudflared/id_tunnel.json
+
+ingress:
+  - hostname: storage.formaly.my.id
+    service: http://localhost:48484
+  - service: http_status:404
