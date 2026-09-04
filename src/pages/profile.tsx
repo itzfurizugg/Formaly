@@ -12,7 +12,7 @@ import {
     X,
     ChevronRight,
     Info,
-    Sparkles,
+    BadgeCheck,
 } from "lucide-react"
 import { useAuth } from "../lib/auth-context"
 import { showAlert } from "../lib/alerts"
@@ -296,22 +296,6 @@ function Profile() {
                         <ChevronRight className="h-4 w-4 text-tinted shrink-0" />
                     </button>
 
-                    {role === "user" && (
-                        <button
-                            onClick={() => navigate("/upgrade-to-creator")}
-                            className="w-full flex items-center gap-3 p-4 hover:bg-base transition-colors text-left"
-                        >
-                            <div className="w-9 h-9 shrink-0 rounded-full bg-done/10 flex items-center justify-center">
-                                <Sparkles className="h-4 w-4 text-done" />
-                            </div>
-                            <div className="flex-1 min-w-0">
-                                <p className="text-sm font-bold text-darks">Upgrade ke Creator</p>
-                                <p className="text-xs text-tinted">Jadilah yang membuat formulir untuk banyak orang.</p>
-                            </div>
-                            <ChevronRight className="h-4 w-4 text-tinted shrink-0" />
-                        </button>
-                    )}
-
                     <button
                         onClick={() => navigate("/credit")}
                         className="w-full flex items-center gap-3 p-4 hover:bg-base transition-colors text-left"
@@ -326,6 +310,25 @@ function Profile() {
                         <ChevronRight className="h-4 w-4 text-tinted shrink-0" />
                     </button>
                 </div>
+
+                <div className="bg-white border border-second mb-3 divide-y divide-second rounded-2xl lg:rounded-xl overflow-hidden">
+                    {role === "user" && (
+                        <button
+                            onClick={() => navigate("/upgrade-to-creator")}
+                            className="w-full flex items-center gap-3 p-4 hover:bg-base transition-colors text-left"
+                        >
+                            <div className="w-9 h-9 shrink-0 rounded-full bg-done/10 flex items-center justify-center">
+                                <BadgeCheck className="h-4 w-4 text-done" />
+                            </div>
+                            <div className="flex-1 min-w-0">
+                                <p className="text-sm font-bold text-darks">Upgrade ke Creator</p>
+                                <p className="text-xs text-tinted">Jadilah yang membuat formulir untuk banyak orang.</p>
+                            </div>
+                            <ChevronRight className="h-4 w-4 text-tinted shrink-0" />
+                        </button>
+                    )}
+                </div>
+
                 <button
                     onClick={handleLogout}
                     disabled={loggingOut}

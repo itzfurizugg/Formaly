@@ -80,7 +80,6 @@ export default function UpgradeToCreator() {
         const remaining = remainingDays(profile.created_at)
         const eligible = remaining <= 0
         setAge({ eligible, remaining })
-        if (eligible) setStep("otp")
         setCheckingAge(false)
     }, [user, profile, authLoading])
 
@@ -190,11 +189,13 @@ export default function UpgradeToCreator() {
     return (
         <div className="flex flex-col items-center px-3.5 sm:px-6 py-5 sm:py-10">
             <div className="w-full max-w-2xl">
-                <BackButton to="/profile" />
+                <BackButton
+                    to={step === "age" ? "/profile" : undefined}
+                    onClick={step !== "age" ? () => setStep("age") : undefined}
+                />
 
                 <motion.div variants={fadeSlide} initial="hidden" animate="show">
                     <div className="flex items-center gap-2.5 mb-1">
-                        <ShieldCheck className="h-5 w-5 text-done" />
                         <h1 className="text-3xl sm:text-4xl font-bold text-darks">Upgrade ke Creator</h1>
                     </div>
                     <p className="text-sm text-tinted mb-6">
@@ -222,14 +223,14 @@ export default function UpgradeToCreator() {
 
                 {!alreadyCreator && (
                     <motion.div variants={listContainer} initial="hidden" animate="show" className="space-y-4">
-                        {/* Step indicator */}
+                        {/* Step indicator
                         <motion.div variants={listItem} className="flex items-center gap-2 text-xs font-medium text-tinted">
                             <span className={step === "otp" || step === "done" ? "text-done" : "text-done"}>1. Cek usia akun</span>
                             <span className="text-second">—</span>
                             <span className={step === "otp" ? "text-darks font-semibold" : step === "done" ? "text-done" : "text-tinted"}>2. Verifikasi OTP</span>
                             <span className="text-second">—</span>
                             <span className={step === "done" ? "text-done font-semibold" : "text-tinted"}>3. Selesai</span>
-                        </motion.div>
+                        </motion.div> */}
 
                         {step === "age" && (
                             <motion.div
@@ -239,31 +240,54 @@ export default function UpgradeToCreator() {
                                 animate="show"
                                 className="bg-white border border-second rounded-2xl lg:rounded-xl p-6 shadow-sm"
                             >
-                                <h2 className="font-semibold text-darks mb-2">Cek persyaratan akun</h2>
+                                <h2 className="font-semibold text-darks mb-2 text-lg">Cek persyaratan akun</h2>
                                 {checkingAge ? (
                                     <div className="flex items-center gap-2 text-tinted text-sm py-3">
                                         <Spinner size={16} /> Memeriksa usia akun...
                                     </div>
                                 ) : (
                                     <div className="space-y-3">
-                                        <div className="flex items-start gap-3">
-                                            <XCircle className="h-5 w-5 text-wrong shrink-0 mt-0.5" />
-                                            <div>
-                                                <p className="text-sm font-medium text-darks">Akun belum memenuhi syarat</p>
-                                                <p className="text-sm text-tinted mt-1">
-                                                    Akun kamu harus berumur minimal {MIN_ACCOUNT_DAYS} hari untuk menjadi creator.
-                                                    {age.remaining > 0 && (
-                                                        <span className="font-semibold text-darks"> Sisa {age.remaining} hari lagi.</span>
-                                                    )}
-                                                </p>
-                                            </div>
-                                        </div>
-                                        <button
-                                            onClick={() => navigate("/profile")}
-                                            className="btn bg-darks text-base border-none w-full hover:opacity-90 transition-opacity rounded-full lg:rounded-xl"
-                                        >
-                                            Kembali ke Profil
-                                        </button>
+                                        {age.eligible ? (
+                                            <>
+                                                <div className="flex items-start gap-3">
+                                                    {/* <div className="w-5 h-5 bg-pass rounded-full" /> */}
+                                                    <CheckCircle2 className="h-5 w-5 text-pass shrink-0 mt-0.5" />
+                                                    <div>
+                                                        <p className="text-sm font-medium text-darks">Akun memenuhi syarat</p>
+                                                        <p className="text-sm text-tinted mt-1">
+                                                            Akun kamu sudah berumur lebih dari {MIN_ACCOUNT_DAYS} hari. Silakan lanjut ke verifikasi OTP.
+                                                        </p>
+                                                    </div>
+                                                </div>
+                                                <button
+                                                    onClick={() => setStep("otp")}
+                                                    className="btn bg-darks text-base border-none w-full hover:opacity-90 transition-opacity rounded-full lg:rounded-xl"
+                                                >
+                                                    Lanjut Verifikasi
+                                                </button>
+                                            </>
+                                        ) : (
+                                            <>
+                                                <div className="flex items-start gap-3">
+                                                    <XCircle className="h-5 w-5 text-wrong shrink-0 mt-0.5" />
+                                                    <div>
+                                                        <p className="text-sm font-medium text-darks">Akun belum memenuhi syarat</p>
+                                                        <p className="text-sm text-tinted mt-1">
+                                                            Akun kamu harus berumur minimal {MIN_ACCOUNT_DAYS} hari untuk menjadi creator.
+                                                            {age.remaining > 0 && (
+                                                                <span className="font-semibold text-darks"> Sisa {age.remaining} hari lagi.</span>
+                                                            )}
+                                                        </p>
+                                                    </div>
+                                                </div>
+                                                <button
+                                                    onClick={() => navigate("/profile")}
+                                                    className="btn bg-darks text-base border-none w-full hover:opacity-90 transition-opacity rounded-full lg:rounded-xl"
+                                                >
+                                                    Kembali ke Profil
+                                                </button>
+                                            </>
+                                        )}
                                     </div>
                                 )}
                             </motion.div>
@@ -278,7 +302,6 @@ export default function UpgradeToCreator() {
                                 className="bg-white border border-second rounded-2xl lg:rounded-xl p-6 shadow-sm"
                             >
                                 <div className="flex items-center gap-2 mb-1">
-                                    <Sparkles className="h-5 w-5 text-done" />
                                     <h2 className="font-semibold text-darks">Verifikasi email kamu</h2>
                                 </div>
                                 <p className="text-sm text-tinted mb-5">
