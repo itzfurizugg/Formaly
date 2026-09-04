@@ -185,9 +185,11 @@ function FormPage() {
             }
         }
 
+        if (submissionId) sessionStorage.removeItem(`formTimer:${formId}:${submissionId}`)
+
         setSubmitting(false)
         navigate("/history")
-    }, [user, formId, questions, answers, navigate])
+    }, [user, formId, submissionId, questions, answers, navigate])
 
     // Tombol "Kirim" hanya membuka modal konfirmasi; pengiriman asli tetap
     // lewat handleSubmit (juga dipakai auto-submit saat waktu habis, tanpa konfirmasi).
@@ -239,12 +241,21 @@ function FormPage() {
         const dur = Number(formData.duration) || 0
         setHasTimer(dur > 0)
         if (dur > 0) {
-            if (locationState?.deadline) {
-                deadlineRef.current = locationState.deadline
-            } else {
-                deadlineRef.current = Date.now() + dur * 60 * 1000
+            // Deadline disimpan di sessionStorage agar tidak reset saat halaman
+            // di-refresh. Key dibuat per submission sehingga percobaan ulang
+            // (allow_multiple_submissions) tetap dapat timer baru.
+            const storageKey = submissionId ? `formTimer:${formId}:${submissionId}` : null
+            let deadline = locationState?.deadline || null
+            if (!deadline && storageKey) {
+                const saved = sessionStorage.getItem(storageKey)
+                if (saved) deadline = Number(saved)
             }
-            setTimeLeft(Math.max(0, Math.round((deadlineRef.current - Date.now()) / 1000)))
+            if (!deadline) {
+                deadline = Date.now() + dur * 60 * 1000
+            }
+            if (storageKey) sessionStorage.setItem(storageKey, String(deadline))
+            deadlineRef.current = deadline
+            setTimeLeft(Math.max(0, Math.round((deadline - Date.now()) / 1000)))
         } else {
             setTimeLeft(300)
         }
@@ -281,7 +292,7 @@ function FormPage() {
         }
 
         setLoading(false)
-    }, [formId, locationState])
+    }, [formId, submissionId, locationState])
 
     useEffect(() => {
         if (authLoading) return
