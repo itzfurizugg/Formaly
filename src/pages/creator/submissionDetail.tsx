@@ -23,6 +23,7 @@ interface AnswerRow {
         question_type: string
         score_value: number
         image_question: string | null
+        media_url: string | null
         order_index: number
         question_options: { id: string; option_text: string; is_correct: boolean }[]
     } | null
@@ -74,7 +75,7 @@ function SubmissionDetail() {
             .select(`
                 id, selected_option_id, selected_options, answer_text, score_obtained,
                 question:question_id (
-                    id, question_text, question_type, score_value, image_question, order_index,
+                    id, question_text, question_type, score_value, image_question, media_url, order_index,
                     question_options ( id, option_text, is_correct )
                 )
             `)
@@ -270,6 +271,23 @@ function SubmissionDetail() {
                                             <div className="text-sm text-darks"><RichText html={a.question?.question_text} /></div>
                                             {a.question?.image_question && (
                                                 <img src={a.question.image_question} alt="Soal" className="max-h-40 object-contain mt-2 border border-second rounded-lg" />
+                                            )}
+                                            {a.question?.media_url && (
+                                                <div className="mt-2">
+                                                    {(() => {
+                                                        const ext = a.question!.media_url!.toLowerCase().substring(a.question!.media_url!.lastIndexOf("."))
+                                                        if ([".jpg", ".jpeg", ".png", ".webp"].includes(ext)) {
+                                                            return <img src={a.question!.media_url!} alt="Media soal" className="max-h-40 object-contain mt-2 border border-second rounded-lg" />
+                                                        }
+                                                        if ([".mp4", ".mkv", ".mov", ".avi"].includes(ext)) {
+                                                            return <video src={a.question!.media_url!} controls className="max-h-40 w-full mt-2 border border-second rounded-lg" preload="metadata" />
+                                                        }
+                                                        if ([".mp3"].includes(ext)) {
+                                                            return <audio src={a.question!.media_url!} controls className="w-full mt-2" preload="metadata" />
+                                                        }
+                                                        return null
+                                                    })()}
+                                                </div>
                                             )}
 
                                             {a.question?.question_type === "text" ? (

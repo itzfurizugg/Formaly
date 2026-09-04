@@ -23,6 +23,7 @@ interface AnswerRow {
         question_type: string
         score_value: number
         image_question: string | null
+        media_url: string | null
         order_index: number
         question_options: { id: string; option_text: string; is_correct: boolean }[]
     } | null
@@ -60,6 +61,7 @@ function ResultPage() {
     // Header gambar & warna form diambil diam-diam; error diabaikan agar halaman tetap jalan.
     const [headerImage, setHeaderImage] = useState<string | null>(null)
     const [headerColor, setHeaderColor] = useState<string | null>(null)
+    const [headerMedia, setHeaderMedia] = useState<string | null>(null)
 
     useEffect(() => {
         const fid = info?.form?.id
@@ -67,14 +69,15 @@ function ResultPage() {
         let cancelled = false
         supabase
             .from("forms")
-            .select("header_image, header_color")
+            .select("header_image, header_color, media_url")
             .eq("id", fid)
             .single()
             .then(({ data }) => {
                 if (cancelled) return
-                const row = data as { header_image?: string | null; header_color?: string | null } | null
+                const row = data as { header_image?: string | null; header_color?: string | null; media_url?: string | null } | null
                 setHeaderImage(row?.header_image || null)
                 setHeaderColor(row?.header_color || null)
+                setHeaderMedia(row?.media_url || null)
             })
         return () => {
             cancelled = true
@@ -105,7 +108,7 @@ function ResultPage() {
             .select(`
                 id, selected_option_id, selected_options, answer_text, score_obtained,
                 question:question_id (
-                    id, question_text, question_type, score_value, image_question, order_index,
+                    id, question_text, question_type, score_value, image_question, media_url, order_index,
                     question_options ( id, option_text, is_correct )
                 )
             `)
@@ -205,7 +208,7 @@ function ResultPage() {
                             <BackButton to="/history" />
                             {info?.form && (
                                 <div className="rounded-xl overflow-hidden border border-second shadow-sm mb-3 lg:mb-4">
-                                    <FormHeader formId={info.form.id} title={info.form.title} headerImage={headerImage} headerColor={headerColor} />
+                                    <FormHeader formId={info.form.id} title={info.form.title} headerImage={headerImage} headerColor={headerColor} headerMedia={headerMedia} />
                                 </div>
                             )}
 
@@ -314,11 +317,28 @@ function ResultPage() {
                                                                         <span className="text-xs text-tinted font-medium">Tanpa Penilaian</span>
                                                                     )}
                                                                 </div>
-                                                                <div className="text-sm text-darks"><RichText html={a.question?.question_text} /></div>
-                                                                {a.question?.image_question && (
-                                                                    <img src={a.question.image_question} alt="Soal" className="max-h-40 object-contain mt-2 border border-second rounded-lg" />
-                                                                )}
-                                                                <div className="mt-3 space-y-1.5">
+<div className="text-sm text-darks"><RichText html={a.question?.question_text} /></div>
+                                                                 {a.question?.image_question && (
+                                                                     <img src={a.question.image_question} alt="Soal" className="max-h-40 object-contain mt-2 border border-second rounded-lg" />
+                                                                 )}
+                                                                 {a.question?.media_url && (
+                                                                     <div className="mt-2">
+                                                                         {(() => {
+                                                                             const ext = a.question!.media_url!.toLowerCase().substring(a.question!.media_url!.lastIndexOf("."))
+                                                                             if ([".jpg", ".jpeg", ".png", ".webp"].includes(ext)) {
+                                                                                 return <img src={a.question!.media_url!} alt="Media soal" className="max-h-40 object-contain mt-2 border border-second rounded-lg" />
+                                                                             }
+                                                                             if ([".mp4", ".mkv", ".mov", ".avi"].includes(ext)) {
+                                                                                 return <video src={a.question!.media_url!} controls className="max-h-40 w-full mt-2 border border-second rounded-lg" preload="metadata" />
+                                                                             }
+                                                                             if ([".mp3"].includes(ext)) {
+                                                                                 return <audio src={a.question!.media_url!} controls className="w-full mt-2" preload="metadata" />
+                                                                             }
+                                                                             return null
+                                                                         })()}
+                                                                     </div>
+                                                                 )}
+                                                                 <div className="mt-3 space-y-1.5">
                                                                     {(a.question?.question_options || []).map((o) => {
                                                                         const selected = a.question?.question_type === "multiple_choice"
                                                                             ? (a.selected_options || []).includes(o.id)
@@ -378,11 +398,28 @@ function ResultPage() {
                                                                     <span className="text-sm font-bold text-darks">Soal {idx + 1}</span>
                                                                     <span className="badge badge-ghost text-tinted rounded-full text-xs">{typeLabel(a.question?.question_type || "")}</span>
                                                                 </div>
-                                                                <div className="text-sm text-darks"><RichText html={a.question?.question_text} /></div>
-                                                                {a.question?.image_question && (
-                                                                    <img src={a.question.image_question} alt="Soal" className="max-h-40 object-contain mt-2 border border-second rounded-lg" />
-                                                                )}
-                                                                <div className="mt-3 text-sm text-darks bg-base border border-second rounded-lg px-3.5 py-2 whitespace-pre-wrap break-words">
+<div className="text-sm text-darks"><RichText html={a.question?.question_text} /></div>
+                                                                 {a.question?.image_question && (
+                                                                     <img src={a.question.image_question} alt="Soal" className="max-h-40 object-contain mt-2 border border-second rounded-lg" />
+                                                                 )}
+                                                                 {a.question?.media_url && (
+                                                                     <div className="mt-2">
+                                                                         {(() => {
+                                                                             const ext = a.question!.media_url!.toLowerCase().substring(a.question!.media_url!.lastIndexOf("."))
+                                                                             if ([".jpg", ".jpeg", ".png", ".webp"].includes(ext)) {
+                                                                                 return <img src={a.question!.media_url!} alt="Media soal" className="max-h-40 object-contain mt-2 border border-second rounded-lg" />
+                                                                             }
+                                                                             if ([".mp4", ".mkv", ".mov", ".avi"].includes(ext)) {
+                                                                                 return <video src={a.question!.media_url!} controls className="max-h-40 w-full mt-2 border border-second rounded-lg" preload="metadata" />
+                                                                             }
+                                                                             if ([".mp3"].includes(ext)) {
+                                                                                 return <audio src={a.question!.media_url!} controls className="w-full mt-2" preload="metadata" />
+                                                                             }
+                                                                             return null
+                                                                         })()}
+                                                                     </div>
+                                                                 )}
+                                                                 <div className="mt-3 text-sm text-darks bg-base border border-second rounded-lg px-3.5 py-2 whitespace-pre-wrap break-words">
                                                                     {a.answer_text || "-"}
                                                                 </div>
                                                             </motion.div>

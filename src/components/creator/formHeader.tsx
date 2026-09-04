@@ -25,14 +25,61 @@ interface FormHeaderProps {
     headerImage?: string | null
     /** Warna latar hex pilihan creator; menang atas gambar header bila diatur. */
     headerColor?: string | null
+    /** Media header (gambar/video/audio) yang di-upload ke storage server. */
+    headerMedia?: string | null
 }
 
 const HEX_COLOR_RE = /^#(?:[0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/
 
-function FormHeader({ formId, title, headerImage, headerColor }: FormHeaderProps) {
+function getMediaType(filenameOrUrl: string): "image" | "video" | "audio" | null {
+    const lower = filenameOrUrl.toLowerCase()
+    const ext = lower.substring(lower.lastIndexOf("."))
+    if ([".jpg", ".jpeg", ".png", ".webp"].includes(ext)) return "image"
+    if ([".mp4", ".mkv", ".mov", ".avi"].includes(ext)) return "video"
+    if ([".mp3"].includes(ext)) return "audio"
+    return null
+}
+
+function FormHeader({ formId, title, headerImage, headerColor, headerMedia }: FormHeaderProps) {
     const [failed, setFailed] = useState(false)
 
-    // Gambar header menang atas warna kustom: kalau link foto sudah ada,
+    // Media header (upload) menang atas header_image dan header_color.
+    // Jika media ada, tampilkan media (gambar/video/audio) sebagai banner.
+    if (headerMedia && !failed) {
+        const mediaType = getMediaType(headerMedia)
+        if (mediaType === "image") {
+            return (
+                <img
+                    src={headerMedia}
+                    alt={`Header ${title}`}
+                    loading="lazy"
+                    onError={() => setFailed(true)}
+                    className="w-full aspect-[3105/1100] object-cover border-b border-second"
+                />
+            )
+        }
+        if (mediaType === "video") {
+            return (
+                <video
+                    src={headerMedia}
+                    autoPlay
+                    loop
+                    muted
+                    playsInline
+                    className="w-full aspect-[3105/1100] object-cover border-b border-second"
+                />
+            )
+        }
+        if (mediaType === "audio") {
+            return (
+                <div className="w-full aspect-[3105/1100] flex items-center justify-center bg-base border-b border-second">
+                    <audio src={headerMedia} controls className="w-full max-w-md" preload="metadata" />
+                </div>
+            )
+        }
+    }
+
+    // Gambar header (URL eksternal) menang atas warna kustom: kalau link foto sudah ada,
     // gunakan versi foto. Warna hanya dipakai bila gambar kosong/gagal dimuat.
     if (headerImage && !failed) {
         return (

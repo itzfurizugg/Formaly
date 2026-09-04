@@ -15,6 +15,7 @@ interface FormRow {
     description: string
     header_image?: string | null
     header_color?: string | null
+    media_url?: string | null
     duration: number
     questions: { id: string }[]
     submissions: { id: string }[]
@@ -32,7 +33,7 @@ function CreatorResponden() {
         const { data, error: err } = await supabase
             .from("forms")
             .select(`
-                id, title, description, duration, header_image, header_color,
+                id, title, description, duration, header_image, header_color, media_url,
                 questions ( id ),
                 submissions ( id )
             `)
@@ -83,7 +84,7 @@ function CreatorResponden() {
                                     aria-label={`Lihat submission ${form.title}`}
                                     className="group card bg-white border border-second rounded-xl transition-all duration-300 hover:shadow-lg hover:shadow-darks/5 w-full text-left h-full overflow-hidden active:scale-[0.95]"
                                 >
-                                    <FormHeader formId={form.id} title={form.title} headerImage={form.header_image} headerColor={form.header_color} />
+                                    <FormHeader formId={form.id} title={form.title} headerImage={form.header_image} headerColor={form.header_color} headerMedia={form.media_url} />
                                     <div className="card-body gap-4 p-4 sm:p-5">
                                         <div className="flex items-start gap-3">
                                             <div className="min-w-0 flex-1">

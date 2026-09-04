@@ -22,6 +22,7 @@ interface FormEditCache {
     createdAt: string
     headerImage: string
     headerColor: string
+    headerMedia: string
 }
 
 function FormEdit() {
@@ -51,6 +52,7 @@ function FormEdit() {
     // dipindah ke tab Settings (formSettings.tsx).
     const [headerImage, setHeaderImage] = useState(cached?.headerImage ?? "")
     const [headerColor, setHeaderColor] = useState(cached?.headerColor ?? "")
+    const [headerMedia, setHeaderMedia] = useState(cached?.headerMedia ?? "")
 
     const loadForm = useCallback(async () => {
         if (!user || !id) return
@@ -74,6 +76,7 @@ function FormEdit() {
         setCreatedAt(data.created_at || "")
         setHeaderImage(data.header_image || "")
         setHeaderColor(typeof data.header_color === "string" ? data.header_color : "")
+        setHeaderMedia(typeof data.media_url === "string" ? data.media_url : "")
 
         const { data: rel } = await supabase
             .from("form_tags")
@@ -95,6 +98,7 @@ function FormEdit() {
             createdAt: data.created_at || "",
             headerImage: data.header_image || "",
             headerColor: typeof data.header_color === "string" ? data.header_color : "",
+            headerMedia: typeof data.media_url === "string" ? data.media_url : "",
         })
         setLoading(false)
     }, [user, id, navigate, cached])
@@ -370,7 +374,7 @@ function FormEdit() {
                                         {/* Pratinjau header (read-only) — sama seperti tampilan di daftar form
                                     & halaman responden. Nilainya diatur lewat tab Settings. */}
                                         <div className="overflow-hidden rounded-lg border border-second">
-                                            <FormHeader formId={id ?? ""} title={title} headerImage={headerImage} headerColor={headerColor} />
+                                            <FormHeader formId={id ?? ""} title={title} headerImage={headerImage} headerColor={headerColor} headerMedia={headerMedia} />
                                         </div>
 
                                         <div>

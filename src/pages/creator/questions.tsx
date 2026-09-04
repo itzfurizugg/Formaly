@@ -7,6 +7,7 @@ import { useAuth } from "../../lib/auth-context"
 import QuestionImportModal from "../../components/creator/QuestionImportModal"
 import CreateButton from "../../components/creator/createButton"
 import ImageUrlInput from "../../components/creator/imageUrlInput"
+import MediaUpload from "../../components/MediaUpload"
 import { isValidImageUrl } from "../../lib/imageUrl"
 import RichTextEditor, { RichText } from "../../components/richText"
 import { richTextToPlain } from "../../lib/richtext"
@@ -30,6 +31,7 @@ interface Question {
     score_value: number
     order_index: number
     image_question: string | null
+    media_url: string | null
     is_required: boolean
     question_options: Option[]
 }
@@ -56,6 +58,7 @@ function Questions({ embedded = false }: { embedded?: boolean }) {
     const [scoreValue, setScoreValue] = useState(0)
     const [orderIndex, setOrderIndex] = useState(0)
     const [imageQuestion, setImageQuestion] = useState("")
+    const [mediaUrl, setMediaUrl] = useState<string | null>(null)
     const [isRequired, setIsRequired] = useState(false)
     const [options, setOptions] = useState<Option[]>([])
     const [removedOptionIds, setRemovedOptionIds] = useState<string[]>([])
@@ -84,7 +87,7 @@ function Questions({ embedded = false }: { embedded?: boolean }) {
         const { data: qs } = await supabase
             .from("questions")
             .select(`
-                id, question_text, question_type, score_value, order_index, image_question, is_required,
+                id, question_text, question_type, score_value, order_index, image_question, media_url, is_required,
                 question_options ( id, option_text, is_correct, order_index )
             `)
             .eq("form_id", id)
@@ -112,6 +115,7 @@ function Questions({ embedded = false }: { embedded?: boolean }) {
         setScoreValue(0)
         setOrderIndex(questions.length)
         setImageQuestion("")
+        setMediaUrl(null)
         setIsRequired(false)
         setOptions([])
         setRemovedOptionIds([])
@@ -141,6 +145,7 @@ function Questions({ embedded = false }: { embedded?: boolean }) {
         setScoreValue(Number(q.score_value) || 0)
         setOrderIndex(q.order_index || 0)
         setImageQuestion(q.image_question || "")
+        setMediaUrl(q.media_url || "")
         setIsRequired(!!q.is_required)
         setOptions((q.question_options || []).map((o) => ({ id: o.id, option_text: o.option_text, is_correct: o.is_correct })))
         setShowEditor(true)
@@ -186,6 +191,7 @@ function Questions({ embedded = false }: { embedded?: boolean }) {
             p_score_value: scoreValue,
             p_order_index: orderIndex,
             p_image_question: imageQuestion || null,
+            p_media_url: mediaUrl || null,
             p_is_required: isRequired,
             p_options: options.map((o, idx) => ({
                 id: o.id || null,
@@ -407,6 +413,15 @@ function Questions({ embedded = false }: { embedded?: boolean }) {
                 </div>
             </div>
 
+            <div>
+                <MediaUpload
+                    value={mediaUrl}
+                    onChange={setMediaUrl}
+                    label="Media Tambahan (Gambar/Video/Audio)"
+                    helpText="Media ini akan ditampilkan di halaman soal responden bersama dengan soal."
+                />
+            </div>
+
             <div className="flex items-center gap-2 ml-2">
                 <button
                     type="button"
@@ -560,6 +575,23 @@ function Questions({ embedded = false }: { embedded?: boolean }) {
                                         <div className="text-sm text-darks"><RichText html={q.question_text} /></div>
                                         {q.image_question && (
                                             <img src={q.image_question} alt="Soal" className="max-h-40 object-contain mt-2 border border-second rounded-lg" />
+                                        )}
+                                        {q.media_url && (
+                                            <div className="mt-2">
+                                                {(() => {
+                                                    const ext = q.media_url!.toLowerCase().substring(q.media_url!.lastIndexOf("."))
+                                                    if ([".jpg", ".jpeg", ".png", ".webp"].includes(ext)) {
+                                                        return <img src={q.media_url!} alt="Media soal" className="max-h-40 object-contain mt-2 border border-second rounded-lg" />
+                                                    }
+                                                    if ([".mp4", ".mkv", ".mov", ".avi"].includes(ext)) {
+                                                        return <video src={q.media_url!} controls className="max-h-40 w-full mt-2 border border-second rounded-lg" preload="metadata" />
+                                                    }
+                                                    if ([".mp3"].includes(ext)) {
+                                                        return <audio src={q.media_url!} controls className="w-full mt-2" preload="metadata" />
+                                                    }
+                                                    return null
+                                                })()}
+                                            </div>
                                         )}
                                         {q.question_type !== "text" && q.question_options?.length > 0 && (
                                             <div className="mt-3 space-y-1.5">

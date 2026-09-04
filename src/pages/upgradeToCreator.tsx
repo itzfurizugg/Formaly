@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react"
 import { useNavigate } from "react-router-dom"
 import { AnimatePresence, motion } from "motion/react"
-import { CheckCircle2, Send, ShieldCheck, Sparkles, XCircle } from "lucide-react"
+import { CheckCircle2, Send, ShieldCheck, XCircle } from "lucide-react"
 import { useAuth } from "../lib/auth-context"
 import { supabase } from "../lib/supabase"
 import { alertPop, easeOutExpo, fadeSlide, listContainer, listItem } from "../lib/motion"

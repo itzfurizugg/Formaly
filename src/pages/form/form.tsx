@@ -24,6 +24,7 @@ interface Question {
     question_type: string
     score_value: number
     image_question?: string | null
+    media_url?: string | null
     is_required?: boolean
     question_options: Option[]
 }
@@ -268,6 +269,7 @@ function FormPage() {
                 question_type,
                 score_value,
                 image_question,
+                media_url,
                 is_required,
                 question_options (
                     id,
@@ -450,6 +452,48 @@ function FormPage() {
                                         >
                                             <ZoomIn className="h-4 w-4" /> Perbesar
                                         </button>
+                                    </div>
+                                )}
+                                {/* Menampilkan Media Soal (gambar/video/audio) menggunakan field media_url */}
+                                {question.media_url && (
+                                    <div className="mt-4">
+                                        {(() => {
+                                            const ext = question.media_url!.toLowerCase().substring(question.media_url!.lastIndexOf("."))
+                                            if ([".jpg", ".jpeg", ".png", ".webp"].includes(ext)) {
+                                                return (
+                                                    <div className="mt-4 relative group rounded-lg overflow-hidden border border-second bg-base w-fit">
+                                                        <img
+                                                            src={question.media_url!}
+                                                            alt="Media Soal"
+                                                            className="max-h-60 object-contain cursor-pointer"
+                                                            onClick={() => setModalImage(question.media_url! ?? null)}
+                                                        />
+                                                        <button
+                                                            onClick={() => setModalImage(question.media_url! ?? null)}
+                                                            className="absolute bottom-2 right-2 bg-base/70 hover:bg-darks text-medium text-darks hover:text-white p-1.5 rounded-md opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-1 text-xs"
+                                                        >
+                                                            <ZoomIn className="h-4 w-4" /> Perbesar
+                                                        </button>
+                                                    </div>
+                                                )
+                                            }
+                                            if ([".mp4", ".mkv", ".mov", ".avi"].includes(ext)) {
+                                                return (
+                                                    <video
+                                                        src={question.media_url!}
+                                                        controls
+                                                        className="max-h-60 w-full mt-2 border border-second rounded-lg"
+                                                        preload="metadata"
+                                                    />
+                                                )
+                                            }
+                                            if ([".mp3"].includes(ext)) {
+                                                return (
+                                                    <audio src={question.media_url!} controls className="w-full mt-2" preload="metadata" />
+                                                )
+                                            }
+                                            return null
+                                        })()}
                                     </div>
                                 )}
 

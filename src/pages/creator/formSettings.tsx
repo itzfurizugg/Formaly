@@ -17,6 +17,7 @@ import { PRESET_HEADER_COLORS } from "../../lib/colorbase"
 import { isValidImageUrl } from "../../lib/imageUrl"
 import { pageGet, pageSet } from "../../lib/pageCache"
 import ImageUrlInput from "../../components/creator/imageUrlInput"
+import MediaUpload from "../../components/MediaUpload"
 import BackButton from "../../components/backButton"
 import FormTabs from "../../components/creator/formTabs"
 import Loading, { Spinner } from "../../components/loading"
@@ -94,6 +95,8 @@ function FormSettings() {
     const [headerColor, setHeaderColor] = useState("")
     // Header gambar dipindah dari tab Detail (formEdit.tsx) ke sini.
     const [headerImage, setHeaderImage] = useState("")
+    // Media header (gambar/video/audio) yang di-upload ke storage server
+    const [headerMedia, setHeaderMedia] = useState<string | null>(null)
 
     const loadSettings = useCallback(async () => {
         if (!user || !id) return
@@ -120,6 +123,7 @@ function FormSettings() {
         })
         setHeaderColor(typeof data.header_color === "string" ? data.header_color : "")
         setHeaderImage(typeof data.header_image === "string" ? data.header_image : "")
+        setHeaderMedia(typeof data.media_url === "string" ? data.media_url : null)
         setLoading(false)
     }, [user, id, navigate])
 
@@ -140,11 +144,12 @@ function FormSettings() {
                 ...cachedFormEdit,
                 headerImage: headerImage.trim(),
                 headerColor: headerColor || "",
+                headerMedia: headerMedia || "",
             })
         }
-        const cachedFormList = pageGet<{ id: string; header_color?: string | null; header_image?: string | null }[] | undefined>(`formList:${user.id}`)
+        const cachedFormList = pageGet<{ id: string; header_color?: string | null; header_image?: string | null; media_url?: string | null }[] | undefined>(`formList:${user.id}`)
         if (cachedFormList) {
-            pageSet(`formList:${user.id}`, cachedFormList.map((f) => f.id === id ? { ...f, header_color: headerColor || null, header_image: headerImage.trim() || null } : f))
+            pageSet(`formList:${user.id}`, cachedFormList.map((f) => f.id === id ? { ...f, header_color: headerColor || null, header_image: headerImage.trim() || null, media_url: headerMedia || null } : f))
         }
     }
 
@@ -167,6 +172,7 @@ function FormSettings() {
                     allow_multiple_submissions: settings.allow_multiple_submissions,
                     header_color: headerColor || null,
                     header_image: headerImage.trim() || null,
+                    media_url: headerMedia.trim() || null,
                 })
                 .eq("id", id)
                 .select("id")
@@ -205,6 +211,7 @@ function FormSettings() {
                 .update({
                     header_color: headerColor || null,
                     header_image: headerImage.trim() || null,
+                    media_url: headerMedia.trim() || null,
                 })
                 .eq("id", id)
                 .select("id")
@@ -342,6 +349,16 @@ function FormSettings() {
                                         placeholder="https://... (tampil di halaman deskripsi form)"
                                         value={headerImage}
                                         onChange={setHeaderImage}
+                                    />
+                                </div>
+
+                                {/* Media Header (Upload Gambar/Video/Audio) */}
+                                <div className="px-3.5 sm:px-1 pb-1 mt-4">
+                                    <MediaUpload
+                                        value={headerMedia}
+                                        onChange={setHeaderMedia}
+                                        label="Media Header (Gambar/Video/Audio)"
+                                        helpText="Media ini akan ditampilkan sebagai banner header form. Mendukung gambar, video, dan audio."
                                     />
                                 </div>
 

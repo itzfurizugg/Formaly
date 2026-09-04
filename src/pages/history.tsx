@@ -18,8 +18,9 @@ interface HistoryItem {
         question_count: number
         passing_score: number | null
         show_score: boolean
-        header_image: string | null
-        header_color: string | null
+        header_image?: string | null
+        header_color?: string | null
+        media_url?: string | null
     }
 }
 
@@ -43,7 +44,7 @@ function History() {
             .select(`
                 id, form_id, total_score,
                 forms (
-                    id, title, duration, passing_score, show_score_to_respondent, header_image, header_color,
+                    id, title, duration, passing_score, show_score_to_respondent, header_image, header_color, media_url,
                     users:creator_id ( name ),
                     questions ( id )
                 )
@@ -127,6 +128,7 @@ function History() {
                                             hideScore={!item.forms?.show_score}
                                             headerImage={item.forms?.header_image || null}
                                             headerColor={item.forms?.header_color}
+                                            headerMedia={item.forms?.media_url || null}
                                             to={`/form/result/${item.id}`}
                                         />
                                     </motion.div>

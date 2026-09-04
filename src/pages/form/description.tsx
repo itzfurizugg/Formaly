@@ -21,6 +21,8 @@ interface FormItem {
     question_count: number
     status?: string
     header_image?: string | null
+    header_color?: string | null
+    media_url?: string | null
 }
 
 interface LocationState {
@@ -41,6 +43,7 @@ function FormDescriptionPage() {
 
     const [headerImage, setHeaderImage] = useState<string | null>(null)
     const [headerColor, setHeaderColor] = useState<string | null>(null)
+    const [headerMedia, setHeaderMedia] = useState<string | null>(null)
     const [loading, setLoading] = useState(false)
     const [showTokenModal, setShowTokenModal] = useState(false)
 
@@ -127,14 +130,15 @@ function FormDescriptionPage() {
         let cancelled = false
         supabase
             .from("forms")
-            .select("header_image, header_color, allow_multiple_submissions")
+            .select("header_image, header_color, media_url, allow_multiple_submissions")
             .eq("id", formId)
             .single()
             .then(({ data }) => {
                 if (cancelled) return
-                const row = data as { header_image?: string | null; header_color?: string | null; allow_multiple_submissions?: boolean | null } | null
+                const row = data as { header_image?: string | null; header_color?: string | null; media_url?: string | null; allow_multiple_submissions?: boolean | null } | null
                 setHeaderImage(row?.header_image || null)
                 setHeaderColor(row?.header_color || null)
+                setHeaderMedia(row?.media_url || null)
                 setAllowMultiple(!!row?.allow_multiple_submissions)
             })
         return () => { cancelled = true }
@@ -179,7 +183,7 @@ function FormDescriptionPage() {
 
                     <div className="w-full sm:max-w-3xl px-3.5 sm:px-0">
                         <div className="rounded-xl overflow-hidden border border-second shadow-sm">
-                            <FormHeader formId={form.id} title={form.title} headerImage={headerImage} headerColor={headerColor} />
+                            <FormHeader formId={form.id} title={form.title} headerImage={headerImage} headerColor={headerColor} headerMedia={headerMedia} />
                         </div>
                     </div>
 
