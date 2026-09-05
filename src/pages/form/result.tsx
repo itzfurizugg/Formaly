@@ -6,6 +6,7 @@ import { supabase } from "../../lib/supabase"
 import { useAuth } from "../../lib/auth-context"
 import Filter from "../../components/filter"
 import { RichText } from "../../components/richText"
+import QuestionMedia from "../../components/QuestionMedia"
 import { listContainer, listItem } from "../../lib/motion"
 import BackButton from "../../components/backButton"
 import FormHeader from "../../components/creator/formHeader"
@@ -321,23 +322,11 @@ function ResultPage() {
                                                                  {a.question?.image_question && (
                                                                      <img src={a.question.image_question} alt="Soal" className="max-h-40 object-contain mt-2 border border-second rounded-lg" />
                                                                  )}
-                                                                 {a.question?.media_url && (
-                                                                     <div className="mt-2">
-                                                                         {(() => {
-                                                                             const ext = a.question!.media_url!.toLowerCase().substring(a.question!.media_url!.lastIndexOf("."))
-                                                                             if ([".jpg", ".jpeg", ".png", ".webp"].includes(ext)) {
-                                                                                 return <img src={a.question!.media_url!} alt="Media soal" className="max-h-40 object-contain mt-2 border border-second rounded-lg" />
-                                                                             }
-                                                                             if ([".mp4", ".mkv", ".mov", ".avi"].includes(ext)) {
-                                                                                 return <video src={a.question!.media_url!} controls className="max-h-40 w-full mt-2 border border-second rounded-lg" preload="metadata" />
-                                                                             }
-                                                                             if ([".mp3"].includes(ext)) {
-                                                                                 return <audio src={a.question!.media_url!} controls className="w-full mt-2" preload="metadata" />
-                                                                             }
-                                                                             return null
-                                                                         })()}
-                                                                     </div>
-                                                                 )}
+                                                                  {a.question?.media_url && (
+                                                                      <div className="mt-2">
+                                                                          <QuestionMedia url={a.question.media_url} className="mt-2 border border-second rounded-lg" />
+                                                                      </div>
+                                                                  )}
                                                                  <div className="mt-3 space-y-1.5">
                                                                     {(a.question?.question_options || []).map((o) => {
                                                                         const selected = a.question?.question_type === "multiple_choice"
@@ -402,23 +391,11 @@ function ResultPage() {
                                                                  {a.question?.image_question && (
                                                                      <img src={a.question.image_question} alt="Soal" className="max-h-40 object-contain mt-2 border border-second rounded-lg" />
                                                                  )}
-                                                                 {a.question?.media_url && (
-                                                                     <div className="mt-2">
-                                                                         {(() => {
-                                                                             const ext = a.question!.media_url!.toLowerCase().substring(a.question!.media_url!.lastIndexOf("."))
-                                                                             if ([".jpg", ".jpeg", ".png", ".webp"].includes(ext)) {
-                                                                                 return <img src={a.question!.media_url!} alt="Media soal" className="max-h-40 object-contain mt-2 border border-second rounded-lg" />
-                                                                             }
-                                                                             if ([".mp4", ".mkv", ".mov", ".avi"].includes(ext)) {
-                                                                                 return <video src={a.question!.media_url!} controls className="max-h-40 w-full mt-2 border border-second rounded-lg" preload="metadata" />
-                                                                             }
-                                                                             if ([".mp3"].includes(ext)) {
-                                                                                 return <audio src={a.question!.media_url!} controls className="w-full mt-2" preload="metadata" />
-                                                                             }
-                                                                             return null
-                                                                         })()}
-                                                                     </div>
-                                                                 )}
+                                                                  {a.question?.media_url && (
+                                                                      <div className="mt-2">
+                                                                          <QuestionMedia url={a.question.media_url} className="mt-2 border border-second rounded-lg" />
+                                                                      </div>
+                                                                  )}
                                                                  <div className="mt-3 text-sm text-darks bg-base border border-second rounded-lg px-3.5 py-2 whitespace-pre-wrap break-words">
                                                                     {a.answer_text || "-"}
                                                                 </div>

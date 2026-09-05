@@ -3,6 +3,7 @@ import { useParams } from "react-router-dom"
 import { motion } from "motion/react"
 import { Check, Download, X } from "lucide-react"
 import { RichText } from "../../components/richText"
+import QuestionMedia from "../../components/QuestionMedia"
 import { supabase } from "../../lib/supabase"
 import { useAuth } from "../../lib/auth-context"
 import { exportSubmissionXlsx } from "../../lib/exportForm"
@@ -274,19 +275,7 @@ function SubmissionDetail() {
                                             )}
                                             {a.question?.media_url && (
                                                 <div className="mt-2">
-                                                    {(() => {
-                                                        const ext = a.question!.media_url!.toLowerCase().substring(a.question!.media_url!.lastIndexOf("."))
-                                                        if ([".jpg", ".jpeg", ".png", ".webp"].includes(ext)) {
-                                                            return <img src={a.question!.media_url!} alt="Media soal" className="max-h-40 object-contain mt-2 border border-second rounded-lg" />
-                                                        }
-                                                        if ([".mp4", ".mkv", ".mov", ".avi"].includes(ext)) {
-                                                            return <video src={a.question!.media_url!} controls className="max-h-40 w-full mt-2 border border-second rounded-lg" preload="metadata" />
-                                                        }
-                                                        if ([".mp3"].includes(ext)) {
-                                                            return <audio src={a.question!.media_url!} controls className="w-full mt-2" preload="metadata" />
-                                                        }
-                                                        return null
-                                                    })()}
+                                                    <QuestionMedia url={a.question.media_url} className="mt-2 border border-second rounded-lg" />
                                                 </div>
                                             )}
 

@@ -4,6 +4,7 @@ import { useNavigate, useParams, useLocation } from "react-router-dom"
 import { Check, Clock, ZoomIn, X } from "lucide-react"
 import PageIndicator from "../../components/pageindicator"
 import { RichText } from "../../components/richText"
+import QuestionMedia from "../../components/QuestionMedia"
 import { supabase } from "../../lib/supabase"
 import { useAuth } from "../../lib/auth-context"
 import { loginUrl } from "../../lib/redirect"
@@ -479,11 +480,10 @@ function FormPage() {
                                             }
                                             if ([".mp4", ".mkv", ".mov", ".avi"].includes(ext)) {
                                                 return (
-                                                    <video
-                                                        src={question.media_url!}
-                                                        controls
-                                                        className="max-h-60 w-full mt-2 border border-second rounded-lg"
-                                                        preload="metadata"
+                                                    <QuestionMedia
+                                                        url={question.media_url!}
+                                                        maxHeight="max-h-60"
+                                                        className="mt-2 border border-second rounded-lg"
                                                     />
                                                 )
                                             }
@@ -663,12 +663,12 @@ function FormPage() {
                                             transition={{ duration: 0.25 }}
                                             className="relative bg-white border border-second rounded-2xl w-full max-w-sm p-5 shadow-xl"
                                         >
-                                            <div className="text-center">
-                                                <div className="w-12 h-12 mx-auto rounded-full bg-done/10 flex items-center justify-center mb-3">
+                                            <div className="items-start text-start">
+                                                <div className="w-12 h-12 rounded-full bg-done/10 flex items-center justify-center mb-3">
                                                     <Check className="h-5 w-5 text-done" />
                                                 </div>
-                                                <h3 className="text-base font-bold text-darks">Kirim Jawaban</h3>
-                                                <p className="text-sm text-tinted mt-1.5">
+                                                <h3 className="text-base font-bold text-darks text-xl">Kirim Jawaban</h3>
+                                                <p className="text-sm text-tinted mt-1">
                                                     Apakah anda yakin ingin mengirim jawaban anda?
                                                 </p>
                                             </div>

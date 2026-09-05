@@ -8,6 +8,7 @@ import QuestionImportModal from "../../components/creator/QuestionImportModal"
 import CreateButton from "../../components/creator/createButton"
 import ImageUrlInput from "../../components/creator/imageUrlInput"
 import MediaUpload from "../../components/MediaUpload"
+import QuestionMedia from "../../components/QuestionMedia"
 import { isValidImageUrl } from "../../lib/imageUrl"
 import RichTextEditor, { RichText } from "../../components/richText"
 import { richTextToPlain } from "../../lib/richtext"
@@ -211,6 +212,31 @@ function Questions({ embedded = false }: { embedded?: boolean }) {
                 showAlert("Gagal menyimpan soal: " + rpcErr.message, "error")
             }
             return
+        }
+
+        // RPC save_question_with_options tidak menangani media_url, dan kolom
+        // questions.media_url tidak bisa di-update langsung oleh client (RLS).
+        // Persist media_url lewat RPC terpisah set_question_media (SECURITY
+        // DEFINER). Untuk soal baru (editingId null) kita ambil soal terbaru
+        // pada form ini sebagai target, karena RPC tersebut tidak mengembalikan id.
+        let mediaTargetId: string | null = editingId
+        if (!mediaTargetId) {
+            const { data: newest } = await supabase
+                .from("questions")
+                .select("id")
+                .eq("form_id", id)
+                .order("created_at", { ascending: false })
+                .limit(1)
+            if (newest && newest[0]) mediaTargetId = newest[0].id
+        }
+        if (mediaTargetId) {
+            const { error: mediaErr } = await supabase.rpc("set_question_media", {
+                p_question_id: mediaTargetId,
+                p_media_url: mediaUrl,
+            })
+            if (mediaErr && !/does not exist|not found|PGRST202/i.test(mediaErr.message)) {
+                showAlert("Gagal menyimpan media soal: " + mediaErr.message, "error")
+            }
         }
 
         // Jaminan posisi tersimpan di database: RPC lama bisa saja mengabaikan
@@ -577,19 +603,7 @@ function Questions({ embedded = false }: { embedded?: boolean }) {
                                         )}
                                         {q.media_url && (
                                             <div className="mt-2">
-                                                {(() => {
-                                                    const ext = q.media_url!.toLowerCase().substring(q.media_url!.lastIndexOf("."))
-                                                    if ([".jpg", ".jpeg", ".png", ".webp"].includes(ext)) {
-                                                        return <img src={q.media_url!} alt="Media soal" className="max-h-40 object-contain mt-2 border border-second rounded-lg" />
-                                                    }
-                                                    if ([".mp4", ".mkv", ".mov", ".avi"].includes(ext)) {
-                                                        return <video src={q.media_url!} controls className="max-h-40 w-full mt-2 border border-second rounded-lg" preload="metadata" />
-                                                    }
-                                                    if ([".mp3"].includes(ext)) {
-                                                        return <audio src={q.media_url!} controls className="w-full mt-2" preload="metadata" />
-                                                    }
-                                                    return null
-                                                })()}
+                                                <QuestionMedia url={q.media_url} className="mt-2 border border-second rounded-lg" />
                                             </div>
                                         )}
                                         {q.question_type !== "text" && q.question_options?.length > 0 && (
