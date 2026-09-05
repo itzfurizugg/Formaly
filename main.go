@@ -6,7 +6,9 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"log"
 	"net/http"
+	"net/url"
 	"os"
 	"path/filepath"
 	"strings"
@@ -36,6 +38,77 @@ func secureHeaders(next http.Handler) http.Handler {
 			w.WriteHeader(http.StatusOK)
 			return
 		}
+		next.ServeHTTP(w, r)
+	})
+}
+
+// allowedOrigins adalah daftar origin web yang boleh POST ke storage service ini.
+// Bisa dioverride lewat env var ALLOWED_ORIGINS (dipisah koma), kalau tidak ada
+// akan fallback ke default di bawah.
+func allowedOrigins() []string {
+	if v := os.Getenv("ALLOWED_ORIGINS"); v != "" {
+		parts := strings.Split(v, ",")
+		for i := range parts {
+			parts[i] = strings.TrimSpace(parts[i])
+		}
+		return parts
+	}
+	return []string{
+		"https://formaly.my.id",
+		"https://creator.formaly.my.id",
+		"http://localhost:5173",
+	}
+}
+
+// isOriginAllowed mengecek apakah origin/referer request ada di whitelist.
+func isOriginAllowed(raw string, allowed []string) bool {
+	if raw == "" {
+		return false
+	}
+
+	u, err := url.Parse(raw)
+	if err != nil {
+		return false
+	}
+	origin := u.Scheme + "://" + u.Host
+
+	for _, o := range allowed {
+		if origin == o {
+			return true
+		}
+	}
+	return false
+}
+
+// OnlyFromWebMiddleware menolak request POST yang tidak membawa header Origin
+// atau Referer dari domain yang di-whitelist.
+//
+// Catatan: header Origin/Referer bisa dipalsukan oleh non-browser client
+// (curl, Postman, dsb) kalau pengirimnya sengaja niat. Middleware ini efektif
+// menahan request iseng/otomatis yang polos, tapi bukan pengganti autentikasi
+// asli.
+func OnlyFromWebMiddleware(next http.Handler) http.Handler {
+	allowed := allowedOrigins()
+
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != http.MethodPost {
+			next.ServeHTTP(w, r)
+			return
+		}
+
+		origin := r.Header.Get("Origin")
+		if origin == "" {
+			origin = r.Header.Get("Referer")
+		}
+
+		if !isOriginAllowed(origin, allowed) {
+			log.Printf("blocked POST from disallowed origin: %q (path=%s)", origin, r.URL.Path)
+			w.Header().Set("Content-Type", "application/json")
+			w.WriteHeader(http.StatusForbidden)
+			json.NewEncoder(w).Encode(ResponseJSON{Error: "Forbidden: request must come from the web app"})
+			return
+		}
+
 		next.ServeHTTP(w, r)
 	})
 }
@@ -215,7 +288,7 @@ func main() {
 	// Menggunakan Port Unik Pilihanmu (:48484)
 	port := ":48484"
 	fmt.Printf("🚀 Server Go Storage Formaly berjalan di port %s...\n", port)
-	if err := http.ListenAndServe(port, secureHeaders(mux)); err != nil {
+	if err := http.ListenAndServe(port, secureHeaders(OnlyFromWebMiddleware(mux))); err != nil {
 		fmt.Printf("Server error: %v\n", err)
 	}
 }

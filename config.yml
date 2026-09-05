@@ -1,5 +1,5 @@
-tunnel: tunnel.id
-credentials-file: /your/cloudflare/json
+tunnel: id
+credentials-file: /path/to/cloudflared/id
 
 ingress:
   - hostname: storage.formaly.my.id
