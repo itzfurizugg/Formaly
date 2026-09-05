@@ -7,8 +7,14 @@ import { easeOutExpo } from "../lib/motion"
 interface MediaUploadProps {
     /** URL media saat ini (jika ada) */
     value?: string | null
-    /** Callback saat media berubah (null jika dihapus) */
-    onChange: (url: string | null) => void
+    /**
+     * Callback saat media berubah (null jika dihapus).
+     * Kalau ini melakukan autosave ke server (mis. update Supabase), kembalikan
+     * Promise yang reject kalau gagal — MediaUpload akan rollback (hapus file
+     * yang baru diupload) kalau autosave-nya gagal, biar tidak ada file
+     * nyangkut di storage tanpa referensi di database.
+     */
+    onChange: (url: string | null) => void | Promise<void>
     /** Label opsional untuk area upload */
     label?: string
     /** Teks bantuan tambahan */
@@ -44,16 +50,43 @@ function MediaUpload({ value, onChange, label = "Media", helpText }: MediaUpload
             setUploading(true)
             setError(null)
 
+            // Simpan referensi media lama sebelum diganti, untuk dihapus nanti
+            // kalau replace-nya berhasil.
+            const previousValue = value
+
+            let uploadedUrl: string
             try {
-                const url = await uploadMedia(file)
-                onChange(url)
+                uploadedUrl = await uploadMedia(file)
             } catch (err) {
                 setError(err instanceof Error ? err.message : "Upload gagal. Silakan coba lagi.")
-            } finally {
                 setUploading(false)
+                return
             }
+
+            try {
+                await Promise.resolve(onChange(uploadedUrl))
+            } catch (err) {
+                // Autosave/commit gagal setelah file berhasil diupload ke storage.
+                // Jangan biarkan file nyangkut tanpa referensi, langsung hapus lagi.
+                await deleteMedia(uploadedUrl).catch(() => {
+                    console.error("Gagal rollback (hapus) media setelah autosave gagal:", uploadedUrl)
+                })
+                setError(err instanceof Error ? err.message : "Gagal menyimpan media. Silakan coba lagi.")
+                setUploading(false)
+                return
+            }
+
+            // Autosave berhasil. Kalau ini menggantikan media lama, hapus yang
+            // lama dari storage (best-effort, tidak mem-block UI kalau gagal).
+            if (previousValue && previousValue !== uploadedUrl) {
+                deleteMedia(previousValue).catch(() => {
+                    console.error("Gagal menghapus media lama saat replace:", previousValue)
+                })
+            }
+
+            setUploading(false)
         },
-        [onChange]
+        [onChange, value]
     )
 
     const handleDrop = useCallback(
@@ -90,18 +123,26 @@ function MediaUpload({ value, onChange, label = "Media", helpText }: MediaUpload
         if (!value) return
 
         setUploading(true)
+        setError(null)
+        const targetUrl = value
+
         try {
-            const success = await deleteMedia(value)
-            if (success) {
-                onChange(null)
-            } else {
-                setError("Gagal menghapus media dari server.")
-            }
-        } catch {
-            setError("Gagal menghapus media. Silakan coba lagi.")
-        } finally {
+            // Commit dulu ke server (mis. set kolom media_url jadi null) sebelum
+            // menghapus file fisiknya, biar tidak ada state di mana DB masih
+            // merujuk ke file yang sudah tidak ada.
+            await Promise.resolve(onChange(null))
+        } catch (err) {
+            setError(err instanceof Error ? err.message : "Gagal menghapus media. Silakan coba lagi.")
             setUploading(false)
+            return
         }
+
+        const success = await deleteMedia(targetUrl)
+        if (!success) {
+            console.error("Gagal menghapus file dari storage:", targetUrl)
+        }
+
+        setUploading(false)
     }, [value, onChange])
 
     const handleClickUpload = useCallback(() => {

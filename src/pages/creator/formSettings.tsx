@@ -172,7 +172,7 @@ function FormSettings() {
                     allow_multiple_submissions: settings.allow_multiple_submissions,
                     header_color: headerColor || null,
                     header_image: headerImage.trim() || null,
-                    media_url: headerMedia.trim() || null,
+                    media_url: headerMedia?.trim() || null,
                 })
                 .eq("id", id)
                 .select("id")
@@ -211,7 +211,7 @@ function FormSettings() {
                 .update({
                     header_color: headerColor || null,
                     header_image: headerImage.trim() || null,
-                    media_url: headerMedia.trim() || null,
+                    media_url: headerMedia?.trim() || null,
                 })
                 .eq("id", id)
                 .select("id")
@@ -340,16 +340,6 @@ function FormSettings() {
                                             </button>
                                         </div>
                                     </div>
-                                </div>
-
-                                {/* Header gambar */}
-                                <div className="px-3.5 sm:px-1 pb-1 mt-4">
-                                    <ImageUrlInput
-                                        label="URL Gambar Header"
-                                        placeholder="https://... (tampil di halaman deskripsi form)"
-                                        value={headerImage}
-                                        onChange={setHeaderImage}
-                                    />
                                 </div>
 
                                 {/* Media Header (Upload Gambar/Video/Audio) */}

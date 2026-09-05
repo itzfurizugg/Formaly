@@ -230,6 +230,7 @@ function FormEdit() {
                         createdAt,
                         headerImage,
                         headerColor,
+                        headerMedia,
                     })
                 }
                 return
@@ -254,19 +255,20 @@ function FormEdit() {
                 .map((r) => (r.tag as unknown as { name: string } | null)?.name)
                 .filter((n): n is string => !!n)
             setTags(verifiedTags)
-            if (user && id) {
-                pageSet<FormEditCache>(`formEdit:${user.id}:${id}`, {
-                    title,
-                    description,
-                    duration,
-                    passingScore,
-                    status,
-                    tags: verifiedTags,
-                    createdAt,
-                    headerImage,
-                    headerColor,
-                })
-            }
+if (user && id) {
+                    pageSet<FormEditCache>(`formEdit:${user.id}:${id}`, {
+                        title,
+                        description,
+                        duration,
+                        passingScore,
+                        status,
+                        tags: verifiedTags,
+                        createdAt,
+                        headerImage,
+                        headerColor,
+                        headerMedia,
+                    })
+                }
             if (verifiedTags.includes(name)) {
                 showAlert("Tag tidak bisa dihapus dari server. Periksa izin database.", "warning")
             }
@@ -331,19 +333,20 @@ function FormEdit() {
         try {
             await saveFormData()
             const newTags = await syncTags()
-            if (user && id) {
-                pageSet<FormEditCache>(`formEdit:${user.id}:${id}`, {
-                    title,
-                    description,
-                    duration,
-                    passingScore,
-                    status,
-                    tags: newTags,
-                    createdAt,
-                    headerImage,
-                    headerColor,
-                })
-            }
+if (user && id) {
+                    pageSet<FormEditCache>(`formEdit:${user.id}:${id}`, {
+                        title,
+                        description,
+                        duration,
+                        passingScore,
+                        status,
+                        tags: newTags,
+                        createdAt,
+                        headerImage,
+                        headerColor,
+                        headerMedia,
+                    })
+                }
             alertSaveSuccess()
         } catch (err) {
             alertSaveError(err instanceof Error ? err.message : "Gagal menyimpan perubahan.")

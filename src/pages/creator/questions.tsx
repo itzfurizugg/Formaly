@@ -145,7 +145,7 @@ function Questions({ embedded = false }: { embedded?: boolean }) {
         setScoreValue(Number(q.score_value) || 0)
         setOrderIndex(q.order_index || 0)
         setImageQuestion(q.image_question || "")
-        setMediaUrl(q.media_url || "")
+        setMediaUrl(q.media_url)
         setIsRequired(!!q.is_required)
         setOptions((q.question_options || []).map((o) => ({ id: o.id, option_text: o.option_text, is_correct: o.is_correct })))
         setShowEditor(true)
@@ -191,7 +191,6 @@ function Questions({ embedded = false }: { embedded?: boolean }) {
             p_score_value: scoreValue,
             p_order_index: orderIndex,
             p_image_question: imageQuestion || null,
-            p_media_url: mediaUrl || null,
             p_is_required: isRequired,
             p_options: options.map((o, idx) => ({
                 id: o.id || null,

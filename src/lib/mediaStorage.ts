@@ -15,6 +15,7 @@ const ALLOWED_EXTENSIONS = new Set([
     ".mov",
     ".avi",
     ".mp3",
+    ".gif"
 ])
 
 const MAX_FILE_SIZE = 100 * 1024 * 1024 // 100 MB
@@ -159,7 +160,7 @@ export function getMediaType(filenameOrUrl: string): "image" | "video" | "audio"
     if ([".jpg", ".jpeg", ".png", ".webp"].includes(ext)) {
         return "image"
     }
-    if ([".mp4", ".mkv", ".mov", ".avi"].includes(ext)) {
+    if ([".mp4", ".mkv", ".mov", ".avi", ".gif"].includes(ext)) {
         return "video"
     }
     if ([".mp3"].includes(ext)) {
