@@ -1,8 +1,17 @@
-import { useState, useCallback, useRef } from "react"
+import { useState, useCallback, useRef, useMemo } from "react"
 import { motion } from "motion/react"
 import { Upload, X, AlertCircle } from "lucide-react"
 import { uploadMedia, deleteMedia, getMediaType } from "../lib/mediaStorage"
 import { easeOutExpo } from "../lib/motion"
+
+/** Jenis media yang bisa dipilih. */
+export type MediaType = "image" | "video" | "audio"
+
+const TYPE_EXTENSIONS: Record<MediaType, string[]> = {
+    image: [".jpg", ".jpeg", ".png", ".webp"],
+    video: [".mp4", ".mkv", ".mov", ".avi", ".gif"],
+    audio: [".mp3"],
+}
 
 interface MediaUploadProps {
     /** URL media saat ini (jika ada) */
@@ -19,16 +28,22 @@ interface MediaUploadProps {
     label?: string
     /** Teks bantuan tambahan */
     helpText?: string
+    /** Jenis media yang boleh di-upload. Default: semua (gambar, video, audio). */
+    allow?: MediaType[]
 }
 
-const ALLOWED_EXTENSIONS = [".jpg", ".jpeg", ".png", ".webp", ".mp4", ".mkv", ".mov", ".avi", ".mp3"]
 const MAX_FILE_SIZE = 100 * 1024 * 1024
 
-function MediaUpload({ value, onChange, label = "Media", helpText }: MediaUploadProps) {
+function MediaUpload({ value, onChange, label = "Media", helpText, allow = ["image", "video", "audio"] }: MediaUploadProps) {
     const [uploading, setUploading] = useState(false)
     const [error, setError] = useState<string | null>(null)
     const [dragActive, setDragActive] = useState(false)
     const fileInputRef = useRef<HTMLInputElement | null>(null)
+
+    const allowedExtensions = useMemo(
+        () => allow.flatMap((type) => TYPE_EXTENSIONS[type]),
+        [allow]
+    )
 
     const mediaType = value ? getMediaType(value) : null
 
@@ -36,8 +51,8 @@ function MediaUpload({ value, onChange, label = "Media", helpText }: MediaUpload
         async (file: File) => {
             // Validasi ekstensi
             const ext = file.name.toLowerCase().substring(file.name.lastIndexOf("."))
-            if (![".jpg", ".jpeg", ".png", ".webp", ".mp4", ".mkv", ".mov", ".avi", ".mp3"].includes(ext)) {
-                setError("Format file tidak didukung. Gunakan: JPG, PNG, WebP, MP4, MKV, MOV, AVI, MP3.")
+            if (!allowedExtensions.includes(ext as never)) {
+                setError(`Format file tidak didukung. Gunakan: ${allowedExtensions.join(", ").toUpperCase()}.`)
                 return
             }
 
@@ -149,7 +164,7 @@ function MediaUpload({ value, onChange, label = "Media", helpText }: MediaUpload
         fileInputRef.current?.click()
     }, [])
 
-    const formatList = ALLOWED_EXTENSIONS.map((ext) => ext.toUpperCase()).join(", ")
+    const formatList = allowedExtensions.map((ext) => ext.toUpperCase()).join(", ")
 
     // Preview media berdasarkan tipe
     const renderPreview = () => {
@@ -220,7 +235,7 @@ function MediaUpload({ value, onChange, label = "Media", helpText }: MediaUpload
                         fileInputRef.current = el
                     }}
                     type="file"
-                    accept={ALLOWED_EXTENSIONS.join(",")}
+                    accept={allowedExtensions.join(",")}
                     onChange={handleFileInputChange}
                     className="absolute inset-0 opacity-0 cursor-pointer"
                     disabled={uploading}

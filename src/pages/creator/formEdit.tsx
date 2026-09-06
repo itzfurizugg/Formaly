@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback, type FormEvent } from "react"
+import { useEffect, useState, useCallback, useRef, type FormEvent } from "react"
 import { useNavigate, useParams } from "react-router-dom"
 import {
     BookOpenText,
@@ -9,18 +9,19 @@ import {
     Trash2,
     Pipette,
     Repeat,
+    Upload,
 } from "lucide-react"
 import { supabase } from "../../lib/supabase"
 import { useAuth } from "../../lib/auth-context"
 import { alertSaveError, alertSaveSuccess, confirmDelete, showAlert } from "../../lib/alerts"
 import { PRESET_HEADER_COLORS } from "../../lib/colorbase"
 import { isValidImageUrl } from "../../lib/imageUrl"
+import { uploadMedia, deleteMedia, getMediaType } from "../../lib/mediaStorage"
 import { pageGet, pageSet } from "../../lib/pageCache"
 import RichTextEditor from "../../components/richText"
 import BackButton from "../../components/backButton"
 import FormTabs from "../../components/creator/formTabs"
 import FormHeader from "../../components/creator/formHeader"
-import MediaUpload from "../../components/MediaUpload"
 import Loading, { Spinner } from "../../components/loading"
 
 interface FormSettingsData {
@@ -83,6 +84,9 @@ const SETTING_ROWS: {
         },
     ]
 
+// Banner header hanya menerima gambar & video (bukan audio).
+const HEADER_EXTENSIONS = [".jpg", ".jpeg", ".png", ".webp", ".mp4", ".mkv", ".mov", ".avi", ".gif"]
+
 interface FormEditCache {
     title: string
     description: string
@@ -119,11 +123,14 @@ function FormEdit() {
     const [saving, setSaving] = useState(false)
     const [savingSettings, setSavingSettings] = useState(false)
     const [savingBanner, setSavingBanner] = useState(false)
+    const [uploadingBanner, setUploadingBanner] = useState(false)
+    const [bannerError, setBannerError] = useState<string | null>(null)
+    const bannerInputRef = useRef<HTMLInputElement | null>(null)
     const [deleting, setDeleting] = useState(false)
     const [settings, setSettings] = useState<FormSettingsData>(cached?.settings ?? DEFAULTS)
     const [headerColor, setHeaderColor] = useState(cached?.headerColor ?? "")
     const [headerImage, setHeaderImage] = useState(cached?.headerImage ?? "")
-    const [headerMedia, setHeaderMedia] = useState(cached?.headerMedia ?? "")
+    const [headerMedia, setHeaderMedia] = useState<string | null>(cached?.headerMedia ?? "")
 
     const cacheKey = user && id ? `formEdit:${user.id}:${id}` : null
 
@@ -245,7 +252,7 @@ function FormEdit() {
             createdAt,
             headerImage,
             headerColor,
-            headerMedia,
+            headerMedia: headerMedia || "",
             settings,
         })
     }
@@ -366,6 +373,46 @@ function FormEdit() {
         }
     }
 
+    // Upload media banner: hanya gambar & video. Mengganti media lama langsung
+    // menghapus file lama dari storage supaya tidak ada file nyangkut.
+    const handleBannerFile = async (file: File) => {
+        const ext = file.name.toLowerCase().substring(file.name.lastIndexOf("."))
+        if (!HEADER_EXTENSIONS.includes(ext as never)) {
+            setBannerError("Format tidak didukung. Untuk banner gunakan gambar (JPG, PNG, WebP) atau video (MP4, MKV, MOV, AVI).")
+            return
+        }
+        if (file.size > 100 * 1024 * 1024) {
+            setBannerError("Ukuran file melebihi batas maksimal 100 MB.")
+            return
+        }
+
+        setUploadingBanner(true)
+        setBannerError(null)
+        try {
+            const url = await uploadMedia(file)
+            const previous = headerMedia
+            setHeaderMedia(url)
+            if (previous && previous !== url) {
+                deleteMedia(previous).catch(() => {
+                    console.error("Gagal menghapus media banner lama saat replace:", previous)
+                })
+            }
+        } catch (err) {
+            setBannerError(err instanceof Error ? err.message : "Upload gagal. Silakan coba lagi.")
+        } finally {
+            setUploadingBanner(false)
+        }
+    }
+
+    const handleBannerRemove = async () => {
+        if (!headerMedia) return
+        const target = headerMedia
+        setHeaderMedia(null)
+        deleteMedia(target).catch(() => {
+            console.error("Gagal menghapus media banner:", target)
+        })
+    }
+
     const handleDeleteForm = () => {
         if (!user || !id) return
         confirmDelete({
@@ -405,12 +452,12 @@ function FormEdit() {
                         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-stretch">
                             {/* 1. Detail Form (kiri) */}
                             <div className="lg:col-span-7 bg-white border border-second p-3 sm:p-4 lg:p-6 shadow-sm rounded-xl flex flex-col justify-between">
-                                <div className="flex items-center gap-2 mb-1 mt-2 ml-2">
+                                {/* <div className="flex items-center gap-2 mb-1 mt-2 ml-2">
                                     <h2 className="font-semibold text-darks text-lg">Detail Form</h2>
                                 </div>
                                 <p className="text-sm text-tinted mb-4 ml-2">
                                     Judul, deskripsi, durasi, dan status soalnya dikelola di sini.
-                                </p>
+                                </p> */}
 
                                 <form onSubmit={handleSaveDetail} className="space-y-3">
                                     <div className="overflow-hidden rounded-lg border border-second">
@@ -501,17 +548,74 @@ function FormEdit() {
                                     </p>
 
                                     <div className="px-3.5 sm:px-1 mb-4">
-                                        <div
-                                            className={`relative h-20 rounded-xl overflow-hidden flex items-center px-4 ${headerColor ? "" : "bg-gradient-to-br from-slate-600 to-slate-800"}`}
-                                            style={headerColor ? { backgroundColor: headerColor } : undefined}
-                                        >
-                                            <div
-                                                className="absolute inset-0 opacity-[0.08]"
-                                                style={{ backgroundImage: "radial-gradient(circle, white 1px, transparent 1px)", backgroundSize: "16px 16px" }}
+                                        <div className="relative overflow-hidden rounded-xl border border-second bg-base">
+                                            {/* Pratinjau: media banner jika ada, selain itu warna/gradien */}
+                                            {headerMedia ? (
+                                                getMediaType(headerMedia) === "video" ? (
+                                                    <video src={headerMedia} controls className="w-full aspect-video object-contain bg-base" preload="metadata" />
+                                                ) : (
+                                                    <img src={headerMedia} alt="Pratinjau banner" loading="lazy" className="w-full aspect-video object-cover" />
+                                                )
+                                            ) : (
+                                                <div
+                                                    className={`relative flex items-center justify-between px-4 aspect-video ${headerColor ? "" : "bg-gradient-to-br from-slate-600 to-slate-800"}`}
+                                                    style={headerColor ? { backgroundColor: headerColor } : undefined}
+                                                >
+                                                    <div
+                                                        className="absolute inset-0 opacity-[0.08]"
+                                                        style={{ backgroundImage: "radial-gradient(circle, white 1px, transparent 1px)", backgroundSize: "16px 16px" }}
+                                                    />
+                                                    <span className="relative z-10 text-sm font-semibold text-white drop-shadow-sm">Pratinjau Banner</span>
+                                                    <span className="relative z-10 text-xs font-mono text-white/80">{headerColor || "gradien acak"}</span>
+                                                </div>
+                                            )}
+
+                                            {/* Overlay aksi: pilih/ganti & hapus media */}
+                                            {uploadingBanner && (
+                                                <div className="absolute inset-0 z-20 bg-darks/50 flex items-center justify-center">
+                                                    <div className="flex items-center gap-2 text-white text-sm font-medium">
+                                                        <Spinner size={16} /> Mengupload...
+                                                    </div>
+                                                </div>
+                                            )}
+                                            {!uploadingBanner && (
+                                                <div className="absolute right-2 top-2 flex items-center gap-1.5 z-20">
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => bannerInputRef.current?.click()}
+                                                        className="btn btn-sm rounded-full bg-darks/85 text-base border-none backdrop-blur hover:bg-darks transition-colors"
+                                                    >
+                                                        <Upload className="h-3.5 w-3.5" />
+                                                        {headerMedia ? "Ganti Media" : "Unggah Gambar/Video"}
+                                                    </button>
+                                                    {headerMedia && (
+                                                        <button
+                                                            type="button"
+                                                            onClick={handleBannerRemove}
+                                                            aria-label="Hapus media banner"
+                                                            className="btn btn-sm rounded-full bg-wrong/85 text-white border-none backdrop-blur hover:bg-wrong transition-colors"
+                                                        >
+                                                            <Trash2 className="h-3.5 w-3.5" />
+                                                        </button>
+                                                    )}
+                                                </div>
+                                            )}
+
+                                            <input
+                                                ref={bannerInputRef}
+                                                type="file"
+                                                accept={HEADER_EXTENSIONS.join(",")}
+                                                className="hidden"
+                                                onChange={(e) => {
+                                                    const file = e.target.files?.[0]
+                                                    if (file) handleBannerFile(file)
+                                                    e.target.value = ""
+                                                }}
                                             />
-                                            <span className="relative z-10 text-sm font-semibold text-white drop-shadow-sm">Pratinjau Banner</span>
-                                            <span className="relative z-10 ml-auto text-xs font-mono text-white/80">{headerColor || "gradien acak"}</span>
                                         </div>
+                                        {bannerError && (
+                                            <p className="mt-2 text-xs text-wrong">{bannerError}</p>
+                                        )}
                                     </div>
 
                                     <div className="px-3.5 sm:px-1 pb-1">
@@ -557,15 +661,6 @@ function FormEdit() {
                                             </button>
                                         </div>
                                     </div>
-                                </div>
-
-                                <div className="px-3.5 sm:px-1 pb-1 mt-4">
-                                    <MediaUpload
-                                        value={headerMedia}
-                                        onChange={setHeaderMedia}
-                                        label="Media Header (Gambar/Video/Audio)"
-                                        helpText="Media ini akan ditampilkan sebagai banner header form. Mendukung gambar, video, dan audio."
-                                    />
                                 </div>
 
                                 <div className="px-3.5 sm:px-1 mt-3 pb-1">
