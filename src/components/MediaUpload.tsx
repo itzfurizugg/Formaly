@@ -101,7 +101,7 @@ function MediaUpload({ value, onChange, label = "Media", helpText, allow = ["ima
 
             setUploading(false)
         },
-        [onChange, value]
+        [onChange, value, allowedExtensions]
     )
 
     const handleDrop = useCallback(

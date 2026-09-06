@@ -552,13 +552,13 @@ function FormEdit() {
                                             {/* Pratinjau: media banner jika ada, selain itu warna/gradien */}
                                             {headerMedia ? (
                                                 getMediaType(headerMedia) === "video" ? (
-                                                    <video src={headerMedia} controls className="w-full aspect-video object-contain bg-base" preload="metadata" />
+                                                    <video src={headerMedia} controls className="w-full aspect-[3105/1100] object-contain bg-base" preload="metadata" />
                                                 ) : (
-                                                    <img src={headerMedia} alt="Pratinjau banner" loading="lazy" className="w-full aspect-video object-cover" />
+                                                    <img src={headerMedia} alt="Pratinjau banner" loading="lazy" className="w-full aspect-[3105/1100] object-cover" />
                                                 )
                                             ) : (
                                                 <div
-                                                    className={`relative flex items-center justify-between px-4 aspect-video ${headerColor ? "" : "bg-gradient-to-br from-slate-600 to-slate-800"}`}
+                                                    className={`relative flex items-center justify-between px-4 aspect-[3105/1100] ${headerColor ? "" : "bg-gradient-to-br from-slate-600 to-slate-800"}`}
                                                     style={headerColor ? { backgroundColor: headerColor } : undefined}
                                                 >
                                                     <div
