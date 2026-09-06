@@ -53,6 +53,7 @@ const CreatorSubmissionDetail = lazy(() => creatorEntry().then((m) => ({ default
 const CreatorShared = lazy(() => creatorEntry().then((m) => ({ default: m.CreatorShared })))
 const CreatorLayout = lazy(() => creatorEntry().then((m) => ({ default: m.CreatorLayout })))
 const CreatorGalileo = lazy(() => import("./pages/galileo/chat"))
+const CreatorGalileoGenerate = lazy(() => import("./pages/galileo/generate"))
 
 const hideNavPaths = ["/login", "/register", "/auth", "/forgot-password", "/reset-password", "/form/description", "/form", "/form/list", "/form/result", "/credit"]
 
@@ -237,6 +238,14 @@ function AppShell() {
                 element={
                   <CreatorGuard>
                     <CreatorGalileo />
+                  </CreatorGuard>
+                }
+              />
+              <Route
+                path="/creator/galileo/generate"
+                element={
+                  <CreatorGuard>
+                    <CreatorGalileoGenerate />
                   </CreatorGuard>
                 }
               />

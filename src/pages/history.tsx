@@ -54,7 +54,7 @@ function History() {
 
         if (data) {
             setItems((data as unknown as HistoryRow[]).map((item) => {
-                const f = item.forms as unknown as { title: string; duration: number; passing_score?: number | null; show_score_to_respondent?: boolean | null; header_image?: string | null; header_color?: string | null; users?: { name: string } | null; questions?: { id: string }[] | null }
+                const f = item.forms as unknown as { title: string; duration: number; passing_score?: number | null; show_score_to_respondent?: boolean | null; header_image?: string | null; header_color?: string | null; media_url?: string | null; users?: { name: string } | null; questions?: { id: string }[] | null }
                 return {
                     id: item.id,
                     form_id: item.form_id,
@@ -68,6 +68,7 @@ function History() {
                         show_score: f?.show_score_to_respondent !== false,
                         header_image: f?.header_image || null,
                         header_color: f?.header_color || null,
+                        media_url: f?.media_url || null,
                     },
                 }
             }))

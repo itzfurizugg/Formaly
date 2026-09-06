@@ -22,8 +22,6 @@ interface FormRow {
     header_image?: string | null
     header_color?: string | null
     media_url?: string | null
-    questions: { id: string }[]
-    submissions: { id: string }[]
 }
 
 function FormList() {
@@ -45,9 +43,7 @@ function FormList() {
         const { data, error: err } = await supabase
             .from("forms")
             .select(`
-                id, title, description, status, duration, passing_score, created_at, header_image, header_color, media_url,
-                questions ( id ),
-                submissions ( id )
+                id, title, description, status, duration, passing_score, created_at, header_image, header_color, media_url
             `)
             .eq("creator_id", user.id)
             .order("created_at", { ascending: false })
@@ -123,7 +119,7 @@ function FormList() {
                                 {/* h-full agar kartu melar mengikuti tinggi baris grid — semua kartu
                     satu baris jadi sama tinggi seperti tampilan di halaman Responden */}
                                 <div className="card bg-white border border-second rounded-xl transition-colors hover:bg-base-200 h-full overflow-hidden">
-                                    <FormHeader formId={form.id} title={form.title} headerImage={form.header_image} headerColor={form.header_color} headerMedia={form.media_url} />
+                                    <FormHeader formId={form.id} title={form.title} headerImage={form.header_image} headerColor={form.header_color} headerMedia={form.media_url} play={false} />
                                     <div className="card-body gap-3 p-4">
                                         <div className="flex items-start justify-between gap-3">
                                             <div className="min-w-0">

@@ -193,7 +193,7 @@ function Tokens() {
                                 onClick={openCreateModal}
                                 className="btn bg-darks text-base border-none rounded-full h-10 min-h-0 px-4 hover:opacity-90 transition-opacity flex items-center gap-1.5"
                             >
-                                <Plus className="h-4 w-4" /> <span>Buat Token</span>
+                                <Plus className="h-4 w-4" /> <span className="hidden sm:block">Buat Token</span>
                             </button>
                         </div>
 

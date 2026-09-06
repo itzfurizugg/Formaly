@@ -27,6 +27,13 @@ interface FormHeaderProps {
     headerColor?: string | null
     /** Media header (gambar/video/audio) yang di-upload ke storage server. */
     headerMedia?: string | null
+    /**
+     * Autoplay video header. Halaman single header (deskripsi/ujian/hasil/edit)
+     * biarkan true. Kartu daftar (dashboard, responden, history) pasang false:
+     * video tetap tampil sebagai frame statis tapi tidak diputar biar loading
+     * cepat & tidak berat.
+     */
+    play?: boolean
 }
 
 const HEX_COLOR_RE = /^#(?:[0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/
@@ -40,7 +47,7 @@ function getMediaType(filenameOrUrl: string): "image" | "video" | "audio" | null
     return null
 }
 
-function FormHeader({ formId, title, headerImage, headerColor, headerMedia }: FormHeaderProps) {
+function FormHeader({ formId, title, headerImage, headerColor, headerMedia, play = true }: FormHeaderProps) {
     const [failed, setFailed] = useState(false)
 
     // Media header (upload) menang atas header_image dan header_color.
@@ -53,6 +60,7 @@ function FormHeader({ formId, title, headerImage, headerColor, headerMedia }: Fo
                     src={headerMedia}
                     alt={`Header ${title}`}
                     loading="lazy"
+                    decoding="async"
                     onError={() => setFailed(true)}
                     className="w-full aspect-[3105/1100] object-cover border-b border-second"
                 />
@@ -62,10 +70,12 @@ function FormHeader({ formId, title, headerImage, headerColor, headerMedia }: Fo
             return (
                 <video
                     src={headerMedia}
-                    autoPlay
-                    loop
+                    autoPlay={play}
+                    loop={play}
                     muted
                     playsInline
+                    preload={play ? "auto" : "metadata"}
+                    onError={() => setFailed(true)}
                     className="w-full aspect-[3105/1100] object-cover border-b border-second"
                 />
             )
@@ -87,6 +97,7 @@ function FormHeader({ formId, title, headerImage, headerColor, headerMedia }: Fo
                 src={headerImage}
                 alt={`Header ${title}`}
                 loading="lazy"
+                decoding="async"
                 onError={() => setFailed(true)}
                 className="w-full aspect-[3105/1100] object-cover border-b border-second"
             />

@@ -121,8 +121,6 @@ function FormEdit() {
     const [createdAt, setCreatedAt] = useState(cached?.createdAt ?? "")
     const [loading, setLoading] = useState(!cached)
     const [saving, setSaving] = useState(false)
-    const [savingSettings, setSavingSettings] = useState(false)
-    const [savingBanner, setSavingBanner] = useState(false)
     const [uploadingBanner, setUploadingBanner] = useState(false)
     const [bannerError, setBannerError] = useState<string | null>(null)
     const bannerInputRef = useRef<HTMLInputElement | null>(null)
@@ -276,30 +274,23 @@ function FormEdit() {
         }
     }
 
-    const handleSaveDetail = async (e: FormEvent) => {
-        e.preventDefault()
+    // Satu tombol simpan untuk SEMUA perubahan: detail form + banner + pengaturan.
+    const handleSaveAll = async (e?: FormEvent) => {
+        if (e) e.preventDefault()
         if (!id) return
-        setSaving(true)
-
-        try {
-            await saveFormData()
-            saveCache()
-            alertSaveSuccess()
-        } catch (err) {
-            alertSaveError(err instanceof Error ? err.message : "Gagal menyimpan perubahan.")
-        } finally {
-            setSaving(false)
-        }
-    }
-
-    const handleSaveSettings = async () => {
-        if (!id) return
+        // Validasi sama seperti aturan ImageUrlInput: link langsung ke file gambar.
         if (headerImage.trim() && !isValidImageUrl(headerImage)) {
             showAlert("URL gambar header harus diawali http:// atau https://.", "error")
             return
         }
-        setSavingSettings(true)
+        setSaving(true)
+
         try {
+            await saveFormData()
+
+            // Banner + pengaturan (beberapa kolom ini mungkin belum ada di
+            // database sebelum migration dijalankan — diketik longgar biar
+            // kolom yang tak dikenal tidak error sebelum diterapkan).
             const { data, error } = await supabase
                 .from("forms")
                 .update({
@@ -322,54 +313,16 @@ function FormEdit() {
 
             syncBannerCaches()
             saveCache()
-            alertSaveSuccess("Pengaturan berhasil disimpan.")
+            alertSaveSuccess()
         } catch (err) {
-            const msg = err instanceof Error ? err.message : "Gagal menyimpan pengaturan."
+            const msg = err instanceof Error ? err.message : "Gagal menyimpan perubahan."
             if (/could not find the .* column|does not exist|PGRST204/i.test(msg)) {
                 showAlert("Kolom pengaturan/warna header belum ada di database. Terapkan migration di supabase/migrations terlebih dahulu.", "error")
                 return
             }
             alertSaveError(msg)
         } finally {
-            setSavingSettings(false)
-        }
-    }
-
-    // Tombol simpan khusus untuk warna/gambar header — hanya menyimpan banner,
-    // tidak menyentuh toggle pengaturan di bawah.
-    const handleSaveBanner = async () => {
-        if (!id) return
-        if (headerImage.trim() && !isValidImageUrl(headerImage)) {
-            showAlert("URL gambar header harus diawali http:// atau https://.", "error")
-            return
-        }
-        setSavingBanner(true)
-        try {
-            const { data, error } = await supabase
-                .from("forms")
-                .update({
-                    header_color: headerColor || null,
-                    header_image: headerImage.trim() || null,
-                    media_url: headerMedia?.trim() || null,
-                })
-                .eq("id", id)
-                .select("id")
-                .maybeSingle()
-
-            if (error) throw new Error(error.message)
-            if (!data) throw new Error("Perubahan tidak tersimpan. Pastikan kamu pemilik form ini.")
-
-            syncBannerCaches()
-            showAlert("Warna header berhasil disimpan.", "success")
-        } catch (err) {
-            const msg = err instanceof Error ? err.message : "Gagal menyimpan warna header."
-            if (/could not find the .* column|does not exist|PGRST204/i.test(msg)) {
-                showAlert("Kolom warna header belum ada di database. Terapkan migration di supabase/migrations terlebih dahulu.", "error")
-                return
-            }
-            alertSaveError(msg)
-        } finally {
-            setSavingBanner(false)
+            setSaving(false)
         }
     }
 
@@ -443,13 +396,19 @@ function FormEdit() {
         <>
             <Loading show={loading} />
             {!loading && (
-                <div className="flex flex-col items-center px-3.5 sm:px-6 py-5 sm:py-10">
+                <div className="flex flex-col items-center px-3.5 sm:px-6 pt-5 pb-28 sm:pb-10 sm:py-10">
                     <div className="w-full xl:max-w-7xl lg:max-w-5xl">
                         <BackButton to="/creator" />
 
-                        <FormTabs id={id} active="detail" />
+                        {/* Tabs sticky di atas; yang ikut scroll cuma kolom kiri.
+                        Border transparan bawah dipakai untuk mencegah margin-bottom FormTabs
+                        collapse keluar dari box sticky, sehingga strip 24px di bawah pill ikut
+                        dilapisi bg-second dan shadow card tidak bocor saat lewat di bawahnya. */}
+                        <div className="lg:sticky lg:top-0 lg:z-30 lg:bg-second lg:pt-1 bg-base-300 w-full">
+                            <FormTabs id={id} active="detail" />
+                        </div>
 
-                        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-stretch">
+                        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start ml-1">
                             {/* 1. Detail Form (kiri) */}
                             <div className="lg:col-span-7 bg-white border border-second p-3 sm:p-4 lg:p-6 shadow-sm rounded-xl flex flex-col justify-between">
                                 {/* <div className="flex items-center gap-2 mb-1 mt-2 ml-2">
@@ -459,7 +418,7 @@ function FormEdit() {
                                     Judul, deskripsi, durasi, dan status soalnya dikelola di sini.
                                 </p> */}
 
-                                <form onSubmit={handleSaveDetail} className="space-y-3">
+                                <form onSubmit={handleSaveAll} className="space-y-3">
                                     <div className="overflow-hidden rounded-lg border border-second">
                                         <FormHeader formId={id ?? ""} title={title} headerImage={headerImage} headerColor={headerColor} headerMedia={headerMedia} />
                                     </div>
@@ -529,7 +488,7 @@ function FormEdit() {
                                     <button
                                         type="submit"
                                         disabled={saving}
-                                        className="btn bg-darks text-base border-none w-full hover:opacity-90 transition-opacity disabled:opacity-60 mb-2 mt-5"
+                                        className="btn bg-darks text-base border-none w-full hidden sm:flex hover:opacity-90 transition-opacity disabled:opacity-60 mb-2 mt-5"
                                     >
                                         {saving ? <Spinner size={16} /> : <Save className="h-4 w-4" />}
                                         Simpan Perubahan
@@ -537,146 +496,162 @@ function FormEdit() {
                                 </form>
                             </div>
 
-                            {/* 2. Tampilan Banner (kanan atas) */}
-                            <div className="lg:col-span-5 bg-white border border-second p-3 sm:p-4 lg:p-6 shadow-sm rounded-xl flex flex-col justify-between">
-                                <div>
-                                    <div className="flex items-center gap-2 mb-1 mt-2 ml-2">
-                                        <h2 className="font-semibold text-darks text-lg">Tampilan Banner</h2>
-                                    </div>
-                                    <p className="text-sm text-tinted mb-4 ml-2">
-                                        Sesuaikan warna tema banner atau gunakan gambar kustom.
-                                    </p>
+                            {/* Kolom kanan sticky: Tampilan Banner + Hapus Form */}
+                            <div className="lg:col-span-5 space-y-6 lg:sticky lg:top-20 lg:self-start mr-1">
+                                {/* 2. Tampilan Banner */}
+                                <div className="bg-white border border-second p-3 sm:p-4 lg:p-6 shadow-sm rounded-xl">
+                                    <div>
+                                        <div className="flex items-center gap-2 mb-1 mt-2 ml-2">
+                                            <h2 className="font-semibold text-darks text-lg">Tampilan Banner</h2>
+                                        </div>
+                                        <p className="text-sm text-tinted mb-4 ml-2">
+                                            Sesuaikan warna tema banner atau gunakan gambar kustom.
+                                        </p>
 
-                                    <div className="px-3.5 sm:px-1 mb-4">
-                                        <div className="relative overflow-hidden rounded-xl border border-second bg-base">
-                                            {/* Pratinjau: media banner jika ada, selain itu warna/gradien */}
-                                            {headerMedia ? (
-                                                getMediaType(headerMedia) === "video" ? (
-                                                    <video src={headerMedia} controls className="w-full aspect-[3105/1100] object-contain bg-base" preload="metadata" />
+                                        <div className="px-3.5 sm:px-1 mb-4">
+                                            <div className="relative overflow-hidden rounded-xl border border-second bg-base">
+                                                {/* Pratinjau: media banner jika ada, selain itu warna/gradien */}
+                                                {headerMedia ? (
+                                                    getMediaType(headerMedia) === "video" ? (
+                                                        <video src={headerMedia} controls className="w-full aspect-[3105/1100] object-contain bg-base" preload="metadata" />
+                                                    ) : (
+                                                        <img src={headerMedia} alt="Pratinjau banner" loading="lazy" className="w-full aspect-[3105/1100] object-cover" />
+                                                    )
                                                 ) : (
-                                                    <img src={headerMedia} alt="Pratinjau banner" loading="lazy" className="w-full aspect-[3105/1100] object-cover" />
-                                                )
-                                            ) : (
-                                                <div
-                                                    className={`relative flex items-center justify-between px-4 aspect-[3105/1100] ${headerColor ? "" : "bg-gradient-to-br from-slate-600 to-slate-800"}`}
-                                                    style={headerColor ? { backgroundColor: headerColor } : undefined}
-                                                >
                                                     <div
-                                                        className="absolute inset-0 opacity-[0.08]"
-                                                        style={{ backgroundImage: "radial-gradient(circle, white 1px, transparent 1px)", backgroundSize: "16px 16px" }}
-                                                    />
-                                                    <span className="relative z-10 text-sm font-semibold text-white drop-shadow-sm">Pratinjau Banner</span>
-                                                    <span className="relative z-10 text-xs font-mono text-white/80">{headerColor || "gradien acak"}</span>
-                                                </div>
-                                            )}
-
-                                            {/* Overlay aksi: pilih/ganti & hapus media */}
-                                            {uploadingBanner && (
-                                                <div className="absolute inset-0 z-20 bg-darks/50 flex items-center justify-center">
-                                                    <div className="flex items-center gap-2 text-white text-sm font-medium">
-                                                        <Spinner size={16} /> Mengupload...
-                                                    </div>
-                                                </div>
-                                            )}
-                                            {!uploadingBanner && (
-                                                <div className="absolute right-2 top-2 flex items-center gap-1.5 z-20">
-                                                    <button
-                                                        type="button"
-                                                        onClick={() => bannerInputRef.current?.click()}
-                                                        className="btn btn-sm rounded-full bg-darks/85 text-base border-none backdrop-blur hover:bg-darks transition-colors"
+                                                        className={`relative flex items-center justify-between px-4 aspect-[3105/1100] ${headerColor ? "" : "bg-gradient-to-br from-slate-600 to-slate-800"}`}
+                                                        style={headerColor ? { backgroundColor: headerColor } : undefined}
                                                     >
-                                                        <Upload className="h-3.5 w-3.5" />
-                                                        {headerMedia ? "Ganti Media" : "Unggah Gambar/Video"}
-                                                    </button>
-                                                    {headerMedia && (
+                                                        <div
+                                                            className="absolute inset-0 opacity-[0.08]"
+                                                            style={{ backgroundImage: "radial-gradient(circle, white 1px, transparent 1px)", backgroundSize: "16px 16px" }}
+                                                        />
+                                                        <span className="relative z-10 text-sm font-semibold text-white drop-shadow-sm">Pratinjau Banner</span>
+                                                        <span className="relative z-10 text-xs font-mono text-white/80">{headerColor || "gradien acak"}</span>
+                                                    </div>
+                                                )}
+
+                                                {/* Overlay aksi: pilih/ganti & hapus media */}
+                                                {uploadingBanner && (
+                                                    <div className="absolute inset-0 z-20 bg-darks/50 flex items-center justify-center">
+                                                        <div className="flex items-center gap-2 text-white text-sm font-medium">
+                                                            <Spinner size={16} /> Mengupload...
+                                                        </div>
+                                                    </div>
+                                                )}
+                                                {!uploadingBanner && (
+                                                    <div className="absolute right-2 top-2 flex items-center gap-1.5 z-20">
                                                         <button
                                                             type="button"
-                                                            onClick={handleBannerRemove}
-                                                            aria-label="Hapus media banner"
-                                                            className="btn btn-sm rounded-full bg-wrong/85 text-white border-none backdrop-blur hover:bg-wrong transition-colors"
+                                                            onClick={() => bannerInputRef.current?.click()}
+                                                            className="btn btn-sm rounded-full bg-darks/85 text-base border-none shadow-none backdrop-blur hover:bg-darks transition-colors"
                                                         >
-                                                            <Trash2 className="h-3.5 w-3.5" />
+                                                            <Upload className="h-3.5 w-3.5" />
+                                                            {headerMedia ? "Ganti Media" : "Unggah Gambar/Video"}
                                                         </button>
-                                                    )}
-                                                </div>
+                                                        {headerMedia && (
+                                                            <button
+                                                                type="button"
+                                                                onClick={handleBannerRemove}
+                                                                aria-label="Hapus media banner"
+                                                                className="btn btn-sm rounded-full bg-wrong/85 text-white border-none shadow-none backdrop-blur hover:bg-wrong transition-colors"
+                                                            >
+                                                                <Trash2 className="h-3.5 w-3.5" />
+                                                            </button>
+                                                        )}
+                                                    </div>
+                                                )}
+
+                                                <input
+                                                    ref={bannerInputRef}
+                                                    type="file"
+                                                    accept={HEADER_EXTENSIONS.join(",")}
+                                                    className="hidden"
+                                                    onChange={(e) => {
+                                                        const file = e.target.files?.[0]
+                                                        if (file) handleBannerFile(file)
+                                                        e.target.value = ""
+                                                    }}
+                                                />
+                                            </div>
+                                            {bannerError && (
+                                                <p className="mt-2 text-xs text-wrong">{bannerError}</p>
                                             )}
-
-                                            <input
-                                                ref={bannerInputRef}
-                                                type="file"
-                                                accept={HEADER_EXTENSIONS.join(",")}
-                                                className="hidden"
-                                                onChange={(e) => {
-                                                    const file = e.target.files?.[0]
-                                                    if (file) handleBannerFile(file)
-                                                    e.target.value = ""
-                                                }}
-                                            />
                                         </div>
-                                        {bannerError && (
-                                            <p className="mt-2 text-xs text-wrong">{bannerError}</p>
-                                        )}
-                                    </div>
 
-                                    <div className="px-3.5 sm:px-1 pb-1">
-                                        <div className="flex flex-wrap items-center gap-2">
-                                            {PRESET_HEADER_COLORS.map((color) => (
-                                                <button
-                                                    key={color}
-                                                    type="button"
-                                                    aria-label={`Pilih warna ${color}`}
-                                                    onClick={() => setHeaderColor(color)}
-                                                    style={{ backgroundColor: color }}
-                                                    className={`h-8 w-8 rounded-full transition-all duration-150 hover:scale-110 ${headerColor.toLowerCase() === color.toLowerCase()
+                                        <div className="px-3.5 sm:px-1 pb-1">
+                                            <div className="flex flex-wrap items-center gap-2">
+                                                {PRESET_HEADER_COLORS.map((color) => (
+                                                    <button
+                                                        key={color}
+                                                        type="button"
+                                                        aria-label={`Pilih warna ${color}`}
+                                                        onClick={() => setHeaderColor(color)}
+                                                        style={{ backgroundColor: color }}
+                                                        className={`h-8 w-8 rounded-full transition-all duration-150 hover:scale-110 ${headerColor.toLowerCase() === color.toLowerCase()
+                                                            ? "ring-2 ring-darks ring-offset-2 ring-offset-white"
+                                                            : ""
+                                                            }`}
+                                                    />
+                                                ))}
+
+                                                <label
+                                                    title="Warna kustom"
+                                                    className={`relative h-8 w-8 rounded-full overflow-hidden cursor-pointer border border-dashed border-second bg-base items-center justify-center hover:bg-second transition-colors ${headerColor && !PRESET_HEADER_COLORS.some((c) => c.toLowerCase() === headerColor.toLowerCase())
                                                         ? "ring-2 ring-darks ring-offset-2 ring-offset-white"
                                                         : ""
-                                                        }`}
-                                                />
-                                            ))}
+                                                        } flex`}
+                                                >
+                                                    <input
+                                                        type="color"
+                                                        aria-label="Warna kustom"
+                                                        value={/^#(?:[0-9a-fA-F]{6})$/.test(headerColor) ? headerColor : "#007dcc"}
+                                                        onChange={(e) => setHeaderColor(e.target.value)}
+                                                        className="absolute inset-0 opacity-0 cursor-pointer"
+                                                    />
+                                                    <Pipette className="h-3.5 w-3.5 text-tinted pointer-events-none" />
+                                                </label>
 
-                                            <label
-                                                title="Warna kustom"
-                                                className={`relative h-8 w-8 rounded-full overflow-hidden cursor-pointer border border-dashed border-second bg-base items-center justify-center hover:bg-second transition-colors ${headerColor && !PRESET_HEADER_COLORS.some((c) => c.toLowerCase() === headerColor.toLowerCase())
-                                                    ? "ring-2 ring-darks ring-offset-2 ring-offset-white"
-                                                    : ""
-                                                    } flex`}
-                                            >
-                                                <input
-                                                    type="color"
-                                                    aria-label="Warna kustom"
-                                                    value={/^#(?:[0-9a-fA-F]{6})$/.test(headerColor) ? headerColor : "#007dcc"}
-                                                    onChange={(e) => setHeaderColor(e.target.value)}
-                                                    className="absolute inset-0 opacity-0 cursor-pointer"
-                                                />
-                                                <Pipette className="h-3.5 w-3.5 text-tinted pointer-events-none" />
-                                            </label>
-
-                                            <button
-                                                type="button"
-                                                onClick={() => setHeaderColor("")}
-                                                disabled={!headerColor}
-                                                className="btn btn-sm rounded-full bg-base text-tinted border border-second hover:bg-white disabled:opacity-50 transition-all duration-200 text-xs py-1 h-8 min-h-0"
-                                            >
-                                                Reset
-                                            </button>
+                                                <button
+                                                    type="button"
+                                                    onClick={() => setHeaderColor("")}
+                                                    disabled={!headerColor}
+                                                    className="btn btn-sm rounded-full bg-base text-tinted border border-second hover:bg-white disabled:opacity-50 transition-all duration-200 text-xs py-1 h-8 min-h-0"
+                                                >
+                                                    Reset
+                                                </button>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
 
-                                <div className="px-3.5 sm:px-1 mt-3 pb-1">
-                                    <button
-                                        type="button"
-                                        onClick={handleSaveBanner}
-                                        disabled={savingBanner}
-                                        className="btn w-full bg-darks text-base border-none rounded-full hover:opacity-90 transition-all duration-200 hover:scale-[1.02] active:scale-[0.98] disabled:opacity-60"
-                                    >
-                                        {savingBanner ? <Spinner size={16} /> : <Save className="h-4 w-4" />}
-                                        Simpan Warna Header
-                                    </button>
+                                {/* 4. Hapus Form */}
+                                <div className="bg-white border border-second p-3 sm:p-4 lg:p-6 shadow-sm rounded-xl flex flex-col justify-between">
+                                    <div>
+                                        <div className="flex items-center gap-2 mb-1 mt-2 ml-2">
+                                            <h2 className="font-semibold text-wrong text-lg">Hapus Form</h2>
+                                        </div>
+                                        <p className="text-sm text-tinted mb-4 ml-2 leading-relaxed">
+                                            Menghapus form ini secara permanen bersama semua soal, token, submission, dan
+                                            jawaban responden. Tindakan ini tidak bisa dibatalkan.
+                                        </p>
+                                    </div>
+
+                                    <div className="flex sm:justify-end">
+                                        <button
+                                            type="button"
+                                            onClick={handleDeleteForm}
+                                            disabled={deleting}
+                                            className="btn rounded-full bg-wrong/10 text-wrong border border-wrong/20 hover:bg-wrong/20 transition-all duration-200 hover:scale-[1.02] active:scale-[0.98] w-fit justify-end ml-2 mb-2"
+                                        >
+                                            {deleting ? <Spinner size={16} /> : <Trash2 className="h-4 w-4" />}
+                                            Hapus Form
+                                        </button>
+                                    </div>
                                 </div>
                             </div>
 
-                            {/* 3. Pengaturan Form (kiri bawah) */}
+                            {/* 3. Pengaturan Form (kiri bawah, selebar Detail Form) */}
                             <div className="lg:col-span-7 bg-white border border-second p-3 sm:p-4 lg:p-6 shadow-sm rounded-xl flex flex-col justify-between">
                                 <div>
                                     <div className="flex items-center gap-2 mb-1 mt-2 ml-2">
@@ -710,41 +685,23 @@ function FormEdit() {
                                         ))}
                                     </div>
                                 </div>
-
-                                <button
-                                    type="button"
-                                    onClick={handleSaveSettings}
-                                    disabled={savingSettings}
-                                    className="btn bg-darks text-base border-none w-[60%] m-3 sm:w-full hover:opacity-90 transition-all duration-200 hover:scale-[1.02] active:scale-[0.98] disabled:opacity-60 mt-4 mb-4 mx-auto rounded-full"
-                                >
-                                    {savingSettings ? <Spinner size={16} /> : <p>Simpan Pengaturan</p>}
-                                </button>
                             </div>
 
-                            {/* 4. Zona Destruktif (kanan bawah) */}
-                            <div className="lg:col-span-5 bg-white border border-second p-3 sm:p-4 lg:p-6 shadow-sm rounded-xl flex flex-col justify-between mb-10 sm:mb-0">
-                                <div>
-                                    <div className="flex items-center gap-2 mb-1 mt-2 ml-2">
-                                        <h2 className="font-semibold text-wrong text-lg">Hapus Form</h2>
-                                    </div>
-                                    <p className="text-sm text-tinted mb-4 ml-2 leading-relaxed">
-                                        Menghapus form ini secara permanen bersama semua soal, token, submission, dan
-                                        jawaban responden. Tindakan ini tidak bisa dibatalkan.
-                                    </p>
-                                </div>
-
-                                <div className="flex sm:justify-end">
-                                    <button
-                                        type="button"
-                                        onClick={handleDeleteForm}
-                                        disabled={deleting}
-                                        className="btn rounded-full bg-wrong/10 text-wrong border border-wrong/20 hover:bg-wrong/20 transition-all duration-200 hover:scale-[1.02] active:scale-[0.98] w-fit justify-end ml-2 mb-2"
-                                    >
-                                        {deleting ? <Spinner size={16} /> : <Trash2 className="h-4 w-4" />}
-                                        Hapus Form
-                                    </button>
-                                </div>
                             </div>
+                    </div>
+
+                    {/* Tombol simpan mobile: fixed di bawah, pola "Mulai Mengerjakan" */}
+                    <div className="fixed bottom-0 left-0 right-0 z-40 pointer-events-none sm:hidden">
+                        <div className="px-4 pb-4 pt-30 bg-gradient-to-t from-base-300 from-40% to-transparent">
+                            <button
+                                type="button"
+                                onClick={() => handleSaveAll()}
+                                disabled={saving}
+                                className="w-3/4 h-14 bg-darks mx-auto text-lg text-white font-bold rounded-full flex items-center justify-center gap-2 pointer-events-auto shadow-lg hover:opacity-90 transition-opacity disabled:opacity-60"
+                            >
+                                {saving ? <Spinner size={16} /> : <Save className="h-4 w-4" />}
+                                Simpan Perubahan
+                            </button>
                         </div>
                     </div>
                 </div>

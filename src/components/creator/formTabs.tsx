@@ -35,7 +35,7 @@ function FormTabs({ id, active }: { id?: string; active: FormTabKey }) {
     if (!id) return null
 
     return (
-        <div className="flex flex-wrap gap-2 mb-6 lg:mt-6">
+        <div className="flex flex-wrap gap-2 mb-6 lg:mt-6 lg:pb-3 lg:ml-1">
             {TABS.map(({ key, path, label, icon: Icon }) => (
                 <button
                     key={key}

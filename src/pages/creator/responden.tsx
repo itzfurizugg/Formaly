@@ -17,8 +17,8 @@ interface FormRow {
     header_color?: string | null
     media_url?: string | null
     duration: number
-    questions: { id: string }[]
-    submissions: { id: string }[]
+    questions: { count: number }[]
+    submissions: { count: number }[]
 }
 
 function CreatorResponden() {
@@ -34,8 +34,8 @@ function CreatorResponden() {
             .from("forms")
             .select(`
                 id, title, description, duration, header_image, header_color, media_url,
-                questions ( id ),
-                submissions ( id )
+                questions ( count ),
+                submissions ( count )
             `)
             .eq("creator_id", user.id)
             .order("created_at", { ascending: false })
@@ -84,7 +84,7 @@ function CreatorResponden() {
                                     aria-label={`Lihat submission ${form.title}`}
                                     className="group card bg-white border border-second rounded-xl transition-all duration-300 hover:shadow-lg hover:shadow-darks/5 w-full text-left h-full overflow-hidden active:scale-[0.95]"
                                 >
-                                    <FormHeader formId={form.id} title={form.title} headerImage={form.header_image} headerColor={form.header_color} headerMedia={form.media_url} />
+                                    <FormHeader formId={form.id} title={form.title} headerImage={form.header_image} headerColor={form.header_color} headerMedia={form.media_url} play={false} />
                                     <div className="card-body gap-4 p-4 sm:p-5">
                                         <div className="flex items-start gap-3">
                                             <div className="min-w-0 flex-1">
@@ -93,7 +93,7 @@ function CreatorResponden() {
                                                 </h2>
                                                 <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-tinted mt-1">
                                                     <span className="inline-flex items-center gap-1">
-                                                        <ListChecks className="h-3.5 w-3.5" /> {form.questions?.length || 0} soal
+                                                        <ListChecks className="h-3.5 w-3.5" /> {form.questions?.[0]?.count ?? 0} soal
                                                     </span>
                                                     <span className="inline-flex items-center gap-1">
                                                         <Timer className="h-3.5 w-3.5" /> {form.duration ? `${form.duration} menit` : "Tanpa Waktu"}
@@ -106,7 +106,7 @@ function CreatorResponden() {
                                         <div className="mt-auto flex items-center justify-between pt-2 border-t border-dashed border-second">
                                             <span className="inline-flex items-center gap-1.5 rounded-full text-darks text-xs font-semibold px-1">
                                                 <ChartNoAxesColumn className="h-3.5 w-3.5" />
-                                                Total Responden: {form.submissions?.length || 0}
+                                                Total Responden: {form.submissions?.[0]?.count ?? 0}
                                             </span>
                                         </div>
                                     </div>
