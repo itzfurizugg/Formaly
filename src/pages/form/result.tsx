@@ -26,7 +26,7 @@ interface AnswerRow {
         image_question: string | null
         media_url: string | null
         order_index: number
-        question_options: { id: string; option_text: string; is_correct: boolean }[]
+        question_options: { id: string; option_text: string; is_correct: boolean; media_url?: string | null }[]
     } | null
 }
 
@@ -143,14 +143,32 @@ function ResultPage() {
     const typeLabel = (t: string) => {
         if (t === "multiple_choice") return "Pilihan Ganda"
         if (t === "text") return "Isian"
+        if (t === "dropdown") return "Dropdown"
+        if (t === "file_upload") return "Upload File"
+        if (t === "date_time") return "Tanggal & Jam"
         return "Pilihan Tunggal"
+    }
+
+    // Tipe soal tanpa pilihan jawaban (tidak dinilai benar/salah otomatis).
+    const isOpenType = (t: string | null | undefined) =>
+        t === "text" || t === "file_upload" || t === "date_time"
+
+    const fmtAnswerText = (t: string | null | undefined, text: string | null | undefined) => {
+        if (!text) return "-"
+        const s = String(text)
+        if (t === "date_time") {
+            if (s.includes("T")) return new Date(s).toLocaleString("id-ID")
+            if (s.includes(":")) return s
+            return new Date(s + "T00:00:00").toLocaleDateString("id-ID", { day: "numeric", month: "long", year: "numeric" })
+        }
+        return s
     }
 
     const fmtDate = (d: string | null) => (d ? new Date(d).toLocaleString("id-ID") : "-")
 
     const isCorrect = (a: AnswerRow) => {
         const q = a.question
-        if (!q || q.question_type === "text") return false
+        if (!q || isOpenType(q.question_type)) return false
         const correct = q.question_options.filter((o) => o.is_correct).map((o) => o.id)
         const selected = q.question_type === "multiple_choice"
             ? a.selected_options || []
@@ -160,13 +178,13 @@ function ResultPage() {
 
     const hasCorrectAnswer = (a: AnswerRow) => {
         const q = a.question
-        if (!q || q.question_type === "text") return false
+        if (!q || isOpenType(q.question_type)) return false
         return q.question_options.some((o) => o.is_correct)
     }
 
     const correctCount = answers.filter(isCorrect).length
-    const textCount = answers.filter((a) => a.question?.question_type === "text").length
-    const noAnswerCount = answers.filter((a) => a.question?.question_type !== "text" && !hasCorrectAnswer(a)).length
+    const textCount = answers.filter((a) => isOpenType(a.question?.question_type)).length
+    const noAnswerCount = answers.filter((a) => !isOpenType(a.question?.question_type) && !hasCorrectAnswer(a)).length
 
     // Pengaturan form: kolom yang belum ada di DB (undefined) dianggap tampil
     // supaya perilaku lama tidak berubah sebelum migrasi diterapkan.
@@ -184,14 +202,14 @@ function ResultPage() {
 
     const filteredAnswers = answers.filter((a) => {
         if (filter === "correct") return isCorrect(a)
-        if (filter === "wrong") return a.question?.question_type !== "text" && hasCorrectAnswer(a) && !isCorrect(a)
-        if (filter === "ungraded") return a.question?.question_type !== "text" && !hasCorrectAnswer(a)
-        if (filter === "text") return a.question?.question_type === "text"
+        if (filter === "wrong") return !isOpenType(a.question?.question_type) && hasCorrectAnswer(a) && !isCorrect(a)
+        if (filter === "ungraded") return !isOpenType(a.question?.question_type) && !hasCorrectAnswer(a)
+        if (filter === "text") return isOpenType(a.question?.question_type)
         return true
     })
 
-    const pgAnswers = filteredAnswers.filter((a) => a.question?.question_type !== "text")
-    const textAnswers = filteredAnswers.filter((a) => a.question?.question_type === "text")
+    const pgAnswers = filteredAnswers.filter((a) => !isOpenType(a.question?.question_type))
+    const textAnswers = filteredAnswers.filter((a) => isOpenType(a.question?.question_type))
 
     return (
         <>
@@ -294,7 +312,7 @@ function ResultPage() {
                                             {pgAnswers.length > 0 && (
                                                 <div className="space-y-3">
                                                     <div className="flex items-center gap-3">
-                                                        <h3 className="text-sm font-bold text-darks whitespace-nowrap">Pilihan Ganda (PG)</h3>
+                                                        <h3 className="text-sm font-bold text-darks whitespace-nowrap">Soal Pilihan (PG)</h3>
                                                         <div className="flex-1 h-px bg-second"></div>
                                                     </div>
                                                     {pgAnswers.map((a) => {
@@ -358,10 +376,15 @@ function ResultPage() {
                                                                                     ) : (
                                                                                         <span className="w-3.5 h-3.5 shrink-0" />
                                                                                     )
-                                                                                ) : selected ? (
-                                                                                    <span className="h-2 w-2 shrink-0 rounded-full bg-darks/50" />
-                                                                                ) : (
-                                                                                    <span className="w-3.5 h-3.5 shrink-0" />
+) : selected ? (
+                                                    <span className="h-2 w-2 shrink-0 rounded-full bg-darks/50" />
+                                                ) : (
+                                                    <span className="w-3.5 h-3.5 shrink-0" />
+                                                )}
+                                                                                {o.media_url && (
+                                                                                    <span className="shrink-0">
+                                                                                        <QuestionMedia url={o.media_url} maxHeight="max-h-14" className="rounded-md border border-second" />
+                                                                                    </span>
                                                                                 )}
                                                                                 <RichText as="span" html={o.option_text} />
                                                                             </div>
@@ -376,7 +399,7 @@ function ResultPage() {
                                             {textAnswers.length > 0 && (
                                                 <div className="space-y-3">
                                                     <div className="flex items-center gap-3">
-                                                        <h3 className="text-sm font-bold text-darks whitespace-nowrap">Soal Isian</h3>
+                                                        <h3 className="text-sm font-bold text-darks whitespace-nowrap">Soal Isian &amp; Jawaban Bebas</h3>
                                                         <div className="flex-1 h-px bg-second"></div>
                                                     </div>
                                                     {textAnswers.map((a) => {
@@ -397,7 +420,7 @@ function ResultPage() {
                                                                       </div>
                                                                   )}
                                                                  <div className="mt-3 text-sm text-darks bg-base border border-second rounded-lg px-3.5 py-2 whitespace-pre-wrap break-words">
-                                                                    {a.answer_text || "-"}
+                                                                    {fmtAnswerText(a.question?.question_type, a.answer_text)}
                                                                 </div>
                                                             </motion.div>
                                                         )

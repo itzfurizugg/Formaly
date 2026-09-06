@@ -26,7 +26,7 @@ interface AnswerRow {
         image_question: string | null
         media_url: string | null
         order_index: number
-        question_options: { id: string; option_text: string; is_correct: boolean }[]
+        question_options: { id: string; option_text: string; is_correct: boolean; media_url?: string | null }[]
     } | null
 }
 
@@ -122,7 +122,25 @@ function SubmissionDetail() {
     const typeLabel = (t: string) => {
         if (t === "multiple_choice") return "Pilihan Ganda"
         if (t === "text") return "Isian"
+        if (t === "dropdown") return "Dropdown"
+        if (t === "file_upload") return "Upload File"
+        if (t === "date_time") return "Tanggal & Jam"
         return "Pilihan Tunggal"
+    }
+
+    // Tipe soal tanpa pilihan jawaban (tidak dinilai benar/salah otomatis).
+    const isOpenType = (t: string | null | undefined) =>
+        t === "text" || t === "file_upload" || t === "date_time"
+
+    const fmtAnswerText = (t: string | null | undefined, text: string | null | undefined) => {
+        if (!text) return "-"
+        const s = String(text)
+        if (t === "date_time") {
+            if (s.includes("T")) return new Date(s).toLocaleString("id-ID")
+            if (s.includes(":")) return s
+            return new Date(s + "T00:00:00").toLocaleDateString("id-ID", { day: "numeric", month: "long", year: "numeric" })
+        }
+        return s
     }
 
     const fmtDate = (d: string | null) => {
@@ -135,13 +153,13 @@ function SubmissionDetail() {
 
     const hasCorrectAnswer = (a: AnswerRow) => {
         const q = a.question
-        if (!q || q.question_type === "text") return false
+        if (!q || isOpenType(q.question_type)) return false
         return q.question_options.some((o) => o.is_correct)
     }
 
     const isCorrect = (a: AnswerRow) => {
         const q = a.question
-        if (!q || q.question_type === "text") return false
+        if (!q || isOpenType(q.question_type)) return false
         if (!hasCorrectAnswer(a)) return false
         const correct = q.question_options.filter((o) => o.is_correct).map((o) => o.id)
         const selected = q.question_type === "multiple_choice"
@@ -151,8 +169,8 @@ function SubmissionDetail() {
     }
 
     const correctCount = answers.filter(isCorrect).length
-    const textCount = answers.filter((a) => a.question?.question_type === "text").length
-    const noAnswerCount = answers.filter((a) => a.question?.question_type !== "text" && !hasCorrectAnswer(a)).length
+    const textCount = answers.filter((a) => isOpenType(a.question?.question_type)).length
+    const noAnswerCount = answers.filter((a) => !isOpenType(a.question?.question_type) && !hasCorrectAnswer(a)).length
     const wrongCount = answers.length - correctCount - textCount - noAnswerCount
 
     if (error) {
@@ -228,7 +246,7 @@ function SubmissionDetail() {
                                     <span>
                                         <span className="text-pass font-semibold">{correctCount} benar </span> &middot;{" "}
                                         <span className="text-wrong font-semibold">{wrongCount} salah</span>
-                                        {textCount > 0 && <>&nbsp;&middot;&nbsp;<span className="text-tinted">{textCount} isian</span></>}
+                                        {textCount > 0 && <>&nbsp;&middot;&nbsp;<span className="text-tinted">{textCount} isian/bebas</span></>}
                                     </span>
                                 </div>
                             </div>
@@ -251,7 +269,7 @@ function SubmissionDetail() {
                                             <div className="flex items-center gap-2 flex-wrap mb-1">
                                                 <span className="text-sm font-bold text-darks">Soal {idx + 1}</span>
                                                 <span className="badge badge-ghost text-tinted rounded-full text-xs">{typeLabel(a.question?.question_type || "")}</span>
-                                                {a.question?.question_type !== "text" &&
+                                                {!isOpenType(a.question?.question_type) &&
                                                     (hasCorrectAnswer(a) ? (
                                                         isCorrect(a) ? (
                                                             <span className="text-xs text-pass font-medium flex items-center gap-1">
@@ -279,9 +297,9 @@ function SubmissionDetail() {
                                                 </div>
                                             )}
 
-                                            {a.question?.question_type === "text" ? (
-                                                <div className="mt-3 text-sm text-darks bg-base border border-second rounded-lg px-3.5 py-2">
-                                                    {a.answer_text || "-"}
+                                            {isOpenType(a.question?.question_type) ? (
+                                                <div className="mt-3 text-sm text-darks bg-base border border-second rounded-lg px-3.5 py-2 whitespace-pre-wrap break-words">
+                                                    {fmtAnswerText(a.question?.question_type, a.answer_text)}
                                                 </div>
                                             ) : (
                                                 <div className="mt-3 space-y-1.5">
@@ -315,10 +333,15 @@ function SubmissionDetail() {
                                                                     ) : (
                                                                         <span className="w-3.5 h-3.5 shrink-0" />
                                                                     )
-                                                                ) : selected ? (
-                                                                    <span className="h-2 w-2 shrink-0 rounded-full bg-darks/50" />
-                                                                ) : (
-                                                                    <span className="w-3.5 h-3.5 shrink-0" />
+) : selected ? (
+                                                    <span className="h-2 w-2 shrink-0 rounded-full bg-darks/50" />
+                                                ) : (
+                                                    <span className="w-3.5 h-3.5 shrink-0" />
+                                                )}
+                                                                {o.media_url && (
+                                                                    <span className="shrink-0">
+                                                                        <QuestionMedia url={o.media_url} maxHeight="max-h-14" className="rounded-md border border-second" />
+                                                                    </span>
                                                                 )}
                                                                 <RichText as="span" html={o.option_text} />
                                                             </div>

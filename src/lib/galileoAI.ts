@@ -1,8 +1,16 @@
 import type { AIModel } from "../pages/galileo/models"
 
+export interface AIMedia {
+    fileName: string
+    mimeType: string
+    /** Konten file asli dalam base64 (bukan hasil ekstrak teks). */
+    base64: string
+}
+
 export interface AIHistoryMessage {
     role: "user" | "assistant"
     content: string
+    media?: AIMedia
 }
 
 export const REQUEST_TIMEOUT_MS = 120_000

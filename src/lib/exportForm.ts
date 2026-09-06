@@ -98,13 +98,32 @@ interface ExportAnswerDetail {
 function typeLabel(t: string) {
     if (t === "multiple_choice") return "Pilihan Ganda"
     if (t === "text") return "Isian"
+    if (t === "dropdown") return "Dropdown"
+    if (t === "file_upload") return "Upload File"
+    if (t === "date_time") return "Tanggal & Jam"
     return "Pilihan Tunggal"
+}
+
+// Tipe soal tanpa pilihan jawaban (tidak dinilai benar/salah otomatis).
+function isOpenType(t: string | null | undefined) {
+    return t === "text" || t === "file_upload" || t === "date_time"
+}
+
+function fmtAnswerText(t: string | null | undefined, text: string | null | undefined): string {
+    if (!text) return "-"
+    const s = String(text)
+    if (t === "date_time") {
+        if (s.includes("T")) return new Date(s).toLocaleString("id-ID")
+        if (s.includes(":")) return s
+        return new Date(s + "T00:00:00").toLocaleDateString("id-ID", { day: "numeric", month: "long", year: "numeric" })
+    }
+    return richTextToPlain(s)
 }
 
 // null = soal tanpa kunci jawaban / isian (tidak dapat dinilai benar/salah).
 function isAnswerCorrect(a: ExportAnswerDetail): boolean | null {
     const q = a.question
-    if (!q || q.question_type === "text") return null
+    if (!q || isOpenType(q.question_type)) return null
     const keys = q.question_options.filter((o) => o.is_correct).map((o) => o.id)
     if (keys.length === 0) return null
     const selected =
@@ -119,7 +138,8 @@ function isAnswerCorrect(a: ExportAnswerDetail): boolean | null {
 function answerText(a: ExportAnswerDetail): string {
     const q = a.question
     if (!q) return "-"
-    if (q.question_type === "text") return a.answer_text ? richTextToPlain(a.answer_text) : "-"
+    const raw = a.answer_text
+    if (isOpenType(q.question_type)) return fmtAnswerText(q.question_type, raw)
     const selected =
         q.question_type === "multiple_choice"
             ? a.selected_options || []

@@ -68,12 +68,11 @@ function ChatPage() {
     return (
         <div className="flex flex-col items-center justify-center min-h-screen px-3.5 sm:px-6 py-6">
             <div className="w-full max-w-2xl">
-                <h1 className="text-center font-default text-4xl sm:text-4xl font-bold text-darks">
-                    Halo, saya <span className="text-primary">Galileo</span>!
+                <h1 className="text-center font-default text-4xl sm:text-4xl text-darks">
+                    Halo, saya <span className="font-bold">Galileo</span>!
                 </h1>
                 <p className="text-center text-sm text-tinted mt-2 mb-6">
-                    Asisten pembuat form dari Formaly. Tuliskan prompt-mu di bawah, dan saya akan
-                    menyusunkan formnya!
+                    Mulai membuat form dengan mudah! Galileo adalah AI Form Builder milik <span className="font-bold">Formaly</span>
                 </p>
 
                 <form onSubmit={handleSubmit} className="bg-white border border-second rounded-2xl shadow-sm p-4">
@@ -96,7 +95,7 @@ function ChatPage() {
                         value={message}
                         onChange={(e) => setMessage(e.target.value)}
                         placeholder="Contoh: Buatkan kuis pilihan ganda 10 soal tentang sejarah Indonesia kelas 5 SD..."
-                        rows={4}
+                        rows={3}
                         className="w-full resize-none bg-transparent text-darks placeholder:text-tinted text-base outline-none px-1"
                     />
 
@@ -104,11 +103,11 @@ function ChatPage() {
                         <button
                             type="button"
                             onClick={() => fileInputRef.current?.click()}
-                            className="btn btn-sm rounded-full bg-base border-none text-darks hover:bg-second transition-colors"
+                            className="btn btn-sm rounded-full bg-base-300 border-none text-darks hover:bg-darks/20 transition-colors"
                             aria-label="Tambahkan dokumen untuk konteks"
                             title="Tambahkan dokumen untuk konteks"
                         >
-                            <Paperclip className="h-4 w-4" />
+                            <Paperclip className="h-4 w-4" /> Sisipkan Materi
                         </button>
 
                         <button

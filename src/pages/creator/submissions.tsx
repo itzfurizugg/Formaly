@@ -941,7 +941,7 @@ function Submissions() {
                                                             >
                                                                 <option value="">-- Pilih pertanyaan --</option>
                                                                 {questions
-                                                                    .filter((q) => q.question_type !== "text")
+                                                                    .filter((q) => q.question_type !== "text" && q.question_type !== "file_upload" && q.question_type !== "date_time")
                                                                     .map((q, idx) => {
                                                                         const text = richTextToPlain(q.question_text)
                                                                         return (

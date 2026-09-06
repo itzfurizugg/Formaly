@@ -9,6 +9,10 @@ import { supabase } from "../../lib/supabase"
 import { useAuth } from "../../lib/auth-context"
 import { loginUrl } from "../../lib/redirect"
 import ModalPortal from "../../components/modalPortal"
+import { extractQuestionConfig, type QuestionConfig } from "../../lib/questionConfig"
+import FileAnswerUpload from "../../components/fileAnswerUpload"
+import DateTimeAnswer from "../../components/dateTimeAnswer"
+import { richTextToPlain } from "../../lib/richtext"
 // import FormHeader from "../../components/creator/formHeader"
 import { alertPop, easeOutExpo, modalBackdrop, modalPanel } from "../../lib/motion"
 import { Spinner } from "../../components/loading"
@@ -17,6 +21,8 @@ interface Option {
     id: string
     option_text: string
     is_correct?: boolean
+    /** TODO(backend): kolom question_options.media_url menyusul lewat migration. */
+    media_url?: string | null
 }
 
 interface Question {
@@ -28,6 +34,7 @@ interface Question {
     media_url?: string | null
     is_required?: boolean
     question_options: Option[]
+    config?: QuestionConfig | null
 }
 
 interface Answer {
@@ -60,6 +67,9 @@ function FormPage() {
     // const [headerImage, setHeaderImage] = useState<string | null>(null)
     const [current, setCurrent] = useState(locationState?.current || 0)
     const [answers, setAnswers] = useState<Answer>(locationState?.answers || {})
+    // Jawaban file (soal file_upload) disimpan terpisah karena berbentuk File.
+    // TODO(backend): penyimpanan permanen jawaban file menyusul.
+    const [fileAnswers, setFileAnswers] = useState<Record<string, File>>({})
     const [timeLeft, setTimeLeft] = useState(300)
     const [loading, setLoading] = useState(true)
     const [notFound, setNotFound] = useState(false)
@@ -91,19 +101,25 @@ function FormPage() {
     //     }
     // }, [formId])
 
+    // Cek apakah soal sudah dijawab, termasuk tipe baru (file_upload / date_time).
+    const isQuestionAnswered = useCallback(
+        (q: Question) => {
+            if (q.question_type === "file_upload") return fileAnswers[q.id] != null
+            const ans = answers[q.id]
+            if (ans === undefined) return false
+            if (Array.isArray(ans)) return ans.length > 0
+            return String(ans).trim() !== ""
+        },
+        [answers, fileAnswers]
+    )
+
     const handleSubmit = useCallback(async (allowRequiredSkip = false) => {
         if (!user || !formId || !submissionId) return
         setSubmitting(true)
         setError(null)
 
         if (!allowRequiredSkip) {
-            const unanswered = questions.find((q) => {
-                if (!q.is_required) return false
-                const ans = answers[q.id]
-                if (ans === undefined) return true
-                if (Array.isArray(ans)) return ans.length === 0
-                return String(ans).trim() === ""
-            })
+            const unanswered = questions.find((q) => q.is_required && !isQuestionAnswered(q))
             if (unanswered) {
                 setSubmitting(false)
                 setError("Masih ada soal wajib yang belum dijawab. Periksa soal bertanda *.")
@@ -116,7 +132,8 @@ function FormPage() {
         for (const q of questions) {
             const ans = answers[q.id]
             if (ans === undefined) continue
-            if (q.question_type === "text") continue
+            // Isian, Upload File, dan Tanggal & Jam tidak dinilai otomatis.
+            if (q.question_type === "text" || q.question_type === "file_upload" || q.question_type === "date_time") continue
 
             const selected = Array.isArray(ans) ? ans : [ans]
             const correct = q.question_options.filter((o) => o.is_correct).map((o) => o.id)
@@ -145,10 +162,10 @@ function FormPage() {
 
         for (const q of questions) {
             const ans = answers[q.id]
-            if (ans === undefined) continue
+            if (ans === undefined && q.question_type !== "file_upload") continue
 
             let scoreObtained = 0
-            if (q.question_type !== "text") {
+            if (q.question_type !== "text" && q.question_type !== "file_upload" && q.question_type !== "date_time") {
                 const selected = Array.isArray(ans) ? ans : [ans]
                 const correct = q.question_options.filter((o) => o.is_correct).map((o) => o.id)
                 if (selected.length === correct.length && selected.every((id) => correct.includes(id))) {
@@ -157,13 +174,22 @@ function FormPage() {
             }
 
             let insertError
-            if (q.question_type === "text") {
+            if (q.question_type === "text" || q.question_type === "date_time") {
+                // TODO(backend): kolom jawaban khusus date_time (dan file) menyusul;
+                // untuk sekarang tanggal/jam disimpan sebagai string ISO di answer_text.
                 ; ({ error: insertError } = await supabase.from("answers").insert({
                     submission_id: submissionId,
                     question_id: q.id,
-                    answer_text: String(ans),
+                    answer_text: q.question_type === "date_time" ? String(ans ?? "") : String(ans ?? ""),
                     score_obtained: scoreObtained,
                 }))
+            } else if (q.question_type === "file_upload") {
+                // TODO(backend): upload file ke storage.formaly.my.id & kolom URL
+                // jawaban menyusul. Untuk sekarang file hanya ada di state dan
+                // dicatat ke console agar tidak hilang sebelum backend siap.
+                const file = fileAnswers[q.id]
+                console.log(`[file_upload pending] question=${q.id}, file=${file?.name ?? "(kosong)"}`, file ?? null)
+                continue
             } else if (Array.isArray(ans)) {
                 ; ({ error: insertError } = await supabase.from("answers").insert({
                     submission_id: submissionId,
@@ -191,19 +217,13 @@ function FormPage() {
 
         setSubmitting(false)
         navigate("/history")
-    }, [user, formId, submissionId, questions, answers, navigate])
+    }, [user, formId, submissionId, questions, answers, fileAnswers, isQuestionAnswered, navigate])
 
     // Tombol "Kirim" hanya membuka modal konfirmasi; pengiriman asli tetap
     // lewat handleSubmit (juga dipakai auto-submit saat waktu habis, tanpa konfirmasi).
     const requestSubmit = () => {
         if (submitting) return
-        const unanswered = questions.find((q) => {
-            if (!q.is_required) return false
-            const ans = answers[q.id]
-            if (ans === undefined) return true
-            if (Array.isArray(ans)) return ans.length === 0
-            return String(ans).trim() === ""
-        })
+        const unanswered = questions.find((q) => q.is_required && !isQuestionAnswered(q))
         if (unanswered) {
             setError("Masih ada soal wajib yang belum dijawab. Periksa soal bertanda *.")
             setCurrent(questions.indexOf(unanswered))
@@ -283,7 +303,11 @@ function FormPage() {
 
         // Pengaturan "acak urutan soal": di-shuffle sekali saat load, jadi urutan
         // konsisten selama sesi pengerjaan (navigasi maju/mundur tidak berubah-ubah).
-        const nextQuestions = ((qData as Question[]) || []).slice()
+        const loaded = ((qData as Question[]) || []).map((q) => {
+            const { html, config } = extractQuestionConfig(q.question_text)
+            return { ...q, question_text: html, config }
+        })
+        const nextQuestions = loaded.slice()
         if (formData.randomize_questions) {
             for (let i = nextQuestions.length - 1; i > 0; i--) {
                 const j = Math.floor(Math.random() * (i + 1))
@@ -506,6 +530,40 @@ function FormPage() {
                                             placeholder="Tulis jawabanmu di sini..."
                                             className="textarea w-full bg-white border-second focus:border-done focus:outline-none transition-colors text-sm resize-y"
                                         />
+                                    ) : question.question_type === "dropdown" ? (
+                                        <div>
+                                            <select
+                                                value={Array.isArray(answers[question.id]) ? "" : (answers[question.id] as string) || ""}
+                                                onChange={(e) => setAnswers((prev) => ({ ...prev, [question.id]: e.target.value }))}
+                                                className="select w-full bg-white border-second focus:border-done focus:outline-none rounded-lg text-sm"
+                                            >
+                                                <option value="">-- Pilih salah satu --</option>
+                                                {question.question_options?.map((option) => (
+                                                    <option key={option.id} value={option.id}>
+                                                        {richTextToPlain(option.option_text)}
+                                                    </option>
+                                                ))}
+                                            </select>
+                                            <p className="text-xs text-tinted mt-1 px-1">Pilih satu jawaban dari daftar.</p>
+                                        </div>
+                                    ) : question.question_type === "file_upload" ? (
+                                        <FileAnswerUpload
+                                            value={fileAnswers[question.id] ?? null}
+                                            onChange={(file) =>
+                                                setFileAnswers((prev) => {
+                                                    const next = { ...prev }
+                                                    if (file) next[question.id] = file
+                                                    else delete next[question.id]
+                                                    return next
+                                                })
+                                            }
+                                        />
+                                    ) : question.question_type === "date_time" ? (
+                                        <DateTimeAnswer
+                                            variant={question.config?.dateTimeVariant ?? "date_and_time"}
+                                            value={Array.isArray(answers[question.id]) ? "" : (answers[question.id] as string) || ""}
+                                            onChange={(iso) => setAnswers((prev) => ({ ...prev, [question.id]: iso }))}
+                                        />
                                     ) : (
                                         question.question_options?.map((option) => {
                                             const isMulti = question.question_type === "multiple_choice"
@@ -528,6 +586,11 @@ function FormPage() {
                                                         >
                                                             {selected && <Check className="h-3 w-3 text-white" strokeWidth={3} />}
                                                         </span>
+                                                        {option.media_url && (
+                                                            <span className="shrink-0">
+                                                                <QuestionMedia url={option.media_url} maxHeight="max-h-16" className="rounded-md border border-second" />
+                                                            </span>
+                                                        )}
                                                         <RichText as="span" html={option.option_text} />
                                                     </span>
                                                 </button>

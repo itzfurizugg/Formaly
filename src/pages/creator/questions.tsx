@@ -1,7 +1,7 @@
 import { useEffect, useState, useCallback, useMemo, type DragEvent } from "react"
 import { useParams } from "react-router-dom"
 import { AnimatePresence, motion } from "motion/react"
-import { Plus, Pencil, Trash2, Save, X, Check, GripVertical } from "lucide-react"
+import { Plus, Pencil, Trash2, Save, X, Check, GripVertical, ImageIcon } from "lucide-react"
 import { supabase } from "../../lib/supabase"
 import { useAuth } from "../../lib/auth-context"
 import QuestionImportModal from "../../components/creator/QuestionImportModal"
@@ -9,6 +9,13 @@ import CreateButton from "../../components/creator/createButton"
 import ImageUrlInput from "../../components/creator/imageUrlInput"
 import MediaUpload from "../../components/MediaUpload"
 import QuestionMedia from "../../components/QuestionMedia"
+import {
+    extractQuestionConfig,
+    embedQuestionConfig,
+    FILE_UPLOAD_DEFAULTS,
+    type QuestionConfig,
+    type DateTimeVariant,
+} from "../../lib/questionConfig"
 import { isValidImageUrl } from "../../lib/imageUrl"
 import RichTextEditor, { RichText } from "../../components/richText"
 import { richTextToPlain } from "../../lib/richtext"
@@ -19,10 +26,15 @@ import BackButton from "../../components/backButton"
 import FormTabs from "../../components/creator/formTabs"
 import { Spinner } from "../../components/loading"
 
+const TYPES_WITH_OPTIONS = ["single_choice", "multiple_choice", "dropdown"]
+const TYPES_NO_OPTIONS = ["text", "file_upload", "date_time"]
+
 interface Option {
     id: string | null
     option_text: string
     is_correct: boolean
+    /** TODO(backend): kolom question_options.media_url menyusul lewat migration. */
+    media_url?: string | null
 }
 
 interface Question {
@@ -35,6 +47,7 @@ interface Question {
     media_url: string | null
     is_required: boolean
     question_options: Option[]
+    config?: QuestionConfig | null
 }
 
 function Questions({ embedded = false }: { embedded?: boolean }) {
@@ -63,6 +76,8 @@ function Questions({ embedded = false }: { embedded?: boolean }) {
     const [isRequired, setIsRequired] = useState(false)
     const [options, setOptions] = useState<Option[]>([])
     const [removedOptionIds, setRemovedOptionIds] = useState<string[]>([])
+    const [dateTimeVariant, setDateTimeVariant] = useState<DateTimeVariant>("date_and_time")
+    const [optionMediaOpen, setOptionMediaOpen] = useState<Record<number, boolean>>({})
     const [saving, setSaving] = useState(false)
     const [showImport, setShowImport] = useState(false)
     const [dragId, setDragId] = useState<string | null>(null)
@@ -94,8 +109,12 @@ function Questions({ embedded = false }: { embedded?: boolean }) {
             .eq("form_id", id)
             .order("order_index", { ascending: true })
         if (qs) {
-            setQuestions(qs as unknown as Question[])
-            newQuestions = qs as unknown as Question[]
+            const withConfig = (qs as unknown as Question[]).map((q) => {
+                const { html, config } = extractQuestionConfig(q.question_text)
+                return { ...q, question_text: html, config }
+            })
+            setQuestions(withConfig)
+            newQuestions = withConfig
         }
 
         if (user && id) {
@@ -120,6 +139,8 @@ function Questions({ embedded = false }: { embedded?: boolean }) {
         setIsRequired(false)
         setOptions([])
         setRemovedOptionIds([])
+        setDateTimeVariant("date_and_time")
+        setOptionMediaOpen({})
         setShowEditor(false)
     }
 
@@ -148,12 +169,13 @@ function Questions({ embedded = false }: { embedded?: boolean }) {
         setImageQuestion(q.image_question || "")
         setMediaUrl(q.media_url)
         setIsRequired(!!q.is_required)
-        setOptions((q.question_options || []).map((o) => ({ id: o.id, option_text: o.option_text, is_correct: o.is_correct })))
+        setOptions((q.question_options || []).map((o) => ({ id: o.id, option_text: o.option_text, is_correct: o.is_correct, media_url: o.media_url || null })))
+        if (q.config?.dateTimeVariant) setDateTimeVariant(q.config.dateTimeVariant)
         setShowEditor(true)
     }
 
     const addOption = () => {
-        setOptions([...options, { id: null, option_text: "", is_correct: false }])
+        setOptions([...options, { id: null, option_text: "", is_correct: false, media_url: null }])
     }
 
     const updateOption = (index: number, patch: Partial<Option>) => {
@@ -164,6 +186,22 @@ function Questions({ embedded = false }: { embedded?: boolean }) {
         const opt = options[index]
         if (opt?.id) setRemovedOptionIds([...removedOptionIds, opt.id])
         setOptions(options.filter((_, i) => i !== index))
+        setOptionMediaOpen((prev) => {
+            const next = { ...prev }
+            delete next[index]
+            return next
+        })
+    }
+
+    // Saat ganti ke tipe tanpa opsi, bersihkan pilihan yang tersisa supaya tidak
+    // ikut tersimpan (file_upload & date_time tidak memakai question_options).
+    const handleTypeChange = (t: string) => {
+        setQuestionType(t)
+        if (TYPES_NO_OPTIONS.includes(t)) {
+            setOptions([])
+            setRemovedOptionIds((prev) => [...prev, ...options.map((o) => o.id || "").filter(Boolean)])
+            setOptionMediaOpen({})
+        }
     }
 
     const handleSave = async () => {
@@ -172,7 +210,7 @@ function Questions({ embedded = false }: { embedded?: boolean }) {
             showAlert("Soal tidak boleh kosong.", "error")
             return
         }
-        if (questionType !== "text" && options.length === 0) {
+        if (TYPES_WITH_OPTIONS.includes(questionType) && options.length === 0) {
             showAlert("Tambahkan minimal satu pilihan jawaban.", "error")
             return
         }
@@ -183,11 +221,21 @@ function Questions({ embedded = false }: { embedded?: boolean }) {
 
         setSaving(true)
 
+        // TODO(backend): kolom config per soal (mis. date_timeVariant, batas file)
+        // menyusul lewat migration. Sementara disisipkan ke question_text supaya
+        // sub-tipe soal tetap bertahan & terbaca di halaman responden.
+        const finalQuestionText = embedQuestionConfig(
+            questionText,
+            questionType === "date_time" ? { dateTimeVariant } : null,
+        )
+
         // Panggil fungsi RPC yang sudah dibuat di database
         const { error: rpcErr } = await supabase.rpc("save_question_with_options", {
             p_question_id: editingId || null,
             p_form_id: id,
-            p_question_text: questionText,
+            // TODO(backend): kolom question_options.media_url belum ada, jadi
+            // media opsi hanya disimpan di state frontend sampai migration jalan.
+            p_question_text: finalQuestionText,
             p_question_type: questionType,
             p_score_value: scoreValue,
             p_order_index: orderIndex,
@@ -366,6 +414,9 @@ function Questions({ embedded = false }: { embedded?: boolean }) {
     const typeLabel = (t: string) => {
         if (t === "multiple_choice") return "Pilihan Ganda"
         if (t === "text") return "Isian"
+        if (t === "dropdown") return "Dropdown"
+        if (t === "file_upload") return "Upload File"
+        if (t === "date_time") return "Tanggal & Jam"
         return "Pilihan Tunggal"
     }
 
@@ -400,10 +451,13 @@ function Questions({ embedded = false }: { embedded?: boolean }) {
                     <select
                         className="select w-full bg-base border-second focus:border-done focus:outline-none rounded-xl"
                         value={questionType}
-                        onChange={(e) => setQuestionType(e.target.value)}
+                        onChange={(e) => handleTypeChange(e.target.value)}
                     >
                         <option value="single_choice">Pilihan Tunggal</option>
                         <option value="multiple_choice">Pilihan Ganda</option>
+                        <option value="dropdown">Dropdown / Select</option>
+                        <option value="file_upload">Upload File sebagai Jawaban</option>
+                        <option value="date_time">Tanggal & Jam</option>
                         <option value="text">Isian</option>
                     </select>
                 </div>
@@ -466,7 +520,35 @@ function Questions({ embedded = false }: { embedded?: boolean }) {
                 </span>
             </div>
 
-            {questionType !== "text" && (
+            {questionType === "date_time" && (
+                <div>
+                    <label className="block text-sm font-medium text-darks mb-1.5 ml-1">Jenis Jawaban</label>
+                    <select
+                        className="select w-full bg-base border-second focus:border-done focus:outline-none rounded-xl"
+                        value={dateTimeVariant}
+                        onChange={(e) => setDateTimeVariant(e.target.value as DateTimeVariant)}
+                    >
+                        <option value="date_and_time">Tanggal & Jam</option>
+                        <option value="date_only">Tanggal saja</option>
+                        <option value="time_only">Jam saja</option>
+                    </select>
+                    {/* TODO(backend): pilihan sub-tipe ini sementara disisipkan ke
+                        question_text via embedQuestionConfig sampai kolom config permanen ada. */}
+                </div>
+            )}
+
+            {questionType === "file_upload" && (
+                <div className="rounded-xl bg-base border border-second px-4 py-3 text-sm text-tinted">
+                    Responden mengunggah file sebagai jawaban.
+                    Batas maksimal <span className="font-semibold text-darks">{FILE_UPLOAD_DEFAULTS.maxMB} MB</span> dengan tipe{" "}
+                    <span className="font-semibold text-darks">{FILE_UPLOAD_DEFAULTS.types.join(", ")}</span>.
+                    <p className="text-xs text-tinted/80 mt-1">
+                        TODO(backend): penyimpanan jawaban file &amp; kolom URL jawaban menyusul; untuk sekarang jawaban disimpan di state lokal saat pengerjaan.
+                    </p>
+                </div>
+            )}
+
+            {TYPES_WITH_OPTIONS.includes(questionType) && (
                 <div>
                     <div className="flex items-center justify-between mb-2 ml-2 mr-2">
                         <label className="text-sm font-medium text-darks">Pilihan Jawaban</label>
@@ -476,39 +558,66 @@ function Questions({ embedded = false }: { embedded?: boolean }) {
                     </div>
                     <div className="space-y-2">
                         {options.map((opt, index) => (
-                            <div key={index} className="flex items-center gap-2">
-                                <RichTextEditor
-                                    compact
-                                    className="flex-1"
-                                    value={opt.option_text}
-                                    onChange={(v) => updateOption(index, { option_text: v })}
-                                    placeholder={`Pilihan ${index + 1}`}
-                                />
-                                <button
-                                    type="button"
-                                    onClick={() => {
-                                        const next = !opt.is_correct
-                                        if (questionType === "single_choice" && next) {
-                                            setOptions(
-                                                options.map((o, i) => (i === index ? { ...o, is_correct: true } : { ...o, is_correct: false }))
-                                            )
-                                        } else {
-                                            updateOption(index, { is_correct: next })
-                                        }
-                                    }}
-                                    title="Tandai jawaban benar"
-                                    aria-label="Tandai jawaban benar"
-                                    className={`shrink-0 rounded-full border p-1.5 transition-colors ${
-                                        opt.is_correct
-                                            ? "bg-darks text-base border-darks"
-                                            : "bg-base text-tinted border-second hover:border-darks hover:text-darks"
-                                    }`}
-                                >
-                                    <Check className="h-4 w-4" />
-                                </button>
-                                <button onClick={() => removeOption(index)} className="btn btn-sm btn-ghost text-wrong">
-                                    <X className="h-4 w-4" />
-                                </button>
+                            <div key={index} className="rounded-lg border border-second p-2">
+                                <div className="flex items-center gap-2">
+                                    <RichTextEditor
+                                        compact
+                                        className="flex-1"
+                                        value={opt.option_text}
+                                        onChange={(v) => updateOption(index, { option_text: v })}
+                                        placeholder={`Pilihan ${index + 1}`}
+                                    />
+                                    <button
+                                        type="button"
+                                        onClick={() => {
+                                            const next = !opt.is_correct
+                                            if ((questionType === "single_choice" || questionType === "dropdown") && next) {
+                                                setOptions(
+                                                    options.map((o, i) => (i === index ? { ...o, is_correct: true } : { ...o, is_correct: false }))
+                                                )
+                                            } else {
+                                                updateOption(index, { is_correct: next })
+                                            }
+                                        }}
+                                        title="Tandai jawaban benar"
+                                        aria-label="Tandai jawaban benar"
+                                        className={`shrink-0 rounded-full border p-1.5 transition-colors ${
+                                            opt.is_correct
+                                                ? "bg-darks text-base border-darks"
+                                                : "bg-base text-tinted border-second hover:border-darks hover:text-darks"
+                                        }`}
+                                    >
+                                        <Check className="h-4 w-4" />
+                                    </button>
+                                    <button
+                                        type="button"
+                                        onClick={() => setOptionMediaOpen((prev) => ({ ...prev, [index]: !prev[index] }))}
+                                        title="Tambah media pada opsi"
+                                        aria-label="Tambah media pada opsi"
+                                        className={`shrink-0 rounded-md border p-1.5 transition-colors ${
+                                            opt.media_url
+                                                ? "bg-darks text-base border-darks"
+                                                : "bg-base text-tinted border-second hover:border-darks hover:text-darks"
+                                        }`}
+                                    >
+                                        <ImageIcon className="h-4 w-4" />
+                                    </button>
+                                    <button onClick={() => removeOption(index)} className="btn btn-sm btn-ghost text-wrong">
+                                        <X className="h-4 w-4" />
+                                    </button>
+                                </div>
+                                {optionMediaOpen[index] && (
+                                    <div className="mt-2">
+                                        {/* TODO(backend): media opsi baru tersimpan penuh ke
+                                            question_options.media_url setelah kolom + RPC dimigrasi. */}
+                                        <MediaUpload
+                                            value={opt.media_url}
+                                            onChange={(url) => updateOption(index, { media_url: url })}
+                                            label={`Media Opsi ${index + 1}`}
+                                            helpText="Gambar/audio/video yang tampil bersama teks opsi."
+                                        />
+                                    </div>
+                                )}
                             </div>
                         ))}
                     </div>
@@ -606,7 +715,7 @@ function Questions({ embedded = false }: { embedded?: boolean }) {
                                                 <QuestionMedia url={q.media_url} className="mt-2 border border-second rounded-lg" />
                                             </div>
                                         )}
-                                        {q.question_type !== "text" && q.question_options?.length > 0 && (
+                                        {TYPES_WITH_OPTIONS.includes(q.question_type) && q.question_options?.length > 0 && (
                                             <div className="mt-3 space-y-1.5">
                                                 {q.question_options.map((o) => (
                                                     <div key={o.id} className="flex items-center gap-2 text-sm text-tinted">
@@ -615,11 +724,31 @@ function Questions({ embedded = false }: { embedded?: boolean }) {
                                                                 o.is_correct ? "bg-done" : "bg-tinted/40"
                                                             }`}
                                                         />
+                                                        {o.media_url && (
+                                                            <span className="shrink-0">
+                                                                <QuestionMedia url={o.media_url} maxHeight="max-h-14" className="rounded-md border border-second" />
+                                                            </span>
+                                                        )}
                                                         <RichText as="span" html={o.option_text} />
                                                         {o.is_correct && <span className="text-xs text-done font-medium">(kunci)</span>}
                                                     </div>
                                                 ))}
                                             </div>
+                                        )}
+                                        {q.question_type === "date_time" && (
+                                            <p className="mt-3 text-xs text-tinted bg-base border border-second rounded-lg px-3 py-1.5 w-fit">
+                                                Jawaban:{" "}
+                                                {q.config?.dateTimeVariant === "date_only"
+                                                    ? "Tanggal saja"
+                                                    : q.config?.dateTimeVariant === "time_only"
+                                                        ? "Jam saja"
+                                                        : "Tanggal & Jam"}
+                                            </p>
+                                        )}
+                                        {q.question_type === "file_upload" && (
+                                            <p className="mt-3 text-xs text-tinted bg-base border border-second rounded-lg px-3 py-1.5 w-fit">
+                                                Jawaban berupa unggahan file (maks {FILE_UPLOAD_DEFAULTS.maxMB} MB)
+                                            </p>
                                         )}
                                     </div>
                                     </div>
