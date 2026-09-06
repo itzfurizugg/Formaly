@@ -478,3 +478,36 @@ body::-webkit-scrollbar {
   width: 100% !important;
   height: 100% !important;
 }
+
+/* ---- Liquid glass yang tetap terlihat walau browser tak mendukung
+   backdrop-filter (System WebView lama, tab-in-app, GPU compositor bug) ----
+   Komponen memilih kelas -solid via deteksi CSS.supports di src/lib/glass.ts;
+   jangan pakai @supports di CSS karena minifier Tailwind v4/Lightning CSS
+   mengoptimasi-nya jadi tidak bersyarat (fallback bocor ke semua browser). */
+@layer utilities {
+  .fml-glass-pill {
+    background: linear-gradient(to bottom, rgb(255 255 255 / 0.7), rgb(255 255 255 / 0.3));
+    -webkit-backdrop-filter: blur(24px);
+    backdrop-filter: blur(24px);
+  }
+  .fml-glass-pill:hover {
+    background: linear-gradient(to bottom, rgb(255 255 255 / 0.8), rgb(255 255 255 / 0.4));
+  }
+  .fml-glass-nav {
+    background: rgb(255 255 255 / 0.4);
+    -webkit-backdrop-filter: blur(40px);
+    backdrop-filter: blur(40px);
+  }
+  .fml-glass-nav:hover {
+    background: rgb(255 255 255 / 0.55);
+  }
+  .fml-glass-pill--solid {
+    background: linear-gradient(to bottom, rgb(255 255 255 / 0.92), rgb(255 255 255 / 0.78));
+  }
+  .fml-glass-nav--solid {
+    background: rgb(255 255 255 / 0.92);
+  }
+  .fml-glass-nav--solid:hover {
+    background: rgb(255 255 255 / 0.97);
+  }
+}
