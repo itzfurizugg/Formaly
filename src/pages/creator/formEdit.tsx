@@ -1,16 +1,87 @@
-import { useEffect, useState, useCallback } from "react"
+import { useEffect, useState, useCallback, type FormEvent } from "react"
 import { useNavigate, useParams } from "react-router-dom"
-import { Save } from "lucide-react"
+import {
+    BookOpenText,
+    Eye,
+    ListFilter,
+    Save,
+    Shuffle,
+    Trash2,
+    Pipette,
+    Repeat,
+} from "lucide-react"
 import { supabase } from "../../lib/supabase"
 import { useAuth } from "../../lib/auth-context"
-import { alertSaveError, alertSaveSuccess } from "../../lib/alerts"
-import RichTextEditor from "../../components/richText"
-import Questions from "./questions"
+import { alertSaveError, alertSaveSuccess, confirmDelete, showAlert } from "../../lib/alerts"
+import { PRESET_HEADER_COLORS } from "../../lib/colorbase"
+import { isValidImageUrl } from "../../lib/imageUrl"
 import { pageGet, pageSet } from "../../lib/pageCache"
+import RichTextEditor from "../../components/richText"
 import BackButton from "../../components/backButton"
 import FormTabs from "../../components/creator/formTabs"
 import FormHeader from "../../components/creator/formHeader"
+import MediaUpload from "../../components/MediaUpload"
 import Loading, { Spinner } from "../../components/loading"
+
+interface FormSettingsData {
+    show_score_to_respondent: boolean
+    show_answers_to_respondent: boolean
+    show_correct_filter_to_respondent: boolean
+    randomize_questions: boolean
+    allow_multiple_submissions: boolean
+}
+
+const DEFAULTS: FormSettingsData = {
+    show_score_to_respondent: true,
+    show_answers_to_respondent: false,
+    show_correct_filter_to_respondent: true,
+    randomize_questions: false,
+    allow_multiple_submissions: false,
+}
+
+const SETTING_ROWS: {
+    key: keyof FormSettingsData
+    icon: typeof Eye
+    title: string
+    description: string
+    hint?: string
+}[] = [
+        {
+            key: "show_score_to_respondent",
+            icon: Eye,
+            title: "Tampilkan nilai kepada responden",
+            description: "Responden bisa melihat total skor setelah mengirim jawaban.",
+            hint: "Jika dimatikan, riwayat & hasil hanya menampilkan status pengerjaan tanpa angka nilai.",
+        },
+        {
+            key: "show_answers_to_respondent",
+            icon: BookOpenText,
+            title: "Tampilkan jawaban kepada responden",
+            description: "Responden bisa melihat rincian jawabannya beserta koreksi benar/salah di halaman hasil.",
+            hint: "Cocok dimatikan untuk ujian agar kunci jawaban tidak tersebar.",
+        },
+        {
+            key: "show_correct_filter_to_respondent",
+            icon: ListFilter,
+            title: "Tampilkan filter benar/salah di halaman hasil",
+            description: "Responden bisa memfilter rincian jawaban berdasarkan status benar, salah, isian, atau tanpa penilaian.",
+            hint: "Hanya berlaku jika rincian jawaban ditampilkan.",
+        },
+        {
+            key: "randomize_questions",
+            icon: Shuffle,
+            title: "Acak urutan soal",
+            description: "Urutan soal dirandom secara acak setiap kali responden mengerjakan.",
+            hint: "Hanya mengubah urutan tampil saat pengerjaan, urutan asli di editor tidak berubah.",
+        },
+        {
+            key: "allow_multiple_submissions",
+            icon: Repeat,
+            title: "Izinkan dikerjakan lebih dari sekali",
+            description: "Responden yang sama boleh mengerjakan form ini berkali-kali.",
+            hint: "Jika dimatikan, satu akun hanya bisa mengerjakan form satu kali.",
+        },
+    ]
 
 interface FormEditCache {
     title: string
@@ -22,6 +93,7 @@ interface FormEditCache {
     headerImage: string
     headerColor: string
     headerMedia: string
+    settings: FormSettingsData
 }
 
 function FormEdit() {
@@ -45,15 +117,22 @@ function FormEdit() {
     const [createdAt, setCreatedAt] = useState(cached?.createdAt ?? "")
     const [loading, setLoading] = useState(!cached)
     const [saving, setSaving] = useState(false)
-    // header_image/header_color hanya dibaca untuk pratinjau; pengeditannya
-    // dipindah ke tab Settings (formSettings.tsx).
-    const [headerImage, setHeaderImage] = useState(cached?.headerImage ?? "")
+    const [savingSettings, setSavingSettings] = useState(false)
+    const [savingBanner, setSavingBanner] = useState(false)
+    const [deleting, setDeleting] = useState(false)
+    const [settings, setSettings] = useState<FormSettingsData>(cached?.settings ?? DEFAULTS)
     const [headerColor, setHeaderColor] = useState(cached?.headerColor ?? "")
+    const [headerImage, setHeaderImage] = useState(cached?.headerImage ?? "")
     const [headerMedia, setHeaderMedia] = useState(cached?.headerMedia ?? "")
+
+    const cacheKey = user && id ? `formEdit:${user.id}:${id}` : null
 
     const loadForm = useCallback(async () => {
         if (!user || !id) return
         if (!cached) setLoading(true)
+        // select("*") — pakai sekali untuk detail form sekaligus pengaturan
+        // (banner, toggle) agar struktur halaman tetap terbuka meski migration
+        // kolom pengaturan belum diterapkan (kolom fallback ke default).
         const { data, error: err } = await supabase
             .from("forms")
             .select("*")
@@ -65,41 +144,53 @@ function FormEdit() {
             navigate("/creator")
             return
         }
+        const nextSettings: FormSettingsData = {
+            show_score_to_respondent: data.show_score_to_respondent ?? DEFAULTS.show_score_to_respondent,
+            show_answers_to_respondent: data.show_answers_to_respondent ?? DEFAULTS.show_answers_to_respondent,
+            show_correct_filter_to_respondent: data.show_correct_filter_to_respondent ?? DEFAULTS.show_correct_filter_to_respondent,
+            randomize_questions: data.randomize_questions ?? DEFAULTS.randomize_questions,
+            allow_multiple_submissions: data.allow_multiple_submissions ?? DEFAULTS.allow_multiple_submissions,
+        }
+        const nextHeaderColor = typeof data.header_color === "string" ? data.header_color : ""
+        const nextHeaderImage = typeof data.header_image === "string" ? data.header_image : ""
+        const nextHeaderMedia = typeof data.media_url === "string" ? data.media_url : ""
+
         setTitle(data.title)
         setDescription(data.description || "")
         setDuration(data.duration || 0)
         setPassingScore(data.passing_score || 0)
         setStatus(String(data.status))
         setCreatedAt(data.created_at || "")
-        setHeaderImage(data.header_image || "")
-        setHeaderColor(typeof data.header_color === "string" ? data.header_color : "")
-        setHeaderMedia(typeof data.media_url === "string" ? data.media_url : "")
+        setSettings(nextSettings)
+        setHeaderColor(nextHeaderColor)
+        setHeaderImage(nextHeaderImage)
+        setHeaderMedia(nextHeaderMedia)
 
-        pageSet<FormEditCache>(`formEdit:${user.id}:${id}`, {
-            title: data.title,
-            description: data.description || "",
-            duration: data.duration || 0,
-            passingScore: data.passing_score || 0,
-            status: String(data.status),
-            createdAt: data.created_at || "",
-            headerImage: data.header_image || "",
-            headerColor: typeof data.header_color === "string" ? data.header_color : "",
-            headerMedia: typeof data.media_url === "string" ? data.media_url : "",
-        })
+        if (cacheKey) {
+            pageSet<FormEditCache>(cacheKey, {
+                title: data.title,
+                description: data.description || "",
+                duration: data.duration || 0,
+                passingScore: data.passing_score || 0,
+                status: String(data.status),
+                createdAt: data.created_at || "",
+                headerImage: nextHeaderImage,
+                headerColor: nextHeaderColor,
+                headerMedia: nextHeaderMedia,
+                settings: nextSettings,
+            })
+        }
         setLoading(false)
-    }, [user, id, navigate, cached])
+    }, [user, id, navigate, cached, cacheKey])
 
     useEffect(() => {
         if (!user || !id) return
         loadForm()
     }, [user, id, loadForm])
 
-
+    // Simpan hanya data detail form (judul, deskripsi, durasi, nilai, status).
     const saveFormData = async () => {
         if (!id) return
-        // header_image tidak disimpan di sini lagi — pengaturannya dipindah
-        // ke tab Settings (formSettings.tsx) agar tab Detail tidak menimpa
-        // nilai header yang diubah lewat Settings.
         const payload = {
             p_form_id: id,
             p_title: title,
@@ -143,32 +234,159 @@ function FormEdit() {
         throw new Error(error.message)
     }
 
-    const handleSave = async (e: React.FormEvent) => {
+    const saveCache = () => {
+        if (!cacheKey) return
+        pageSet<FormEditCache>(cacheKey, {
+            title,
+            description,
+            duration,
+            passingScore,
+            status,
+            createdAt,
+            headerImage,
+            headerColor,
+            headerMedia,
+            settings,
+        })
+    }
+
+    // Sinkronkan nilai banner ke cache tab lain (daftar form) supaya pratinjau
+    // tidak basi setelah warna/gambar header disimpan.
+    const syncBannerCaches = () => {
+        if (!user || !id || !cacheKey) return
+        const cachedFormEdit = pageGet<Record<string, unknown> | undefined>(cacheKey)
+        if (cachedFormEdit) {
+            pageSet(cacheKey, {
+                ...cachedFormEdit,
+                headerImage: headerImage.trim(),
+                headerColor: headerColor || "",
+                headerMedia: headerMedia || "",
+            })
+        }
+        const cachedFormList = pageGet<{ id: string; header_color?: string | null; header_image?: string | null; media_url?: string | null }[] | undefined>(`formList:${user.id}`)
+        if (cachedFormList) {
+            pageSet(`formList:${user.id}`, cachedFormList.map((f) => f.id === id ? { ...f, header_color: headerColor || null, header_image: headerImage.trim() || null, media_url: headerMedia || null } : f))
+        }
+    }
+
+    const handleSaveDetail = async (e: FormEvent) => {
         e.preventDefault()
         if (!id) return
         setSaving(true)
 
         try {
             await saveFormData()
-            if (user && id) {
-                pageSet<FormEditCache>(`formEdit:${user.id}:${id}`, {
-                    title,
-                    description,
-                    duration,
-                    passingScore,
-                    status,
-                    createdAt,
-                    headerImage,
-                    headerColor,
-                    headerMedia,
-                })
-            }
+            saveCache()
             alertSaveSuccess()
         } catch (err) {
             alertSaveError(err instanceof Error ? err.message : "Gagal menyimpan perubahan.")
         } finally {
             setSaving(false)
         }
+    }
+
+    const handleSaveSettings = async () => {
+        if (!id) return
+        if (headerImage.trim() && !isValidImageUrl(headerImage)) {
+            showAlert("URL gambar header harus diawali http:// atau https://.", "error")
+            return
+        }
+        setSavingSettings(true)
+        try {
+            const { data, error } = await supabase
+                .from("forms")
+                .update({
+                    show_score_to_respondent: settings.show_score_to_respondent,
+                    show_answers_to_respondent: settings.show_answers_to_respondent,
+                    show_correct_filter_to_respondent: settings.show_correct_filter_to_respondent,
+                    randomize_questions: settings.randomize_questions,
+                    allow_multiple_submissions: settings.allow_multiple_submissions,
+                    header_color: headerColor || null,
+                    header_image: headerImage.trim() || null,
+                    media_url: headerMedia?.trim() || null,
+                })
+                .eq("id", id)
+                .select("id")
+                .maybeSingle()
+
+            // Baris kosong berarti RLS memblokir update diam-diam.
+            if (error) throw new Error(error.message)
+            if (!data) throw new Error("Perubahan tidak tersimpan. Pastikan kamu pemilik form ini.")
+
+            syncBannerCaches()
+            saveCache()
+            alertSaveSuccess("Pengaturan berhasil disimpan.")
+        } catch (err) {
+            const msg = err instanceof Error ? err.message : "Gagal menyimpan pengaturan."
+            if (/could not find the .* column|does not exist|PGRST204/i.test(msg)) {
+                showAlert("Kolom pengaturan/warna header belum ada di database. Terapkan migration di supabase/migrations terlebih dahulu.", "error")
+                return
+            }
+            alertSaveError(msg)
+        } finally {
+            setSavingSettings(false)
+        }
+    }
+
+    // Tombol simpan khusus untuk warna/gambar header — hanya menyimpan banner,
+    // tidak menyentuh toggle pengaturan di bawah.
+    const handleSaveBanner = async () => {
+        if (!id) return
+        if (headerImage.trim() && !isValidImageUrl(headerImage)) {
+            showAlert("URL gambar header harus diawali http:// atau https://.", "error")
+            return
+        }
+        setSavingBanner(true)
+        try {
+            const { data, error } = await supabase
+                .from("forms")
+                .update({
+                    header_color: headerColor || null,
+                    header_image: headerImage.trim() || null,
+                    media_url: headerMedia?.trim() || null,
+                })
+                .eq("id", id)
+                .select("id")
+                .maybeSingle()
+
+            if (error) throw new Error(error.message)
+            if (!data) throw new Error("Perubahan tidak tersimpan. Pastikan kamu pemilik form ini.")
+
+            syncBannerCaches()
+            showAlert("Warna header berhasil disimpan.", "success")
+        } catch (err) {
+            const msg = err instanceof Error ? err.message : "Gagal menyimpan warna header."
+            if (/could not find the .* column|does not exist|PGRST204/i.test(msg)) {
+                showAlert("Kolom warna header belum ada di database. Terapkan migration di supabase/migrations terlebih dahulu.", "error")
+                return
+            }
+            alertSaveError(msg)
+        } finally {
+            setSavingBanner(false)
+        }
+    }
+
+    const handleDeleteForm = () => {
+        if (!user || !id) return
+        confirmDelete({
+            title: "Hapus form ini?",
+            description: "Form, soal, token, dan semua submission terkait akan ikut terhapus permanen.",
+            onConfirm: async () => {
+                setDeleting(true)
+                try {
+                    // RPC delete_form menghapus seluruh data terkait (soal, token,
+                    // submission, jawaban, relasi tag) plus tag yatim dalam satu
+                    // transaksi SECURITY DEFINER — pola yang sama dengan tombol
+                    // Hapus di daftar form.
+                    const { error } = await supabase.rpc("delete_form", { p_form_id: id })
+                    if (error) throw new Error(error.message)
+                    if (cacheKey) pageSet(cacheKey, undefined)
+                    navigate("/creator")
+                } finally {
+                    setDeleting(false)
+                }
+            },
+        })
     }
 
     const inputCls = "input w-full bg-white text-xl lg:text-3xl h-auto p-2 border-second focus:border-done focus:outline-none transition-colors"
@@ -178,104 +396,258 @@ function FormEdit() {
         <>
             <Loading show={loading} />
             {!loading && (
-                <div className="flex flex-col items-center px-3.5 sm:px-6 pt-5 sm:py-10 lg:h-[100dvh] lg:overflow-hidden">
-                    <div className="w-full xl:max-w-7xl lg:max-w-5xl lg:h-full lg:flex lg:flex-col">
+                <div className="flex flex-col items-center px-3.5 sm:px-6 py-5 sm:py-10">
+                    <div className="w-full xl:max-w-7xl lg:max-w-5xl">
                         <BackButton to="/creator" />
 
                         <FormTabs id={id} active="detail" />
 
-                        {/* Layout ala YouTube player: tiap panel punya tinggi layar sendiri
-                    dan scroll action-nya terpisah dari panel sebelahnya. */}
-                        <div className="flex flex-col lg:flex-row items-start gap-6 lg:flex-1 lg:min-h-0 lg:overflow-hidden lg:mt-2">
-                            <div className="relative w-full lg:w-[45%] lg:h-full lg:min-h-0">
-                                <div className="scrollbar-none h-full lg:pb-3 lg:overflow-y-auto lg:overscroll-contain">
-                                    <form onSubmit={handleSave} className="space-y-3 bg-white border border-second p-3 lg:p-6 sm:p-4 shadow-sm rounded-xl">
-                                        {/* Pratinjau header (read-only) — sama seperti tampilan di daftar form
-                                    & halaman responden. Nilainya diatur lewat tab Settings. */}
-                                        <div className="overflow-hidden rounded-lg border border-second">
-                                            <FormHeader formId={id ?? ""} title={title} headerImage={headerImage} headerColor={headerColor} headerMedia={headerMedia} />
-                                        </div>
+                        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-stretch">
+                            {/* 1. Detail Form (kiri) */}
+                            <div className="lg:col-span-7 bg-white border border-second p-3 sm:p-4 lg:p-6 shadow-sm rounded-xl flex flex-col justify-between">
+                                <div className="flex items-center gap-2 mb-1 mt-2 ml-2">
+                                    <h2 className="font-semibold text-darks text-lg">Detail Form</h2>
+                                </div>
+                                <p className="text-sm text-tinted mb-4 ml-2">
+                                    Judul, deskripsi, durasi, dan status soalnya dikelola di sini.
+                                </p>
 
-                                        <div>
-                                            <span className="inline-flex items-center gap-1.5 text-xs text-tinted mb-3 sm:mb-2 ml-1">
-                                                Dibuat pada {createdAt ? new Date(createdAt).toLocaleDateString("id-ID", { day: "numeric", month: "short", year: "numeric" }) : ""}
-                                            </span>
-                                            <input type="text" required className={inputCls} value={title} onChange={(e) => setTitle(e.target.value)} />
-                                        </div>
+                                <form onSubmit={handleSaveDetail} className="space-y-3">
+                                    <div className="overflow-hidden rounded-lg border border-second">
+                                        <FormHeader formId={id ?? ""} title={title} headerImage={headerImage} headerColor={headerColor} headerMedia={headerMedia} />
+                                    </div>
 
+                                    <div>
+                                        <span className="inline-flex items-center gap-1.5 text-xs text-tinted mb-3 sm:mb-2 ml-1">
+                                            Dibuat pada {createdAt ? new Date(createdAt).toLocaleDateString("id-ID", { day: "numeric", month: "short", year: "numeric" }) : ""}
+                                        </span>
+                                        <input type="text" required className={inputCls} value={title} onChange={(e) => setTitle(e.target.value)} />
+                                    </div>
+
+                                    <div>
+                                        <RichTextEditor
+                                            value={description}
+                                            onChange={setDescription}
+                                            placeholder="Deskripsi Form..."
+                                        />
+                                    </div>
+
+                                    <div className="grid grid-cols-2 gap-4">
                                         <div>
-                                            {/* <label className="block text-sm font-medium text-darks mb-1.5">Deskripsi</label> */}
-                                            <RichTextEditor
-                                                value={description}
-                                                onChange={setDescription}
-                                                placeholder="Deskripsi Form..."
+                                            <label className="block text-sm font-medium text-darks mb-1.5">Durasi (menit)</label>
+                                            <input
+                                                type="number"
+                                                min={0}
+                                                step={1}
+                                                className={inputWithVal}
+                                                value={duration}
+                                                onFocus={(e) => e.target.select()}
+                                                onChange={(e) => {
+                                                    const val = e.target.value
+                                                    setDuration(val === "" ? "" : Number(val))
+                                                }}
+                                                placeholder="0"
                                             />
                                         </div>
-
-                                        <div className="grid grid-cols-2 gap-4">
-                                            <div>
-                                                <label className="block text-sm font-medium text-darks mb-1.5">Durasi (menit)</label>
-                                                <input
-                                                    type="number"
-                                                    min={0}
-                                                    step={1}
-                                                    className={inputWithVal}
-                                                    value={duration}
-                                                    onFocus={(e) => e.target.select()}
-                                                    onChange={(e) => {
-                                                        const val = e.target.value
-                                                        setDuration(val === "" ? "" : Number(val))
-                                                    }}
-                                                    placeholder="0"
-                                                />
-                                            </div>
-                                            <div>
-                                                <label className="block text-sm font-medium text-darks mb-1.5">Nilai Minimum</label>
-                                                <input
-                                                    type="number"
-                                                    min={0}
-                                                    max={100}
-                                                    step={1}
-                                                    className={inputWithVal}
-                                                    value={passingScore}
-                                                    onFocus={(e) => e.target.select()}
-                                                    onChange={(e) => {
-                                                        const val = e.target.value
-                                                        setPassingScore(val === "" ? "" : Number(val))
-                                                    }}
-                                                    placeholder="0"
-                                                />
-                                            </div>
-                                        </div>
-
                                         <div>
-                                            <label className="block text-sm font-medium text-darks mb-1.5">Status</label>
-                                            <select className="select select-bordered w-full bg-base border-second focus:border-done focus:outline-none" value={status} onChange={(e) => setStatus(e.target.value)}>
-                                                <option value="draft">Draft</option>
-                                                <option value="published">Public</option>
-                                            </select>
-                                            <p className="text-xs text-tinted mt-1.5 hidden sm:block">
-                                                Hanya form berstatus <span className="font-medium text-darks">Public</span> yang bisa diakses orang lain, termasuk lewat tag.
-                                            </p>
+                                            <label className="block text-sm font-medium text-darks mb-1.5">Nilai Minimum</label>
+                                            <input
+                                                type="number"
+                                                min={0}
+                                                max={100}
+                                                step={1}
+                                                className={inputWithVal}
+                                                value={passingScore}
+                                                onFocus={(e) => e.target.select()}
+                                                onChange={(e) => {
+                                                    const val = e.target.value
+                                                    setPassingScore(val === "" ? "" : Number(val))
+                                                }}
+                                                placeholder="0"
+                                            />
                                         </div>
+                                    </div>
 
-                                        <button
-                                            type="submit"
-                                            disabled={saving}
-                                            className="btn bg-darks text-base border-none w-full hover:opacity-90 transition-opacity disabled:opacity-60 mb-3 mt-5"
+                                    <div>
+                                        <label className="block text-sm font-medium text-darks mb-1.5">Status</label>
+                                        <select className="select select-bordered w-full bg-base border-second focus:border-done focus:outline-none" value={status} onChange={(e) => setStatus(e.target.value)}>
+                                            <option value="draft">Draft</option>
+                                            <option value="published">Public</option>
+                                        </select>
+                                        <p className="text-xs text-tinted mt-1.5 hidden sm:block">
+                                            Hanya form berstatus <span className="font-medium text-darks">Public</span> yang bisa diakses orang lain, termasuk lewat tag.
+                                        </p>
+                                    </div>
+
+                                    <button
+                                        type="submit"
+                                        disabled={saving}
+                                        className="btn bg-darks text-base border-none w-full hover:opacity-90 transition-opacity disabled:opacity-60 mb-2 mt-5"
+                                    >
+                                        {saving ? <Spinner size={16} /> : <Save className="h-4 w-4" />}
+                                        Simpan Perubahan
+                                    </button>
+                                </form>
+                            </div>
+
+                            {/* 2. Tampilan Banner (kanan atas) */}
+                            <div className="lg:col-span-5 bg-white border border-second p-3 sm:p-4 lg:p-6 shadow-sm rounded-xl flex flex-col justify-between">
+                                <div>
+                                    <div className="flex items-center gap-2 mb-1 mt-2 ml-2">
+                                        <h2 className="font-semibold text-darks text-lg">Tampilan Banner</h2>
+                                    </div>
+                                    <p className="text-sm text-tinted mb-4 ml-2">
+                                        Sesuaikan warna tema banner atau gunakan gambar kustom.
+                                    </p>
+
+                                    <div className="px-3.5 sm:px-1 mb-4">
+                                        <div
+                                            className={`relative h-20 rounded-xl overflow-hidden flex items-center px-4 ${headerColor ? "" : "bg-gradient-to-br from-slate-600 to-slate-800"}`}
+                                            style={headerColor ? { backgroundColor: headerColor } : undefined}
                                         >
-                                            {saving ? <Spinner size={16} /> : <Save className="h-4 w-4" />}
-                                            Simpan Perubahan
-                                        </button>
-                                    </form>
+                                            <div
+                                                className="absolute inset-0 opacity-[0.08]"
+                                                style={{ backgroundImage: "radial-gradient(circle, white 1px, transparent 1px)", backgroundSize: "16px 16px" }}
+                                            />
+                                            <span className="relative z-10 text-sm font-semibold text-white drop-shadow-sm">Pratinjau Banner</span>
+                                            <span className="relative z-10 ml-auto text-xs font-mono text-white/80">{headerColor || "gradien acak"}</span>
+                                        </div>
+                                    </div>
+
+                                    <div className="px-3.5 sm:px-1 pb-1">
+                                        <div className="flex flex-wrap items-center gap-2">
+                                            {PRESET_HEADER_COLORS.map((color) => (
+                                                <button
+                                                    key={color}
+                                                    type="button"
+                                                    aria-label={`Pilih warna ${color}`}
+                                                    onClick={() => setHeaderColor(color)}
+                                                    style={{ backgroundColor: color }}
+                                                    className={`h-8 w-8 rounded-full transition-all duration-150 hover:scale-110 ${headerColor.toLowerCase() === color.toLowerCase()
+                                                        ? "ring-2 ring-darks ring-offset-2 ring-offset-white"
+                                                        : ""
+                                                        }`}
+                                                />
+                                            ))}
+
+                                            <label
+                                                title="Warna kustom"
+                                                className={`relative h-8 w-8 rounded-full overflow-hidden cursor-pointer border border-dashed border-second bg-base items-center justify-center hover:bg-second transition-colors ${headerColor && !PRESET_HEADER_COLORS.some((c) => c.toLowerCase() === headerColor.toLowerCase())
+                                                    ? "ring-2 ring-darks ring-offset-2 ring-offset-white"
+                                                    : ""
+                                                    } flex`}
+                                            >
+                                                <input
+                                                    type="color"
+                                                    aria-label="Warna kustom"
+                                                    value={/^#(?:[0-9a-fA-F]{6})$/.test(headerColor) ? headerColor : "#007dcc"}
+                                                    onChange={(e) => setHeaderColor(e.target.value)}
+                                                    className="absolute inset-0 opacity-0 cursor-pointer"
+                                                />
+                                                <Pipette className="h-3.5 w-3.5 text-tinted pointer-events-none" />
+                                            </label>
+
+                                            <button
+                                                type="button"
+                                                onClick={() => setHeaderColor("")}
+                                                disabled={!headerColor}
+                                                className="btn btn-sm rounded-full bg-base text-tinted border border-second hover:bg-white disabled:opacity-50 transition-all duration-200 text-xs py-1 h-8 min-h-0"
+                                            >
+                                                Reset
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div className="px-3.5 sm:px-1 pb-1 mt-4">
+                                    <MediaUpload
+                                        value={headerMedia}
+                                        onChange={setHeaderMedia}
+                                        label="Media Header (Gambar/Video/Audio)"
+                                        helpText="Media ini akan ditampilkan sebagai banner header form. Mendukung gambar, video, dan audio."
+                                    />
+                                </div>
+
+                                <div className="px-3.5 sm:px-1 mt-3 pb-1">
+                                    <button
+                                        type="button"
+                                        onClick={handleSaveBanner}
+                                        disabled={savingBanner}
+                                        className="btn w-full bg-darks text-base border-none rounded-full hover:opacity-90 transition-all duration-200 hover:scale-[1.02] active:scale-[0.98] disabled:opacity-60"
+                                    >
+                                        {savingBanner ? <Spinner size={16} /> : <Save className="h-4 w-4" />}
+                                        Simpan Warna Header
+                                    </button>
                                 </div>
                             </div>
 
-                            <div className="relative w-full lg:flex-1 min-w-0 lg:h-full lg:min-h-0">
-                                <div className="scrollbar-none h-full lg:overflow-y-auto lg:overscroll-contain">
-                                    <div className="hidden lg:block pb-3">
-                                        <Questions embedded />
+                            {/* 3. Pengaturan Form (kiri bawah) */}
+                            <div className="lg:col-span-7 bg-white border border-second p-3 sm:p-4 lg:p-6 shadow-sm rounded-xl flex flex-col justify-between">
+                                <div>
+                                    <div className="flex items-center gap-2 mb-1 mt-2 ml-2">
+                                        <h2 className="font-semibold text-darks text-lg">Pengaturan Form</h2>
                                     </div>
+                                    <p className="text-sm text-tinted mb-4 ml-2">
+                                        Atur apa yang dilihat responden dan bagaimana form dikerjakan.
+                                    </p>
+
+                                    <div className="px-3.5 sm:px-1 divide-y divide-second/60">
+                                        {SETTING_ROWS.map((row) => (
+                                            <div key={row.key} className="flex items-start justify-between gap-4 py-4 first:pt-2 last:pb-6">
+                                                <div className="flex items-start gap-3 min-w-0">
+                                                    <div className="shrink-0 bg-base rounded-lg p-2 mt-0.5">
+                                                        <row.icon className="h-4 w-4 text-darks" />
+                                                    </div>
+                                                    <div className="min-w-0">
+                                                        <p className="text-sm font-semibold text-darks">{row.title}</p>
+                                                        <p className="text-xs text-tinted mt-1 leading-relaxed">{row.description}</p>
+                                                        {row.hint && <p className="text-xs text-tinted/70 mt-1.5 italic hidden sm:block">{row.hint}</p>}
+                                                    </div>
+                                                </div>
+                                                <input
+                                                    type="checkbox"
+                                                    aria-label={row.title}
+                                                    checked={settings[row.key]}
+                                                    onChange={() => setSettings((prev) => ({ ...prev, [row.key]: !prev[row.key] }))}
+                                                    className="toggle mt-1 shrink-0 border-second bg-tinted/30 checked:border-darks/50 checked:bg-darks/50 transition-colors duration-200"
+                                                />
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+
+                                <button
+                                    type="button"
+                                    onClick={handleSaveSettings}
+                                    disabled={savingSettings}
+                                    className="btn bg-darks text-base border-none w-[60%] m-3 sm:w-full hover:opacity-90 transition-all duration-200 hover:scale-[1.02] active:scale-[0.98] disabled:opacity-60 mt-4 mb-4 mx-auto rounded-full"
+                                >
+                                    {savingSettings ? <Spinner size={16} /> : <p>Simpan Pengaturan</p>}
+                                </button>
+                            </div>
+
+                            {/* 4. Zona Destruktif (kanan bawah) */}
+                            <div className="lg:col-span-5 bg-white border border-second p-3 sm:p-4 lg:p-6 shadow-sm rounded-xl flex flex-col justify-between mb-10 sm:mb-0">
+                                <div>
+                                    <div className="flex items-center gap-2 mb-1 mt-2 ml-2">
+                                        <h2 className="font-semibold text-wrong text-lg">Hapus Form</h2>
+                                    </div>
+                                    <p className="text-sm text-tinted mb-4 ml-2 leading-relaxed">
+                                        Menghapus form ini secara permanen bersama semua soal, token, submission, dan
+                                        jawaban responden. Tindakan ini tidak bisa dibatalkan.
+                                    </p>
+                                </div>
+
+                                <div className="flex sm:justify-end">
+                                    <button
+                                        type="button"
+                                        onClick={handleDeleteForm}
+                                        disabled={deleting}
+                                        className="btn rounded-full bg-wrong/10 text-wrong border border-wrong/20 hover:bg-wrong/20 transition-all duration-200 hover:scale-[1.02] active:scale-[0.98] w-fit justify-end ml-2 mb-2"
+                                    >
+                                        {deleting ? <Spinner size={16} /> : <Trash2 className="h-4 w-4" />}
+                                        Hapus Form
+                                    </button>
                                 </div>
                             </div>
                         </div>

@@ -47,7 +47,6 @@ const CreatorResponden = lazy(() => creatorEntry().then((m) => ({ default: m.Cre
 const CreatorFormNew = lazy(() => creatorEntry().then((m) => ({ default: m.CreatorFormNew })))
 const CreatorFormEdit = lazy(() => creatorEntry().then((m) => ({ default: m.CreatorFormEdit })))
 const CreatorQuestions = lazy(() => creatorEntry().then((m) => ({ default: m.CreatorQuestions })))
-const CreatorFormSettings = lazy(() => creatorEntry().then((m) => ({ default: m.CreatorFormSettings })))
 const CreatorTokens = lazy(() => creatorEntry().then((m) => ({ default: m.CreatorTokens })))
 const CreatorSubmissions = lazy(() => creatorEntry().then((m) => ({ default: m.CreatorSubmissions })))
 const CreatorSubmissionDetail = lazy(() => creatorEntry().then((m) => ({ default: m.CreatorSubmissionDetail })))
@@ -206,14 +205,6 @@ function AppShell() {
                 element={
                   <CreatorGuard>
                     <CreatorQuestions />
-                  </CreatorGuard>
-                }
-              />
-              <Route
-                path="/creator/forms/:id/settings"
-                element={
-                  <CreatorGuard>
-                    <CreatorFormSettings />
                   </CreatorGuard>
                 }
               />
