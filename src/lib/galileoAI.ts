@@ -1,11 +1,38 @@
 import type { AIModel } from "../pages/galileo/models"
 
+export interface AIMedia {
+    fileName: string
+    mimeType: string
+    /** Konten file asli dalam base64 (bukan hasil ekstrak teks). */
+    base64: string
+}
+
 export interface AIHistoryMessage {
     role: "user" | "assistant"
     content: string
+    media?: AIMedia
 }
 
 export const REQUEST_TIMEOUT_MS = 120_000
+
+function isImageMime(mime: string): boolean {
+    return mime.startsWith("image/")
+}
+
+// Provider mana yang bisa menerima sebuah media apa adanya. Untuk yang tidak
+// didukung, cukup nama file yang disebutkan (teks saja).
+function mediaSupportedBy(provider: AIModel["provider"], mime: string | undefined): boolean {
+    if (!mime) return false
+    if (isImageMime(mime)) return true
+    if (mime === "application/pdf") return provider === "Google" || provider === "Anthropic"
+    return false
+}
+
+function mediaNote(media: AIMedia | undefined, supported: boolean): string {
+    if (!media) return ""
+    if (supported) return `\n\nFile lampiran: "${media.fileName}" (dikirim sebagai media).`
+    return `\n\n(Lampiran "${media.fileName}" berformat ${media.mimeType} tidak didukung sebagai media oleh provider ini.)`
+}
 
 async function parseHttpError(res: Response): Promise<string> {
     try {
@@ -27,6 +54,25 @@ async function callOpenAI(
     signal: AbortSignal,
 ): Promise<string> {
     const systemEntry = system ? [{ role: "system", content: system }] : []
+
+    const bodyMessages = messages.map((h) => {
+        const supported = mediaSupportedBy("OpenAI", h.media?.mimeType)
+        const text = h.content + mediaNote(h.media, supported)
+        if (h.media && isImageMime(h.media.mimeType)) {
+            return {
+                role: h.role,
+                content: [
+                    { type: "text", text },
+                    {
+                        type: "image_url",
+                        image_url: { url: `data:${h.media.mimeType};base64,${h.media.base64}` },
+                    },
+                ],
+            }
+        }
+        return { role: h.role, content: text }
+    })
+
     const res = await fetch(`${m.baseUrl}${m.endpoint}`, {
         method: "POST",
         signal,
@@ -36,7 +82,7 @@ async function callOpenAI(
         },
         body: JSON.stringify({
             model: m.model,
-            messages: [...systemEntry, ...messages],
+            messages: [...systemEntry, ...bodyMessages],
         }),
     })
     if (!res.ok) throw new Error(`OpenAI gagal: ${await parseHttpError(res)}`)
@@ -53,16 +99,25 @@ async function callGemini(
     signal: AbortSignal,
 ): Promise<string> {
     const url = `${m.baseUrl}${m.endpoint}?key=${encodeURIComponent(m.apiKey)}`
+    const contents = messages.map((h) => {
+        const supported = mediaSupportedBy("Google", h.media?.mimeType)
+        const parts: { text?: string; inline_data?: { mime_type: string; data: string } }[] = []
+        if (h.content) parts.push({ text: h.content + mediaNote(h.media, supported) })
+        if (h.media && supported) {
+            parts.push({ inline_data: { mime_type: h.media.mimeType, data: h.media.base64 } })
+        }
+        return {
+            role: h.role === "assistant" ? "model" : "user",
+            parts,
+        }
+    })
     const res = await fetch(url, {
         method: "POST",
         signal,
         headers: { "content-type": "application/json" },
         body: JSON.stringify({
             systemInstruction: system ? { parts: [{ text: system }] } : undefined,
-            contents: messages.map((h) => ({
-                role: h.role === "assistant" ? "model" : "user",
-                parts: [{ text: h.content }],
-            })),
+            contents,
         }),
     })
     if (!res.ok) throw new Error(`Gemini gagal: ${await parseHttpError(res)}`)
@@ -83,6 +138,22 @@ async function callClaude(
     system: string | undefined,
     signal: AbortSignal,
 ): Promise<string> {
+    const bodyMessages = messages.map((h) => {
+        const supported = mediaSupportedBy("Anthropic", h.media?.mimeType)
+        const blocks: {
+            type: string
+            text?: string
+            source?: { type: string; media_type: string; data: string }
+        }[] = []
+        if (h.content) blocks.push({ type: "text", text: h.content + mediaNote(h.media, supported) })
+        if (h.media && supported) {
+            blocks.push({
+                type: "image",
+                source: { type: "base64", media_type: h.media.mimeType, data: h.media.base64 },
+            })
+        }
+        return { role: h.role, content: blocks }
+    })
     const res = await fetch(`${m.baseUrl}${m.endpoint}`, {
         method: "POST",
         signal,
@@ -95,7 +166,7 @@ async function callClaude(
             model: m.model,
             system: system ?? "",
             max_tokens: 4096,
-            messages,
+            messages: bodyMessages,
         }),
     })
     if (!res.ok) throw new Error(`Claude gagal: ${await parseHttpError(res)}`)
@@ -117,13 +188,17 @@ async function callCustom(
     const headers: Record<string, string> = { "content-type": "application/json" }
     if (m.apiKey) headers.Authorization = `Bearer ${m.apiKey}`
     const systemEntry = system ? [{ role: "system", content: system }] : []
+    const bodyMessages = messages.map((h) => ({
+        role: h.role,
+        content: h.content + mediaNote(h.media, mediaSupportedBy("Custom", h.media?.mimeType)),
+    }))
     const res = await fetch(`${m.baseUrl}${m.endpoint}`, {
         method: "POST",
         signal,
         headers,
         body: JSON.stringify({
             model: m.model || "galileo",
-            messages: [...systemEntry, ...messages],
+            messages: [...systemEntry, ...bodyMessages],
         }),
     })
     if (!res.ok) throw new Error(`Endpoint kustom gagal: ${await parseHttpError(res)}`)

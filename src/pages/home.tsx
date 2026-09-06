@@ -154,7 +154,7 @@ function Home() {
     if (authLoading || !user) return null
 
     return (
-        <div className="relative min-h-full flex flex-col items-center justify-start px-4 pt-12 lg:pt-30 pb-1 lg:pb-10 overflow-hidden">
+        <div className="fixed inset-0 flex flex-col items-center justify-center px-4 overflow-hidden">
             <div className="w-full max-w-4xl mx-auto flex flex-col items-center justify">
 
                 {/* Header & Hero Card */}
