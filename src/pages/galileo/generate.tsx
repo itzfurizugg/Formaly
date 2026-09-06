@@ -5,13 +5,12 @@ import { AlertTriangle } from "lucide-react"
 import { supabase } from "../../lib/supabase"
 import { useAuth } from "../../lib/auth-context"
 import { DEFAULT_MODEL_ID, getModel } from "./models"
-import { requestAI, type AIHistoryMessage } from "../../lib/galileoAI"
+import { requestAI } from "../../lib/galileoAI"
 
 interface PromptPayload {
     prompt: string
+    docText: string
     fileName: string | null
-    mimeType: string | null
-    base64: string | null
 }
 
 type QuestionType = "single_choice" | "multiple_choice" | "text"
@@ -64,7 +63,7 @@ const GENERATE_SYSTEM =
     '- Tipe "text" TIDAK punya opsi (options kosong).\n' +
     '- Buat soal yang lengkap dan sesuai permintaan pengguna (jumlah, topik, jenjang, dst).\n' +
     "- Gunakan Bahasa Indonesia untuk semua teks soal.\n" +
-    "- Jika pengguna melampirkan file/media, gunakan isi media itu untuk menyusun soal.\n" +
+    "- Jika pengguna melampirkan dokumen, acu isinya untuk menyusun soal.\n" +
     "- Kosongkan passing_score hanya jika tidak relevan (isi 70)."
 
 // Tahapan proses generate — dipakai untuk crossfade teks & posisi orbit.
@@ -233,18 +232,12 @@ function GeneratePage() {
             }
             setPrompt(promptText)
 
-            const userContent = promptText
-
-            const message: AIHistoryMessage = { role: "user", content: userContent }
-            if (payload?.mimeType && payload?.base64) {
-                message.media = {
-                    fileName: payload.fileName ?? "lampiran",
-                    mimeType: payload.mimeType,
-                    base64: payload.base64,
-                }
+            let userContent = promptText
+            if (payload?.docText) {
+                userContent += `\n\nIsi dokumen "${payload.fileName}":\n${payload.docText}`
             }
 
-            const raw = await requestAI(model, [message], GENERATE_SYSTEM)
+            const raw = await requestAI(model, [{ role: "user", content: userContent }], GENERATE_SYSTEM)
 
             setStep(STAGES[1])
             const form = parseGenerated(raw)
@@ -269,11 +262,7 @@ function GeneratePage() {
     }, [user, attempt])
 
     return (
-        <div className="relative flex items-center justify-center min-h-screen px-4 overflow-hidden">
-            {/* Blob warna di background halaman — sumber blur yang bikin glow & glassmorphism kelihatan */}
-            <div className="pointer-events-none absolute top-1/4 left-1/4 -translate-x-1/2 -translate-y-1/2 w-80 h-80 rounded-full bg-darks-400/40 blur-[100px] -z-10" />
-            <div className="pointer-events-none absolute bottom-1/4 right-1/4 translate-x-1/2 translate-y-1/2 w-80 h-80 rounded-full bg-tinted-400/40 blur-[100px] -z-10" />
-
+        <div className="flex items-center justify-center min-h-screen px-4">
             <div className="w-full max-w-lg">
                 <AnimatePresence mode="wait">
                     {!error ? (
@@ -281,74 +270,68 @@ function GeneratePage() {
                             key="loading"
                             initial={{ opacity: 0 }}
                             animate={{ opacity: 1 }}
-                            className="relative isolate"
+                            className="relative overflow-hidden rounded-3xl bg-darks px-8 py-14 flex flex-col items-center gap-10"
                         >
-                            {/* Glow blur di belakang card — pakai isolate + z-index positif, bukan -z-10,
-                               supaya nggak kena efek stacking context yang berubah pas animasi opacity motion.div selesai */}
-                            <div className="absolute inset-0 -m-4 z-0 rounded-xl bg-gradient-to-br from-darks/50 to-tinted/50 blur-2xl" />
+                            {/* Lensa teleskop: cincin berlapis berputar dengan kecepatan berbeda */}
+                            <div className="relative w-32 h-32 flex items-center justify-center shrink-0">
+                                <motion.span
+                                    animate={{ rotate: 360 }}
+                                    transition={{ duration: 12, repeat: Infinity, ease: "linear" }}
+                                    className="absolute inset-0 rounded-full border border-white/15 border-t-white/50"
+                                />
+                                <motion.span
+                                    animate={{ rotate: -360 }}
+                                    transition={{ duration: 8, repeat: Infinity, ease: "linear" }}
+                                    className="absolute inset-3 rounded-full border border-white/10 border-t-white/40"
+                                />
+                                <motion.span
+                                    animate={{ rotate: 360 }}
+                                    transition={{ duration: 5, repeat: Infinity, ease: "linear" }}
+                                    className="absolute inset-7 rounded-full border border-dashed border-white/20"
+                                >
+                                    <motion.span className="absolute -top-1 left-1/2 -translate-x-1/2 w-2 h-2 rounded-full bg-white" />
+                                </motion.span>
 
-                            <div className="relative z-10 overflow-hidden rounded-xl bg-darks backdrop-blur-xl border border-white/10 px-8 py-14 flex flex-col items-center gap-10">
-                                {/* Lensa teleskop: cincin berlapis berputar dengan kecepatan berbeda */}
-                                <div className="relative w-32 h-32 flex items-center justify-center shrink-0">
-                                    <motion.span
-                                        animate={{ rotate: 360 }}
-                                        transition={{ duration: 12, repeat: Infinity, ease: "linear" }}
-                                        className="absolute inset-0 rounded-full border border-white/15 border-t-white/50"
-                                    />
-                                    <motion.span
-                                        animate={{ rotate: -360 }}
-                                        transition={{ duration: 8, repeat: Infinity, ease: "linear" }}
-                                        className="absolute inset-3 rounded-full border border-white/10 border-t-white/40"
-                                    />
-                                    <motion.span
-                                        animate={{ rotate: 360 }}
-                                        transition={{ duration: 5, repeat: Infinity, ease: "linear" }}
-                                        className="absolute inset-7 rounded-full border border-dashed border-white/20"
-                                    >
-                                        <motion.span className="absolute -top-1 left-1/2 -translate-x-1/2 w-2 h-2 rounded-full bg-white" />
-                                    </motion.span>
-
-                                    <motion.div
-                                        animate={{ scale: [1, 1.12, 1] }}
-                                        transition={{ duration: 2.2, repeat: Infinity, ease: "easeInOut" }}
-                                        className="w-12 h-12 rounded-full bg-white/95"
-                                    />
-                                </div>
-
-                                <div className="flex flex-col items-center gap-3 text-center">
-                                    <AnimatePresence mode="wait">
-                                        <motion.p
-                                            key={stageIndex}
-                                            initial={{ opacity: 0, y: 6 }}
-                                            animate={{ opacity: 1, y: 0 }}
-                                            exit={{ opacity: 0, y: -6 }}
-                                            transition={{ duration: 0.35 }}
-                                            className="text-xl font-medium text-white mb-2"
-                                        >
-                                            {STAGES[stageIndex]}
-                                        </motion.p>
-                                    </AnimatePresence>
-
-                                    {/* Orbit progress track: posisi titik menandai tahap yang sedang berjalan */}
-                                    <div className="relative w-40 h-1 rounded-full bg-white/10 overflow-hidden">
-                                        <motion.div
-                                            animate={{ width: `${((stageIndex + 1) / STAGES.length) * 100}%` }}
-                                            transition={{ duration: 0.5, ease: "easeOut" }}
-                                            className="absolute inset-y-0 left-0 rounded-full bg-white"
-                                        />
-                                    </div>
-
-                                    <p className="mt-1 text-sm text-white/50">
-                                        {model.name} sedang membuat form
-                                    </p>
-                                </div>
-
-                                {prompt && (
-                                    <p className="text-xs text-white/40 bg-white/5 backdrop-blur-sm rounded-xl px-4 py-2.5 max-w-full break-words italic text-center">
-                                        &quot;{prompt}&quot;
-                                    </p>
-                                )}
+                                <motion.div
+                                    animate={{ scale: [1, 1.12, 1] }}
+                                    transition={{ duration: 2.2, repeat: Infinity, ease: "easeInOut" }}
+                                    className="w-12 h-12 rounded-full bg-white/95"
+                                />
                             </div>
+
+                            <div className="flex flex-col items-center gap-3 text-center">
+                                <AnimatePresence mode="wait">
+                                    <motion.p
+                                        key={stageIndex}
+                                        initial={{ opacity: 0, y: 6 }}
+                                        animate={{ opacity: 1, y: 0 }}
+                                        exit={{ opacity: 0, y: -6 }}
+                                        transition={{ duration: 0.35 }}
+                                        className="text-lg font-medium text-white"
+                                    >
+                                        {STAGES[stageIndex]}
+                                    </motion.p>
+                                </AnimatePresence>
+
+                                {/* Orbit progress track: posisi titik menandai tahap yang sedang berjalan */}
+                                <div className="relative w-40 h-1 rounded-full bg-white/10 overflow-hidden">
+                                    <motion.div
+                                        animate={{ width: `${((stageIndex + 1) / STAGES.length) * 100}%` }}
+                                        transition={{ duration: 0.5, ease: "easeOut" }}
+                                        className="absolute inset-y-0 left-0 rounded-full bg-white"
+                                    />
+                                </div>
+
+                                <p className="text-xs text-white/50">
+                                    {model.name} sedang meracik form-mu
+                                </p>
+                            </div>
+
+                            {prompt && (
+                                <p className="text-xs text-white/40 bg-white/5 rounded-xl px-4 py-2.5 max-w-full break-words italic text-center">
+                                    &quot;{prompt}&quot;
+                                </p>
+                            )}
                         </motion.div>
                     ) : (
                         <motion.div
@@ -356,28 +339,25 @@ function GeneratePage() {
                             initial={{ opacity: 0, y: 6 }}
                             animate={{ opacity: 1, y: 0 }}
                             transition={{ duration: 0.25 }}
-                            className="relative isolate"
+                            className="bg-white border border-second rounded-3xl px-8 py-12 flex flex-col items-center gap-4 text-center shadow-sm"
                         >
-                            {/* Glow blur di belakang card — sama, pakai isolate + z-index positif */}
-                            <div className="relative z-10 bg-white/100 backdrop-blur-xl border border-white/40 rounded-xl px-8 py-12 flex flex-col items-center gap-4 text-center shadow-sm">
-                                <AlertTriangle className="h-8 w-8 text-wrong" />
-                                <p className="text-sm text-wrong rounded-lg px-3 py-2 max-w-full">
-                                    {error}
-                                </p>
-                                <div className="flex gap-3 mt-2">
-                                    <button
-                                        onClick={() => navigate("/creator/galileo")}
-                                        className="btn btn-sm rounded-full bg-base border border-second text-darks hover:bg-second transition-colors"
-                                    >
-                                        Kembali
-                                    </button>
-                                    <button
-                                        onClick={() => setAttempt((a) => a + 1)}
-                                        className="btn btn-sm rounded-full bg-darks border-none text-base hover:opacity-90 transition-opacity"
-                                    >
-                                        Coba Lagi
-                                    </button>
-                                </div>
+                            <AlertTriangle className="h-8 w-8 text-wrong" />
+                            <p className="text-sm text-wrong bg-wrong/10 border border-wrong/20 rounded-lg px-3 py-2 max-w-full">
+                                {error}
+                            </p>
+                            <div className="flex gap-3 mt-2">
+                                <button
+                                    onClick={() => navigate("/creator/galileo")}
+                                    className="btn btn-sm rounded-full bg-base border border-second text-darks hover:bg-second transition-colors"
+                                >
+                                    Kembali
+                                </button>
+                                <button
+                                    onClick={() => setAttempt((a) => a + 1)}
+                                    className="btn btn-sm rounded-full bg-darks border-none text-base hover:opacity-90 transition-opacity"
+                                >
+                                    Coba Lagi
+                                </button>
                             </div>
                         </motion.div>
                     )}

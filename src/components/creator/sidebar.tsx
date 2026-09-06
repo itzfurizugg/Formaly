@@ -90,10 +90,10 @@ function CreatorSidebar() {
             transition={{ duration: 0.45, ease: easeOutExpo }}
             className="hidden lg:flex fixed inset-y-0 left-0 z-40 w-[20vw] flex-col bg-base-200 border-r border-second"
         >
-            <div className="flex items-center h-20 px-6 border-b border-second shrink-0">
+            <div className="flex items-center h-16 px-6 border-b border-second shrink-0">
                 <Link to="/">
                     <img src={logo} alt="Formaly" className="h-6 w-auto" />
-                    <p className="font-thin text-sm">C R E A T O R</p>
+                    <p className="text-italic">C R E A T O R</p>
                 </Link>
             </div>
 
