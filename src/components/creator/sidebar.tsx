@@ -8,6 +8,7 @@ import {
     X,
     ChartNoAxesColumn,
     Form,
+    Bot,
 } from "lucide-react"
 import logo from "../../assets/logo.svg"
 import { useAuth } from "../../lib/auth-context"
@@ -78,6 +79,12 @@ function CreatorSidebar() {
             label: "Responden",
             icon: ChartNoAxesColumn,
             active: pathname.includes("/submissions") || pathname === "/creator/responden",
+        },
+        {
+            to: "/creator/galileo",
+            label: "Galileo AI",
+            icon: Bot,
+            active: pathname.startsWith("/creator/galileo"),
         },
     ]
 

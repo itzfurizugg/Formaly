@@ -5,6 +5,8 @@ import { showAlert } from "../../lib/alerts"
 
 interface TagInputProps {
     formId: string
+    /** Dipanggil setelah tags berubah dan tersimpan di database. */
+    onChange?: (tags: string[]) => void
 }
 
 /**
@@ -12,9 +14,17 @@ interface TagInputProps {
  * dan sinkronisasi ke database (RPC set_form_tags / delete_unused_tags dengan
  * fallback operasi langsung bila RPC belum diterapkan di DB).
  */
-export default function TagInput({ formId }: TagInputProps) {
+export default function TagInput({ formId, onChange }: TagInputProps) {
     const [tags, setTags] = useState<string[]>([])
     const [tagInput, setTagInput] = useState("")
+
+    const applyTags = useCallback(
+        (next: string[]) => {
+            setTags(next)
+            onChange?.(next)
+        },
+        [onChange]
+    )
 
     useEffect(() => {
         let cancelled = false
@@ -25,7 +35,7 @@ export default function TagInput({ formId }: TagInputProps) {
             .then(({ data }) => {
                 if (cancelled) return
                 if (data) {
-                    setTags(
+                    applyTags(
                         data
                             .map((r) => (r.tag as unknown as { name: string } | null)?.name)
                             .filter((n): n is string => !!n)
@@ -35,7 +45,7 @@ export default function TagInput({ formId }: TagInputProps) {
         return () => {
             cancelled = true
         }
-    }, [formId])
+    }, [formId, applyTags])
 
     /** Hapus baris tag yang sudah tidak dirujuk form manapun. Pakai RPC
      * SECURITY DEFINER (delete_unused_tags) supaya DELETE ke tabel tags tidak
@@ -58,144 +68,6 @@ export default function TagInput({ formId }: TagInputProps) {
         }
     }
 
-    async function syncTags(): Promise<string[]> {
-        const normalized = [...new Set(tags.map((t) => t.trim()).filter(Boolean))]
-
-        // RPC SECURITY DEFINER (set_form_tags) menjalankan semuanya dalam
-        // satu transaksi: hapus relasi lama, buat tag baru jika perlu,
-        // tautkan, bersihkan tag yatim, dan mengembalikan daftar nama
-        // aktual dari database sebagai single source of truth.
-        const { data, error } = await supabase.rpc("set_form_tags", {
-            p_form_id: formId,
-            p_tag_names: normalized,
-        })
-        if (!error) {
-            const newTags = (data ?? []) as string[]
-            setTags(newTags)
-            return newTags
-        }
-        if (!/PGRST202|could not find the function|schema cache/i.test(error.message)) {
-            throw new Error("Gagal memperbarui tag: " + error.message)
-        }
-
-        // Fallback lama — hanya dipakai bila RPC belum diterapkan ke DB.
-        // Operasi langsung ke tabel mungkin terblokir RLS, jadi tag bisa
-        // saja tidak benar-benar berubah di server.
-        const { data: oldRel } = await supabase
-            .from("form_tags")
-            .select("tag_id")
-            .eq("form_id", formId)
-
-        const tagIds: (string | number)[] = []
-        for (const name of normalized) {
-            const { data: existing, error: selErr } = await supabase.from("tags").select("id").eq("name", name).maybeSingle()
-            if (selErr && selErr.code !== "PGRST116") throw new Error("Gagal memperbarui tag: " + selErr.message)
-            let tagId = existing?.id as string | undefined
-
-            if (!tagId) {
-                const { data: ins, error: insErr } = await supabase.from("tags").insert({ name }).select("id").single()
-                if (insErr) throw new Error("Gagal membuat tag: " + insErr.message)
-                tagId = ins?.id as string | undefined
-            }
-
-            if (tagId) tagIds.push(tagId)
-        }
-
-        await supabase.from("form_tags").delete().eq("form_id", formId)
-
-        if (tagIds.length > 0) {
-            const { error: relErr } = await supabase
-                .from("form_tags")
-                .upsert(
-                    tagIds.map((tag_id) => ({ form_id: formId, tag_id })),
-                    { onConflict: "form_id,tag_id", ignoreDuplicates: true }
-                )
-            if (relErr) throw new Error("Gagal menautkan tag: " + relErr.message)
-        }
-
-        const keptIds = new Set(tagIds.map(String))
-        const removedIds = [...new Set((oldRel || []).map((r) => String(r.tag_id)))].filter((tid) => !keptIds.has(tid))
-        if (removedIds.length > 0) await deleteOrphanTags(removedIds)
-        // Ambil ulang dari DB sebagai source of truth.
-        const { data: verifyRel } = await supabase
-            .from("form_tags")
-            .select("tag:tags ( name )")
-            .eq("form_id", formId)
-        const verifiedTags = (verifyRel ?? [])
-            .map((r) => (r.tag as unknown as { name: string } | null)?.name)
-            .filter((n): n is string => !!n)
-        return verifiedTags
-    }
-
-    async function syncTags(): Promise<string[]> {
-        const normalized = [...new Set(tags.map((t) => t.trim()).filter(Boolean))]
-
-        // RPC SECURITY DEFINER (set_form_tags) menjalankan semuanya dalam
-        // satu transaksi: hapus relasi lama, buat tag baru jika perlu,
-        // tautkan, bersihkan tag yatim, dan mengembalikan daftar nama
-        // aktual dari database sebagai single source of truth.
-        const { data, error } = await supabase.rpc("set_form_tags", {
-            p_form_id: formId,
-            p_tag_names: normalized,
-        })
-        if (!error) {
-            const newTags = (data ?? []) as string[]
-            setTags(newTags)
-            return newTags
-        }
-        if (!/PGRST202|could not find the function|schema cache/i.test(error.message)) {
-            throw new Error("Gagal memperbarui tag: " + error.message)
-        }
-
-        // Fallback lama — hanya dipakai bila RPC belum diterapkan ke DB.
-        // Operasi langsung ke tabel mungkin terblokir RLS, jadi tag bisa
-        // saja tidak benar-benar berubah di server.
-        const { data: oldRel } = await supabase
-            .from("form_tags")
-            .select("tag_id")
-            .eq("form_id", formId)
-
-        const tagIds: (string | number)[] = []
-        for (const name of normalized) {
-            const { data: existing, error: selErr } = await supabase.from("tags").select("id").eq("name", name).maybeSingle()
-            if (selErr && selErr.code !== "PGRST116") throw new Error("Gagal memperbarui tag: " + selErr.message)
-            let tagId = existing?.id as string | undefined
-
-            if (!tagId) {
-                const { data: ins, error: insErr } = await supabase.from("tags").insert({ name }).select("id").single()
-                if (insErr) throw new Error("Gagal membuat tag: " + insErr.message)
-                tagId = ins?.id as string | undefined
-            }
-
-            if (tagId) tagIds.push(tagId)
-        }
-
-        await supabase.from("form_tags").delete().eq("form_id", formId)
-
-        if (tagIds.length > 0) {
-            const { error: relErr } = await supabase
-                .from("form_tags")
-                .upsert(
-                    tagIds.map((tag_id) => ({ form_id: formId, tag_id })),
-                    { onConflict: "form_id,tag_id", ignoreDuplicates: true }
-                )
-            if (relErr) throw new Error("Gagal menautkan tag: " + relErr.message)
-        }
-
-        const keptIds = new Set(tagIds.map(String))
-        const removedIds = [...new Set((oldRel || []).map((r) => String(r.tag_id)))].filter((tid) => !keptIds.has(tid))
-        if (removedIds.length > 0) await deleteOrphanTags(removedIds)
-        // Ambil ulang dari DB sebagai source of truth.
-        const { data: verifyRel } = await supabase
-            .from("form_tags")
-            .select("tag:tags ( name )")
-            .eq("form_id", formId)
-        const verifiedTags = (verifyRel ?? [])
-            .map((r) => (r.tag as unknown as { name: string } | null)?.name)
-            .filter((n): n is string => !!n)
-        return verifiedTags
-    }
-
     const addTag = useCallback(async () => {
         const value = tagInput.trim()
         if (!value) return
@@ -206,7 +78,7 @@ export default function TagInput({ formId }: TagInputProps) {
                 p_tag_names: nextNames,
             })
             if (!error) {
-                setTags((data ?? []) as string[])
+                applyTags((data ?? []) as string[])
             } else if (/PGRST202|could not find the function|schema cache/i.test(error.message)) {
                 showAlert("Fungsi set_form_tags belum tersedia. Periksa database.", "warning")
             } else {
@@ -216,20 +88,20 @@ export default function TagInput({ formId }: TagInputProps) {
             showAlert(err instanceof Error ? err.message : "Gagal menambahkan tag.", "error")
         }
         setTagInput("")
-    }, [formId, tags, tagInput])
+    }, [formId, tags, tagInput, applyTags])
 
     const removeTag = useCallback(
         async (name: string) => {
             const nextNames = tags.filter((t) => t !== name).map((t) => t.trim())
             try {
                 // Satu panggilan RPC atomik: hapus relasi, bersihkan tag yatim,
-                // kembalikan daftar aktual — konsisten dengan syncTags.
+                // kembalikan daftar aktual.
                 const { data, error } = await supabase.rpc("set_form_tags", {
                     p_form_id: formId,
                     p_tag_names: nextNames,
                 })
                 if (!error) {
-                    setTags((data ?? []) as string[])
+                    applyTags((data ?? []) as string[])
                     return
                 }
                 if (!/PGRST202|could not find the function|schema cache/i.test(error.message)) {
@@ -258,7 +130,7 @@ export default function TagInput({ formId }: TagInputProps) {
                 showAlert(err instanceof Error ? err.message : "Gagal menghapus tag.", "error")
             }
         },
-        [formId, tags]
+        [formId, tags, applyTags]
     )
 
     return (

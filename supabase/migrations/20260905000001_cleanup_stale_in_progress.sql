@@ -1,17 +1,21 @@
 -- ============================================================
--- Fungsi memulai pengerjaan form + validasi token.
--- Tempel di Supabase Dashboard > SQL Editor > RUN (semuanya sekaligus).
+-- Perbaikan: bersihkan submission IN_PROGRESS yang mangkrak.
 --
--- Catatan versi ini:
---   - TANPA variabel record (pakai variabel skalar) sehingga error
---     'record "v_token" is not assigned yet' tidak mungkin terjadi lagi.
---   - Di awal ada DROP FUNCTION untuk membersihkan overload/versi lama.
---   - Di akhir ada NOTICE berisi cuplikan body yang ter-deploy; kalau
---     cuplikannya BUKAN versi ini, berarti kamu mengedit database lain.
+-- Masalah: setiap kali user menekan "Mulai Mengerjakan", RPC
+-- start_form_submission membuat baris submissions baru berstatus
+-- IN_PROGRESS. Kalau user membuka lalu meninggalkan form tanpa
+-- mengirim, baris itu tersangkut IN_PROGRESS selamanya, sehingga
+-- daftar submissions (creator) penuh status "Proses" padahal tidak
+-- pernah dikerjakan.
+--
+-- Perbaikan: sebelum membuat submission baru, hapus dahulu semua
+-- submission IN_PROGRESS milik user yang sama untuk form tersebut.
+-- Dengan begitu hanya ada satu attempt aktif per (user, form), dan
+-- attempt yang ditinggalkan tidak menumpuk.
+--
+-- Aman dijalankan berulang (idempotent). Jalankan di Supabase
+-- Dashboard > SQL Editor atau lewat CLI migration.
 -- ============================================================
-
-DROP FUNCTION IF EXISTS public.start_form_submission(uuid, character varying);
-DROP FUNCTION IF EXISTS public.start_form_submission(uuid, text);
 
 CREATE OR REPLACE FUNCTION public.start_form_submission(
   p_form_id uuid,
@@ -95,33 +99,3 @@ END;
 $$;
 
 GRANT EXECUTE ON FUNCTION public.start_form_submission(uuid, character varying) TO authenticated;
-
--- Saklar gerbang token di tabel forms (dipakai UI & RPC di atas).
-alter table public.forms add column if not exists requires_token boolean not null default false;
-
--- Index lookup token per form.
-CREATE INDEX IF NOT EXISTS idx_tokens_form_id_token_code
-  ON public.tokens (form_id, token_code);
-
--- ===== VERIFIKASI OTOMATIS =====
--- Setelah RUN, lihat tab Messages: harus muncul NOTICE yang diawali
--- "DEPLOYED OK" dan cuplikan body tanpa kata "v_token".
-do $$
-declare
-  src text;
-begin
-  select prosrc into src
-  from pg_proc p
-  join pg_namespace n on n.oid = p.pronamespace
-  where n.nspname = 'public'
-    and p.proname = 'start_form_submission'
-  limit 1;
-
-  if src is null then
-    raise notice 'DEPLOY GAGAL: fungsi start_form_submission tidak ditemukan.';
-  elsif position('v_token' in src) > 0 then
-    raise notice 'MASIH VERSI LAMA! Body masih memuat "v_token": %', left(src, 160);
-  else
-    raise notice 'DEPLOY OK — body baru aktif: %', left(src, 160);
-  end if;
-end $$;

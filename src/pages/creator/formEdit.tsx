@@ -1,9 +1,9 @@
 import { useEffect, useState, useCallback } from "react"
 import { useNavigate, useParams } from "react-router-dom"
-import { Save, X } from "lucide-react"
+import { Save } from "lucide-react"
 import { supabase } from "../../lib/supabase"
 import { useAuth } from "../../lib/auth-context"
-import { alertSaveError, alertSaveSuccess, showAlert } from "../../lib/alerts"
+import { alertSaveError, alertSaveSuccess } from "../../lib/alerts"
 import RichTextEditor from "../../components/richText"
 import Questions from "./questions"
 import { pageGet, pageSet } from "../../lib/pageCache"
@@ -18,7 +18,6 @@ interface FormEditCache {
     duration: number | ""
     passingScore: number | ""
     status: string
-    tags: string[]
     createdAt: string
     headerImage: string
     headerColor: string
@@ -46,8 +45,6 @@ function FormEdit() {
     const [createdAt, setCreatedAt] = useState(cached?.createdAt ?? "")
     const [loading, setLoading] = useState(!cached)
     const [saving, setSaving] = useState(false)
-    const [tags, setTags] = useState<string[]>(cached?.tags ?? [])
-    const [tagInput, setTagInput] = useState("")
     // header_image/header_color hanya dibaca untuk pratinjau; pengeditannya
     // dipindah ke tab Settings (formSettings.tsx).
     const [headerImage, setHeaderImage] = useState(cached?.headerImage ?? "")
@@ -78,23 +75,12 @@ function FormEdit() {
         setHeaderColor(typeof data.header_color === "string" ? data.header_color : "")
         setHeaderMedia(typeof data.media_url === "string" ? data.media_url : "")
 
-        const { data: rel } = await supabase
-            .from("form_tags")
-            .select("tag:tags ( name )")
-            .eq("form_id", id)
-        let newTags: string[] = []
-        if (rel) {
-            newTags = rel.map((r) => (r.tag as unknown as { name: string } | null)?.name).filter((n): n is string => !!n)
-            setTags(newTags)
-        }
-
         pageSet<FormEditCache>(`formEdit:${user.id}:${id}`, {
             title: data.title,
             description: data.description || "",
             duration: data.duration || 0,
             passingScore: data.passing_score || 0,
             status: String(data.status),
-            tags: newTags,
             createdAt: data.created_at || "",
             headerImage: data.header_image || "",
             headerColor: typeof data.header_color === "string" ? data.header_color : "",
@@ -108,174 +94,6 @@ function FormEdit() {
         loadForm()
     }, [user, id, loadForm])
 
-    /** Hapus baris tag yang sudah tidak dirujuk form manapun. Pakai RPC
-     * SECURITY DEFINER (delete_unused_tags) supaya DELETE ke tabel tags tidak
-     * bisa diblokir RLS di sisi client; verifikasi referensi dilakukan di
-     * database. Bila RPC belum diterapkan, fallback ke loop per-tag yang
-     * best-effort (bila dibatasi RLS, PostgREST sukses tanpa menghapus apa pun). */
-    const deleteOrphanTags = async (tagIds: (string | number)[]) => {
-        const { error } = await supabase.rpc("delete_unused_tags", { p_tag_ids: tagIds.map(String) })
-        if (!error) return
-        if (!/PGRST202|could not find the function|schema cache/i.test(error.message)) {
-            throw new Error("Gagal membersihkan tag yang tidak terpakai: " + error.message)
-        }
-        for (const tagId of tagIds) {
-            const { count } = await supabase
-                .from("form_tags")
-                .select("tag_id", { count: "exact", head: true })
-                .eq("tag_id", tagId)
-            if ((count ?? 0) > 0) continue
-            await supabase.from("tags").delete().eq("id", tagId)
-        }
-    }
-
-    async function syncTags(): Promise<string[]> {
-        if (!id) return tags
-        const normalized = [...new Set(tags.map((t) => t.trim()).filter(Boolean))]
-
-        // RPC SECURITY DEFINER (set_form_tags) menjalankan semuanya dalam
-        // satu transaksi: hapus relasi lama, buat tag baru jika perlu,
-        // tautkan, bersihkan tag yatim, dan mengembalikan daftar nama
-        // aktual dari database sebagai single source of truth.
-        const { data, error } = await supabase.rpc("set_form_tags", {
-            p_form_id: id,
-            p_tag_names: normalized,
-        })
-        if (!error) {
-            const newTags = (data ?? []) as string[]
-            setTags(newTags)
-            return newTags
-        }
-        if (!/PGRST202|could not find the function|schema cache/i.test(error.message)) {
-            throw new Error("Gagal memperbarui tag: " + error.message)
-        }
-
-        // Fallback lama — hanya dipakai bila RPC belum diterapkan ke DB.
-        // Operasi langsung ke tabel mungkin terblokir RLS, jadi tag bisa
-        // saja tidak benar-benar berubah di server.
-        const { data: oldRel } = await supabase
-            .from("form_tags")
-            .select("tag_id")
-            .eq("form_id", id)
-
-        const tagIds: (string | number)[] = []
-        for (const name of normalized) {
-            const { data: existing, error: selErr } = await supabase.from("tags").select("id").eq("name", name).maybeSingle()
-            if (selErr && selErr.code !== "PGRST116") throw new Error("Gagal memperbarui tag: " + selErr.message)
-            let tagId = existing?.id as string | undefined
-
-            if (!tagId) {
-                const { data: ins, error: insErr } = await supabase.from("tags").insert({ name }).select("id").single()
-                if (insErr) throw new Error("Gagal membuat tag: " + insErr.message)
-                tagId = ins?.id as string | undefined
-            }
-
-            if (tagId) tagIds.push(tagId)
-        }
-
-        await supabase.from("form_tags").delete().eq("form_id", id)
-
-        if (tagIds.length > 0) {
-            const { error: relErr } = await supabase
-                .from("form_tags")
-                .upsert(
-                    tagIds.map((tag_id) => ({ form_id: id!, tag_id })),
-                    { onConflict: "form_id,tag_id", ignoreDuplicates: true }
-                )
-            if (relErr) throw new Error("Gagal menautkan tag: " + relErr.message)
-        }
-
-        const keptIds = new Set(tagIds.map(String))
-        const removedIds = [...new Set((oldRel || []).map((r) => String(r.tag_id)))].filter((tid) => !keptIds.has(tid))
-        if (removedIds.length > 0) await deleteOrphanTags(removedIds)
-        // Ambil ulang dari DB sebagai source of truth.
-        const { data: verifyRel } = await supabase
-            .from("form_tags")
-            .select("tag:tags ( name )")
-            .eq("form_id", id)
-        const verifiedTags = (verifyRel ?? [])
-            .map((r) => (r.tag as unknown as { name: string } | null)?.name)
-            .filter((n): n is string => !!n)
-        return verifiedTags
-    }
-
-    const addTag = () => {
-        const value = tagInput.trim()
-        if (!value) return
-        setTags((prev) => (prev.includes(value) ? prev : [...prev, value]))
-        setTagInput("")
-    }
-
-    const removeTag = async (name: string) => {
-        if (!id) return
-        const nextNames = tags.filter((t) => t !== name).map((t) => t.trim())
-        try {
-            // Satu panggilan RPC atomik: hapus relasi, bersihkan tag yatim,
-            // kembalikan daftar aktual — konsisten dengan syncTags.
-            const { data, error } = await supabase.rpc("set_form_tags", {
-                p_form_id: id,
-                p_tag_names: nextNames,
-            })
-            if (!error) {
-                const newTags = (data ?? []) as string[]
-                setTags(newTags)
-                if (user && id) {
-                    pageSet<FormEditCache>(`formEdit:${user.id}:${id}`, {
-                        title,
-                        description,
-                        duration,
-                        passingScore,
-                        status,
-                        tags: newTags,
-                        createdAt,
-                        headerImage,
-                        headerColor,
-                        headerMedia,
-                    })
-                }
-                return
-            }
-            if (!/PGRST202|could not find the function|schema cache/i.test(error.message)) {
-                throw new Error("Gagal menghapus tag: " + error.message)
-            }
-
-            // Fallback lama — operasi langsung mungkin terblokir RLS.
-            const { data: existing } = await supabase.from("tags").select("id").eq("name", name).maybeSingle()
-            if (existing?.id) {
-                const { error: delErr } = await supabase.from("form_tags").delete().eq("form_id", id).eq("tag_id", existing.id)
-                if (delErr) throw delErr
-                await deleteOrphanTags([existing.id])
-            }
-            // Ambil ulang dari DB sebagai source of truth.
-            const { data: verifyRel } = await supabase
-                .from("form_tags")
-                .select("tag:tags ( name )")
-                .eq("form_id", id)
-            const verifiedTags = (verifyRel ?? [])
-                .map((r) => (r.tag as unknown as { name: string } | null)?.name)
-                .filter((n): n is string => !!n)
-            setTags(verifiedTags)
-if (user && id) {
-                    pageSet<FormEditCache>(`formEdit:${user.id}:${id}`, {
-                        title,
-                        description,
-                        duration,
-                        passingScore,
-                        status,
-                        tags: verifiedTags,
-                        createdAt,
-                        headerImage,
-                        headerColor,
-                        headerMedia,
-                    })
-                }
-            if (verifiedTags.includes(name)) {
-                showAlert("Tag tidak bisa dihapus dari server. Periksa izin database.", "warning")
-            }
-        } catch (err) {
-            showAlert(err instanceof Error ? err.message : "Gagal menghapus tag.", "error")
-        }
-    }
 
     const saveFormData = async () => {
         if (!id) return
@@ -332,21 +150,19 @@ if (user && id) {
 
         try {
             await saveFormData()
-            const newTags = await syncTags()
-if (user && id) {
-                    pageSet<FormEditCache>(`formEdit:${user.id}:${id}`, {
-                        title,
-                        description,
-                        duration,
-                        passingScore,
-                        status,
-                        tags: newTags,
-                        createdAt,
-                        headerImage,
-                        headerColor,
-                        headerMedia,
-                    })
-                }
+            if (user && id) {
+                pageSet<FormEditCache>(`formEdit:${user.id}:${id}`, {
+                    title,
+                    description,
+                    duration,
+                    passingScore,
+                    status,
+                    createdAt,
+                    headerImage,
+                    headerColor,
+                    headerMedia,
+                })
+            }
             alertSaveSuccess()
         } catch (err) {
             alertSaveError(err instanceof Error ? err.message : "Gagal menyimpan perubahan.")
@@ -440,50 +256,6 @@ if (user && id) {
                                             </select>
                                             <p className="text-xs text-tinted mt-1.5 hidden sm:block">
                                                 Hanya form berstatus <span className="font-medium text-darks">Public</span> yang bisa diakses orang lain, termasuk lewat tag.
-                                            </p>
-                                        </div>
-
-                                        <div>
-                                            <label className="flex items-center gap-1.5 text-sm font-medium text-darks mb-1.5">
-                                                Tag
-                                            </label>
-                                            <div className="flex gap-2">
-                                                <input
-                                                    type="text"
-                                                    className="input flex-1 bg-base border-second focus:border-done focus:outline-none transition-colors"
-                                                    placeholder="Form akan bisa ditemukan di beranda dengan memasukkan tag ini."
-                                                    value={tagInput}
-                                                    onChange={(e) => setTagInput(e.target.value)}
-                                                    onKeyDown={(e) => {
-                                                        if (e.key === "Enter") {
-                                                            e.preventDefault()
-                                                            addTag()
-                                                        }
-                                                    }}
-                                                />
-                                                <button type="button" onClick={addTag} className="btn bg-base text-darks border border-second hover:bg-second">
-                                                    Tambah
-                                                </button>
-                                            </div>
-                                            {tags.length > 0 && (
-                                                <div className="flex flex-wrap gap-2 mt-3">
-                                                    {tags.map((t) => (
-                                                        <span key={t} className="badge gap-1 py-3 rounded-full bg-done/10 text-done border-none">
-                                                            @{t}
-                                                            <button
-                                                                type="button"
-                                                                onClick={() => removeTag(t)}
-                                                                className="hover:text-wrong transition-colors"
-                                                                aria-label={`Hapus tag ${t}`}
-                                                            >
-                                                                <X className="h-3 w-3" />
-                                                            </button>
-                                                        </span>
-                                                    ))}
-                                                </div>
-                                            )}
-                                            <p className="text-xs text-tinted mt-2 hidden sm:block">
-                                                Tag pertama dipakai sebagai link singkat form, contoh: <span className="font-medium text-darks">/form/CODEVERSE</span>.
                                             </p>
                                         </div>
 
