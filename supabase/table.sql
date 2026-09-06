@@ -63,6 +63,7 @@ CREATE TABLE public.questions (
   created_at timestamp with time zone DEFAULT now(),
   image_question text,
   is_required boolean NOT NULL DEFAULT false,
+  config jsonb,
   CONSTRAINT questions_pkey PRIMARY KEY (id),
   CONSTRAINT questions_form_id_fkey FOREIGN KEY (form_id) REFERENCES public.forms(id)
 );
@@ -72,6 +73,7 @@ CREATE TABLE public.question_options (
   option_text text NOT NULL,
   is_correct boolean NOT NULL DEFAULT false,
   order_index integer NOT NULL DEFAULT 0,
+  media_url text,
   CONSTRAINT question_options_pkey PRIMARY KEY (id),
   CONSTRAINT question_options_question_id_fkey FOREIGN KEY (question_id) REFERENCES public.questions(id)
 );
@@ -96,6 +98,10 @@ CREATE TABLE public.answers (
   selected_option_id uuid,
   selected_options ARRAY,
   answer_text text,
+  file_url text,
+  file_name text,
+  file_size bigint,
+  file_mime text,
   score_obtained numeric NOT NULL DEFAULT 0,
   created_at timestamp with time zone DEFAULT now(),
   CONSTRAINT answers_pkey PRIMARY KEY (id),
