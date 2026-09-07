@@ -54,6 +54,38 @@ async function callOpenAI(
     return text
 }
 
+async function callOpenRouter(
+    m: AIModel,
+    messages: AIHistoryMessage[],
+    system: string | undefined,
+    signal: AbortSignal,
+): Promise<string> {
+    const systemEntry = system ? [{ role: "system", content: system }] : []
+    const res = await fetch(`${m.baseUrl}${m.endpoint}`, {
+        method: "POST",
+        signal,
+        headers: {
+            "content-type": "application/json",
+            Authorization: `Bearer ${m.apiKey}`,
+        },
+        body: JSON.stringify({
+            model: m.model,
+            messages: [...systemEntry, ...messages],
+            // Matikan reasoning: model reasoning (mis. Nemotron) bisa balikin field
+            // `message.reasoning` terpisah yang boros token & tidak dipakai di sini.
+            // Kita hanya butuh `message.content` yang berisi JSON form-nya.
+            reasoning: { enabled: false },
+        }),
+    })
+    if (!res.ok) throw new Error(`OpenRouter gagal: ${await parseHttpError(res)}`)
+    const data = (await res.json()) as { choices?: { message?: { content?: string } }[] }
+    // Ambil khusus `content` — sengaja tidak menyentuh `message.reasoning` sama sekali
+    // supaya narasi proses berpikir model tidak ikut kecampur ke output yang di-parse JSON.
+    const text = data?.choices?.[0]?.message?.content
+    if (typeof text !== "string" || !text.trim()) throw new Error("Respons OpenRouter kosong.")
+    return text
+}
+
 async function callGemini(
     m: AIModel,
     messages: AIHistoryMessage[],
@@ -69,7 +101,19 @@ async function callGemini(
             systemInstruction: system ? { parts: [{ text: system }] } : undefined,
             contents: messages.map((h) => ({
                 role: h.role === "assistant" ? "model" : "user",
-                parts: [{ text: h.content }],
+                parts: [
+                    { text: h.content },
+                    ...(h.media && h.media.base64
+                        ? [
+                              {
+                                  inline_data: {
+                                      mime_type: h.media.mimeType,
+                                      data: h.media.base64,
+                                  },
+                              },
+                          ]
+                        : []),
+                ],
             })),
         }),
     })
@@ -162,6 +206,8 @@ export async function requestAI(
         switch (m.provider) {
             case "OpenAI":
                 return await callOpenAI(m, messages, system, controller.signal)
+            case "OpenRouter":
+                return await callOpenRouter(m, messages, system, controller.signal)
             case "Google":
                 return await callGemini(m, messages, system, controller.signal)
             case "Anthropic":

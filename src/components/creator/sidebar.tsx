@@ -93,7 +93,7 @@ function CreatorSidebar() {
             <div className="flex items-center h-16 px-6 border-b border-second shrink-0">
                 <Link to="/">
                     <img src={logo} alt="Formaly" className="h-6 w-auto" />
-                    <p className="text-italic">C R E A T O R</p>
+                    <p className="font-thin text-tinted">C R E A T O R</p>
                 </Link>
             </div>
 

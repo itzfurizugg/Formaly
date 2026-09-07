@@ -181,7 +181,7 @@ function CreatorDashboard() {
             <div className="xl:max-w-7xl lg:max-w-5xl w-full">
                 <BackButton to="/" />
 
-                <div className="ml-1">
+                <div className="ml-2">
                     <div className="flex items-center justify-between mb-1">
                         <h1 className="text-3xl sm:text-5xl lg:text-6xl font-bold font-display text-darks">Dashboard Creator</h1>
                     </div>

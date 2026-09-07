@@ -10,12 +10,23 @@
 // bundle frontend untuk produksi — arahkan ke proxy/edge function
 // milik sendiri. Struktur ini dibuat supaya generator/proxy bisa
 // dibangun tanpa mengubah bentuk data.
+//
+// CATATAN MODEL: Model :free di OpenRouter bisa berubah/dicabut
+// sewaktu-waktu tanpa pemberitahuan. Cek ulang ketersediaannya
+// berkala di https://openrouter.ai/models?fmt=cards&max_price=0
+//
+// CATATAN PENTING: Sebagian model :free dibatasi provider-nya
+// hanya bisa dipakai lewat "agentic harness" terdaftar (Cline,
+// Cursor, dst — lihat openrouter.ai/apps), BUKAN lewat API call
+// polos seperti yang dipakai Galileo. Kalau muncul error
+// "only available on agentic harnesses", keluarkan model itu
+// dari daftar di bawah — jangan dipaksakan.
 // ============================================================
 
 export interface AIModel {
     id: string
     name: string
-    provider: "OpenAI" | "Google" | "Anthropic" | "Custom"
+    provider: "OpenAI" | "Google" | "Anthropic" | "Custom" | "OpenRouter"
     /** Identifier model yang dikirim ke API (mis. "gpt-4o-mini"). */
     model: string
     /** Base URL endpoint API (boleh tanpa slash di akhir). */
@@ -41,15 +52,37 @@ export const AI_MODELS: AIModel[] = [
     //     color: "#10A37F",
     // },
     {
-        id: "gemini",
-        name: "Gemini",
-        provider: "Google",
-        model: "gemini-3.6-flash",
-        baseUrl: "https://generativelanguage.googleapis.com/v1beta",
-        endpoint: "/models/gemini-3.6-flash:generateContent",
-        apiKey: import.meta.env.VITE_GEMINI_API_KEY ?? "",
-        description: "Gemini 2.0 Flash · multimodal & berbahasa Indonesia baik.",
-        color: "#4285F4",
+        id: "nemotron",
+        name: "Nemotron",
+        provider: "OpenRouter",
+        model: "nvidia/nemotron-3.5-lightning:free",
+        baseUrl: "https://openrouter.ai/api/v1",
+        endpoint: "/chat/completions",
+        apiKey: import.meta.env.VITE_OPENROUTER_API_KEY ?? "",
+        description: "Nemotron 3.5 Lightning (NVIDIA, free) · cepat & default, konteks 1M token.",
+        color: "#76B900",
+    },
+    {
+        id: "laguna",
+        name: "Laguna S 2.1",
+        provider: "OpenRouter",
+        model: "poolside/laguna-s-2.1:free",
+        baseUrl: "https://openrouter.ai/api/v1",
+        endpoint: "/chat/completions",
+        apiKey: import.meta.env.VITE_OPENROUTER_API_KEY ?? "",
+        description: "Laguna S 2.1 (Poolside, free) · fokus coding-agent, output terstruktur lebih presisi.",
+        color: "#00A8E8",
+    },
+    {
+        id: "lfm",
+        name: "LFM 2.5",
+        provider: "OpenRouter",
+        model: "liquid/lfm-2.5-2.6b:free",
+        baseUrl: "https://openrouter.ai/api/v1",
+        endpoint: "/chat/completions",
+        apiKey: import.meta.env.VITE_OPENROUTER_API_KEY ?? "",
+        description: "LFM2.5-2.6B (Liquid AI, free) · ringan & cepat, cocok untuk soal-soal sederhana.",
+        color: "#FF6B6B",
     },
     // {
     //     id: "claude",

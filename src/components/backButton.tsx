@@ -34,7 +34,7 @@ function BackButton({ to, onClick, label = "Kembali", className = "", showOnDesk
             aria-label={label}
             title={label}
             // Sticky saat halaman di-scroll; z-40 supaya melayang di atas konten.
-            className={`group inline-flex items-center mb-3 ${showOnDesktop ? "" : "lg:hidden"} text-darks sticky ${hasTopNav ? "top-[68px]" : "top-3"} z-40 self-start ${className}`}
+            className={`group inline-flex pt-3 pl-1 items-center mb-3 ${showOnDesktop ? "" : "lg:hidden"} text-darks sticky ${hasTopNav ? "top-[68px]" : "top-3"} z-40 self-start ${className}`}
         >
             <span className={`relative size-9 md:size-10 shrink-0 rounded-full flex items-center justify-center border border-white/70 ${BACKDROP_FILTER_SUPPORTED ? "fml-glass-pill" : "fml-glass-pill--solid"} shadow-[0_2px_12px_rgba(57,62,70,0.18)] transition-all duration-200 active:scale-95`}>
                 <ArrowLeft className="h-4 w-4 md:h-[18px] md:w-[18px] text-darks" strokeWidth={2.2} />
