@@ -6,17 +6,11 @@ import {
     ChartNoAxesColumn,
     Form,
     Bot,
+    type LucideIcon,
 } from "lucide-react"
 import logo from "../../assets/logo.svg"
 import { Link } from "react-router-dom"
 import { useAuth } from "../../lib/auth-context"
-
-interface NavItem {
-    to: string
-    label: string
-    icon: typeof LayoutDashboard
-    active: boolean
-}
 
 // Orkestrasi item nav setelah sidebar selesai menggelincir masuk:
 // delay kecil dulu (guarded slide), lalu item muncul fade + angkat ringan.
@@ -30,6 +24,15 @@ const sidebarNav: Variants = {
 function CreatorSidebar() {
     const { pathname } = useLocation()
     const { user, profile } = useAuth()
+
+    interface NavItem {
+        to: string
+        label: string
+        icon: LucideIcon
+        active: boolean
+        /** Label kecil di sebelah teks nav, mis. "Baru" / "Beta". Kosongkan kalau tidak perlu. */
+        badge?: string
+    }
 
     const navItems: NavItem[] = [
         {
@@ -55,12 +58,13 @@ function CreatorSidebar() {
             label: "Galileo AI",
             icon: Bot,
             active: pathname.startsWith("/creator/galileo"),
+            badge: "BETA",
         },
     ]
 
     // Pill aktif dianimasikan lewat layoutId.
     const renderLink = (item: NavItem) => {
-        const { to, label, icon: Icon, active } = item
+        const { to, label, icon: Icon, active, badge } = item
         return (
             <Link
                 key={to}
@@ -76,7 +80,12 @@ function CreatorSidebar() {
                     />
                 )}
                 <Icon className="relative z-10 h-4 w-4 shrink-0" />
-                <span className="relative z-10 truncate text-[15px]">{label}</span>
+                <span className="relative z-10 truncate text-[15px] flex-1">{label}</span>
+                {badge && (
+                    <span className={`relative z-10 shrink-0 rounded-full px-1.5 py-0.5 text-[10px] font-semibold transition-colors ${active ? "bg-white text-darks" : "bg-darks text-white"}`}>
+                        {badge}
+                    </span>
+                )}
             </Link>
         )
     }

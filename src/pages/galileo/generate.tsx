@@ -501,12 +501,12 @@ function GeneratePage() {
                                         {model.name} sedang meracik form-mu
                                     </p>
                                 </div>
-
+{/* 
                                 {prompt && (
                                     <p className="text-xs text-darks/40 bg-darks/5 backdrop-blur-sm rounded-xl px-4 py-2.5 max-w-full break-words italic text-center">
                                         &quot;{prompt}&quot;
                                     </p>
-                                )}
+                                )} */}
                             </div>
                         </motion.div>
                     ) : (
