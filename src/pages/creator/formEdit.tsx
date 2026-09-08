@@ -22,6 +22,7 @@ import RichTextEditor from "../../components/richText"
 import BackButton from "../../components/backButton"
 import FormTabs from "../../components/creator/formTabs"
 import FormHeader from "../../components/creator/formHeader"
+import TagInput from "../../components/creator/TagInput"
 import Loading, { Spinner } from "../../components/loading"
 
 interface FormSettingsData {
@@ -499,7 +500,7 @@ function FormEdit() {
                             {/* Kolom kanan sticky: Tampilan Banner + Hapus Form */}
                             <div className="lg:col-span-5 space-y-6 lg:sticky lg:top-20 lg:self-start mr-1">
                                 {/* 2. Tampilan Banner */}
-                                <div className="bg-white border border-second p-3 sm:p-4 lg:p-6 shadow-sm rounded-xl">
+                                <div className="bg-white border border-second p-3 shadow-sm rounded-xl">
                                     <div>
                                         <div className="flex items-center gap-2 mb-1 mt-2 ml-2">
                                             <h2 className="font-semibold text-darks text-lg">Tampilan Banner</h2>
@@ -625,8 +626,15 @@ function FormEdit() {
                                     </div>
                                 </div>
 
+                                {/* Tag */}
+                                <div className="bg-white border border-second p-3 lg:p-6 sm:p-4 shadow-sm rounded-xl">
+                                    <div className="ml-2">
+                                        <TagInput formId={id ?? ""} />
+                                    </div>
+                                </div>
+
                                 {/* 4. Hapus Form */}
-                                <div className="bg-white border border-second p-3 sm:p-4 lg:p-6 shadow-sm rounded-xl flex flex-col justify-between">
+                                <div className="bg-white border border-second p-3 shadow-sm rounded-xl flex flex-col justify-between">
                                     <div>
                                         <div className="flex items-center gap-2 mb-1 mt-2 ml-2">
                                             <h2 className="font-semibold text-wrong text-lg">Hapus Form</h2>
@@ -687,7 +695,7 @@ function FormEdit() {
                                 </div>
                             </div>
 
-                            </div>
+                        </div>
                     </div>
 
                     {/* Tombol simpan mobile: fixed di bawah, pola "Mulai Mengerjakan" */}

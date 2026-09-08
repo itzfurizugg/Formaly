@@ -8,7 +8,7 @@ import {
     Bot,
     type LucideIcon,
 } from "lucide-react"
-import logo from "../../assets/logo.svg"
+import logo from "../../assets/icon.svg"
 import { Link } from "react-router-dom"
 import { useAuth } from "../../lib/auth-context"
 
@@ -32,6 +32,8 @@ function CreatorSidebar() {
         active: boolean
         /** Label kecil di sebelah teks nav, mis. "Baru" / "Beta". Kosongkan kalau tidak perlu. */
         badge?: string
+        /** Ikon diisi penuh saat aktif. Galileo memakai garis biasa. */
+        filled?: boolean
     }
 
     const navItems: NavItem[] = [
@@ -59,12 +61,13 @@ function CreatorSidebar() {
             icon: Bot,
             active: pathname.startsWith("/creator/galileo"),
             badge: "BETA",
+            filled: false,
         },
     ]
 
     // Pill aktif dianimasikan lewat layoutId.
     const renderLink = (item: NavItem) => {
-        const { to, label, icon: Icon, active, badge } = item
+        const { to, label, icon: Icon, active, badge, filled = true } = item
         return (
             <Link
                 key={to}
@@ -79,7 +82,7 @@ function CreatorSidebar() {
                         transition={{ type: "spring", stiffness: 400, damping: 30 }}
                     />
                 )}
-                <Icon className="relative z-10 h-4 w-4 shrink-0" />
+                <Icon className="relative z-10 h-4 w-4 shrink-0" fill={active && filled ? "currentColor" : "none"} />
                 <span className="relative z-10 truncate text-[15px] flex-1">{label}</span>
                 {badge && (
                     <span className={`relative z-10 shrink-0 rounded-full px-1.5 py-0.5 text-[10px] font-semibold transition-colors ${active ? "bg-white text-darks" : "bg-darks text-white"}`}>
@@ -99,10 +102,10 @@ function CreatorSidebar() {
             transition={{ duration: 0.45, ease: easeOutExpo }}
             className="hidden lg:flex fixed inset-y-0 left-0 z-40 w-[20vw] flex-col bg-base-200 border-r border-second"
         >
-            <div className="flex items-center h-16 px-6 border-b border-second shrink-0">
-                <Link to="/">
-                    <img src={logo} alt="Formaly" className="h-6 w-auto" />
-                    <p className="font-thin text-tinted">C R E A T O R</p>
+            <div className="flex flex-row items-center h-28 px-6 shrink-0">
+                <Link to="/" className="flex items-center gap-2">
+                    <img src={logo} alt="Formaly" className="h-8 w-auto" />
+                    <p className="font-semibold text-tinted">C R E A T O R</p>
                 </Link>
             </div>
 

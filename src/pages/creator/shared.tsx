@@ -1,15 +1,37 @@
+import { useEffect, useState } from "react"
 import { useParams } from "react-router-dom"
-import { useState } from "react"
 import { Copy, Globe } from "lucide-react"
 import { showAlert } from "../../lib/alerts"
 import BackButton from "../../components/backButton"
 import FormTabs from "../../components/creator/formTabs"
-import TagInput from "../../components/creator/TagInput"
+import { supabase } from "../../lib/supabase"
 
 function Shared() {
     const { id } = useParams()
     const [tags, setTags] = useState<string[]>([])
     const [shortMode, setShortMode] = useState(false)
+
+    useEffect(() => {
+        if (!id) return
+        let cancelled = false
+        supabase
+            .from("form_tags")
+            .select("tag:tags ( name )")
+            .eq("form_id", id)
+            .then(({ data }) => {
+                if (cancelled) return
+                if (data) {
+                    setTags(
+                        data
+                            .map((r) => (r.tag as unknown as { name: string } | null)?.name)
+                            .filter((n): n is string => !!n)
+                    )
+                }
+            })
+        return () => {
+            cancelled = true
+        }
+    }, [id])
 
     const tag = tags[0]
     const shortUrl = tag ? `${window.location.origin}/form/${encodeURIComponent(tag)}` : null
@@ -76,7 +98,7 @@ function Shared() {
                                         className="btn bg-base text-darks border-second flex-1"
                                         title={shortUrl ? (shortMode ? "Kembalikan ke link panjang" : "Ubah ke link singkat") : "Tambahkan tag untuk link singkat"}
                                     >
-                                        <Globe className="h-4 w-4" />
+                                        <Globe className="h-4 w-4" fill={shortMode ? "currentColor" : "none"} />
                                         {shortMode ? "Link Asli" : "Link dari Tag"}
                                     </button>
                                     <button
@@ -92,18 +114,6 @@ function Shared() {
                         </div>
                     </div>
 
-                </div>
-
-                <div className="bg-white border border-second p-3 lg:p-6 sm:p-4 shadow-sm rounded-xl mt-4">
-                    {/* <div className="flex items-center gap-2 mb-1">
-                        <h2 className="font-semibold text-darks mt-2 ml-2">Tag</h2>
-                    </div>
-                    <p className="text-sm text-tinted mb-4 ml-2">
-                        Tag membantu orang menemukan form ini di beranda dan menyediakan link singkat.
-                    </p> */}
-                    <div className="ml-2">
-                        <TagInput formId={id ?? ""} onChange={(nextTags) => setTags(nextTags)} />
-                    </div>
                 </div>
 
                 {/* <div className="bg-white border border-second p-3 lg:p-6 sm:p-4 shadow-sm rounded-xl mt-4">

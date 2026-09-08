@@ -14,6 +14,8 @@ interface PromptPayload {
     fileName: string | null
     mimeType: string | null
     base64: string | null
+    /** Teks hasil ekstraksi isi file — dikirim sebagai konteks ke semua model. */
+    fileText: string | null
     /** id form tujuan "tambah soal" (null = buat form baru). */
     form_id?: string | null
     /** id model AI yang dipilih pengguna di chat.tsx lewat model picker. */
@@ -340,7 +342,6 @@ function GeneratePage() {
     const inFlightRef = useRef(false)
     const [attempt, setAttempt] = useState(0)
     const [step, setStep] = useState<string>(STAGES[0])
-    const [prompt, setPrompt] = useState("")
     const [error, setError] = useState<string | null>(null)
     // Model yang dipilih pengguna di chat.tsx — dibaca dari payload sessionStorage,
     // fallback ke DEFAULT_MODEL_ID kalau tidak ada (mis. payload lama sebelum fitur ini ada).
@@ -365,7 +366,6 @@ function GeneratePage() {
                 setError("Tidak ada prompt. Kembali ke halaman Galileo dan tuliskan ide form-mu.")
                 return
             }
-            setPrompt(promptText)
 
             const activeModelId = payload?.model_id ?? DEFAULT_MODEL_ID
             setModelId(activeModelId)
@@ -398,6 +398,16 @@ function GeneratePage() {
                     mimeType: payload.mimeType,
                     base64: payload.base64,
                 }
+            }
+            // Teks hasil ekstraksi isi file disisipkan sebagai konteks supaya terbaca model
+            // berbasis teks (OpenRouter/OpenAI/Anthropic/Custom) yang tidak menerima file mentah.
+            // Gemini tetap menerima file mentah lewat message.media, plus konteks teks ini.
+            if (payload?.fileText?.trim()) {
+                message.content +=
+                    "\n\n=== ISI FILE LAMPIRAN ===\n" +
+                    `Nama file: ${payload.fileName ?? "lampiran"}\n` +
+                    payload.fileText +
+                    "\n=== AKHIR ISI FILE ===\n"
             }
 
             const raw = await requestAI(activeModel, [message], formIdEdit ? EDIT_SYSTEM : GENERATE_SYSTEM)
@@ -498,7 +508,7 @@ function GeneratePage() {
                                     </div>
 
                                     <p className="text-xs text-darks/50">
-                                        {model.name} sedang meracik form-mu
+                                        {model.name} sedang membuat form-mu
                                     </p>
                                 </div>
 {/* 

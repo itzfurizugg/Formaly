@@ -5,6 +5,7 @@ import { FileText, Paperclip, Send, LayoutTemplate, ChevronDown, Check } from "l
 import { Spinner } from "../../components/loading"
 import { supabase } from "../../lib/supabase"
 import { useAuth } from "../../lib/auth-context"
+import { extractFileText } from "../../lib/fileText"
 import { AI_MODELS, DEFAULT_MODEL_ID, getModel, type AIModel } from "./models"
 
 interface PromptPayload {
@@ -13,6 +14,8 @@ interface PromptPayload {
     mimeType: string | null
     /** Konten file asli (base64) yang dikirim ke AI (docx/pdf/txt/md). */
     base64: string | null
+    /** Teks hasil ekstraksi isi file — konteks untuk model yang tidak menerima file mentah. */
+    fileText: string | null
     /** id form yang dipilih untuk ditambah soal (null = buat form baru). */
     form_id: string | null
     /** id model AI yang dipilih pengguna lewat model picker di chat. */
@@ -190,6 +193,7 @@ function ChatPage() {
         let base64: string | null = null
         let mimeType: string | null = null
         let fileName: string | null = null
+        let fileText: string | null = null
         if (file) {
             fileName = file.name
             try {
@@ -200,6 +204,13 @@ function ChatPage() {
                 base64 = null
                 mimeType = null
             }
+            try {
+                fileText = await extractFileText(file)
+            } catch (err) {
+                setError(err instanceof Error ? err.message : "Isi file tidak bisa dibaca.")
+                setLoading(false)
+                return
+            }
         }
 
         const payload: PromptPayload = {
@@ -207,6 +218,7 @@ function ChatPage() {
             fileName,
             mimeType,
             base64,
+            fileText,
             // Prioritas: form yang dipilih eksplisit lewat popup "@".
             // Fallback: telusuri judul form yang disebut "@judul..." dalam teks.
             form_id: selectedFormId ?? resolveMentionId(text, forms),
