@@ -2,11 +2,13 @@ import * as React from "react"
 import { useEffect, useState, useRef } from "react"
 import { useNavigate } from "react-router-dom"
 import { FileText, Paperclip, Send, LayoutTemplate, ChevronDown, Check } from "lucide-react"
+import { motion } from "motion/react"
 import { Spinner } from "../../components/loading"
 import { supabase } from "../../lib/supabase"
 import { useAuth } from "../../lib/auth-context"
 import { extractFileText } from "../../lib/fileText"
 import { AI_MODELS, DEFAULT_MODEL_ID, getModel, type AIModel } from "./models"
+import { fadeSlide } from "../../lib/motion"
 
 interface PromptPayload {
     prompt: string
@@ -240,7 +242,7 @@ function ChatPage() {
 
     return (
         <div className="flex flex-col items-center justify-center min-h-screen px-3.5 sm:px-6 py-6">
-            <div className="w-full max-w-2xl">
+            <motion.div variants={fadeSlide} initial="hidden" animate="show" className="w-full max-w-2xl">
                 <h1 className="text-center font-default text-4xl sm:text-4xl text-darks">
                     Halo, saya <span className="font-bold">Galileo</span>!
                 </h1>
@@ -336,7 +338,7 @@ function ChatPage() {
                         Coba ketik <span className="font-semibold text-darks">@</span> lalu pilih form — Galileo akan membaca soal yang sudah ada dan menambahkan soal baru ke form itu.
                     </p> */}
                 </form>
-            </div>
+            </motion.div>
 
             <input
                 ref={fileInputRef}

@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react"
 import { useNavigate, useLocation } from "react-router-dom"
 import { Clock, FileText } from "lucide-react"
+import { motion } from "motion/react"
 import { RichText } from "../../components/richText"
 import { supabase } from "../../lib/supabase"
 import { showAlert } from "../../lib/alerts"
@@ -11,6 +12,7 @@ import TokenInputModal from "../../components/TokenInputModal"
 import BackButton from "../../components/backButton"
 import FormHeader from "../../components/creator/formHeader"
 import { Spinner } from "../../components/loading"
+import { fadeSlide } from "../../lib/motion"
 
 interface FormItem {
     id: string
@@ -176,7 +178,7 @@ function FormDescriptionPage() {
     return (
         <>
             {!loading && form && (
-                <div className="flex flex-col items-center min-h-screen sm:min-h-[80vh] sm:justify-center pt-6 pb-28 sm:px-4 sm:py-10 bg-base-300 sm:bg-transparent">
+                <motion.div variants={fadeSlide} initial="hidden" animate="show" className="flex flex-col items-center min-h-screen sm:min-h-[80vh] sm:justify-center pt-6 pb-28 sm:px-4 sm:py-10 bg-base-300 sm:bg-transparent">
                     {locationState?.form && (
                         <BackButton to="/" className="ml-3.5 sm:ml-0" />
                     )}
@@ -255,7 +257,7 @@ function FormDescriptionPage() {
                             </button>
                         </div>
                     </div>
-                </div>
+                </motion.div>
             )}
 
             <TokenInputModal

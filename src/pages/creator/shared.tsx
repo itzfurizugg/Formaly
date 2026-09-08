@@ -1,10 +1,12 @@
 import { useEffect, useState } from "react"
 import { useParams } from "react-router-dom"
 import { Copy, Globe } from "lucide-react"
+import { motion } from "motion/react"
 import { showAlert } from "../../lib/alerts"
 import BackButton from "../../components/backButton"
 import FormTabs from "../../components/creator/formTabs"
 import { supabase } from "../../lib/supabase"
+import { fadeSlide, listContainer, listItem } from "../../lib/motion"
 
 function Shared() {
     const { id } = useParams()
@@ -44,14 +46,19 @@ function Shared() {
     }
 
     return (
-        <div className="flex flex-col items-center px-3.5 sm:px-6 py-5 sm:py-10">
+        <motion.div
+            variants={fadeSlide}
+            initial="hidden"
+            animate="show"
+            className="flex flex-col items-center px-3.5 sm:px-6 py-5 sm:py-10"
+        >
             <div className="w-full xl:max-w-7xl lg:max-w-5xl">
                 <BackButton to="/creator" />
 
                 <FormTabs id={id} active="shared" />
 
-                <div className="flex flex-col md:flex-row gap-3">
-                    <div className="bg-white border border-second p-3 lg:p-6 sm:p-4 shadow-sm rounded-xl shrink-0">
+                <motion.div variants={listContainer} initial="hidden" animate="show" className="flex flex-col md:flex-row gap-3">
+                    <motion.div variants={listItem} className="bg-white border border-second p-3 lg:p-6 sm:p-4 shadow-sm rounded-xl shrink-0">
                         <div className="flex flex-col items-center gap-4">
                             <div className="bg-base border border-second rounded-lg p-3 w-fit">
                                 <img
@@ -65,9 +72,9 @@ function Shared() {
                                 Scan QR code untuk membuka form langsung di perangkat lain.
                             </p> */}
                         </div>
-                    </div>
+                    </motion.div>
 
-                    <div className="bg-white border border-second p-3 lg:p-6 sm:p-4 shadow-sm rounded-xl flex-1 min-w-0">
+                    <motion.div variants={listItem} className="bg-white border border-second p-3 lg:p-6 sm:p-4 shadow-sm rounded-xl flex-1 min-w-0">
                         <div className="flex items-center gap-2 mb-1">
                             <h2 className="font-semibold text-darks mt-2 ml-2">Bagikan Form</h2>
                         </div>
@@ -112,9 +119,9 @@ function Shared() {
                                 </div>
                             </div>
                         </div>
-                    </div>
+                    </motion.div>
 
-                </div>
+                </motion.div>
 
                 {/* <div className="bg-white border border-second p-3 lg:p-6 sm:p-4 shadow-sm rounded-xl mt-4">
                     <div className="flex items-center gap-2 mb-1">
@@ -138,7 +145,7 @@ function Shared() {
                     </div>
                 </div> */}
             </div>
-        </div>
+        </motion.div>
     )
 }
 

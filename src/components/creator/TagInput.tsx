@@ -171,7 +171,7 @@ export default function TagInput({ formId, onChange }: TagInputProps) {
                     ))}
                 </div>
             )}
-            <p className="text-xs text-tinted mt-2 hidden sm:block">
+            <p className="text-xs text-tinted mt-2">
                 Tag pertama dipakai sebagai link singkat form, contoh: <span className="font-medium text-darks">/form/CODEVERSE</span>.
             </p>
         </div>

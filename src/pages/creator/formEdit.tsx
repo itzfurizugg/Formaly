@@ -1,5 +1,6 @@
 import { useEffect, useState, useCallback, useRef, type FormEvent } from "react"
 import { useNavigate, useParams } from "react-router-dom"
+import { motion } from "motion/react"
 import {
     BookOpenText,
     Eye,
@@ -14,6 +15,7 @@ import {
 import { supabase } from "../../lib/supabase"
 import { useAuth } from "../../lib/auth-context"
 import { alertSaveError, alertSaveSuccess, confirmDelete, showAlert } from "../../lib/alerts"
+import { fadeSlide } from "../../lib/motion"
 import { PRESET_HEADER_COLORS } from "../../lib/colorbase"
 import { isValidImageUrl } from "../../lib/imageUrl"
 import { uploadMedia, deleteMedia, getMediaType } from "../../lib/mediaStorage"
@@ -397,7 +399,12 @@ function FormEdit() {
         <>
             <Loading show={loading} />
             {!loading && (
-                <div className="flex flex-col items-center px-3.5 sm:px-6 pt-5 pb-28 sm:pb-10 sm:py-10">
+                <motion.div
+                    variants={fadeSlide}
+                    initial="hidden"
+                    animate="show"
+                    className="flex flex-col items-center px-3.5 sm:px-6 pt-5 pb-28 sm:pb-10 sm:py-10"
+                >
                     <div className="w-full xl:max-w-7xl lg:max-w-5xl">
                         <BackButton to="/creator" />
 
@@ -409,98 +416,134 @@ function FormEdit() {
                             <FormTabs id={id} active="detail" />
                         </div>
 
+                        {/* Kolom kiri: Detail + Pengaturan ditumpuk (desktop). Di mobile
+                        wrapper memakai `contents` agar semua kartu jadi grid-item langsung,
+                        urutannya diatur lewat order-*: formEdit → header → tag → formSettings → delete. */}
                         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start ml-1">
-                            {/* 1. Detail Form (kiri) */}
-                            <div className="lg:col-span-7 bg-white border border-second p-3 sm:p-4 lg:p-6 shadow-sm rounded-xl flex flex-col justify-between">
-                                {/* <div className="flex items-center gap-2 mb-1 mt-2 ml-2">
-                                    <h2 className="font-semibold text-darks text-lg">Detail Form</h2>
+                            {/* Kolom kiri: Detail Form + Pengaturan Form ditumpuk */}
+                            <div className="contents lg:block lg:col-span-7 lg:space-y-6">
+                                {/* 1. Detail Form */}
+                                <div className="order-1 lg:order-1 bg-white border border-second p-3 sm:p-4 lg:p-6 shadow-sm rounded-xl flex flex-col justify-between">
+                                    <form onSubmit={handleSaveAll} className="space-y-3">
+                                        <div className="overflow-hidden rounded-lg border border-second">
+                                            <FormHeader formId={id ?? ""} title={title} headerImage={headerImage} headerColor={headerColor} headerMedia={headerMedia} />
+                                        </div>
+
+                                        <div>
+                                            <span className="inline-flex items-center gap-1.5 text-xs text-tinted mb-3 sm:mb-2 ml-1">
+                                                Dibuat pada {createdAt ? new Date(createdAt).toLocaleDateString("id-ID", { day: "numeric", month: "short", year: "numeric" }) : ""}
+                                            </span>
+                                            <input type="text" required className={inputCls} value={title} onChange={(e) => setTitle(e.target.value)} />
+                                        </div>
+
+                                        <div>
+                                            <RichTextEditor
+                                                value={description}
+                                                onChange={setDescription}
+                                                placeholder="Deskripsi Form..."
+                                            />
+                                        </div>
+
+                                        <div className="grid grid-cols-2 gap-4">
+                                            <div>
+                                                <label className="block text-sm font-medium text-darks mb-1.5">Durasi (menit)</label>
+                                                <input
+                                                    type="number"
+                                                    min={0}
+                                                    step={1}
+                                                    className={inputWithVal}
+                                                    value={duration}
+                                                    onFocus={(e) => e.target.select()}
+                                                    onChange={(e) => {
+                                                        const val = e.target.value
+                                                        setDuration(val === "" ? "" : Number(val))
+                                                    }}
+                                                    placeholder="0"
+                                                />
+                                            </div>
+                                            <div>
+                                                <label className="block text-sm font-medium text-darks mb-1.5">Nilai Minimum</label>
+                                                <input
+                                                    type="number"
+                                                    min={0}
+                                                    max={100}
+                                                    step={1}
+                                                    className={inputWithVal}
+                                                    value={passingScore}
+                                                    onFocus={(e) => e.target.select()}
+                                                    onChange={(e) => {
+                                                        const val = e.target.value
+                                                        setPassingScore(val === "" ? "" : Number(val))
+                                                    }}
+                                                    placeholder="0"
+                                                />
+                                            </div>
+                                        </div>
+
+                                        <div>
+                                            <label className="block text-sm font-medium text-darks mb-1.5">Status</label>
+                                            <select className="select select-bordered w-full bg-base border-second focus:border-done focus:outline-none" value={status} onChange={(e) => setStatus(e.target.value)}>
+                                                <option value="draft">Draft</option>
+                                                <option value="published">Public</option>
+                                            </select>
+                                            <p className="text-xs text-tinted mt-1.5 hidden sm:block">
+                                                Hanya form berstatus <span className="font-medium text-darks">Public</span> yang bisa diakses orang lain, termasuk lewat tag.
+                                            </p>
+                                        </div>
+
+                                        <button
+                                            type="submit"
+                                            disabled={saving}
+                                            className="btn bg-darks text-base border-none w-full hidden sm:flex hover:opacity-90 transition-opacity disabled:opacity-60 mb-2 mt-5"
+                                        >
+                                            {saving ? <Spinner size={16} /> : <Save className="h-4 w-4" />}
+                                            Simpan Perubahan
+                                        </button>
+                                    </form>
                                 </div>
-                                <p className="text-sm text-tinted mb-4 ml-2">
-                                    Judul, deskripsi, durasi, dan status soalnya dikelola di sini.
-                                </p> */}
 
-                                <form onSubmit={handleSaveAll} className="space-y-3">
-                                    <div className="overflow-hidden rounded-lg border border-second">
-                                        <FormHeader formId={id ?? ""} title={title} headerImage={headerImage} headerColor={headerColor} headerMedia={headerMedia} />
-                                    </div>
-
+                                {/* 3. Pengaturan Form */}
+                                <div className="order-4 lg:order-none bg-white border border-second p-3 sm:p-4 lg:p-6 shadow-sm rounded-xl flex flex-col justify-between">
                                     <div>
-                                        <span className="inline-flex items-center gap-1.5 text-xs text-tinted mb-3 sm:mb-2 ml-1">
-                                            Dibuat pada {createdAt ? new Date(createdAt).toLocaleDateString("id-ID", { day: "numeric", month: "short", year: "numeric" }) : ""}
-                                        </span>
-                                        <input type="text" required className={inputCls} value={title} onChange={(e) => setTitle(e.target.value)} />
-                                    </div>
-
-                                    <div>
-                                        <RichTextEditor
-                                            value={description}
-                                            onChange={setDescription}
-                                            placeholder="Deskripsi Form..."
-                                        />
-                                    </div>
-
-                                    <div className="grid grid-cols-2 gap-4">
-                                        <div>
-                                            <label className="block text-sm font-medium text-darks mb-1.5">Durasi (menit)</label>
-                                            <input
-                                                type="number"
-                                                min={0}
-                                                step={1}
-                                                className={inputWithVal}
-                                                value={duration}
-                                                onFocus={(e) => e.target.select()}
-                                                onChange={(e) => {
-                                                    const val = e.target.value
-                                                    setDuration(val === "" ? "" : Number(val))
-                                                }}
-                                                placeholder="0"
-                                            />
+                                        <div className="flex items-center gap-2 mb-1 mt-2 ml-2">
+                                            <h2 className="font-semibold text-darks text-lg">Pengaturan Form</h2>
                                         </div>
-                                        <div>
-                                            <label className="block text-sm font-medium text-darks mb-1.5">Nilai Minimum</label>
-                                            <input
-                                                type="number"
-                                                min={0}
-                                                max={100}
-                                                step={1}
-                                                className={inputWithVal}
-                                                value={passingScore}
-                                                onFocus={(e) => e.target.select()}
-                                                onChange={(e) => {
-                                                    const val = e.target.value
-                                                    setPassingScore(val === "" ? "" : Number(val))
-                                                }}
-                                                placeholder="0"
-                                            />
-                                        </div>
-                                    </div>
-
-                                    <div>
-                                        <label className="block text-sm font-medium text-darks mb-1.5">Status</label>
-                                        <select className="select select-bordered w-full bg-base border-second focus:border-done focus:outline-none" value={status} onChange={(e) => setStatus(e.target.value)}>
-                                            <option value="draft">Draft</option>
-                                            <option value="published">Public</option>
-                                        </select>
-                                        <p className="text-xs text-tinted mt-1.5 hidden sm:block">
-                                            Hanya form berstatus <span className="font-medium text-darks">Public</span> yang bisa diakses orang lain, termasuk lewat tag.
+                                        <p className="text-sm text-tinted mb-4 ml-2">
+                                            Atur apa yang dilihat responden dan bagaimana form dikerjakan.
                                         </p>
-                                    </div>
 
-                                    <button
-                                        type="submit"
-                                        disabled={saving}
-                                        className="btn bg-darks text-base border-none w-full hidden sm:flex hover:opacity-90 transition-opacity disabled:opacity-60 mb-2 mt-5"
-                                    >
-                                        {saving ? <Spinner size={16} /> : <Save className="h-4 w-4" />}
-                                        Simpan Perubahan
-                                    </button>
-                                </form>
+                                        <div className="px-3.5 sm:px-1 divide-y divide-second/60">
+                                            {SETTING_ROWS.map((row) => (
+                                                <div key={row.key} className="flex items-start justify-between gap-4 py-4 first:pt-2 last:pb-6">
+                                                    <div className="flex items-start gap-3 min-w-0">
+                                                        <div className="shrink-0 bg-base rounded-lg p-2 mt-0.5">
+                                                            <row.icon className="h-4 w-4 text-darks" />
+                                                        </div>
+                                                        <div className="min-w-0">
+                                                            <p className="text-sm font-semibold text-darks">{row.title}</p>
+                                                            <p className="text-xs text-tinted mt-1 leading-relaxed">{row.description}</p>
+                                                            {row.hint && <p className="text-xs text-tinted/70 mt-1.5 italic hidden sm:block">{row.hint}</p>}
+                                                        </div>
+                                                    </div>
+                                                    <input
+                                                        type="checkbox"
+                                                        aria-label={row.title}
+                                                        checked={settings[row.key]}
+                                                        onChange={() => setSettings((prev) => ({ ...prev, [row.key]: !prev[row.key] }))}
+                                                        className="toggle mt-1 shrink-0 border-second bg-tinted/30 checked:border-darks/50 checked:bg-darks/50 transition-colors duration-200"
+                                                    />
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
 
-                            {/* Kolom kanan sticky: Tampilan Banner + Hapus Form */}
-                            <div className="lg:col-span-5 space-y-6 lg:sticky lg:top-20 lg:self-start mr-1">
-                                {/* 2. Tampilan Banner */}
-                                <div className="bg-white border border-second p-3 shadow-sm rounded-xl">
+                            {/* Kolom kanan sticky: Header (Banner) + Hapus Form. Di mobile `contents`
+                            supaya Banner urut ke-2 (setelah Detail) dan Hapus di paling bawah. */}
+                            <div className="contents lg:block lg:col-span-5 lg:space-y-6 lg:sticky lg:top-20 lg:self-start mr-1">
+                                {/* 2. Header (Tampilan Banner) */}
+                                <div className="order-2 lg:order-none bg-white border border-second p-3 shadow-sm rounded-xl">
                                     <div>
                                         <div className="flex items-center gap-2 mb-1 mt-2 ml-2">
                                             <h2 className="font-semibold text-darks text-lg">Tampilan Banner</h2>
@@ -627,14 +670,14 @@ function FormEdit() {
                                 </div>
 
                                 {/* Tag */}
-                                <div className="bg-white border border-second p-3 lg:p-6 sm:p-4 shadow-sm rounded-xl">
+                                <div className="order-3 lg:order-none bg-white border border-second p-5 rounded-xl">
                                     <div className="ml-2">
                                         <TagInput formId={id ?? ""} />
                                     </div>
                                 </div>
 
                                 {/* 4. Hapus Form */}
-                                <div className="bg-white border border-second p-3 shadow-sm rounded-xl flex flex-col justify-between">
+                                <div className="order-5 lg:order-none bg-white border border-second p-3 shadow-sm rounded-xl flex flex-col justify-between">
                                     <div>
                                         <div className="flex items-center gap-2 mb-1 mt-2 ml-2">
                                             <h2 className="font-semibold text-wrong text-lg">Hapus Form</h2>
@@ -658,61 +701,24 @@ function FormEdit() {
                                     </div>
                                 </div>
                             </div>
-
-                            {/* 3. Pengaturan Form (kiri bawah, selebar Detail Form) */}
-                            <div className="lg:col-span-7 bg-white border border-second p-3 sm:p-4 lg:p-6 shadow-sm rounded-xl flex flex-col justify-between">
-                                <div>
-                                    <div className="flex items-center gap-2 mb-1 mt-2 ml-2">
-                                        <h2 className="font-semibold text-darks text-lg">Pengaturan Form</h2>
-                                    </div>
-                                    <p className="text-sm text-tinted mb-4 ml-2">
-                                        Atur apa yang dilihat responden dan bagaimana form dikerjakan.
-                                    </p>
-
-                                    <div className="px-3.5 sm:px-1 divide-y divide-second/60">
-                                        {SETTING_ROWS.map((row) => (
-                                            <div key={row.key} className="flex items-start justify-between gap-4 py-4 first:pt-2 last:pb-6">
-                                                <div className="flex items-start gap-3 min-w-0">
-                                                    <div className="shrink-0 bg-base rounded-lg p-2 mt-0.5">
-                                                        <row.icon className="h-4 w-4 text-darks" />
-                                                    </div>
-                                                    <div className="min-w-0">
-                                                        <p className="text-sm font-semibold text-darks">{row.title}</p>
-                                                        <p className="text-xs text-tinted mt-1 leading-relaxed">{row.description}</p>
-                                                        {row.hint && <p className="text-xs text-tinted/70 mt-1.5 italic hidden sm:block">{row.hint}</p>}
-                                                    </div>
-                                                </div>
-                                                <input
-                                                    type="checkbox"
-                                                    aria-label={row.title}
-                                                    checked={settings[row.key]}
-                                                    onChange={() => setSettings((prev) => ({ ...prev, [row.key]: !prev[row.key] }))}
-                                                    className="toggle mt-1 shrink-0 border-second bg-tinted/30 checked:border-darks/50 checked:bg-darks/50 transition-colors duration-200"
-                                                />
-                                            </div>
-                                        ))}
-                                    </div>
-                                </div>
-                            </div>
-
                         </div>
                     </div>
 
                     {/* Tombol simpan mobile: fixed di bawah, pola "Mulai Mengerjakan" */}
                     <div className="fixed bottom-0 left-0 right-0 z-40 pointer-events-none sm:hidden">
-                        <div className="px-4 pb-4 pt-30 bg-gradient-to-t from-base-300 from-40% to-transparent">
+                        <div className="px-4 pb-6 pt-30 bg-gradient-to-t from-base-300 from-20% to-transparent">
                             <button
                                 type="button"
                                 onClick={() => handleSaveAll()}
                                 disabled={saving}
-                                className="w-3/4 h-14 bg-darks mx-auto text-lg text-white font-bold rounded-full flex items-center justify-center gap-2 pointer-events-auto shadow-lg hover:opacity-90 transition-opacity disabled:opacity-60"
+                                className="w-fit px-5 h-14 bg-darks mx-auto text-lg text-white font-bold rounded-full flex items-center justify-center gap-2 pointer-events-auto shadow-lg hover:opacity-90 transition-opacity disabled:opacity-60"
                             >
                                 {saving ? <Spinner size={16} /> : <Save className="h-4 w-4" />}
                                 Simpan Perubahan
                             </button>
                         </div>
                     </div>
-                </div>
+                </motion.div>
             )}
         </>
     )

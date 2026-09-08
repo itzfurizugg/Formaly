@@ -1,11 +1,13 @@
 import { useState } from "react"
 import { useNavigate } from "react-router-dom"
+import { motion } from "motion/react"
 import { supabase } from "../../lib/supabase"
 import { useAuth } from "../../lib/auth-context"
 import BackButton from "../../components/backButton"
 import { alertSaveError, alertSaveSuccess } from "../../lib/alerts"
 import RichTextEditor from "../../components/richText"
 import { Spinner } from "../../components/loading"
+import { fadeSlide } from "../../lib/motion"
 
 function FormNew() {
     const navigate = useNavigate()
@@ -49,7 +51,12 @@ function FormNew() {
 
 
     return (
-        <div className="flex flex-col items-center px-3.5 sm:px-6 py-5 sm:py-15">
+        <motion.div
+            variants={fadeSlide}
+            initial="hidden"
+            animate="show"
+            className="flex flex-col items-center px-3.5 sm:px-6 py-5 sm:py-15"
+        >
             <div className="w-full max-w-5xl">
                 <BackButton to="/creator/forms" showOnDesktop />
 
@@ -123,7 +130,7 @@ function FormNew() {
                     </button>
                 </form>
             </div>
-        </div>
+        </motion.div>
     )
 }
 

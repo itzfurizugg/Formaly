@@ -1,8 +1,10 @@
 import { useState, useEffect } from "react"
 import { useNavigate, useParams, useLocation } from "react-router-dom"
+import { motion } from "motion/react"
 import { supabase } from "../../lib/supabase"
 import { useAuth } from "../../lib/auth-context"
 import { loginUrl } from "../../lib/redirect"
+import { fadeSlide } from "../../lib/motion"
 import FormPage from "./form"
 
 function FormResolver() {
@@ -95,12 +97,12 @@ function FormResolver() {
             mode === "exam" ? (
                 <FormPage />
             ) : (
-                <div className="flex flex-col items-center justify-center min-h-screen px-3.5">
+                <motion.div variants={fadeSlide} initial="hidden" animate="show" className="flex flex-col items-center justify-center min-h-screen px-3.5">
                     <p className="text-tinted mb-4">Form tidak ditemukan atau belum dipublikasikan.</p>
                     <button onClick={() => navigate("/")} className="btn bg-darks text-white border-none">
                         Kembali
                     </button>
-                </div>
+                </motion.div>
             )
             )}
         </>

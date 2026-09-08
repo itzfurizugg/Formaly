@@ -9,7 +9,7 @@ import {
     Bot,
     type LucideIcon,
 } from "lucide-react"
-import logo from "../../assets/icon.svg"
+import logo from "../../assets/logo.svg"
 import { Link } from "react-router-dom"
 import { useAuth } from "../../lib/auth-context"
 
@@ -120,12 +120,12 @@ function CreatorSidebar() {
             initial={{ x: "-100%" }}
             animate={{ x: hidden ? "-100%" : "0%" }}
             transition={{ duration: 0.45, ease: easeOutExpo }}
-            className="flex fixed inset-y-0 left-0 z-40 w-[20vw] flex-col bg-base-200 border-r border-second"
+            className="flex fixed inset-y-0 left-0 z-40 w-[19.5vw] flex-col bg-base-200 border-r border-second"
         >
             <div className="flex flex-row items-center h-28 px-6 shrink-0">
-                <Link to="/" className="flex items-center gap-2">
+                <Link to="/" className="flex items-center gap-2 overflow-hidden">
                     <img src={logo} alt="Formaly" className="h-8 w-auto" />
-                    <p className="font-semibold text-tinted">C R E A T O R</p>
+                    <p className="font-semibold text-tinted whitespace-nowrap">C R E A T O R</p>
                 </Link>
             </div>
 
