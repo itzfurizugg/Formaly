@@ -456,7 +456,7 @@ function GeneratePage() {
                                supaya nggak kena efek stacking context yang berubah pas animasi opacity motion.div selesai */}
                             {/* <div className="absolute inset-0 -m-4 z-0 rounded-xl bg-gradient-to-br from-darks/50 to-tinted/50 blur-2xl" /> */}
 
-                            <div className="relative z-10 overflow-hidden rounded-xl bg-base-300 backdrop-blur-xl px-8 py-14 flex flex-col items-center gap-10">
+                            <div className="relative z-10 overflow-hidden rounded-xl bg-base-400 backdrop-blur-xl px-8 py-14 flex flex-col items-center gap-10">
                                 {/* Lensa teleskop: cincin berlapis berputar dengan kecepatan berbeda */}
                                 <div className="relative w-32 h-32 flex items-center justify-center shrink-0">
                                     <motion.span

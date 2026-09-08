@@ -1,4 +1,5 @@
 import { motion, type Variants } from "motion/react"
+import { useEffect, useState } from "react"
 import { useLocation } from "react-router-dom"
 import { easeOutExpo, listItem } from "../../lib/motion"
 import {
@@ -12,6 +13,20 @@ import logo from "../../assets/icon.svg"
 import { Link } from "react-router-dom"
 import { useAuth } from "../../lib/auth-context"
 
+// Breakpoint desktop (lg) supaya sidebar bisa dianimasikan keluar saat layar
+// menyusut di bawah 1024px, bukan langsung hilang lewat CSS `hidden lg:flex`.
+function useIsDesktop() {
+    const [isDesktop, setIsDesktop] = useState(() =>
+        typeof window !== "undefined" ? window.innerWidth >= 1024 : true
+    )
+    useEffect(() => {
+        const onResize = () => setIsDesktop(window.innerWidth >= 1024)
+        window.addEventListener("resize", onResize)
+        return () => window.removeEventListener("resize", onResize)
+    }, [])
+    return isDesktop
+}
+
 // Orkestrasi item nav setelah sidebar selesai menggelincir masuk:
 // delay kecil dulu (guarded slide), lalu item muncul fade + angkat ringan.
 const sidebarNav: Variants = {
@@ -24,6 +39,11 @@ const sidebarNav: Variants = {
 function CreatorSidebar() {
     const { pathname } = useLocation()
     const { user, profile } = useAuth()
+
+    // Sidebar disembunyikan (menggelincir keluar ke kiri) di layar < lg (mobile
+    // pakai drawer sendiri) dan di halaman generate Galileo supaya fokus penuh.
+    const isDesktop = useIsDesktop()
+    const hidden = !isDesktop || pathname.startsWith("/creator/galileo/generate")
 
     interface NavItem {
         to: string
@@ -98,9 +118,9 @@ function CreatorSidebar() {
     return (
         <motion.aside
             initial={{ x: "-100%" }}
-            animate={{ x: "0%" }}
+            animate={{ x: hidden ? "-100%" : "0%" }}
             transition={{ duration: 0.45, ease: easeOutExpo }}
-            className="hidden lg:flex fixed inset-y-0 left-0 z-40 w-[20vw] flex-col bg-base-200 border-r border-second"
+            className="flex fixed inset-y-0 left-0 z-40 w-[20vw] flex-col bg-base-200 border-r border-second"
         >
             <div className="flex flex-row items-center h-28 px-6 shrink-0">
                 <Link to="/" className="flex items-center gap-2">
