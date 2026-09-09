@@ -124,7 +124,7 @@ function CreatorSidebar() {
         >
             <div className="flex flex-row items-center h-28 px-6 shrink-0">
                 <Link to="/" className="flex items-center gap-2 overflow-hidden">
-                    <img src={logo} alt="Formaly" className="h-8 w-auto" />
+                    <img src={logo} alt="Formaly" className="h-6 w-auto" />
                     <p className="font-semibold text-tinted whitespace-nowrap">C R E A T O R</p>
                 </Link>
             </div>
@@ -142,7 +142,7 @@ function CreatorSidebar() {
                 ))}
             </motion.nav>
 
-            <div className="p-3 border-t border-second shrink-0">
+            <div className="p-3 border-t border-second shrink-0 pb-5">
                 <div className="flex items-center gap-3 rounded-lg px-2 py-2 min-w-0">
                     <div className="w-9 h-9 rounded-full bg-done overflow-hidden flex items-center justify-center shrink-0 ring-2 ring-white">
                         <span className="text-sm font-bold text-white">

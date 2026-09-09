@@ -18,7 +18,7 @@ import { alertSaveError, alertSaveSuccess, confirmDelete, showAlert } from "../.
 import { fadeSlide } from "../../lib/motion"
 import { PRESET_HEADER_COLORS } from "../../lib/colorbase"
 import { isValidImageUrl } from "../../lib/imageUrl"
-import { uploadMedia, deleteMedia, getMediaType } from "../../lib/mediaStorage"
+import { uploadMedia, deleteMedia } from "../../lib/mediaStorage"
 import { pageGet, pageSet } from "../../lib/pageCache"
 import RichTextEditor from "../../components/richText"
 import BackButton from "../../components/backButton"
@@ -125,6 +125,7 @@ function FormEdit() {
     const [loading, setLoading] = useState(!cached)
     const [saving, setSaving] = useState(false)
     const [uploadingBanner, setUploadingBanner] = useState(false)
+    const [bannerProgress, setBannerProgress] = useState(0)
     const [bannerError, setBannerError] = useState<string | null>(null)
     const bannerInputRef = useRef<HTMLInputElement | null>(null)
     const [deleting, setDeleting] = useState(false)
@@ -242,7 +243,7 @@ function FormEdit() {
         throw new Error(error.message)
     }
 
-    const saveCache = () => {
+    const saveCache = useCallback(() => {
         if (!cacheKey) return
         pageSet<FormEditCache>(cacheKey, {
             title,
@@ -256,7 +257,14 @@ function FormEdit() {
             headerMedia: headerMedia || "",
             settings,
         })
-    }
+    }, [cacheKey, title, description, duration, passingScore, status, createdAt, headerImage, headerColor, headerMedia, settings])
+
+    // Sama seperti halaman Soal: kalau kreator pindah tab / keluar sebelum
+    // menekan "Simpan Perubahan", draft saat ini (termasuk banner yang baru
+    // di-upload) disimpan ke sessionStorage supaya tidak hilang saat kembali.
+    useEffect(() => {
+        return () => saveCache()
+    }, [saveCache])
 
     // Sinkronkan nilai banner ke cache tab lain (daftar form) supaya pratinjau
     // tidak basi setelah warna/gambar header disimpan.
@@ -343,9 +351,10 @@ function FormEdit() {
         }
 
         setUploadingBanner(true)
+        setBannerProgress(0)
         setBannerError(null)
         try {
-            const url = await uploadMedia(file)
+            const url = await uploadMedia(file, { onProgress: setBannerProgress })
             const previous = headerMedia
             setHeaderMedia(url)
             if (previous && previous !== url) {
@@ -553,74 +562,66 @@ function FormEdit() {
                                         </p>
 
                                         <div className="px-3.5 sm:px-1 mb-4">
-                                            <div className="relative overflow-hidden rounded-xl border border-second bg-base">
-                                                {/* Pratinjau: media banner jika ada, selain itu warna/gradien */}
-                                                {headerMedia ? (
-                                                    getMediaType(headerMedia) === "video" ? (
-                                                        <video src={headerMedia} controls className="w-full aspect-[3105/1100] object-contain bg-base" preload="metadata" />
-                                                    ) : (
-                                                        <img src={headerMedia} alt="Pratinjau banner" loading="lazy" className="w-full aspect-[3105/1100] object-cover" />
-                                                    )
-                                                ) : (
-                                                    <div
-                                                        className={`relative flex items-center justify-between px-4 aspect-[3105/1100] ${headerColor ? "" : "bg-gradient-to-br from-slate-600 to-slate-800"}`}
-                                                        style={headerColor ? { backgroundColor: headerColor } : undefined}
-                                                    >
-                                                        <div
-                                                            className="absolute inset-0 opacity-[0.08]"
-                                                            style={{ backgroundImage: "radial-gradient(circle, white 1px, transparent 1px)", backgroundSize: "16px 16px" }}
-                                                        />
-                                                        <span className="relative z-10 text-sm font-semibold text-white drop-shadow-sm">Pratinjau Banner</span>
-                                                        <span className="relative z-10 text-xs font-mono text-white/80">{headerColor || "gradien acak"}</span>
+                                            {uploadingBanner ? (
+                                                <div className="flex flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed border-second bg-base p-6">
+                                                    <div className="flex items-center gap-2 text-sm font-medium text-darks">
+                                                        <Spinner size={16} /> Mengupload...
                                                     </div>
-                                                )}
-
-                                                {/* Overlay aksi: pilih/ganti & hapus media */}
-                                                {uploadingBanner && (
-                                                    <div className="absolute inset-0 z-20 bg-darks/50 flex items-center justify-center">
-                                                        <div className="flex items-center gap-2 text-white text-sm font-medium">
-                                                            <Spinner size={16} /> Mengupload...
-                                                        </div>
+                                                    <div className="w-full max-w-xs h-2 overflow-hidden rounded-full bg-second" role="progressbar" aria-valuemin={0} aria-valuemax={100} aria-valuenow={Math.round(bannerProgress * 100)} aria-label="Progres upload banner">
+                                                        {bannerProgress > 0 ? (
+                                                            <div className="h-full rounded-full bg-done transition-[width] duration-200 ease-out" style={{ width: `${Math.round(bannerProgress * 100)}%` }} />
+                                                        ) : (
+                                                            <div className="h-full w-1/3 rounded-full bg-done animate-pulse" />
+                                                        )}
                                                     </div>
-                                                )}
-                                                {!uploadingBanner && (
-                                                    <div className="absolute right-2 top-2 flex items-center gap-1.5 z-20">
+                                                    <p className="text-xs text-tinted">
+                                                        {bannerProgress > 0 ? `${Math.round(bannerProgress * 100)}%` : "Menunggu proses server..."}
+                                                    </p>
+                                                </div>
+                                            ) : (
+                                                <div className="flex flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed border-second bg-base p-6 text-center">
+                                                    <Upload className="h-6 w-6 text-darks" />
+                                                    <p className="text-sm font-medium text-darks">
+                                                        {headerMedia ? "Media banner sudah dipilih." : "Unggah media banner"}
+                                                    </p>
+                                                    <p className="text-xs text-tinted">JPG, PNG, WebP, MP4, MKV, MOV, AVI · Maks 100 MB</p>
+                                                    <div className="flex flex-wrap items-center justify-center gap-2 mt-2">
                                                         <button
                                                             type="button"
                                                             onClick={() => bannerInputRef.current?.click()}
-                                                            className="btn btn-sm rounded-full bg-darks/85 text-base border-none shadow-none backdrop-blur hover:bg-darks transition-colors"
+                                                            className="btn btn-sm bg-darks text-base border-none shadow-none hover:opacity-90 transition-opacity"
                                                         >
                                                             <Upload className="h-3.5 w-3.5" />
-                                                            {headerMedia ? "Ganti Media" : "Unggah Gambar/Video"}
+                                                            {headerMedia ? "Ganti Media" : "Pilih File"}
                                                         </button>
                                                         {headerMedia && (
                                                             <button
                                                                 type="button"
                                                                 onClick={handleBannerRemove}
                                                                 aria-label="Hapus media banner"
-                                                                className="btn btn-sm rounded-full bg-wrong/85 text-white border-none shadow-none backdrop-blur hover:bg-wrong transition-colors"
+                                                                className="btn btn-sm bg-wrong/10 text-wrong border border-wrong/25 hover:bg-wrong/20 transition-colors"
                                                             >
-                                                                <Trash2 className="h-3.5 w-3.5" />
+                                                                <Trash2 className="h-3.5 w-3.5" /> Hapus
                                                             </button>
                                                         )}
                                                     </div>
-                                                )}
-
-                                                <input
-                                                    ref={bannerInputRef}
-                                                    type="file"
-                                                    accept={HEADER_EXTENSIONS.join(",")}
-                                                    className="hidden"
-                                                    onChange={(e) => {
-                                                        const file = e.target.files?.[0]
-                                                        if (file) handleBannerFile(file)
-                                                        e.target.value = ""
-                                                    }}
-                                                />
-                                            </div>
-                                            {bannerError && (
-                                                <p className="mt-2 text-xs text-wrong">{bannerError}</p>
+                                                    {bannerError && (
+                                                        <p className="mt-2 text-xs text-wrong">{bannerError}</p>
+                                                    )}
+                                                </div>
                                             )}
+
+                                            <input
+                                                ref={bannerInputRef}
+                                                type="file"
+                                                accept={HEADER_EXTENSIONS.join(",")}
+                                                className="hidden"
+                                                onChange={(e) => {
+                                                    const file = e.target.files?.[0]
+                                                    if (file) handleBannerFile(file)
+                                                    e.target.value = ""
+                                                }}
+                                            />
                                         </div>
 
                                         <div className="px-3.5 sm:px-1 pb-1">
@@ -670,7 +671,7 @@ function FormEdit() {
                                 </div>
 
                                 {/* Tag */}
-                                <div className="order-3 lg:order-none bg-white border border-second p-5 rounded-xl">
+                                <div className="order-3 lg:order-none bg-white shadow-sm border border-second p-5 rounded-xl">
                                     <div className="ml-2">
                                         <TagInput formId={id ?? ""} />
                                     </div>

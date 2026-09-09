@@ -30,12 +30,15 @@ interface MediaUploadProps {
     helpText?: string
     /** Jenis media yang boleh di-upload. Default: semua (gambar, video, audio). */
     allow?: MediaType[]
+    /** Variant ringkas: satu baris (tombol + nama file + progres) alih-alih dropzone besar. */
+    compact?: boolean
 }
 
 const MAX_FILE_SIZE = 100 * 1024 * 1024
 
-function MediaUpload({ value, onChange, label = "Media", helpText, allow = ["image", "video", "audio"] }: MediaUploadProps) {
+function MediaUpload({ value, onChange, label = "Media", helpText, allow = ["image", "video", "audio"], compact = false }: MediaUploadProps) {
     const [uploading, setUploading] = useState(false)
+    const [uploadProgress, setUploadProgress] = useState(0)
     const [error, setError] = useState<string | null>(null)
     const [dragActive, setDragActive] = useState(false)
     const fileInputRef = useRef<HTMLInputElement | null>(null)
@@ -63,6 +66,7 @@ function MediaUpload({ value, onChange, label = "Media", helpText, allow = ["ima
             }
 
             setUploading(true)
+            setUploadProgress(0)
             setError(null)
 
             // Simpan referensi media lama sebelum diganti, untuk dihapus nanti
@@ -71,10 +75,11 @@ function MediaUpload({ value, onChange, label = "Media", helpText, allow = ["ima
 
             let uploadedUrl: string
             try {
-                uploadedUrl = await uploadMedia(file)
+                uploadedUrl = await uploadMedia(file, { onProgress: setUploadProgress })
             } catch (err) {
                 setError(err instanceof Error ? err.message : "Upload gagal. Silakan coba lagi.")
                 setUploading(false)
+                setUploadProgress(0)
                 return
             }
 
@@ -88,6 +93,7 @@ function MediaUpload({ value, onChange, label = "Media", helpText, allow = ["ima
                 })
                 setError(err instanceof Error ? err.message : "Gagal menyimpan media. Silakan coba lagi.")
                 setUploading(false)
+                setUploadProgress(0)
                 return
             }
 
@@ -212,6 +218,104 @@ function MediaUpload({ value, onChange, label = "Media", helpText, allow = ["ima
         )
     }
 
+    // Variant ringkas: baris kecil berisi preview mini, nama file, dan tombol
+    // aksi — dipakai di dalam modal/panel sempit supaya tidak memakan tempat.
+    const renderCompact = () => {
+        const fileName = value ? value.split("/").pop() : null
+
+        return (
+            <div>
+                <div
+                    className={`flex items-center justify-between gap-3 rounded-xl border px-3 py-2 transition-colors ${
+                        dragActive ? "border-done bg-done/5" : "border-second bg-base"
+                    }`}
+                    onDrop={handleDrop}
+                    onDragOver={handleDragOver}
+                    onDragLeave={handleDragLeave}
+                >
+                    <div className="flex items-center gap-2.5 min-w-0">
+                        <div className="shrink-0 h-9 w-12 rounded-md border border-second bg-white overflow-hidden flex items-center justify-center">
+                            {value && mediaType === "image" ? (
+                                <img src={value} alt="Preview media" className="h-full w-full object-cover" loading="lazy" />
+                            ) : (
+                                <Upload className="h-4 w-4 text-darks" />
+                            )}
+                        </div>
+                        <div className="min-w-0">
+                            <p className="text-sm font-medium text-darks truncate">
+                                {fileName ?? "Upload media"}
+                            </p>
+                            <p className="text-xs text-tinted truncate">Mendukung foto, video, dan juga audio</p>
+                        </div>
+                    </div>
+
+                    <div className="flex items-center shrink-0 gap-1.5">
+                        {uploading ? (
+                            <span className="text-xs font-medium text-done tabular-nums">
+                                {Math.round(uploadProgress * 100)}%
+                            </span>
+                        ) : (
+                            <>
+                                <button
+                                    type="button"
+                                    onClick={handleClickUpload}
+                                    className="btn btn-xs bg-white text-darks border border-second hover:bg-second transition-colors"
+                                >
+                                    <Upload className="h-3 w-3" />
+                                    {value ? "Ganti" : "Upload"}
+                                </button>
+                                {value && (
+                                    <button
+                                        type="button"
+                                        onClick={handleDelete}
+                                        aria-label="Hapus media"
+                                        className="btn btn-xs bg-white text-wrong border border-wrong/25 hover:bg-wrong/10 transition-colors"
+                                    >
+                                        <X className="h-3 w-3" />
+                                    </button>
+                                )}
+                            </>
+                        )}
+                    </div>
+                </div>
+
+                {uploading && (
+                    <div
+                        className="mt-2"
+                        role="progressbar"
+                        aria-valuemin={0}
+                        aria-valuemax={100}
+                        aria-valuenow={Math.round(uploadProgress * 100)}
+                        aria-label="Progres upload media"
+                    >
+                        <div className="h-1.5 w-full overflow-hidden rounded-full bg-second">
+                            {uploadProgress > 0 ? (
+                                <div
+                                    className="h-full rounded-full bg-done transition-[width] duration-200 ease-out"
+                                    style={{ width: `${Math.round(uploadProgress * 100)}%` }}
+                                />
+                            ) : (
+                                <motion.div
+                                    className="h-full w-1/3 rounded-full bg-done"
+                                    initial={{ x: "-100%" }}
+                                    animate={{ x: "320%" }}
+                                    transition={{ duration: 1.2, repeat: Infinity, ease: "easeInOut" }}
+                                />
+                            )}
+                        </div>
+                    </div>
+                )}
+
+                {error && (
+                    <p className="mt-1.5 text-xs text-wrong flex items-center gap-1">
+                        <AlertCircle className="h-3.5 w-3.5 flex-shrink-0" />
+                        {error}
+                    </p>
+                )}
+            </div>
+        )
+    }
+
     // Dropzone / tombol upload
     const renderDropzone = () => {
         return (
@@ -230,17 +334,6 @@ function MediaUpload({ value, onChange, label = "Media", helpText, allow = ["ima
                 onDragLeave={handleDragLeave}
                 onClick={handleClickUpload}
             >
-                <input
-                    ref={(el) => {
-                        fileInputRef.current = el
-                    }}
-                    type="file"
-                    accept={allowedExtensions.join(",")}
-                    onChange={handleFileInputChange}
-                    className="absolute inset-0 opacity-0 cursor-pointer"
-                    disabled={uploading}
-                />
-
                 <div className="flex flex-col items-center justify-center p-8 text-center">
                     <motion.div
                         animate={{ scale: dragActive ? 1.05 : 1 }}
@@ -262,15 +355,45 @@ function MediaUpload({ value, onChange, label = "Media", helpText, allow = ["ima
 
                     {helpText && <p className="text-xs text-tinted/70 mt-1">{helpText}</p>}
 
-                    {error && (
-                        <motion.p
-                            initial={{ opacity: 0, y: -4 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            className="mt-3 text-sm text-wrong flex items-center gap-1.5"
+                    {uploading ? (
+                        <div
+                            className="w-full max-w-xs mt-3"
+                            role="progressbar"
+                            aria-valuemin={0}
+                            aria-valuemax={100}
+                            aria-valuenow={Math.round(uploadProgress * 100)}
+                            aria-label="Progres upload media"
                         >
-                            <AlertCircle className="h-4 w-4 flex-shrink-0" />
-                            {error}
-                        </motion.p>
+                            <div className="h-2 w-full overflow-hidden rounded-full bg-second">
+                                {uploadProgress > 0 ? (
+                                    <div
+                                        className="h-full rounded-full bg-done transition-[width] duration-200 ease-out"
+                                        style={{ width: `${Math.round(uploadProgress * 100)}%` }}
+                                    />
+                                ) : (
+                                    <motion.div
+                                        className="h-full w-1/3 rounded-full bg-done"
+                                        initial={{ x: "-100%" }}
+                                        animate={{ x: "320%" }}
+                                        transition={{ duration: 1.2, repeat: Infinity, ease: "easeInOut" }}
+                                    />
+                                )}
+                            </div>
+                            <p className="mt-1.5 text-xs font-medium text-tinted">
+                                {uploadProgress > 0 ? `${Math.round(uploadProgress * 100)}%` : "Menunggu proses server..."}
+                            </p>
+                        </div>
+                    ) : (
+                        error && (
+                            <motion.p
+                                initial={{ opacity: 0, y: -4 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                className="mt-3 text-sm text-wrong flex items-center gap-1.5"
+                            >
+                                <AlertCircle className="h-4 w-4 flex-shrink-0" />
+                                {error}
+                            </motion.p>
+                        )
                     )}
                 </div>
             </motion.div>
@@ -281,9 +404,20 @@ function MediaUpload({ value, onChange, label = "Media", helpText, allow = ["ima
         <div className="space-y-3">
             <label className="block text-sm font-medium text-darks mb-1.5 ml-1">{label}</label>
 
-            {value ? renderPreview() : renderDropzone()}
+            <input
+                ref={(el) => {
+                    fileInputRef.current = el
+                }}
+                type="file"
+                accept={allowedExtensions.join(",")}
+                onChange={handleFileInputChange}
+                className="hidden"
+                disabled={uploading}
+            />
 
-            {value && (
+            {compact ? renderCompact() : value ? renderPreview() : renderDropzone()}
+
+            {!compact && value && (
                 <p className="text-xs text-tinted">
                     File:{" "}
                     <span className="font-mono text-darks">{value.split("/").pop()}</span>

@@ -172,10 +172,10 @@ function Home() {
                             initial={{ scale: 0.95, rotate: -2 }}
                             animate={{ scale: 1, rotate: 0 }}
                             transition={{ duration: 0.3 }}
-                            className="relative z-10 w-80 sm:w-56 rounded-xl bg-white p-2.5 sm:p-3.5 shadow-2xl shadow-darks/10 text-left shrink-0 sm:ml-6 sm:scale-105 lg:scale-120 sm:ml-30 lg:ml-30"
+                            className="relative z-10 w-full max-w-[260px] sm:w-56 rounded-2xl bg-white border border-second/60 p-3 sm:p-3.5 shadow-xl shadow-darks/10 text-left shrink-0 sm:ml-6 sm:scale-115 lg:scale-120 lg:ml-30"
                         >
-                            <div className="flex items-center gap-2 mb-2">
-                                <div className="w-6 h-6 rounded-lg bg-done/10 text-done flex items-center justify-center font-bold text-xs">
+                            <div className="flex items-center gap-2.5 mb-3">
+                                <div className="w-7 h-7 rounded-lg bg-done/10 text-done flex items-center justify-center font-bold text-xs shrink-0">
                                     F
                                 </div>
 
@@ -187,19 +187,19 @@ function Home() {
                                             animate={{ opacity: 1, y: 0 }}
                                             exit={{ opacity: 0, y: -8 }}
                                             transition={{ duration: 0.3 }}
-                                            className="text-[11px] font-bold text-darks truncate"
+                                            className="text-xs font-bold text-darks truncate leading-tight"
                                         >
                                             {formItems[formIndex].title}
                                         </motion.p>
                                     </AnimatePresence>
 
-                                    <p className="text-[9px] text-tinted">
+                                    <p className="text-[10px] text-tinted mt-0.5">
                                         {formItems[formIndex].author}
                                     </p>
                                 </div>
                             </div>
 
-                            <div className="space-y-1.5 pt-1">
+                            <div className="space-y-2">
                                 <AnimatePresence mode="wait">
                                     <motion.div
                                         key={formIndex}
@@ -207,13 +207,13 @@ function Home() {
                                         animate={{ opacity: 1 }}
                                         exit={{ opacity: 0 }}
                                         transition={{ duration: 0.3 }}
-                                        className="py-2 rounded-xl ml-1 text-[14px] font-medium text-darks leading-tight"
+                                        className="text-sm font-medium text-darks leading-snug"
                                     >
                                         {formItems[formIndex].question}
                                     </motion.div>
                                 </AnimatePresence>
 
-                                <div className="space-y-1">
+                                <div className="space-y-1.5">
                                     <AnimatePresence mode="wait">
                                         <motion.div
                                             key={`${formIndex}-opt`}
@@ -221,17 +221,14 @@ function Home() {
                                             animate={{ opacity: 1, scale: 1 }}
                                             exit={{ opacity: 0, scale: 0.95 }}
                                             transition={{ duration: 0.2 }}
-                                            className="px-2 py-1 rounded-lg bg-done text-white text-[11px] font-medium flex items-center justify-between shadow-sm"
+                                            className="px-2.5 py-1.5 rounded-lg bg-done text-white text-xs font-medium flex items-center justify-between shadow-sm shadow-done/30"
                                         >
-                                            <span>
-                                                {formItems[formIndex].options[0]}
-                                            </span>
-
-                                            <span className="w-1.5 h-1.5 rounded-full bg-white" />
+                                            <span>{formItems[formIndex].options[0]}</span>
+                                            <span className="w-1.5 h-1.5 rounded-full bg-white shrink-0" />
                                         </motion.div>
                                     </AnimatePresence>
 
-                                    <div className="px-2 py-1 rounded-lg bg-second/30 text-darks text-[11px] font-medium">
+                                    <div className="px-2.5 py-1.5 rounded-lg border border-second bg-base text-darks text-xs font-medium">
                                         {formItems[formIndex].options[1]}
                                     </div>
                                 </div>

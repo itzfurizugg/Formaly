@@ -1,12 +1,11 @@
-import { useEffect, useState, useCallback, useMemo, type DragEvent } from "react"
+import { useEffect, useState, useCallback, useMemo, useRef, type DragEvent } from "react"
 import { useParams } from "react-router-dom"
 import { AnimatePresence, motion } from "motion/react"
-import { Plus, Pencil, Trash2, Save, X, Check, GripVertical, ImageIcon } from "lucide-react"
+import { Plus, Pencil, Trash2, Save, X, Check, GripVertical, ImageIcon, CheckCircle, ListChecks } from "lucide-react"
 import { supabase } from "../../lib/supabase"
 import { useAuth } from "../../lib/auth-context"
 import QuestionImportModal from "../../components/creator/QuestionImportModal"
 import CreateButton from "../../components/creator/createButton"
-import ImageUrlInput from "../../components/creator/imageUrlInput"
 import MediaUpload from "../../components/MediaUpload"
 import QuestionMedia from "../../components/QuestionMedia"
 import {
@@ -16,18 +15,39 @@ import {
     type QuestionConfig,
     type DateTimeVariant,
 } from "../../lib/questionConfig"
-import { isValidImageUrl } from "../../lib/imageUrl"
 import RichTextEditor, { RichText } from "../../components/richText"
 import { richTextToPlain } from "../../lib/richtext"
 import { alertSaveSuccess, confirmDelete, showAlert } from "../../lib/alerts"
 import { pageGet, pageSet } from "../../lib/pageCache"
-import { easeOutExpo, panelSlide } from "../../lib/motion"
+import { easeOutExpo } from "../../lib/motion"
 import BackButton from "../../components/backButton"
 import FormTabs from "../../components/creator/formTabs"
 import { Spinner } from "../../components/loading"
 
 const TYPES_WITH_OPTIONS = ["single_choice", "multiple_choice", "dropdown"]
 const TYPES_NO_OPTIONS = ["text", "file_upload", "date_time"]
+
+// Kunci cache draft editor soal. Draft disimpan ke sessionStorage (via pageCache)
+// setiap kali editor ditutup lewat navigasi (pindah tab/keluar) sebelum disimpan,
+// supaya soal & media yang sudah di-upload tidak hilang saat kembali ke halaman ini.
+function questionDraftKey(userId: string | undefined, formId: string | undefined) {
+    return userId && formId ? `questions:draft:${userId}:${formId}` : null
+}
+
+/** Snapshot state editor yang bisa dipulihkan saat kembali ke halaman soal. */
+interface QuestionDraft {
+    editingId: string | null
+    questionText: string
+    questionType: string
+    scoreValue: number
+    orderIndex: number
+    imageQuestion: string
+    mediaUrl: string | null
+    isRequired: boolean
+    options: Option[]
+    removedOptionIds: string[]
+    dateTimeVariant: DateTimeVariant
+}
 
 interface Option {
     id: string | null
@@ -65,23 +85,85 @@ function Questions({ embedded = false }: { embedded?: boolean }) {
     const [questions, setQuestions] = useState<Question[]>(cached?.questions ?? [])
     const [loading, setLoading] = useState(!cached)
 
-    const [showEditor, setShowEditor] = useState(false)
-    const [editingId, setEditingId] = useState<string | null>(null)
-    const [questionText, setQuestionText] = useState("")
-    const [questionType, setQuestionType] = useState("single_choice")
-    const [scoreValue, setScoreValue] = useState(0)
-    const [orderIndex, setOrderIndex] = useState(0)
-    const [imageQuestion, setImageQuestion] = useState("")
-    const [mediaUrl, setMediaUrl] = useState<string | null>(null)
-    const [isRequired, setIsRequired] = useState(false)
-    const [options, setOptions] = useState<Option[]>([])
-    const [removedOptionIds, setRemovedOptionIds] = useState<string[]>([])
-    const [dateTimeVariant, setDateTimeVariant] = useState<DateTimeVariant>("date_and_time")
+    // Restore draft editor yang belum tersimpan (mis. media sudah di-upload tapi
+    // soal belum di-save lalu pindah tab/keluar halaman). Dibaca sekali lewat
+    // state initializer supaya identitasnya stabil, sama seperti `cached`.
+    const [savedDraft] = useState<QuestionDraft | null>(() => {
+        const key = questionDraftKey(user?.id, id)
+        return key ? (pageGet<QuestionDraft>(key) ?? null) : null
+    })
+
+    const [showEditor, setShowEditor] = useState(!!savedDraft)
+    const [editingId, setEditingId] = useState<string | null>(savedDraft?.editingId ?? null)
+    const [questionText, setQuestionText] = useState(savedDraft?.questionText ?? "")
+    const [questionType, setQuestionType] = useState(savedDraft?.questionType ?? "single_choice")
+    const [scoreValue, setScoreValue] = useState(savedDraft?.scoreValue ?? 0)
+    const [orderIndex, setOrderIndex] = useState(savedDraft?.orderIndex ?? 0)
+    const [imageQuestion, setImageQuestion] = useState(savedDraft?.imageQuestion ?? "")
+    const [mediaUrl, setMediaUrl] = useState<string | null>(savedDraft?.mediaUrl ?? null)
+    const [isRequired, setIsRequired] = useState(savedDraft?.isRequired ?? false)
+    const [options, setOptions] = useState<Option[]>(savedDraft?.options ?? [])
+    const [removedOptionIds, setRemovedOptionIds] = useState<string[]>(savedDraft?.removedOptionIds ?? [])
+    const [dateTimeVariant, setDateTimeVariant] = useState<DateTimeVariant>(savedDraft?.dateTimeVariant ?? "date_and_time")
     const [optionMediaOpen, setOptionMediaOpen] = useState<Record<number, boolean>>({})
     const [saving, setSaving] = useState(false)
     const [showImport, setShowImport] = useState(false)
     const [dragId, setDragId] = useState<string | null>(null)
     const [orderIds, setOrderIds] = useState<string[] | null>(null)
+
+    // Pantau state editor terbaru lewat ref (bukan lewat dependency array yang
+    // panjang), supaya saat komponen unmount (pindah tab/keluar) kita bisa
+    // menyimpan snapshot editor yang benar-benar terakhir di-render.
+    const editorStateRef = useRef<{ showEditor: boolean; draft: QuestionDraft }>({
+        showEditor,
+        draft: {
+            editingId,
+            questionText,
+            questionType,
+            scoreValue,
+            orderIndex,
+            imageQuestion,
+            mediaUrl,
+            isRequired,
+            options,
+            removedOptionIds,
+            dateTimeVariant,
+        },
+    })
+    useEffect(() => {
+        editorStateRef.current = {
+            showEditor,
+            draft: {
+                editingId,
+                questionText,
+                questionType,
+                scoreValue,
+                orderIndex,
+                imageQuestion,
+                mediaUrl,
+                isRequired,
+                options,
+                removedOptionIds,
+                dateTimeVariant,
+            },
+        }
+    })
+
+    // Simpan draft saat keluar halaman. Kalau editor sedang terbuka, snapshot
+    // dipertahankan supaya tidak hilang (termasuk media yang sudah di-upload
+    // tapi soal belum di-save); kalau editor ditutup/tidak aktif, hapus draft.
+    useEffect(() => {
+        return () => {
+            const key = questionDraftKey(user?.id, id)
+            if (!key) return
+            const current = editorStateRef.current
+            if (current.showEditor) {
+                pageSet<QuestionDraft>(key, current.draft)
+            } else if (pageGet<QuestionDraft>(key) !== undefined) {
+                pageSet(key, undefined)
+            }
+        }
+    }, [user?.id, id])
 
     const loadAll = useCallback(async () => {
         if (!user || !id) return
@@ -142,6 +224,10 @@ function Questions({ embedded = false }: { embedded?: boolean }) {
         setDateTimeVariant("date_and_time")
         setOptionMediaOpen({})
         setShowEditor(false)
+        // Editor sengaja ditutup / soal sudah disimpan: bersihkan draft agar
+        // tidak muncul lagi saat kembali ke halaman ini.
+        const key = questionDraftKey(user?.id, id)
+        if (key) pageSet(key, undefined)
     }
 
     const startAdd = () => {
@@ -212,10 +298,6 @@ function Questions({ embedded = false }: { embedded?: boolean }) {
         }
         if (TYPES_WITH_OPTIONS.includes(questionType) && options.length === 0) {
             showAlert("Tambahkan minimal satu pilihan jawaban.", "error")
-            return
-        }
-        if (imageQuestion.trim() && !isValidImageUrl(imageQuestion)) {
-            showAlert("URL gambar harus diawali http:// atau https://.", "error")
             return
         }
 
@@ -421,218 +503,287 @@ function Questions({ embedded = false }: { embedded?: boolean }) {
     }
 
     const renderEditor = () => (
-        <motion.div
-            key="question-editor"
-            variants={panelSlide}
-            initial="hidden"
-            animate="show"
-            exit="exit"
-            className="bg-white border border-second p-3 sm:p-5 shadow-sm rounded-xl overflow-block space-y-4 mb-10"
-        >
-            <div className="flex items-center justify-between">
-                <h2 className="font-semibold text-darks ml-2 sm:ml-1">{editingId ? "Edit Soal" : "Tambah Soal"}</h2>
-                <button onClick={resetEditor} className="btn btn-sm btn-ghost text-tinted mr-2">
-                    <X className="h-4 w-4" />
-                </button>
-            </div>
+        <div className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center sm:p-6">
+            {/* Overlay gelap; klik di luar menutup editor */}
+            <motion.div
+                className="absolute inset-0 bg-darks/60"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                onClick={resetEditor}
+            />
 
-            <div>
-                <label className="block text-sm font-medium text-darks mb-1.5 ml-1">Soal</label>
-                <RichTextEditor
-                    value={questionText}
-                    onChange={setQuestionText}
-                    placeholder="Tulis soal di sini..."
-                />
-            </div>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div>
-                    <label className="block text-sm font-medium text-darks mb-1.5 ml-1">Tipe</label>
-                    <select
-                        className="select w-full bg-base border-second focus:border-done focus:outline-none rounded-xl"
-                        value={questionType}
-                        onChange={(e) => handleTypeChange(e.target.value)}
-                    >
-                        <option value="single_choice">Pilihan Tunggal</option>
-                        <option value="multiple_choice">Pilihan Ganda</option>
-                        <option value="dropdown">Dropdown / Select</option>
-                        <option value="file_upload">Upload File sebagai Jawaban</option>
-                        <option value="date_time">Tanggal & Jam</option>
-                        <option value="text">Isian</option>
-                    </select>
-                </div>
-                <div>
-                    <label className="block text-sm font-medium text-darks mb-1.5 ml-1">Skor</label>
-                    <input
-                        type="number"
-                        min={0}
-                        max={100}
-                        step={1}
-                        className="input w-full bg-base border-second focus:border-done focus:outline-none"
-                        value={scoreValue}
-                        onChange={(e) => setScoreValue(Number(e.target.value))}
-                        placeholder="0"
-                    />
-                </div>
-            </div>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div>
-                    <label className="block text-sm font-medium text-darks mb-1.5 ml-1">Urutan</label>
-                    <input
-                        type="number"
-                        min={0}
-                        className="input w-full bg-base border-second focus:border-done focus:outline-none"
-                        value={orderIndex}
-                        onChange={(e) => setOrderIndex(Number(e.target.value))}
-                    />
-                </div>
-                <div>
-                    <ImageUrlInput value={imageQuestion} onChange={setImageQuestion} />
-                </div>
-            </div>
-
-            <div>
-                <MediaUpload
-                    value={mediaUrl}
-                    onChange={setMediaUrl}
-                    label="Media Tambahan (Gambar/Video/Audio)"
-                    helpText="Media ini akan ditampilkan di halaman soal responden bersama dengan soal."
-                />
-            </div>
-
-            <div className="flex items-center gap-2 ml-2">
-                <button
-                    type="button"
-                    onClick={() => setIsRequired(!isRequired)}
-                    title="Tandai sebagai wajib dijawab"
-                    aria-label="Tandai sebagai wajib dijawab"
-                    className={`shrink-0 rounded-full border p-1 transition-colors ${
-                        isRequired
-                            ? "bg-darks text-base border-darks"
-                            : "bg-base text-tinted border-second hover:border-darks hover:text-darks"
-                    }`}
-                >
-                    <Check className="h-4 w-4" />
-                </button>
-                <span className="text-sm font-medium text-darks">
-                    Wajib dijawab <span className="text-red-600 font-bold">*</span>
-                </span>
-            </div>
-
-            {questionType === "date_time" && (
-                <div>
-                    <label className="block text-sm font-medium text-darks mb-1.5 ml-1">Jenis Jawaban</label>
-                    <select
-                        className="select w-full bg-base border-second focus:border-done focus:outline-none rounded-xl"
-                        value={dateTimeVariant}
-                        onChange={(e) => setDateTimeVariant(e.target.value as DateTimeVariant)}
-                    >
-                        <option value="date_and_time">Tanggal & Jam</option>
-                        <option value="date_only">Tanggal saja</option>
-                        <option value="time_only">Jam saja</option>
-                    </select>
-                    {/* TODO(backend): pilihan sub-tipe ini sementara disisipkan ke
-                        question_text via embedQuestionConfig sampai kolom config permanen ada. */}
-                </div>
-            )}
-
-            {questionType === "file_upload" && (
-                <div className="rounded-xl bg-base border border-second px-4 py-3 text-sm text-tinted">
-                    Responden mengunggah file sebagai jawaban.
-                    Batas maksimal <span className="font-semibold text-darks">{FILE_UPLOAD_DEFAULTS.maxMB} MB</span> dengan tipe{" "}
-                    <span className="font-semibold text-darks">{FILE_UPLOAD_DEFAULTS.types.join(", ")}</span>.
-                    <p className="text-xs text-tinted/80 mt-1">
-                        TODO(backend): penyimpanan jawaban file &amp; kolom URL jawaban menyusul; untuk sekarang jawaban disimpan di state lokal saat pengerjaan.
-                    </p>
-                </div>
-            )}
-
-            {TYPES_WITH_OPTIONS.includes(questionType) && (
-                <div>
-                    <div className="flex items-center justify-between mb-2 ml-2 mr-2">
-                        <label className="text-sm font-medium text-darks">Pilihan Jawaban</label>
-                        <button onClick={addOption} className="btn btn-sm bg-base text-darks border border-second hover:bg-second">
-                            <Plus className="h-3.5 w-3.5" /> Tambah Pilihan
-                        </button>
+            <motion.div
+                key="question-editor"
+                initial={{ opacity: 0, y: 24, scale: 0.98 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                exit={{ opacity: 0, y: 24, scale: 0.98 }}
+                transition={{ duration: 0.25, ease: easeOutExpo }}
+                className="relative w-full sm:max-w-xl max-h-[88vh] sm:max-h-[85vh] overflow-y-auto bg-white border border-second shadow-2xl rounded-t-2xl sm:rounded-2xl p-4 sm:p-6 pb-8"
+            >
+                <div className="flex items-start justify-between mb-5">
+                    <div>
+                        <h2 className="font-semibold text-darks text-lg">{editingId ? "Edit Soal" : "Tambah Soal"}</h2>
+                        <p className="text-sm text-tinted mt-0.5">
+                            {editingId ? "Perbarui detail soal ini." : "Lengkapi detail soal di bawah ini."}
+                        </p>
                     </div>
-                    <div className="space-y-2">
-                        {options.map((opt, index) => (
-                            <div key={index} className="rounded-lg border border-second p-2">
-                                <div className="flex items-center gap-2">
-                                    <RichTextEditor
-                                        compact
-                                        className="flex-1"
-                                        value={opt.option_text}
-                                        onChange={(v) => updateOption(index, { option_text: v })}
-                                        placeholder={`Pilihan ${index + 1}`}
-                                    />
-                                    <button
-                                        type="button"
-                                        onClick={() => {
-                                            const next = !opt.is_correct
-                                            if ((questionType === "single_choice" || questionType === "dropdown") && next) {
-                                                setOptions(
-                                                    options.map((o, i) => (i === index ? { ...o, is_correct: true } : { ...o, is_correct: false }))
-                                                )
-                                            } else {
-                                                updateOption(index, { is_correct: next })
-                                            }
-                                        }}
-                                        title="Tandai jawaban benar"
-                                        aria-label="Tandai jawaban benar"
-                                        className={`shrink-0 rounded-full border p-1.5 transition-colors ${
-                                            opt.is_correct
-                                                ? "bg-darks text-base border-darks"
-                                                : "bg-base text-tinted border-second hover:border-darks hover:text-darks"
-                                        }`}
-                                    >
-                                        <Check className="h-4 w-4" />
-                                    </button>
-                                    <button
-                                        type="button"
-                                        onClick={() => setOptionMediaOpen((prev) => ({ ...prev, [index]: !prev[index] }))}
-                                        title="Tambah media pada opsi"
-                                        aria-label="Tambah media pada opsi"
-                                        className={`shrink-0 rounded-md border p-1.5 transition-colors ${
-                                            opt.media_url
-                                                ? "bg-darks text-base border-darks"
-                                                : "bg-base text-tinted border-second hover:border-darks hover:text-darks"
-                                        }`}
-                                    >
-                                        <ImageIcon className="h-4 w-4" />
-                                    </button>
-                                    <button onClick={() => removeOption(index)} className="btn btn-sm btn-ghost text-wrong">
-                                        <X className="h-4 w-4" />
+                    <button onClick={resetEditor} className="btn btn-sm btn-ghost text-tinted -mt-1 -mr-1">
+                        <X className="h-4 w-4" />
+                    </button>
+                </div>
+
+                <div className="space-y-6">
+                    {/* Media soal tampil paling atas dengan UI ringkas */}
+                    <MediaUpload
+                        compact
+                        value={mediaUrl}
+                        onChange={setMediaUrl}
+                        label="Media Soal"
+                        helpText="Gambar/video/audio pendukung yang tampil bersama soal."
+                    />
+
+                    <div>
+                        <label className="block text-sm font-medium text-darks mb-1.5 ml-1">Soal</label>
+                        <RichTextEditor
+                            value={questionText}
+                            onChange={setQuestionText}
+                            placeholder="Tulis soal di sini..."
+                        />
+                    </div>
+
+                    <div className="rounded-xl border border-second bg-base/60 p-4 space-y-4">
+                        <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
+                            <div className="sm:col-span-2">
+                                <label className="block text-sm font-medium text-darks mb-1.5 ml-1">Tipe</label>
+                                <select
+                                    className="select w-full bg-white border-second focus:border-done focus:outline-none rounded-xl"
+                                    value={questionType}
+                                    onChange={(e) => handleTypeChange(e.target.value)}
+                                >
+                                    <option value="single_choice">Pilihan Tunggal</option>
+                                    <option value="multiple_choice">Pilihan Ganda</option>
+                                    <option value="dropdown">Dropdown / Select</option>
+                                    <option value="file_upload">Upload File sebagai Jawaban</option>
+                                    <option value="date_time">Tanggal & Jam</option>
+                                    <option value="text">Isian</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label className="block text-sm font-medium text-darks mb-1.5 ml-1">Skor</label>
+                                <input
+                                    type="number"
+                                    min={0}
+                                    max={100}
+                                    step={1}
+                                    className="input w-full bg-white border-second focus:border-done focus:outline-none"
+                                    value={scoreValue}
+                                    onChange={(e) => setScoreValue(Number(e.target.value))}
+                                    placeholder="0"
+                                />
+                            </div>
+                            <div>
+                                <label className="block text-sm font-medium text-darks mb-1.5 ml-1">Urutan</label>
+                                <input
+                                    type="number"
+                                    min={0}
+                                    className="input w-full bg-white border-second focus:border-done focus:outline-none"
+                                    value={orderIndex}
+                                    onChange={(e) => setOrderIndex(Number(e.target.value))}
+                                />
+                            </div>
+                        </div>
+
+                        <div className="flex items-center justify-between gap-3 pt-1 border-t border-second/70">
+                            <div className="pt-3">
+                                <span className="text-sm font-medium text-darks">Wajib dijawab</span>
+                                <p className="text-xs text-tinted mt-0.5">Responden harus mengisi soal ini sebelum lanjut.</p>
+                            </div>
+                            <button
+                                type="button"
+                                onClick={() => setIsRequired(!isRequired)}
+                                role="switch"
+                                aria-checked={isRequired}
+                                aria-label="Tandai sebagai wajib dijawab"
+                                className={`relative shrink-0 h-6 w-11 rounded-full mt-3 transition-colors ${
+                                    isRequired ? "bg-darks" : "bg-second"
+                                }`}
+                            >
+                                <span
+                                    className={`absolute top-0.5 left-0.5 h-5 w-5 rounded-full bg-white shadow transition-transform ${
+                                        isRequired ? "translate-x-5" : "translate-x-0"
+                                    }`}
+                                />
+                            </button>
+                        </div>
+                    </div>
+
+                    {questionType === "date_time" && (
+                        <div>
+                            <label className="block text-sm font-medium text-darks mb-1.5 ml-1">Jenis Jawaban</label>
+                            <select
+                                className="select w-full bg-base border-second focus:border-done focus:outline-none rounded-xl"
+                                value={dateTimeVariant}
+                                onChange={(e) => setDateTimeVariant(e.target.value as DateTimeVariant)}
+                            >
+                                <option value="date_and_time">Tanggal & Jam</option>
+                                <option value="date_only">Tanggal saja</option>
+                                <option value="time_only">Jam saja</option>
+                            </select>
+                            {/* TODO(backend): pilihan sub-tipe ini sementara disisipkan ke
+                                question_text via embedQuestionConfig sampai kolom config permanen ada. */}
+                        </div>
+                    )}
+
+                    {questionType === "file_upload" && (
+                        <div className="rounded-xl bg-base border border-second px-4 py-3 text-sm text-tinted">
+                            Responden mengunggah file sebagai jawaban.
+                            Batas maksimal <span className="font-semibold text-darks">{FILE_UPLOAD_DEFAULTS.maxMB} MB</span> dengan tipe{" "}
+                            <span className="font-semibold text-darks">{FILE_UPLOAD_DEFAULTS.types.join(", ")}</span>.
+                            <p className="text-xs text-tinted/80 mt-1">
+                                TODO(backend): penyimpanan jawaban file &amp; kolom URL jawaban menyusul; untuk sekarang jawaban disimpan di state lokal saat pengerjaan.
+                            </p>
+                        </div>
+                    )}
+
+                    {TYPES_WITH_OPTIONS.includes(questionType) && (
+                        <div>
+                            <div className="flex items-center justify-between gap-2 mb-1 ml-1 mr-1">
+                                <label className="text-sm font-medium text-darks">
+                                    Pilihan Jawaban
+                                    {options.length > 0 && (
+                                        <span className="ml-2 text-xs text-tinted font-normal">({options.length})</span>
+                                    )}
+                                </label>
+                                <button onClick={addOption} className="btn btn-sm bg-white text-darks border border-second hover:bg-second">
+                                    <Plus className="h-3.5 w-3.5" /> Tambah Pilihan
+                                </button>
+                            </div>
+                            <p className="flex items-center gap-1.5 ml-1 text-xs text-tinted mb-3">
+                                <CheckCircle className="h-3.5 w-3.5 text-done shrink-0" />
+                                {questionType === "multiple_choice"
+                                    ? "Tandai kotak di kiri untuk menetapkan jawaban benar — boleh lebih dari satu."
+                                    : "Tandai lingkaran di kiri untuk menetapkan jawaban benar (kunci)."}
+                            </p>
+
+                            {options.length === 0 ? (
+                                <div className="flex flex-col items-center justify-center gap-2.5 rounded-xl border border-dashed border-second px-4 py-8 text-center">
+                                    <div className="flex h-11 w-11 items-center justify-center rounded-full bg-base border border-second">
+                                        <ListChecks className="h-5 w-5 text-tinted" />
+                                    </div>
+                                    <p className="text-sm text-tinted">Belum ada pilihan jawaban.</p>
+                                    <button onClick={addOption} className="btn btn-sm btn-ghost text-done hover:bg-done/10">
+                                        <Plus className="h-3.5 w-3.5" /> Tambah pilihan pertama
                                     </button>
                                 </div>
-                                {optionMediaOpen[index] && (
-                                    <div className="mt-2">
-                                        {/* TODO(backend): media opsi baru tersimpan penuh ke
-                                            question_options.media_url setelah kolom + RPC dimigrasi. */}
-                                        <MediaUpload
-                                            value={opt.media_url}
-                                            onChange={(url) => updateOption(index, { media_url: url })}
-                                            label={`Media Opsi ${index + 1}`}
-                                            helpText="Gambar/audio/video yang tampil bersama teks opsi."
-                                        />
-                                    </div>
-                                )}
-                            </div>
-                        ))}
-                    </div>
-                </div>
-            )}
+                            ) : (
+                            <div className="space-y-2">
+                                {options.map((opt, index) => {
+                                    const isSingle = questionType === "single_choice" || questionType === "dropdown"
+                                    const isCorrect = !!opt.is_correct
+                                    return (
+                                    <div
+                                        key={index}
+                                        className={`rounded-xl border transition-colors ${
+                                            isCorrect
+                                                ? "border-done/60 bg-done/5"
+                                                : "border-second bg-white hover:border-done/40 hover:bg-base/40"
+                                        }`}
+                                    >
+                                        <div className="flex items-center gap-3 p-2.5 pr-1.5">
+                                        {/* Indikator kunci: radio untuk single/dropdown, checkbox untuk multiple */}
+                                        <button
+                                            type="button"
+                                            onClick={() => {
+                                                if (isSingle && !isCorrect) {
+                                                    setOptions(
+                                                        options.map((o, i) => (i === index ? { ...o, is_correct: true } : { ...o, is_correct: false }))
+                                                    )
+                                                } else {
+                                                    updateOption(index, { is_correct: !isCorrect })
+                                                }
+                                            }}
+                                            role={isSingle ? "radio" : "checkbox"}
+                                            aria-checked={isCorrect}
+                                            title={isCorrect ? "Jawaban benar" : "Tandai sebagai jawaban benar"}
+                                            aria-label={`Tandai pilihan ${index + 1} sebagai jawaban benar`}
+                                            className={`flex h-5 w-5 shrink-0 items-center justify-center border-2 transition-all ${
+                                                isSingle ? "rounded-full" : "rounded-[5px]"
+                                            } ${
+                                                isCorrect
+                                                    ? "border-done bg-done text-base shadow-sm"
+                                                    : "border-tinted/40 bg-white text-transparent hover:border-done/70"
+                                            }`}
+                                        >
+                                            <Check className="h-3 w-3" strokeWidth={3.5} />
+                                        </button>
 
-            <button
-                onClick={handleSave}
-                disabled={saving}
-                className="btn bg-darks text-base border-none w-full hover:opacity-90 transition-opacity disabled:opacity-60 mb-3 mt-2"
-            >
-                {saving ? <Spinner size={16} /> : <Save className="h-4 w-4" />}
-                Simpan Soal
-            </button>
-        </motion.div>
+                                        <RichTextEditor
+                                            compact
+                                            className="flex-1 min-w-0"
+                                            value={opt.option_text}
+                                            onChange={(v) => updateOption(index, { option_text: v })}
+                                            placeholder={`Pilihan ${index + 1}`}
+                                        />
+
+                                        {/* Aksi ringkas: media & hapus */}
+                                        <div className="flex shrink-0 items-center gap-0.5">
+                                            <button
+                                                type="button"
+                                                onClick={() => setOptionMediaOpen((prev) => ({ ...prev, [index]: !prev[index] }))}
+                                                aria-pressed={!!opt.media_url}
+                                                title={opt.media_url ? "Media opsi aktif" : "Tambah media pada opsi"}
+                                                className={`rounded-lg p-2 transition-colors ${
+                                                    opt.media_url
+                                                        ? "bg-darks text-base"
+                                                        : "text-tinted hover:bg-base hover:text-darks"
+                                                }`}
+                                            >
+                                                <ImageIcon className="h-4 w-4" />
+                                            </button>
+                                            <button
+                                                type="button"
+                                                onClick={() => removeOption(index)}
+                                                title="Hapus pilihan"
+                                                className="rounded-lg p-2 text-tinted transition-colors hover:bg-wrong/10 hover:text-wrong"
+                                            >
+                                                <Trash2 className="h-4 w-4" />
+                                            </button>
+                                        </div>
+                                        </div>
+
+                                        {optionMediaOpen[index] && (
+                                            <div className="mx-2.5 pb-2.5 border-t border-second/60 pt-2">
+                                                {/* TODO(backend): media opsi baru tersimpan penuh ke
+                                                    question_options.media_url setelah kolom + RPC dimigrasi. */}
+                                                <MediaUpload
+                                                    compact
+                                                    value={opt.media_url}
+                                                    onChange={(url) => updateOption(index, { media_url: url })}
+                                                    label={`Media Opsi ${index + 1}`}
+                                                    helpText="Gambar/audio/video yang tampil bersama teks opsi."
+                                                />
+                                            </div>
+                                        )}
+                                    </div>
+                                    )
+                                })}
+                            </div>
+                            )}
+                        </div>
+                    )}
+                </div>
+
+                <button
+                    onClick={handleSave}
+                    disabled={saving}
+                    className="btn bg-darks text-base border-none w-full hover:opacity-90 transition-opacity disabled:opacity-60 mt-6"
+                >
+                    {saving ? <Spinner size={16} /> : <Save className="h-4 w-4" />}
+                    Simpan Soal
+                </button>
+            </motion.div>
+        </div>
     )
 
     return (
@@ -654,10 +805,6 @@ function Questions({ embedded = false }: { embedded?: boolean }) {
                     )}
                 </div>
 
-                <AnimatePresence>
-                {showEditor && !editingId && renderEditor()}
-                </AnimatePresence>
-
                 {questions.length === 0 && !showEditor ? (
                     <div className="text-center py-16">
                         <p className="text-tinted mb-4">Belum ada soal.</p>
@@ -668,7 +815,6 @@ function Questions({ embedded = false }: { embedded?: boolean }) {
                             const isDragging = dragId === q.id
                             return (
                             <AnimatePresence key={q.id} initial={false}>
-                            {showEditor && editingId === q.id ? renderEditor() : (
                             <motion.div
                                 // Kartu pengganti hanya meluncur (posisi saja, ukuran tetap);
                                 // kartu yang di-drag snap langsung agar tidak "menumpuk" dengan ghost.
@@ -763,7 +909,6 @@ function Questions({ embedded = false }: { embedded?: boolean }) {
                                 </div>
                              </div>
                              </motion.div>
-                         )}
                          </AnimatePresence>
                             )
                         })}
@@ -782,6 +927,9 @@ function Questions({ embedded = false }: { embedded?: boolean }) {
                         }}
                     />
                 )}
+                </AnimatePresence>
+                <AnimatePresence>
+                {showEditor && renderEditor()}
                 </AnimatePresence>
             </div>
             )}

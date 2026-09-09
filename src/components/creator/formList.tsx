@@ -199,7 +199,7 @@ function FormList() {
                     satu baris jadi sama tinggi seperti tampilan di halaman Responden */}
                                 <div className="relative h-full">
                                     <div className="card bg-white border border-second rounded-xl transition-all duration-300 hover:shadow-lg hover:shadow-darks/5 overflow-hidden h-full">
-                                        <FormHeader formId={form.id} title={form.title} headerImage={form.header_image} headerColor={form.header_color} headerMedia={form.media_url} play={true} />
+                                        <FormHeader formId={form.id} title={form.title} headerImage={form.header_image} headerColor={form.header_color} headerMedia={form.media_url} play={false} />
                                         <div className="card-body gap-3 p-4">
                                             <div className="flex items-start justify-between gap-3">
                                                 <div className="min-w-0">

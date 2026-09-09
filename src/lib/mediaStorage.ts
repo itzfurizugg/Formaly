@@ -54,13 +54,24 @@ function extractPath(input: string): string {
     }
 }
 
+/** Opsi tambahan untuk proses upload. */
+export interface UploadMediaOptions {
+    /**
+     * Callback progres upload. Dipanggil berulang kali dengan fraksi 0..1
+     * selama badan request sedang dikirim ke server (jika browser/mode
+     * jaringan mendukung pelaporan progres; tidak selalu tersedia).
+     */
+    onProgress?: (fraction: number) => void
+}
+
 /**
  * Upload file media ke storage server.
  * @param file File yang akan di-upload
+ * @param options Opsi tambahan (mis. callback progres upload)
  * @returns Promise yang resolve ke URL lengkap media (base URL + path relatif)
  * @throws Error dengan pesan dalam Bahasa Indonesia jika gagal
  */
-export async function uploadMedia(file: File): Promise<string> {
+export async function uploadMedia(file: File, options?: UploadMediaOptions): Promise<string> {
     // Validasi ekstensi
     if (!isAllowedExtension(file.name)) {
         throw new Error(
@@ -76,46 +87,59 @@ export async function uploadMedia(file: File): Promise<string> {
     const formData = new FormData()
     formData.append("file", file)
 
-    const headers: Record<string, string> = {}
-    if (STORAGE_API_KEY) {
-        headers["Authorization"] = `Bearer ${STORAGE_API_KEY}`
-    }
+    // fetch() tidak menyediakan event progres saat upload, jadi pakai
+    // XMLHttpRequest supaya progress bar bisa ditampilkan ke user.
+    return new Promise<string>((resolve, reject) => {
+        const xhr = new XMLHttpRequest()
+        xhr.open("POST", `${STORAGE_BASE_URL}/upload`)
+        if (STORAGE_API_KEY) {
+            xhr.setRequestHeader("Authorization", `Bearer ${STORAGE_API_KEY}`)
+        }
 
-    try {
-        const response = await fetch(`${STORAGE_BASE_URL}/upload`, {
-            method: "POST",
-            body: formData,
-            headers,
-        })
-
-        if (!response.ok) {
-            let errorMessage = `Upload gagal dengan status ${response.status}.`
-            try {
-                const errorData = await response.json()
-                if (errorData?.error) {
-                    errorMessage = errorData.error
-                }
-            } catch {
-                // Abaikan error parsing JSON
+        xhr.upload.onprogress = (e) => {
+            if (e.lengthComputable && options?.onProgress) {
+                options.onProgress(Math.min(e.loaded / e.total, 1))
             }
-            throw new Error(errorMessage)
         }
 
-        const data = await response.json()
-        const relativePath = data?.url
+        xhr.onload = () => {
+            try {
+                const responseText = xhr.responseText
 
-        if (!relativePath) {
-            throw new Error("Respons server tidak valid: URL media tidak ditemukan.")
+                if (xhr.status < 200 || xhr.status >= 300) {
+                    let errorMessage = `Upload gagal dengan status ${xhr.status}.`
+                    try {
+                        const errorData = JSON.parse(responseText)
+                        if (errorData?.error) {
+                            errorMessage = errorData.error
+                        }
+                    } catch {
+                        // Abaikan error parsing JSON
+                    }
+                    reject(new Error(errorMessage))
+                    return
+                }
+
+                const data = JSON.parse(responseText)
+                const relativePath = data?.url
+
+                if (!relativePath) {
+                    reject(new Error("Respons server tidak valid: URL media tidak ditemukan."))
+                    return
+                }
+
+                // Gabungkan base URL + path relatif
+                resolve(`${STORAGE_BASE_URL}${relativePath}`)
+            } catch (err) {
+                reject(err instanceof Error ? err : new Error("Terjadi kesalahan jaringan saat mengupload media."))
+            }
         }
 
-        // Gabungkan base URL + path relatif
-        return `${STORAGE_BASE_URL}${relativePath}`
-    } catch (err) {
-        if (err instanceof Error) {
-            throw err
-        }
-        throw new Error("Terjadi kesalahan jaringan saat mengupload media.", { cause: err })
-    }
+        xhr.onerror = () => reject(new Error("Terjadi kesalahan jaringan saat mengupload media.", { cause: new Error("network error") }))
+        xhr.onabort = () => reject(new Error("Upload dibatalkan."))
+
+        xhr.send(formData)
+    })
 }
 
 /**

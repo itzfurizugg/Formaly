@@ -296,7 +296,7 @@ function Profile() {
                         <ChevronRight className="h-4 w-4 text-tinted shrink-0" />
                     </button>
 
-                    <button
+                    {/* <button
                         onClick={() => navigate("/credit")}
                         className="w-full flex items-center gap-3 p-4 hover:bg-base transition-colors text-left"
                     >
@@ -308,7 +308,7 @@ function Profile() {
                             <p className="text-xs text-tinted">Kenalan dengan yang membuat Formaly.</p>
                         </div>
                         <ChevronRight className="h-4 w-4 text-tinted shrink-0" />
-                    </button>
+                    </button> */}
                 </div>
 
                 <div className="bg-white border border-second mb-3 divide-y divide-second rounded-2xl lg:rounded-xl overflow-hidden">
