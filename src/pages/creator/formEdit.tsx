@@ -289,6 +289,10 @@ function FormEdit() {
     const handleSaveAll = async (e?: FormEvent) => {
         if (e) e.preventDefault()
         if (!id) return
+        if (uploadingBanner) {
+            showAlert("Tunggu sampai upload media banner selesai.", "warning")
+            return
+        }
         // Validasi sama seperti aturan ImageUrlInput: link langsung ke file gambar.
         if (headerImage.trim() && !isValidImageUrl(headerImage)) {
             showAlert("URL gambar header harus diawali http:// atau https://.", "error")
@@ -502,11 +506,11 @@ function FormEdit() {
 
                                         <button
                                             type="submit"
-                                            disabled={saving}
+                                            disabled={saving || uploadingBanner}
                                             className="btn bg-darks text-base border-none w-full hidden sm:flex hover:opacity-90 transition-opacity disabled:opacity-60 mb-2 mt-5"
                                         >
-                                            {saving ? <Spinner size={16} /> : <Save className="h-4 w-4" />}
-                                            Simpan Perubahan
+                                            {saving ? <Spinner size={16} /> : uploadingBanner ? <Spinner size={16} /> : <Save className="h-4 w-4" />}
+                                            {saving ? "Menyimpan..." : uploadingBanner ? "Mengupload banner..." : "Simpan Perubahan"}
                                         </button>
                                     </form>
                                 </div>
@@ -711,11 +715,11 @@ function FormEdit() {
                             <button
                                 type="button"
                                 onClick={() => handleSaveAll()}
-                                disabled={saving}
+                                disabled={saving || uploadingBanner}
                                 className="w-fit px-5 h-14 bg-darks mx-auto text-lg text-white font-bold rounded-full flex items-center justify-center gap-2 pointer-events-auto shadow-lg hover:opacity-90 transition-opacity disabled:opacity-60"
                             >
-                                {saving ? <Spinner size={16} /> : <Save className="h-4 w-4" />}
-                                Simpan Perubahan
+                                {saving ? <Spinner size={16} /> : uploadingBanner ? <Spinner size={16} /> : <Save className="h-4 w-4" />}
+                                {saving ? "Menyimpan..." : uploadingBanner ? "Mengupload banner..." : "Simpan Perubahan"}
                             </button>
                         </div>
                     </div>

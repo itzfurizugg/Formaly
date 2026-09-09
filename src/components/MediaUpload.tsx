@@ -1,4 +1,4 @@
-import { useState, useCallback, useRef, useMemo } from "react"
+import { useState, useCallback, useRef, useMemo, useEffect } from "react"
 import { motion } from "motion/react"
 import { Upload, X, AlertCircle } from "lucide-react"
 import { uploadMedia, deleteMedia, getMediaType } from "../lib/mediaStorage"
@@ -32,16 +32,27 @@ interface MediaUploadProps {
     allow?: MediaType[]
     /** Variant ringkas: satu baris (tombol + nama file + progres) alih-alih dropzone besar. */
     compact?: boolean
+    /** Diberitahu setiap kali status upload berubah — dipakai parent (mis. tombol simpan modal) untuk menahan aksi selama upload. */
+    onUploadingChange?: (uploading: boolean) => void
 }
 
 const MAX_FILE_SIZE = 100 * 1024 * 1024
 
-function MediaUpload({ value, onChange, label = "Media", helpText, allow = ["image", "video", "audio"], compact = false }: MediaUploadProps) {
+function MediaUpload({ value, onChange, label = "Media", helpText, allow = ["image", "video", "audio"], compact = false, onUploadingChange }: MediaUploadProps) {
     const [uploading, setUploading] = useState(false)
     const [uploadProgress, setUploadProgress] = useState(0)
     const [error, setError] = useState<string | null>(null)
     const [dragActive, setDragActive] = useState(false)
     const fileInputRef = useRef<HTMLInputElement | null>(null)
+    const onUploadingChangeRef = useRef(onUploadingChange)
+    useEffect(() => {
+        onUploadingChangeRef.current = onUploadingChange
+    }, [onUploadingChange])
+
+    const setUploadingState = useCallback((v: boolean) => {
+        setUploading(v)
+        onUploadingChangeRef.current?.(v)
+    }, [])
 
     const allowedExtensions = useMemo(
         () => allow.flatMap((type) => TYPE_EXTENSIONS[type]),
@@ -65,7 +76,7 @@ function MediaUpload({ value, onChange, label = "Media", helpText, allow = ["ima
                 return
             }
 
-            setUploading(true)
+            setUploadingState(true)
             setUploadProgress(0)
             setError(null)
 
@@ -78,7 +89,7 @@ function MediaUpload({ value, onChange, label = "Media", helpText, allow = ["ima
                 uploadedUrl = await uploadMedia(file, { onProgress: setUploadProgress })
             } catch (err) {
                 setError(err instanceof Error ? err.message : "Upload gagal. Silakan coba lagi.")
-                setUploading(false)
+                setUploadingState(false)
                 setUploadProgress(0)
                 return
             }
@@ -92,7 +103,7 @@ function MediaUpload({ value, onChange, label = "Media", helpText, allow = ["ima
                     console.error("Gagal rollback (hapus) media setelah autosave gagal:", uploadedUrl)
                 })
                 setError(err instanceof Error ? err.message : "Gagal menyimpan media. Silakan coba lagi.")
-                setUploading(false)
+                setUploadingState(false)
                 setUploadProgress(0)
                 return
             }
@@ -105,9 +116,9 @@ function MediaUpload({ value, onChange, label = "Media", helpText, allow = ["ima
                 })
             }
 
-            setUploading(false)
+            setUploadingState(false)
         },
-        [onChange, value, allowedExtensions]
+        [onChange, value, allowedExtensions, setUploadingState]
     )
 
     const handleDrop = useCallback(
@@ -143,7 +154,7 @@ function MediaUpload({ value, onChange, label = "Media", helpText, allow = ["ima
     const handleDelete = useCallback(async () => {
         if (!value) return
 
-        setUploading(true)
+        setUploadingState(true)
         setError(null)
         const targetUrl = value
 
@@ -154,7 +165,7 @@ function MediaUpload({ value, onChange, label = "Media", helpText, allow = ["ima
             await Promise.resolve(onChange(null))
         } catch (err) {
             setError(err instanceof Error ? err.message : "Gagal menghapus media. Silakan coba lagi.")
-            setUploading(false)
+            setUploadingState(false)
             return
         }
 
@@ -163,8 +174,8 @@ function MediaUpload({ value, onChange, label = "Media", helpText, allow = ["ima
             console.error("Gagal menghapus file dari storage:", targetUrl)
         }
 
-        setUploading(false)
-    }, [value, onChange])
+        setUploadingState(false)
+    }, [value, onChange, setUploadingState])
 
     const handleClickUpload = useCallback(() => {
         fileInputRef.current?.click()

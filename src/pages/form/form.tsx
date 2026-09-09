@@ -16,6 +16,7 @@ import { richTextToPlain } from "../../lib/richtext"
 // import FormHeader from "../../components/creator/formHeader"
 import { alertPop, easeOutExpo, modalBackdrop, modalPanel } from "../../lib/motion"
 import { Spinner } from "../../components/loading"
+import { networkNow, networkISOString, syncTime, onTimeSync } from "../../lib/networkTime"
 
 interface Option {
     id: string
@@ -150,7 +151,7 @@ function FormPage() {
             .update({
                 total_score: totalScore,
                 status: 'SUBMITTED',
-                submitted_at: new Date().toISOString()
+                submitted_at: networkISOString()
             })
             .eq("id", submissionId)
 
@@ -273,11 +274,11 @@ function FormPage() {
                 if (saved) deadline = Number(saved)
             }
             if (!deadline) {
-                deadline = Date.now() + dur * 60 * 1000
+                deadline = networkNow() + dur * 60 * 1000
             }
             if (storageKey) sessionStorage.setItem(storageKey, String(deadline))
             deadlineRef.current = deadline
-            setTimeLeft(Math.max(0, Math.round((deadline - Date.now()) / 1000)))
+            setTimeLeft(Math.max(0, Math.round((deadline - networkNow()) / 1000)))
         } else {
             setTimeLeft(300)
         }
@@ -337,13 +338,25 @@ function FormPage() {
             navigate(`/form/description?formId=${formId}`)
             return
         }
-        loadForm()
+        let cancelled = false
+        syncTime().then(() => {
+            if (!cancelled) loadForm()
+        })
+        const unsub = onTimeSync(() => {
+            if (deadlineRef.current) {
+                setTimeLeft(Math.max(0, Math.round((deadlineRef.current - networkNow()) / 1000)))
+            }
+        })
+        return () => {
+            cancelled = true
+            unsub()
+        }
     }, [user, authLoading, formId, submissionId, navigate, location, loadForm])
 
     useEffect(() => {
         if (!hasTimer || !deadlineRef.current || loading) return
         const timer = setInterval(() => {
-            const remaining = Math.max(0, Math.round((deadlineRef.current! - Date.now()) / 1000))
+            const remaining = Math.max(0, Math.round((deadlineRef.current! - networkNow()) / 1000))
             setTimeLeft(remaining)
             if (remaining <= 0) clearInterval(timer)
         }, 1000)

@@ -107,6 +107,7 @@ function Questions({ embedded = false }: { embedded?: boolean }) {
     const [dateTimeVariant, setDateTimeVariant] = useState<DateTimeVariant>(savedDraft?.dateTimeVariant ?? "date_and_time")
     const [optionMediaOpen, setOptionMediaOpen] = useState<Record<number, boolean>>({})
     const [saving, setSaving] = useState(false)
+    const [mediaUploading, setMediaUploading] = useState(false)
     const [showImport, setShowImport] = useState(false)
     const [dragId, setDragId] = useState<string | null>(null)
     const [orderIds, setOrderIds] = useState<string[] | null>(null)
@@ -211,6 +212,12 @@ function Questions({ embedded = false }: { embedded?: boolean }) {
     }, [user, id, loadAll])
 
     const resetEditor = () => {
+        // Tahan modal selama media masih di-upload: menutup di tengah proses
+        // berisiko menghilangkan referensi file yang belum selesai tersimpan.
+        if (mediaUploading) {
+            showAlert("Tunggu sampai upload media selesai.", "warning")
+            return
+        }
         setEditingId(null)
         setQuestionText("")
         setQuestionType("single_choice")
@@ -292,6 +299,10 @@ function Questions({ embedded = false }: { embedded?: boolean }) {
 
     const handleSave = async () => {
         if (!id) return
+        if (mediaUploading) {
+            showAlert("Tunggu sampai upload media selesai.", "warning")
+            return
+        }
         if (!richTextToPlain(questionText).trim()) {
             showAlert("Soal tidak boleh kosong.", "error")
             return
@@ -519,7 +530,7 @@ function Questions({ embedded = false }: { embedded?: boolean }) {
                 animate={{ opacity: 1, y: 0, scale: 1 }}
                 exit={{ opacity: 0, y: 24, scale: 0.98 }}
                 transition={{ duration: 0.25, ease: easeOutExpo }}
-                className="relative w-full sm:max-w-xl max-h-[88vh] sm:max-h-[85vh] overflow-y-auto bg-white border border-second shadow-2xl rounded-t-2xl sm:rounded-2xl p-4 sm:p-6 pb-8"
+                className="relative w-full sm:max-w-3xl max-h-[88vh] sm:max-h-[85vh] overflow-y-auto bg-white border border-second shadow-2xl rounded-t-2xl sm:rounded-2xl p-4 sm:p-6 pb-8"
             >
                 <div className="flex items-start justify-between mb-5">
                     <div>
@@ -539,6 +550,7 @@ function Questions({ embedded = false }: { embedded?: boolean }) {
                         compact
                         value={mediaUrl}
                         onChange={setMediaUrl}
+                        onUploadingChange={setMediaUploading}
                         label="Media Soal"
                         helpText="Gambar/video/audio pendukung yang tampil bersama soal."
                     />
@@ -760,6 +772,7 @@ function Questions({ embedded = false }: { embedded?: boolean }) {
                                                     compact
                                                     value={opt.media_url}
                                                     onChange={(url) => updateOption(index, { media_url: url })}
+                                                    onUploadingChange={setMediaUploading}
                                                     label={`Media Opsi ${index + 1}`}
                                                     helpText="Gambar/audio/video yang tampil bersama teks opsi."
                                                 />
@@ -776,11 +789,11 @@ function Questions({ embedded = false }: { embedded?: boolean }) {
 
                 <button
                     onClick={handleSave}
-                    disabled={saving}
+                    disabled={saving || mediaUploading}
                     className="btn bg-darks text-base border-none w-full hover:opacity-90 transition-opacity disabled:opacity-60 mt-6"
                 >
-                    {saving ? <Spinner size={16} /> : <Save className="h-4 w-4" />}
-                    Simpan Soal
+                    {saving ? <Spinner size={16} /> : mediaUploading ? <Spinner size={16} /> : <Save className="h-4 w-4" />}
+                    {saving ? "Menyimpan..." : mediaUploading ? "Mengupload media..." : "Simpan Soal"}
                 </button>
             </motion.div>
         </div>

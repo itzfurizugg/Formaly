@@ -11,6 +11,10 @@ import CreatorSidebar from "./components/creator/sidebar"
 import LoadingPage from "./components/loadingPage"
 import AppSplash from "./components/AppSplash"
 import { AlertToaster } from "./lib/alerts"
+import { initTimeSync } from "./lib/networkTime"
+import ErrorBoundary from "./components/ErrorBoundary"
+
+initTimeSync()
 
 function ScrollToTop() {
   const { pathname } = useLocation()
@@ -54,6 +58,7 @@ const CreatorShared = lazy(() => creatorEntry().then((m) => ({ default: m.Creato
 const CreatorLayout = lazy(() => creatorEntry().then((m) => ({ default: m.CreatorLayout })))
 const CreatorGalileo = lazy(() => import("./pages/galileo/chat"))
 const CreatorGalileoGenerate = lazy(() => import("./pages/galileo/generate"))
+const ErrorHandling = lazy(() => import("./pages/errorHandling"))
 
 const hideNavPaths = ["/login", "/register", "/auth", "/forgot-password", "/reset-password", "/form/description", "/form", "/form/list", "/form/result", "/credit"]
 
@@ -143,6 +148,7 @@ function AppShell() {
             </motion.div>
           )}
         </AnimatePresence>
+        <ErrorBoundary>
         <Suspense fallback={<LoadingPage />}>
           {/* Key = pathname agar tiap pindah halaman me-replay animasi pembukaan halaman */}
           <motion.div
@@ -263,9 +269,11 @@ function AppShell() {
             <Route path="/auth" element={<Otp />} />
             <Route path="/forgot-password" element={<ForgotPassword />} />
             <Route path="/reset-password" element={<ResetPassword />} />
+            <Route path="*" element={<ErrorHandling />} />
           </Routes>
           </motion.div>
         </Suspense>
+        </ErrorBoundary>
         {showDock && <Dock />}
       </div>
       </MotionConfig>

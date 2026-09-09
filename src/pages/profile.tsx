@@ -11,7 +11,6 @@ import {
     KeyRound,
     X,
     ChevronRight,
-    Info,
     BadgeCheck,
 } from "lucide-react"
 import { useAuth } from "../lib/auth-context"
