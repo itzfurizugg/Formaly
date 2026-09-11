@@ -15,8 +15,8 @@ const baseItems = [
 const creatorItem = { to: "/creator", label: "Creator", icon: LayoutDashboard }
 
 /**
- * Dock bottom bar — tampil di sm (640–767px) saja.
- * Di xs (< 640px) pakai Navbar sidebar drawer; di md+ (768px+) pakai Navbar desktop.
+ * Dock bottom bar — tampil di semua layar mobile (< md / 768px).
+ * Di md+ (768px+) pakai Navbar desktop.
  */
 function Dock() {
     const { pathname } = useLocation()
@@ -30,7 +30,7 @@ function Dock() {
     const isCreatorActive = pathname === creatorItem.to
 
     return (
-        <div className="fixed bottom-0 inset-x-0 z-50 max-[380px]:hidden md:hidden pointer-events-none">
+        <div className="fixed bottom-0 inset-x-0 z-50 md:hidden pointer-events-none">
             {/* <div className="bg-gradient-to-t from-base-300 via-base-300/30 to-transparent px-4 pb-6 pt-30"> */}
                 <div className="mx-auto w-fit max-w-full flex items-center justify-center gap-3 px-4 pb-6">
                     <nav

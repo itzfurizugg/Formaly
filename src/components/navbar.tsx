@@ -102,13 +102,12 @@ function Navbar() {
                     </div>
 
                     {/* Hamburger & sidebar drawer:
-                        - <=380px (HP ~4 inch: iPhone SE 2020, iPhone 5s, Redmi 5A, dll) -> tampil (sidebar)
-                        - 381px-767px (HP normal) -> disembunyikan, navigasi pakai Dock
+                        - < md (768px, semua HP incl. iPhone SE) -> disembunyikan, navigasi pakai Dock
                         - md (768px-1023px, tablet/iPad) -> tampil (sidebar)
                         - lg ke atas -> disembunyikan, pakai link horizontal */}
                     <button
                         onClick={toggle}
-                        className="btn btn-square btn-ghost mt-1 text-darks relative overflow-hidden shrink-0 hidden max-[380px]:flex min-[381px]:max-[767px]:hidden md:flex lg:hidden ml-auto"
+                        className="btn btn-square btn-ghost mt-1 text-darks relative overflow-hidden shrink-0 hidden md:flex lg:hidden ml-auto"
                         aria-label={open ? "Tutup menu" : "Buka menu"}
                     >
                         <motion.div
@@ -148,7 +147,7 @@ function Navbar() {
             {/* Backdrop untuk sidebar */}
             {showContent && (
                 <motion.div
-                    className={`fixed inset-0 z-[60] hidden max-[380px]:block min-[381px]:max-[767px]:hidden md:block lg:hidden ${open ? "" : "pointer-events-none"}`}
+                    className={`fixed inset-0 z-[60] hidden md:block lg:hidden ${open ? "" : "pointer-events-none"}`}
                     initial={false}
                     animate={{ opacity: open ? 1 : 0 }}
                     transition={{ duration: 0.3, ease: "easeOut" }}
@@ -157,12 +156,12 @@ function Navbar() {
                 />
             )}
 
-            {/* Sidebar drawer: <=380px dan md-lg (lihat komentar di button hamburger) */}
+            {/* Sidebar drawer: md-lg saja (lihat komentar di button hamburger) */}
             <motion.aside
                 initial={false}
                 animate={{ x: open ? "0%" : "100%" }}
                 transition={{ duration: 0.3, ease: easeOutExpo }}
-                className="fixed top-0 right-0 z-[70] h-full w-72 max-w-[85vw] bg-white shadow-xl hidden max-[380px]:flex min-[381px]:max-[767px]:hidden md:flex lg:hidden flex-col"
+                className="fixed top-0 right-0 z-[70] h-full w-72 max-w-[85vw] bg-white shadow-xl hidden md:flex lg:hidden flex-col"
                 role="dialog"
                 aria-modal="true"
                 aria-label="Menu navigasi"

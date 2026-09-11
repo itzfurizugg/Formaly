@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react"
 import { useNavigate } from "react-router-dom"
 import { motion, AnimatePresence } from "motion/react"
-import { AlertTriangle } from "lucide-react"
+import { AlertTriangle, Check } from "lucide-react"
 import { supabase } from "../../lib/supabase"
 import { useAuth } from "../../lib/auth-context"
 import { DEFAULT_MODEL_ID, getModel } from "./models"
@@ -498,13 +498,55 @@ function GeneratePage() {
                                         </motion.p>
                                     </AnimatePresence>
 
-                                    {/* Orbit progress track: posisi titik menandai tahap yang sedang berjalan */}
-                                    <div className="relative w-40 h-1 rounded-full bg-darks/10 overflow-hidden">
-                                        <motion.div
-                                            animate={{ width: `${((stageIndex + 1) / STAGES.length) * 100}%` }}
-                                            transition={{ duration: 0.5, ease: "easeOut" }}
-                                            className="absolute inset-y-0 left-0 rounded-full bg-darks"
-                                        />
+                                    {/* Step bar: tiap tahap generate ditampilkan sebagai satu
+                                        langkah berurutan (selesai = centang, aktif = menyala) */}
+                                    <div className="w-full flex items-start">
+                                        {STAGES.map((stage, index) => {
+                                            const isDone = index < stageIndex
+                                            const isCurrent = index === stageIndex
+                                            const showLeft = index > 0
+                                            const leftDone = index <= stageIndex
+                                            const showRight = index < STAGES.length - 1
+                                            const rightDone = index < stageIndex
+                                            return (
+                                                <div key={stage} className="flex flex-col items-center flex-1 min-w-0">
+                                                    <div className="flex items-center w-full">
+                                                        {showLeft && (
+                                                            <div
+                                                                className={`h-0.5 flex-1 rounded-full transition-colors duration-300 ${
+                                                                    leftDone ? "bg-darks" : "bg-darks/10"
+                                                                }`}
+                                                            />
+                                                        )}
+                                                        <div
+                                                            className={`shrink-0 w-8 h-8 rounded-full flex items-center justify-center text-xs font-semibold transition-all duration-300 ${
+                                                                isDone
+                                                                    ? "bg-darks text-base"
+                                                                    : isCurrent
+                                                                        ? "bg-darks text-base ring-[6px] ring-darks/10 scale-105"
+                                                                        : "bg-base border border-darks/15 text-darks/35"
+                                                            }`}
+                                                        >
+                                                            {isDone ? <Check className="h-3.5 w-3.5" strokeWidth={3} /> : index + 1}
+                                                        </div>
+                                                        {showRight && (
+                                                            <div
+                                                                className={`h-0.5 flex-1 rounded-full transition-colors duration-300 ${
+                                                                    rightDone ? "bg-darks" : "bg-darks/10"
+                                                                }`}
+                                                            />
+                                                        )}
+                                                    </div>
+                                                    <p
+                                                        className={`mt-2 text-[10px] leading-tight text-center transition-colors duration-300 ${
+                                                            isCurrent ? "text-darks font-semibold" : "text-darks/40"
+                                                        }`}
+                                                    >
+                                                        {stage}
+                                                    </p>
+                                                </div>
+                                            )
+                                        })}
                                     </div>
 
                                     <p className="text-xs text-darks/50">
