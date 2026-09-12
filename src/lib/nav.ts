@@ -16,11 +16,11 @@ const HIDE_NAV_PATHS = [
 ]
 
 /** Apakah Navbar umum dirender untuk path ini. */
-export function isGeneralNavVisible(pathname: string, isMobile: boolean): boolean {
+export function isGeneralNavVisible(pathname: string): boolean {
     const hidden =
         HIDE_NAV_PATHS.includes(pathname) ||
         /^\/form\/[^/]+$/.test(pathname) ||
-        (isMobile && pathname.startsWith("/form/result"))
+        pathname.startsWith("/form/result")
     return !hidden && !pathname.startsWith("/creator")
 }
 

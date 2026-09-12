@@ -1,5 +1,5 @@
 import { Routes, Route, useLocation, useNavigate } from "react-router-dom"
-import { lazy, Suspense, useEffect, useState } from "react"
+import { lazy, Suspense, useEffect } from "react"
 import { AnimatePresence, MotionConfig, motion } from "motion/react"
 import { easeOutExpo } from "./lib/motion"
 import { AuthProvider } from "./lib/auth"
@@ -60,19 +60,7 @@ const CreatorGalileo = lazy(() => import("./pages/galileo/chat"))
 const CreatorGalileoGenerate = lazy(() => import("./pages/galileo/generate"))
 const ErrorHandling = lazy(() => import("./pages/errorHandling"))
 
-const hideNavPaths = ["/login", "/register", "/auth", "/forgot-password", "/reset-password", "/form/description", "/form", "/form/list", "/form/result", "/credit"]
-
-function useIsMobile() {
-  const [isMobile, setIsMobile] = useState(() =>
-    typeof window !== "undefined" ? window.innerWidth < 768 : false
-  )
-  useEffect(() => {
-    const onResize = () => setIsMobile(window.innerWidth < 768)
-    window.addEventListener("resize", onResize)
-    return () => window.removeEventListener("resize", onResize)
-  }, [])
-  return isMobile
-}
+const hideNavPaths = ["/login", "/register", "/auth", "/forgot-password", "/reset-password", "/form/description", "/form", "/form/list", "/form/result", "/credit", "/pages/errorHandling"]
 
 // App hanya menyediakan provider. Konten asli (gated auth) ada di AppShell,
 // biar useAuth() bisa dipanggil di dalam cakupan AuthProvider.
@@ -92,7 +80,6 @@ function AppShell() {
   const { loading: authLoading } = useAuth()
   const location = useLocation()
   const navigate = useNavigate()
-  const isMobile = useIsMobile()
 
   // Kalau user tiba lewat link reset (mungkin jatuh ke home/route lain karena
   // Site URL default), sesi recovery tetap diproses oleh supabase-js dan
@@ -107,10 +94,21 @@ function AppShell() {
     return () => subscription.unsubscribe()
   }, [location.pathname, navigate])
   const isCreator = location.pathname.startsWith("/creator")
-  const hideNav =
+
+  // Path yang punya halaman nyata. Selain ini jatuh ke ErrorHandling (route "*"),
+  // jadi Navbar umum & Dock disembunyikan biar halaman error tampil minim.
+  const knownRoutes = ["/", "/history", "/profile", "/credit", "/upgrade-to-creator", "/admin/forms"]
+  const isResultPage = location.pathname.startsWith("/form/result")
+  const isKnownRoute =
+    knownRoutes.includes(location.pathname) ||
     hideNavPaths.includes(location.pathname) ||
+    /^\/creator(?:\/.*)?$/.test(location.pathname) ||
     /^\/form\/[^/]+$/.test(location.pathname) ||
-    (isMobile && location.pathname.startsWith("/form/result"))
+    isResultPage
+
+  // Halaman hasil Form tampil tanpa Navbar maupun Dock (mobile & desktop),
+  // senada dengan aturan di lib/nav.ts (isGeneralNavVisible).
+  const hideNav = !isKnownRoute || isResultPage
   // Dock bottom nav khusus mobile: sama seperti Navbar, tapi tidak tampil di creator
   // dashboard maupun halaman yang menyembunyikan navigasi (auth, form resolver, dll).
   const showDock = !hideNav && !isCreator

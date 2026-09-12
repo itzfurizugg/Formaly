@@ -224,7 +224,7 @@ function ResultPage() {
                 ) : (
                     <div className="flex flex-col items-center px-3.5 py-5 sm:py-10">
                         <div className="w-full max-w-4xl">
-                            <BackButton to="/history" />
+                            <BackButton to="/history" showOnDesktop/>
                             {info?.form && (
                                 <div className="rounded-xl overflow-hidden border border-second shadow-sm mb-3 lg:mb-4">
                                     <FormHeader formId={info.form.id} title={info.form.title} headerImage={headerImage} headerColor={headerColor} headerMedia={headerMedia} />

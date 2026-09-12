@@ -239,6 +239,7 @@ function CreatorDashboard() {
                                 {[
                                     { to: "/creator/forms", label: "Kelola Form", desc: "Buat dan atur form kamu", icon: FileText },
                                     { to: "/creator/responden", label: "Responden", desc: "Lihat hasil pengisian form", icon: ChartNoAxesColumn },
+                                    // { to: "/creator/galileo", label: "Galileo AI", desc: "Coba buat form hanya dengan mengetikan ide!" }
                                 ].map((item, index) => (
                                     <motion.div
                                         key={item.to}
@@ -259,6 +260,7 @@ function CreatorDashboard() {
                                             </span>
                                             <ChevronRight className="h-4 w-4 text-tinted shrink-0" />
                                         </Link>
+                                        
                                     </motion.div>
                                 ))}
                             </div>

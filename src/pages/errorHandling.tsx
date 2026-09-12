@@ -7,19 +7,17 @@ function ErrorHandling() {
     const navigate = useNavigate()
     const error = useRouteError()
 
-    let title = "Terjadi Kesalahan"
-    let message = "Sepertinya ada yang tidak beres. Silakan coba lagi."
+    let title = "Halaman Tidak Ditemukan"
+    let message = "Halaman yang kamu cari tidak ada atau sudah dipindahkan."
 
     if (isRouteErrorResponse(error)) {
-        if (error.status === 404) {
-            title = "Halaman Tidak Ditemukan"
-            message = "Halaman yang kamu cari tidak ada atau sudah dipindahkan."
-        } else {
+        if (error.status !== 404) {
             title = `Kesalahan ${error.status}`
-            message = error.statusText || message
+            message = error.statusText || "Sepertinya ada yang tidak beres. Silakan coba lagi."
         }
     } else if (error instanceof Error) {
-        message = error.message || message
+        title = "Terjadi Kesalahan"
+        message = error.message
     }
 
     return (

@@ -1,5 +1,5 @@
 import { Component, type ReactNode } from "react"
-import { AlertTriangle, Home, RefreshCw } from "lucide-react"
+import { AlertTriangle, ArrowLeft } from "lucide-react"
 
 interface Props {
     children: ReactNode
@@ -35,19 +35,12 @@ class ErrorBoundary extends Component<Props, State> {
                             </p>
                         )}
                         <div className="flex gap-3">
-                            <button
-                                onClick={() => window.location.reload()}
-                                className="btn rounded-full bg-base text-darks border border-second hover:bg-second transition-colors"
-                            >
-                                <RefreshCw className="h-4 w-4" />
-                                Muat Ulang
-                            </button>
                             <a
                                 href="/"
                                 className="btn rounded-full bg-darks text-base border-none hover:opacity-90 transition-opacity"
                             >
-                                <Home className="h-4 w-4" />
-                                Beranda
+                                <ArrowLeft className="h-4 w-4" />
+                                Kembali ke Beranda
                             </a>
                         </div>
                     </div>

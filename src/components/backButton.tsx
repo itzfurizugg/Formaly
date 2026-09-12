@@ -1,6 +1,6 @@
 import { ArrowLeft } from "lucide-react"
 import { useLocation, useNavigate } from "react-router-dom"
-import { isGeneralNavVisible, isMobileViewport } from "../lib/nav"
+import { isGeneralNavVisible } from "../lib/nav"
 import { BACKDROP_FILTER_SUPPORTED } from "../lib/glass"
 
 interface BackButtonProps {
@@ -20,7 +20,7 @@ function BackButton({ to, onClick, label = "Kembali", className = "", showOnDesk
 
     // Offset sticky menyesuaikan ada-tidaknya Navbar umum: kalau ada, berhenti
     // sedikit di bawahnya; kalau tidak (creator/form/auth), tempel ke tepi atas.
-    const hasTopNav = isGeneralNavVisible(pathname, isMobileViewport())
+    const hasTopNav = isGeneralNavVisible(pathname)
 
     const handleClick = () => {
         if (onClick) onClick()

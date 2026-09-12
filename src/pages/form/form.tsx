@@ -430,7 +430,7 @@ function FormPage() {
                     </div>
                 ) : (
                     <div className="flex flex-col items-center px-3.5 pt-6 pb-28 md:pb-6">
-                        <div className="w-full max-w-5xl xl:mt-3">
+                        <div className="w-full max-w-3xl xl:mt-3">
                             {/* Banner header hanya di desktop; mobile fokus ke soal. Full width, proporsi 3105x1100 via FormHeader. */}
                             {/* {headerImage && (
                     <div className="hidden lg:block w-full rounded-xl overflow-hidden border border-second shadow-sm mb-4">
