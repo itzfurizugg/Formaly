@@ -18,6 +18,8 @@ import {
 import RichTextEditor, { RichText } from "../../components/richText"
 import { richTextToPlain } from "../../lib/richtext"
 import { alertSaveSuccess, confirmDelete, showAlert } from "../../lib/alerts"
+import { deleteStoredMedia } from "../../lib/mediaStorage"
+import { collectQuestionMediaUrls } from "../../lib/mediaCleanup"
 import { pageGet, pageSet } from "../../lib/pageCache"
 import { easeOutExpo } from "../../lib/motion"
 import BackButton from "../../components/backButton"
@@ -277,6 +279,10 @@ function Questions({ embedded = false }: { embedded?: boolean }) {
 
     const removeOption = (index: number) => {
         const opt = options[index]
+        // Hapus juga file media opsi dari storage supaya tidak nyangkut.
+        if (opt?.media_url) {
+            deleteStoredMedia([opt.media_url])
+        }
         if (opt?.id) setRemovedOptionIds([...removedOptionIds, opt.id])
         setOptions(options.filter((_, i) => i !== index))
         setOptionMediaOpen((prev) => {
@@ -402,6 +408,9 @@ function Questions({ embedded = false }: { embedded?: boolean }) {
             title: "Hapus soal ini?",
             description: "Pilihan jawaban pada soal ini akan ikut terhapus.",
             onConfirm: async () => {
+                // Kumpulkan URL media dulu sebelum baris soal dihapus,
+                // supaya masih bisa di-query dari database.
+                const urls = await collectQuestionMediaUrls(q.id)
                 const { error } = await supabase.rpc("delete_question", { p_question_id: q.id })
                 if (error) {
                     // RPC belum tersedia di database -> fallback ke DELETE langsung.
@@ -414,6 +423,8 @@ function Questions({ embedded = false }: { embedded?: boolean }) {
                         throw new Error(error.message)
                     }
                 }
+                // Setelah data dihapus, bersihkan file-nya di storage.
+                await deleteStoredMedia(urls)
                 await loadAll()
             },
         })

@@ -101,14 +101,17 @@ function AppShell() {
   const isResultPage = location.pathname.startsWith("/form/result")
   const isKnownRoute =
     knownRoutes.includes(location.pathname) ||
-    hideNavPaths.includes(location.pathname) ||
     /^\/creator(?:\/.*)?$/.test(location.pathname) ||
     /^\/form\/[^/]+$/.test(location.pathname) ||
     isResultPage
 
-  // Halaman hasil Form tampil tanpa Navbar maupun Dock (mobile & desktop),
-  // senada dengan aturan di lib/nav.ts (isGeneralNavVisible).
-  const hideNav = !isKnownRoute || isResultPage
+  // Navbar umum & Dock disembunyikan pada daftar path di bawah (auth, form,
+  // credit, dll.) — senada dengan aturan di lib/nav.ts (isGeneralNavVisible).
+  const navHiddenHere =
+    hideNavPaths.includes(location.pathname) ||
+    /^\/form\/[^/]+$/.test(location.pathname) ||
+    isResultPage
+  const hideNav = !isKnownRoute || navHiddenHere
   // Dock bottom nav khusus mobile: sama seperti Navbar, tapi tidak tampil di creator
   // dashboard maupun halaman yang menyembunyikan navigasi (auth, form resolver, dll).
   const showDock = !hideNav && !isCreator

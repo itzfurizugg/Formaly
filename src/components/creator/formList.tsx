@@ -8,6 +8,8 @@ import { confirmDelete, showAlert } from "../../lib/alerts"
 import { RichText } from "../richText"
 import FormHeader from "./formHeader"
 import { pageGet, pageSet } from "../../lib/pageCache"
+import { deleteStoredMedia } from "../../lib/mediaStorage"
+import { collectFormMediaUrls } from "../../lib/mediaCleanup"
 import { easeOutExpo } from "../../lib/motion"
 import { Spinner } from "../loading"
 
@@ -151,8 +153,13 @@ function FormList() {
                 setDeleting(id)
                 setError(null)
                 try {
+                    // Kumpulkan URL media dulu sebelum baris form dihapus,
+                    // supaya masih bisa di-query dari database.
+                    const urls = await collectFormMediaUrls(id)
                     const { error } = await supabase.rpc("delete_form", { p_form_id: id })
                     if (error) throw new Error(error.message)
+                    // Setelah data dihapus, bersihkan file-nya di storage.
+                    await deleteStoredMedia(urls)
                     await loadForms()
                 } finally {
                     setDeleting(null)

@@ -41,7 +41,7 @@ const HEX_COLOR_RE = /^#(?:[0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/
 function getMediaType(filenameOrUrl: string): "image" | "video" | "audio" | null {
     const lower = filenameOrUrl.toLowerCase()
     const ext = lower.substring(lower.lastIndexOf("."))
-    if ([".jpg", ".jpeg", ".png", ".webp"].includes(ext)) return "image"
+    if ([".jpg", ".jpeg", ".png", ".webp", ".gif"].includes(ext)) return "image"
     if ([".mp4", ".mkv", ".mov", ".avi"].includes(ext)) return "video"
     if ([".mp3"].includes(ext)) return "audio"
     return null

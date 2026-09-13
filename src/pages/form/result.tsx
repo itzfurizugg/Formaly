@@ -223,7 +223,7 @@ function ResultPage() {
                     </div>
                 ) : (
                     <div className="flex flex-col items-center px-3.5 py-5 sm:py-10">
-                        <div className="w-full max-w-4xl">
+                        <div className="w-full max-w-3xl">
                             <BackButton to="/history" showOnDesktop/>
                             {info?.form && (
                                 <div className="rounded-xl overflow-hidden border border-second shadow-sm mb-3 lg:mb-4">

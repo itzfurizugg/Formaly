@@ -69,6 +69,8 @@ const FORM_RULES =
     '  ]\n' +
     '}\n\n' +
     "Aturan:\n" +
+    '- "duration_minutes" = waktu pengerjaan dalam MENIT. Contoh: "waktu pengerjaan 30 menit" → 30, "durasi 1 jam" → 60. Isi null bila pengguna tidak menyebut durasi.\n' +
+    '- "passing_score" = nilai minimum / batas kelulusan (0-100). Contoh: "nilai minimum 80" → 80, "passing score 75" → 75. Default 70 bila pengguna tidak menyebut batas nilai.\n' +
     '- Tipe "single_choice", "multiple_choice", dan "dropdown" WAJIB punya minimal 2 opsi atau lebih. ' +
     '"single_choice" dan "dropdown" menyimpan tepat satu opsi benar, "multiple_choice" minimal satu opsi benar.\n' +
     '- Tipe "text", "file_upload", dan "date_time" TIDAK punya opsi (options kosong).\n' +
@@ -89,7 +91,8 @@ const GENERATE_SYSTEM =
     "rapikan setiap soal menjadi struktur JSON yang bisa dikerjakan: perbaiki teks soal, " +
     "jabarkan pilihan jawaban, tetapkan kunci jawaban, dan pilih tipe yang paling sesuai " +
     "(kebanyakan akan 'single_choice' atau 'multiple_choice'). Pertahankan isi/maksud asli soal tanpa mengubah artinya.\n" +
-    "- Kosongkan passing_score hanya jika tidak relevan (isi 70)."
+    "- Perhatikan dengan saksama kata kunci pengguna untuk setting form: 'nilai minimum', 'passing score', dan 'KKM' → passing_score; 'waktu pengerjaan', 'durasi', 'menit', dan 'jam' → duration_minutes. Gunakan angka yang disebut pengguna apa adanya.\n" +
+    "- Jika pengguna TIDAK menyebut nilai minimum & waktu pengerjaan, isi duration_minutes = null dan passing_score = 70."
 
 // Instruksi sistem untuk mode MELENGKAPI form yang sudah ada (append soal baru).
 const EDIT_SYSTEM =
@@ -105,6 +108,8 @@ const EDIT_SYSTEM =
     "- Pertahankan konsistensi gaya soal (jenis tipe & tingkat kesulitan) dengan soal yang sudah ada.\n" +
     '- Isi "title" dengan judul form yang sedang dilengkapi (pindahkan apa adanya dari konteks).\n' +
     '- "questions" berisi HANYA soal-soal baru.\n' +
+    '- "duration_minutes" & "passing_score": pertahankan nilai yang ada di konteks form eksisting, ' +
+    "kecuali pengguna secara eksplisit minta mengubah waktu pengerjaan / nilai minimum.\n" +
     "- Jika pengguna melampirkan file/media, gunakan isi media itu untuk menyusun soal."
 
 // Tahapan proses generate — dipakai untuk crossfade teks & posisi orbit.
@@ -278,13 +283,15 @@ interface ExistingQuestion {
 interface ExistingFormContext {
     title: string
     questions: ExistingQuestion[]
+    duration_minutes: number | null
+    passing_score: number | null
 }
 
 /** Muat form eksisting + daftar soal lama (teks dibersihkan dari config) untuk konteks AI. */
 async function loadExistingContext(formId: string): Promise<ExistingFormContext> {
     const { data: formRow, error: formErr } = await supabase
         .from("forms")
-        .select("id,title")
+        .select("id,title,duration,passing_score")
         .eq("id", formId)
         .single()
     if (formErr || !formRow) throw new Error("Form tujuan tidak ditemukan. Pilih ulang lewat @ di Galileo.")
@@ -303,7 +310,7 @@ async function loadExistingContext(formId: string): Promise<ExistingFormContext>
         return { text_plain: richTextToPlain(cleaned).trim() }
     })
 
-    return { title: formRow.title, questions }
+    return { title: formRow.title, questions, duration_minutes: formRow.duration ?? null, passing_score: formRow.passing_score ?? null }
 }
 
 /** Tambahkan soal-soal hasil AI ke form yang sudah ada (di belakang soal lama). */
@@ -331,6 +338,17 @@ async function appendQuestionsToForm(userId: string, formId: string, form: GenFo
     for (let i = 0; i < form.questions.length; i++) {
         await insertQuestion(formId, form.questions[i], startIndex + i)
     }
+
+    // Waktu pengerjaan & nilai minimum ikut diperbarui bila model mengembalikan nilai
+    // (hasil parsing konsisten dengan konteks eksisting / permintaan pengguna).
+    const { error: updateErr } = await supabase
+        .from("forms")
+        .update({
+            duration: form.duration_minutes,
+            passing_score: form.passing_score,
+        })
+        .eq("id", formId)
+    if (updateErr) throw new Error(`Gagal memperbarui setting form: ${updateErr.message}`)
 
     return formId
 }
@@ -386,6 +404,8 @@ function GeneratePage() {
                 userContent +=
                     "\n\n=== KONTEKS FORM EKSISTING ===\n" +
                     `Judul form: ${existing.title}\n` +
+                    `Duration saat ini: ${existing.duration_minutes ?? null}\n` +
+                    `Passing score saat ini: ${existing.passing_score ?? null}\n` +
                     "Soal yang sudah ada di form ini (jangan dibuat ulang):\n" +
                     soals +
                     "\n=== AKHIR KONTEKS ===\n"

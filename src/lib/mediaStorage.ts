@@ -173,6 +173,28 @@ export async function deleteMedia(fileUrlOrPath: string): Promise<boolean> {
 }
 
 /**
+ * Apakah URL di-host di server storage sendiri (bukan gambar eksternal).
+ * Hanya file milik storage yang aman dihapus lewat deleteMedia.
+ */
+export function isStoredMediaUrl(url: string): boolean {
+    return url.startsWith(STORAGE_BASE_URL)
+}
+
+/**
+ * Hapus batch file dari storage server. URL eksternal (di luar storage) dan
+ * nilai kosong diabaikan; kegagalan per-file tidak menggagalkan yang lain.
+ */
+export async function deleteStoredMedia(urls: Array<string | null | undefined>): Promise<void> {
+    await Promise.all(
+        urls
+            .filter((u): u is string => typeof u === "string" && u.trim() !== "" && isStoredMediaUrl(u))
+            .map((u) => deleteMedia(u).catch(() => {
+                console.error("Gagal menghapus media dari storage:", u)
+            }))
+    )
+}
+
+/**
  * Tentukan tipe media berdasarkan ekstensi nama file atau URL.
  * @param filenameOrUrl Nama file atau URL
  * @returns 'image' | 'video' | 'audio' | null
@@ -181,10 +203,10 @@ export function getMediaType(filenameOrUrl: string): "image" | "video" | "audio"
     const lower = filenameOrUrl.toLowerCase()
     const ext = lower.substring(lower.lastIndexOf("."))
 
-    if ([".jpg", ".jpeg", ".png", ".webp"].includes(ext)) {
+    if ([".jpg", ".jpeg", ".png", ".webp", ".gif"].includes(ext)) {
         return "image"
     }
-    if ([".mp4", ".mkv", ".mov", ".avi", ".gif"].includes(ext)) {
+    if ([".mp4", ".mkv", ".mov", ".avi"].includes(ext)) {
         return "video"
     }
     if ([".mp3"].includes(ext)) {

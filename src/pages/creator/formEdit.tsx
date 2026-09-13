@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback, useRef, type FormEvent } from "react"
+import { useEffect, useState, useCallback, type FormEvent } from "react"
 import { useNavigate, useParams } from "react-router-dom"
 import { motion } from "motion/react"
 import {
@@ -10,7 +10,6 @@ import {
     Trash2,
     Pipette,
     Repeat,
-    Upload,
 } from "lucide-react"
 import { supabase } from "../../lib/supabase"
 import { useAuth } from "../../lib/auth-context"
@@ -18,8 +17,10 @@ import { alertSaveError, alertSaveSuccess, confirmDelete, showAlert } from "../.
 import { fadeSlide } from "../../lib/motion"
 import { PRESET_HEADER_COLORS } from "../../lib/colorbase"
 import { isValidImageUrl } from "../../lib/imageUrl"
-import { uploadMedia, deleteMedia } from "../../lib/mediaStorage"
 import { pageGet, pageSet } from "../../lib/pageCache"
+import { deleteStoredMedia } from "../../lib/mediaStorage"
+import { collectFormMediaUrls } from "../../lib/mediaCleanup"
+import MediaUpload from "../../components/MediaUpload"
 import RichTextEditor from "../../components/richText"
 import BackButton from "../../components/backButton"
 import FormTabs from "../../components/creator/formTabs"
@@ -87,9 +88,6 @@ const SETTING_ROWS: {
         },
     ]
 
-// Banner header hanya menerima gambar & video (bukan audio).
-const HEADER_EXTENSIONS = [".jpg", ".jpeg", ".png", ".webp", ".mp4", ".mkv", ".mov", ".avi", ".gif"]
-
 interface FormEditCache {
     title: string
     description: string
@@ -125,9 +123,6 @@ function FormEdit() {
     const [loading, setLoading] = useState(!cached)
     const [saving, setSaving] = useState(false)
     const [uploadingBanner, setUploadingBanner] = useState(false)
-    const [bannerProgress, setBannerProgress] = useState(0)
-    const [bannerError, setBannerError] = useState<string | null>(null)
-    const bannerInputRef = useRef<HTMLInputElement | null>(null)
     const [deleting, setDeleting] = useState(false)
     const [settings, setSettings] = useState<FormSettingsData>(cached?.settings ?? DEFAULTS)
     const [headerColor, setHeaderColor] = useState(cached?.headerColor ?? "")
@@ -341,47 +336,6 @@ function FormEdit() {
         }
     }
 
-    // Upload media banner: hanya gambar & video. Mengganti media lama langsung
-    // menghapus file lama dari storage supaya tidak ada file nyangkut.
-    const handleBannerFile = async (file: File) => {
-        const ext = file.name.toLowerCase().substring(file.name.lastIndexOf("."))
-        if (!HEADER_EXTENSIONS.includes(ext as never)) {
-            setBannerError("Format tidak didukung. Untuk banner gunakan gambar (JPG, PNG, WebP) atau video (MP4, MKV, MOV, AVI).")
-            return
-        }
-        if (file.size > 100 * 1024 * 1024) {
-            setBannerError("Ukuran file melebihi batas maksimal 100 MB.")
-            return
-        }
-
-        setUploadingBanner(true)
-        setBannerProgress(0)
-        setBannerError(null)
-        try {
-            const url = await uploadMedia(file, { onProgress: setBannerProgress })
-            const previous = headerMedia
-            setHeaderMedia(url)
-            if (previous && previous !== url) {
-                deleteMedia(previous).catch(() => {
-                    console.error("Gagal menghapus media banner lama saat replace:", previous)
-                })
-            }
-        } catch (err) {
-            setBannerError(err instanceof Error ? err.message : "Upload gagal. Silakan coba lagi.")
-        } finally {
-            setUploadingBanner(false)
-        }
-    }
-
-    const handleBannerRemove = async () => {
-        if (!headerMedia) return
-        const target = headerMedia
-        setHeaderMedia(null)
-        deleteMedia(target).catch(() => {
-            console.error("Gagal menghapus media banner:", target)
-        })
-    }
-
     const handleDeleteForm = () => {
         if (!user || !id) return
         confirmDelete({
@@ -390,12 +344,17 @@ function FormEdit() {
             onConfirm: async () => {
                 setDeleting(true)
                 try {
+                    // Kumpulkan URL media dulu sebelum baris form dihapus,
+                    // supaya masih bisa di-query dari database.
+                    const urls = await collectFormMediaUrls(id)
                     // RPC delete_form menghapus seluruh data terkait (soal, token,
                     // submission, jawaban, relasi tag) plus tag yatim dalam satu
                     // transaksi SECURITY DEFINER — pola yang sama dengan tombol
                     // Hapus di daftar form.
                     const { error } = await supabase.rpc("delete_form", { p_form_id: id })
                     if (error) throw new Error(error.message)
+                    // Setelah data dihapus, bersihkan file-nya di storage.
+                    await deleteStoredMedia(urls)
                     if (cacheKey) pageSet(cacheKey, undefined)
                     navigate("/creator")
                 } finally {
@@ -566,65 +525,12 @@ function FormEdit() {
                                         </p>
 
                                         <div className="px-3.5 sm:px-1 mb-4">
-                                            {uploadingBanner ? (
-                                                <div className="flex flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed border-second bg-base p-6">
-                                                    <div className="flex items-center gap-2 text-sm font-medium text-darks">
-                                                        <Spinner size={16} /> Mengupload...
-                                                    </div>
-                                                    <div className="w-full max-w-xs h-2 overflow-hidden rounded-full bg-second" role="progressbar" aria-valuemin={0} aria-valuemax={100} aria-valuenow={Math.round(bannerProgress * 100)} aria-label="Progres upload banner">
-                                                        {bannerProgress > 0 ? (
-                                                            <div className="h-full rounded-full bg-done transition-[width] duration-200 ease-out" style={{ width: `${Math.round(bannerProgress * 100)}%` }} />
-                                                        ) : (
-                                                            <div className="h-full w-1/3 rounded-full bg-done animate-pulse" />
-                                                        )}
-                                                    </div>
-                                                    <p className="text-xs text-tinted">
-                                                        {bannerProgress > 0 ? `${Math.round(bannerProgress * 100)}%` : "Menunggu proses server..."}
-                                                    </p>
-                                                </div>
-                                            ) : (
-                                                <div className="flex flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed border-second bg-base p-6 text-center">
-                                                    <Upload className="h-6 w-6 text-darks" />
-                                                    <p className="text-sm font-medium text-darks">
-                                                        {headerMedia ? "Media banner sudah dipilih." : "Unggah media banner"}
-                                                    </p>
-                                                    <p className="text-xs text-tinted">JPG, PNG, WebP, MP4, MKV, MOV, AVI · Maks 100 MB</p>
-                                                    <div className="flex flex-wrap items-center justify-center gap-2 mt-2">
-                                                        <button
-                                                            type="button"
-                                                            onClick={() => bannerInputRef.current?.click()}
-                                                            className="btn btn-sm bg-darks text-base border-none shadow-none hover:opacity-90 transition-opacity"
-                                                        >
-                                                            <Upload className="h-3.5 w-3.5" />
-                                                            {headerMedia ? "Ganti Media" : "Pilih File"}
-                                                        </button>
-                                                        {headerMedia && (
-                                                            <button
-                                                                type="button"
-                                                                onClick={handleBannerRemove}
-                                                                aria-label="Hapus media banner"
-                                                                className="btn btn-sm bg-wrong/10 text-wrong border border-wrong/25 hover:bg-wrong/20 transition-colors"
-                                                            >
-                                                                <Trash2 className="h-3.5 w-3.5" /> Hapus
-                                                            </button>
-                                                        )}
-                                                    </div>
-                                                    {bannerError && (
-                                                        <p className="mt-2 text-xs text-wrong">{bannerError}</p>
-                                                    )}
-                                                </div>
-                                            )}
-
-                                            <input
-                                                ref={bannerInputRef}
-                                                type="file"
-                                                accept={HEADER_EXTENSIONS.join(",")}
-                                                className="hidden"
-                                                onChange={(e) => {
-                                                    const file = e.target.files?.[0]
-                                                    if (file) handleBannerFile(file)
-                                                    e.target.value = ""
-                                                }}
+                                            <MediaUpload
+                                                compact
+                                                allow={["image"]}
+                                                value={headerMedia}
+                                                onChange={setHeaderMedia}
+                                                onUploadingChange={setUploadingBanner}
                                             />
                                         </div>
 

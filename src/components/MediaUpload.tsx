@@ -8,8 +8,8 @@ import { easeOutExpo } from "../lib/motion"
 export type MediaType = "image" | "video" | "audio"
 
 const TYPE_EXTENSIONS: Record<MediaType, string[]> = {
-    image: [".jpg", ".jpeg", ".png", ".webp"],
-    video: [".mp4", ".mkv", ".mov", ".avi", ".gif"],
+    image: [".jpg", ".jpeg", ".png", ".webp", ".gif"],
+    video: [".mp4", ".mkv", ".mov", ".avi"],
     audio: [".mp3"],
 }
 
@@ -256,7 +256,6 @@ function MediaUpload({ value, onChange, label = "Media", helpText, allow = ["ima
                             <p className="text-sm font-medium text-darks truncate">
                                 {fileName ?? "Upload media"}
                             </p>
-                            <p className="text-xs text-tinted truncate">Mendukung foto, video, dan juga audio</p>
                         </div>
                     </div>
 
@@ -361,7 +360,7 @@ function MediaUpload({ value, onChange, label = "Media", helpText, allow = ["ima
                     </p>
 
                     <p className="text-xs text-tinted mb-2 max-w-xs mx-auto">
-                        Format: {formatList} · Maks 100 MB
+                        Format: {formatList} · Maks 5 MB
                     </p>
 
                     {helpText && <p className="text-xs text-tinted/70 mt-1">{helpText}</p>}

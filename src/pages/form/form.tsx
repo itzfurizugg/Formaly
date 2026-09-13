@@ -620,7 +620,7 @@ function FormPage() {
                                     <button
                                         onClick={requestSubmit}
                                         disabled={submitting}
-                                        className="btn text-white h-12 min-h-0 px-3.5 bg-done border-none rounded-xl hover:opacity-90 disabled:opacity-25"
+                                        className="btn text-white h-12 min-h-0 px-3.5 bg-done border-none rounded-full hover:opacity-90 disabled:opacity-25"
                                     >
                                         {submitting ? (
                                             <Spinner size={16} />

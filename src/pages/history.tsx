@@ -93,7 +93,7 @@ function History() {
         <>
             {!authLoading && user && !loading && (
                 <div className="flex flex-col items-center px-3.5 sm:px-6 py-5">
-                    <div className="max-w-6xl grid w-full lg:mt-3">
+                    <div className="max-w-7xl grid w-full lg:mt-3">
                         <div className="ml-2 sm:ml-3 lg:ml-0">
                             <div className="flex items-center gap-2 mb-1">
                                 <h1 className="text-2xl lg:text-4xl text-darks font-bold font-display">Riwayat</h1>
