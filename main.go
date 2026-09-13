@@ -2,6 +2,7 @@ package main
 
 import (
 	"crypto/rand"
+	"crypto/subtle"
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
@@ -15,11 +16,34 @@ import (
 	"time"
 )
 
+// GANTI INI jadi string acak panjang versi kamu sendiri (mis. hasil dari
+// `openssl rand -hex 32` di terminal). Dipakai buat memverifikasi request
+// webhook dari Supabase, biar orang lain nggak bisa manggil endpoint cleanup
+// sembarangan.
+const webhookSecret = "ganti-dengan-string-acak-punya-kamu"
+
 // ResponseJSON untuk format balikan API yang konsisten
 type ResponseJSON struct {
 	Message string `json:"message"`
 	URL     string `json:"url,omitempty"`
 	Error   string `json:"error,omitempty"`
+}
+
+// SupabaseWebhookPayload adalah bentuk payload standar yang dikirim Supabase
+// Database Webhooks untuk event INSERT/UPDATE/DELETE.
+type SupabaseWebhookPayload struct {
+	Type      string                 `json:"type"`
+	Table     string                 `json:"table"`
+	Schema    string                 `json:"schema"`
+	Record    map[string]interface{} `json:"record"`
+	OldRecord map[string]interface{} `json:"old_record"`
+}
+
+// originCheckExemptPaths adalah path yang dikecualikan dari Origin check di
+// OnlyFromWebMiddleware karena dilindungi mekanisme lain (shared secret),
+// bukan Origin/Referer, sebab yang manggil bukan browser (mis. Supabase).
+var originCheckExemptPaths = map[string]bool{
+	"/webhook/media-cleanup": true,
 }
 
 // Middleware Keamanan (CORS & Security Headers)
@@ -31,7 +55,7 @@ func secureHeaders(next http.Handler) http.Handler {
 
 		// Konfigurasi CORS
 		w.Header().Set("Access-Control-Allow-Origin", "*")
-		w.Header().Set("Access-Control-Allow-Methods", "POST, GET, OPTIONS")
+		w.Header().Set("Access-Control-Allow-Methods", "POST, GET, DELETE, OPTIONS")
 		w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
 
 		if r.Method == http.MethodOptions {
@@ -81,7 +105,8 @@ func isOriginAllowed(raw string, allowed []string) bool {
 }
 
 // OnlyFromWebMiddleware menolak request POST yang tidak membawa header Origin
-// atau Referer dari domain yang di-whitelist.
+// atau Referer dari domain yang di-whitelist, kecuali path yang ada di
+// originCheckExemptPaths (dilindungi mekanisme lain).
 //
 // Catatan: header Origin/Referer bisa dipalsukan oleh non-browser client
 // (curl, Postman, dsb) kalau pengirimnya sengaja niat. Middleware ini efektif
@@ -91,7 +116,7 @@ func OnlyFromWebMiddleware(next http.Handler) http.Handler {
 	allowed := allowedOrigins()
 
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		if r.Method != http.MethodPost {
+		if r.Method != http.MethodPost || originCheckExemptPaths[r.URL.Path] {
 			next.ServeHTTP(w, r)
 			return
 		}
@@ -118,6 +143,100 @@ func generateShortRandomString(length int) string {
 	bytes := make([]byte, length)
 	rand.Read(bytes)
 	return hex.EncodeToString(bytes)
+}
+
+// mediaURLToLocalPath mengubah URL media publik (mis.
+// "https://storage.formaly.my.id/media/2026/09/05/xxxx.jpeg", atau path
+// relatifnya "/media/2026/09/05/xxxx.jpeg") menjadi path lokal di disk
+// ("./uploads/2026/09/05/xxxx.jpeg"). Balikan false kalau bukan URL media
+// yang valid (bukan di bawah /media/).
+func mediaURLToLocalPath(raw string) (string, bool) {
+	if raw == "" {
+		return "", false
+	}
+
+	p := raw
+	if u, err := url.Parse(raw); err == nil && u.Path != "" {
+		p = u.Path
+	}
+
+	if !strings.HasPrefix(p, "/media/") {
+		return "", false
+	}
+
+	return "." + strings.Replace(p, "/media", "/uploads", 1), true
+}
+
+// mediaColumnsByTable memetakan nama tabel ke kolom-kolom yang menyimpan URL
+// media, supaya webhook tahu kolom mana yang perlu dicek saat row dihapus.
+var mediaColumnsByTable = map[string][]string{
+	"forms":     {"header_image", "media_url"},
+	"questions": {"media_url", "image_question"},
+}
+
+// mediaCleanupWebhookHandler menerima payload Supabase Database Webhook untuk
+// event DELETE pada tabel forms/questions, lalu menghapus file media terkait
+// dari disk. Dilindungi shared secret lewat header X-Webhook-Secret (bukan
+// Origin check, karena pemanggilnya adalah server Supabase, bukan browser).
+func mediaCleanupWebhookHandler(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+
+	if r.Method != http.MethodPost {
+		w.WriteHeader(http.StatusMethodNotAllowed)
+		json.NewEncoder(w).Encode(ResponseJSON{Error: "Method not allowed"})
+		return
+	}
+
+	incoming := r.Header.Get("X-Webhook-Secret")
+	if subtle.ConstantTimeCompare([]byte(incoming), []byte(webhookSecret)) != 1 {
+		w.WriteHeader(http.StatusUnauthorized)
+		json.NewEncoder(w).Encode(ResponseJSON{Error: "Unauthorized"})
+		return
+	}
+
+	var payload SupabaseWebhookPayload
+	if err := json.NewDecoder(r.Body).Decode(&payload); err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		json.NewEncoder(w).Encode(ResponseJSON{Error: "Payload tidak valid"})
+		return
+	}
+
+	if payload.Type != "DELETE" || payload.OldRecord == nil {
+		w.WriteHeader(http.StatusOK)
+		json.NewEncoder(w).Encode(ResponseJSON{Message: "Diabaikan (bukan event DELETE)"})
+		return
+	}
+
+	columns, ok := mediaColumnsByTable[payload.Table]
+	if !ok {
+		w.WriteHeader(http.StatusOK)
+		json.NewEncoder(w).Encode(ResponseJSON{Message: "Diabaikan (tabel tidak relevan)"})
+		return
+	}
+
+	deletedCount := 0
+	for _, col := range columns {
+		raw, ok := payload.OldRecord[col].(string)
+		if !ok || raw == "" {
+			continue
+		}
+
+		localPath, ok := mediaURLToLocalPath(raw)
+		if !ok {
+			continue
+		}
+
+		if err := os.Remove(localPath); err != nil {
+			if !os.IsNotExist(err) {
+				log.Printf("gagal hapus file dari webhook cleanup (%s.%s): %v", payload.Table, col, err)
+			}
+			continue
+		}
+		deletedCount++
+	}
+
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(ResponseJSON{Message: fmt.Sprintf("Cleanup selesai, %d file dihapus", deletedCount)})
 }
 
 func main() {
@@ -171,7 +290,7 @@ func main() {
 		// KEAMANAN: Validasi ekstensi ketat
 		ext := strings.ToLower(filepath.Ext(handler.Filename))
 		allowedExts := map[string]bool{
-			".jpg": true, ".jpeg": true, ".png": true, ".webp": true,
+			".jpg": true, ".jpeg": true, ".png": true, ".webp": true, ".gif": true,
 			".mp4": true, ".mkv": true, ".mov": true, ".avi": true, ".mp3": true,
 		}
 		if !allowedExts[ext] {
@@ -284,6 +403,10 @@ func main() {
 		w.WriteHeader(http.StatusOK)
 		json.NewEncoder(w).Encode(ResponseJSON{Message: "File berhasil dihapus dari server"})
 	})
+
+	// Endpoint webhook untuk auto-cleanup media saat row forms/questions dihapus
+	// di Supabase (lihat Supabase Database Webhooks di dashboard).
+	mux.HandleFunc("/webhook/media-cleanup", mediaCleanupWebhookHandler)
 
 	// Menggunakan Port Unik Pilihanmu (:48484)
 	port := ":48484"

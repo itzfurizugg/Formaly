@@ -8,7 +8,7 @@ Backend penyimpanan media berbasis **Go (Golang)** yang ringan, aman, dan cepat.
 * **Penyimpanan Lokal Berbasis Disk**: Menyimpan file fisik langsung ke folder server `./uploads`.
 * **Struktur Folder Tanggal**: File otomatis dipecah berdasarkan `Tahun/Bulan/Hari` untuk menjaga performa baca/tulis.
 * **Keamanan Berlapis**: 
-  * Validasi ekstensi ketat (Gambar: `.jpg`, `.jpeg`, `.png`, `.webp` | Video: `.mp4`, `.mkv`, `.mov`, `.avi` | Audio: `.mp3`).
+  * Validasi ekstensi ketat (Gambar: `.jpg`, `.jpeg`, `.png`, `.webp`, `.gif` | Video: `.mp4`, `.mkv`, `.mov`, `.avi` | Audio: `.mp3`).
   * Pengecekan *Magic Bytes* (512 byte pertama) untuk mencegah manipulasi ekstensi file berbahaya.
   * Pembatasan ukuran *request* maksimal **100MB** untuk mencegah serangan DoS.
   * Proteksi CORS dan header keamanan standar HTTP.
