@@ -1,7 +1,7 @@
 import { useEffect, useState, useCallback } from "react"
 import { useNavigate, useParams } from "react-router-dom"
 import { motion } from "motion/react"
-import { Check, Clock } from "lucide-react"
+import { Check } from "lucide-react"
 import { supabase } from "../../lib/supabase"
 import { useAuth } from "../../lib/auth-context"
 import { easeOutExpo } from "../../lib/motion"
@@ -28,32 +28,6 @@ function DonePage() {
     const [info, setInfo] = useState<DoneInfo | null>(null)
     const [loading, setLoading] = useState(true)
     const [error, setError] = useState<string | null>(null)
-
-    // Header gambar & warna form diambil diam-diam; error diabaikan agar halaman tetap jalan.
-    const [headerImage, setHeaderImage] = useState<string | null>(null)
-    const [headerColor, setHeaderColor] = useState<string | null>(null)
-    const [headerMedia, setHeaderMedia] = useState<string | null>(null)
-
-    useEffect(() => {
-        const fid = info?.form?.id
-        if (!fid) return
-        let cancelled = false
-        supabase
-            .from("forms")
-            .select("header_image, header_color, media_url")
-            .eq("id", fid)
-            .single()
-            .then(({ data }) => {
-                if (cancelled) return
-                const row = data as { header_image?: string | null; header_color?: string | null; media_url?: string | null } | null
-                setHeaderImage(row?.header_image || null)
-                setHeaderColor(row?.header_color || null)
-                setHeaderMedia(row?.media_url || null)
-            })
-        return () => {
-            cancelled = true
-        }
-    }, [info?.form?.id])
 
     const loadData = useCallback(async () => {
         if (!user || !submissionId) return
@@ -88,12 +62,6 @@ function DonePage() {
         loadData()
     }, [user, authLoading, submissionId, navigate, loadData])
 
-    // Pengaturan form: kolom yang belum ada di DB (undefined) dianggap tampil
-    // supaya perilaku lama tidak berubah sebelum migrasi diterapkan.
-    const showScore = info?.form?.show_score_to_respondent !== false
-    const failed = showScore && info?.form?.passing_score != null && (info?.total_score ?? 0) < info.form.passing_score
-    const fmtDate = (d: string | null) => (d ? new Date(d).toLocaleString("id-ID") : "-")
-
     return (
         <>
             {!authLoading && !loading && (
@@ -109,12 +77,6 @@ function DonePage() {
                 ) : (
                     <div className="flex flex-col items-center justify-center min-h-screen px-3.5 py-6">
                         <div className="w-full max-w-3xl mx-auto flex flex-col items-center">
-                            {/* {info?.form && (
-                                <div className="rounded-xl overflow-hidden border border-second shadow-sm mb-3 lg:mb-4">
-                                    <FormHeader formId={info.form.id} title={info.form.title} headerImage={headerImage} headerColor={headerColor} headerMedia={headerMedia} />
-                                </div>
-                            )} */}
-
                             <motion.div
                                 initial={{ opacity: 0, y: 16 }}
                                 animate={{ opacity: 1, y: 0 }}
@@ -129,38 +91,6 @@ function DonePage() {
                                 <p className="text-sm text-tinted mt-2 mb-6">
                                     Jawaban kamu untuk <span className="font-medium text-darks">{info?.form?.title || "form ini"}</span> berhasil dikirim.
                                 </p>
-
-                                {/* {showScore ? (
-                                    <div className="bg-base border border-second rounded-xl p-4 mb-6">
-                                        <div className="flex items-center justify-between gap-3">
-                                            <div className="text-left">
-                                                <p className="text-xs text-tinted">Total Skor</p>
-                                                <p className={`text-4xl font-bold ${failed ? "text-wrong" : "text-pass"}`}>
-                                                    {info?.total_score ?? 0}
-                                                </p>
-                                            </div>
-                                            <div className="text-right">
-                                                <span
-                                                    className={`badge rounded-full text-xs ${failed
-                                                            ? "bg-wrong/10 text-wrong border-none"
-                                                            : info?.status === "SUBMITTED"
-                                                                ? "bg-pass/10 text-pass border-none"
-                                                                : "badge-ghost text-tinted"
-                                                        }`}
-                                                >
-                                                    {failed ? "Gagal" : "Lolos"}
-                                                </span>
-                                                <p className="text-xs text-tinted mt-2 flex items-center gap-1 justify-end">
-                                                    <Clock className="h-3 w-3" /> {fmtDate(info?.submitted_at || null)}
-                                                </p>
-                                            </div>
-                                        </div>
-                                    </div>
-                                ) : (
-                                    <p className="text-sm text-tinted mb-6">
-                                        Nilai tidak ditampilkan oleh pembuat form.
-                                    </p>
-                                )} */}
 
                                 <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
                                     <button

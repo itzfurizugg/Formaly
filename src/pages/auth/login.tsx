@@ -42,7 +42,6 @@ function Login() {
         <div className="min-h-screen flex bg-base">
             <div className="hidden lg:flex flex-1 flex-col justify-center px-3.5 bg-white from-darks/5 via-base to-darks/5">
                 <div className="max-w-lg ml-20">
-                    <img src={vye} alt="Ilustrasi" className="mb-8 h-72 object-contain" />
                     <img src={logo} alt="Formaly" className="h-10 w-auto mb-2" />
                     <h1 className="text-4xl font-bold text-darks leading-tight">
                         Buat lebih mudah.
@@ -54,6 +53,7 @@ function Login() {
                         Kelola formulir dan data dengan cepat, mudah, dan efisien.
                         Platform all-in-one untuk kebutuhan form kamu.
                     </p>
+                    <img src={vye} alt="Ilustrasi" className="mb-8 h-72 object-contain" />
                 </div>
             </div>
 
