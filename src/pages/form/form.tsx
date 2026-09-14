@@ -14,8 +14,9 @@ import FileAnswerUpload from "../../components/fileAnswerUpload"
 import DateTimeAnswer from "../../components/dateTimeAnswer"
 import { richTextToPlain } from "../../lib/richtext"
 // import FormHeader from "../../components/creator/formHeader"
-import { alertPop, easeOutExpo, modalBackdrop, modalPanel } from "../../lib/motion"
+import { easeOutExpo, modalBackdrop, modalPanel } from "../../lib/motion"
 import { Spinner } from "../../components/loading"
+import { showAlert } from "../../lib/alerts"
 import { networkNow, networkISOString, syncTime, onTimeSync } from "../../lib/networkTime"
 
 interface Option {
@@ -48,6 +49,8 @@ interface LocationState {
     deadline?: number
     /** "Tiket" dari RPC start_form_submission — wajib ada, tanpa ini akses ditolak. */
     submissionId?: string
+    /** Tanda ragu-ragu per soal, dipertahankan saat bolak-balik dari Daftar Soal. */
+    rages?: Record<string, boolean>
 }
 
 function FormPage() {
@@ -71,17 +74,28 @@ function FormPage() {
     // Jawaban file (soal file_upload) disimpan terpisah karena berbentuk File.
     // TODO(backend): penyimpanan permanen jawaban file menyusul.
     const [fileAnswers, setFileAnswers] = useState<Record<string, File>>({})
+    const [raguQuestions, setRaguQuestions] = useState<Record<string, boolean>>(locationState?.rages ?? {})
     const [timeLeft, setTimeLeft] = useState(300)
     const [loading, setLoading] = useState(true)
     const [notFound, setNotFound] = useState(false)
     const [submitting, setSubmitting] = useState(false)
-    const [error, setError] = useState<string | null>(null)
     const [modalImage, setModalImage] = useState<string | null>(null)
     const [showSubmitConfirm, setShowSubmitConfirm] = useState(false)
     const [hasTimer, setHasTimer] = useState(false)
     const autoSubmitted = useRef(false)
     const deadlineRef = useRef<number | null>(null)
     const prevTimeRef = useRef<number | null>(null)
+
+    // Flag ragu aktif: ada soal yang ditandai ragu-ragu. Selagi ada tanda ragu,
+    // kirim manual diblokir; jawaban baru dikirim otomatis saat timer habis
+    // (handleSubmit(true)) terlepas dari kondisi apapun. Tanpa timer tidak ada
+    // auto-submit sebagai jaring pengaman, jadi blokir tidak diterapkan.
+    const raguActive = hasTimer && Object.values(raguQuestions).some((v) => v)
+
+    const raguNumberList = useCallback(
+        () => questions.map((q, i) => (raguQuestions[q.id] ? i + 1 : 0)).filter((n) => n > 0),
+        [questions, raguQuestions]
+    )
 
     // Fetch header terpisah & diam-diam: error diabaikan supaya halaman soal
     // tidak ikut gagal saat kolom header_image belum ada di database.
@@ -117,13 +131,18 @@ function FormPage() {
     const handleSubmit = useCallback(async (allowRequiredSkip = false) => {
         if (!user || !formId || !submissionId) return
         setSubmitting(true)
-        setError(null)
+
+        if (!allowRequiredSkip && raguActive) {
+            setSubmitting(false)
+            showAlert(`Masih ada soal yang ditandai ragu-ragu (nomor ${raguNumberList().join(", ")}). Hapus tanda ragu atau tunggu waktu habis — jawaban otomatis dikirim saat timer selesai.`, "error")
+            return
+        }
 
         if (!allowRequiredSkip) {
             const unanswered = questions.find((q) => q.is_required && !isQuestionAnswered(q))
             if (unanswered) {
                 setSubmitting(false)
-                setError("Masih ada soal wajib yang belum dijawab. Periksa soal bertanda *.")
+                showAlert("Masih ada soal wajib yang belum dijawab. Periksa soal bertanda *.", "error")
                 setCurrent(questions.indexOf(unanswered))
                 return
             }
@@ -157,7 +176,7 @@ function FormPage() {
 
         if (subErr) {
             setSubmitting(false)
-            setError(subErr.message || "Gagal mengirim jawaban. Coba lagi.")
+            showAlert(subErr.message || "Gagal mengirim jawaban. Coba lagi.", "error")
             return
         }
 
@@ -209,7 +228,7 @@ function FormPage() {
 
             if (insertError) {
                 setSubmitting(false)
-                setError(insertError.message || "Gagal menyimpan jawaban. Coba lagi.")
+                showAlert(insertError.message || "Gagal menyimpan jawaban. Coba lagi.", "error")
                 return
             }
         }
@@ -217,20 +236,27 @@ function FormPage() {
         if (submissionId) sessionStorage.removeItem(`formTimer:${formId}:${submissionId}`)
 
         setSubmitting(false)
-        navigate("/history")
-    }, [user, formId, submissionId, questions, answers, fileAnswers, isQuestionAnswered, navigate])
+        // Ganti halaman (bukan push) supaya tombol back tidak kembali ke
+        // halaman soal yang sudah ter-submit.
+        navigate(`/form/done/${submissionId}`, { replace: true })
+    }, [user, formId, submissionId, questions, answers, fileAnswers, isQuestionAnswered, navigate, raguActive, raguNumberList])
 
     // Tombol "Kirim" hanya membuka modal konfirmasi; pengiriman asli tetap
     // lewat handleSubmit (juga dipakai auto-submit saat waktu habis, tanpa konfirmasi).
     const requestSubmit = () => {
         if (submitting) return
+        if (raguActive) {
+            const raguNumbers = raguNumberList()
+            showAlert(`Masih ada soal yang ditandai ragu-ragu (nomor ${raguNumbers.join(", ")}). Hapus tanda ragu atau tunggu waktu habis — jawaban otomatis dikirim saat timer selesai.`, "error")
+            setCurrent((raguNumbers[0] || 1) - 1)
+            return
+        }
         const unanswered = questions.find((q) => q.is_required && !isQuestionAnswered(q))
         if (unanswered) {
-            setError("Masih ada soal wajib yang belum dijawab. Periksa soal bertanda *.")
+            showAlert("Masih ada soal wajib yang belum dijawab. Periksa soal bertanda *.", "error")
             setCurrent(questions.indexOf(unanswered))
             return
         }
-        setError(null)
         setShowSubmitConfirm(true)
     }
 
@@ -408,7 +434,12 @@ function FormPage() {
     }
 
     const goToList = () => {
-        navigate('/form/list', { state: { current, answers, formId, questions, submissionId, deadline: deadlineRef.current || undefined } })
+        navigate('/form/list', { state: { current, answers, formId, questions, submissionId, deadline: deadlineRef.current || undefined, rages: raguQuestions } })
+    }
+
+    const toggleRagu = () => {
+        if (!question) return
+        setRaguQuestions((prev) => ({ ...prev, [question.id]: !prev[question.id] }))
     }
 
     return (
@@ -615,74 +646,16 @@ function FormPage() {
 
                             {/* NOTE: LAYOUT DESKTOP (>= md) — PageIndicator & tombol Kirim inline di bawah konten */}
                             <div className="hidden md:flex items-center justify-between gap-3 sticky bottom-0 z-30 mt-4 py-3 bg-gradient-to-t from-second via-second/90 to-transparent">
-                                <PageIndicator total={total} current={current} onPrev={prev} onNext={next} onListClick={goToList} />
-                                {current === total - 1 && (
-                                    <button
-                                        onClick={requestSubmit}
-                                        disabled={submitting}
-                                        className="btn text-white h-12 min-h-0 px-3.5 bg-done border-none rounded-full hover:opacity-90 disabled:opacity-25"
-                                    >
-                                        {submitting ? (
-                                            <Spinner size={16} />
-                                        ) : (
-                                            <Check className="h-4 w-4" />
-                                        )}
-                                        {submitting ? "Mengirim..." : "Kirim"}
-                                    </button>
-                                )}
+                                <PageIndicator total={total} current={current} onPrev={prev} onNext={next} onListClick={goToList} isRagu={question ? !!raguQuestions[question.id] : false} onRaguToggle={toggleRagu} onRequestSubmit={requestSubmit} submitting={submitting} groupRagu />
                             </div>
-
-                            <AnimatePresence>
-                                {error && (
-                                    <motion.div
-                                        key="form-error-desktop"
-                                        variants={alertPop}
-                                        initial="hidden"
-                                        animate="show"
-                                        exit="exit"
-                                        className="mt-4 flex items-start gap-3 bg-red-500/10 border border-red-500/20 rounded-lg px-3.5 py-3"
-                                    >
-                                        <p className="text-sm text-red-600 font-medium">{error}</p>
-                                    </motion.div>
-                                )}
-                            </AnimatePresence>
                         </div>
 
                         {/* NOTE: LAYOUT MOBILE (< md) — bar fixed di bawah dengan gradasi */}
                         <div className="fixed bottom-0 left-0 right-0 z-40 md:hidden pointer-events-none">
                             <div className="bg-gradient-to-t from-second via-second/95 to-transparent px-3.5 pt-20 pb-5">
                                 <div className="w-full max-w-3xl mx-auto flex items-center justify-between gap-3 pointer-events-auto mb-2">
-                                    <PageIndicator total={total} current={current} onPrev={prev} onNext={next} onListClick={goToList} />
-                                    {current === total - 1 && (
-                                        <button
-                                            onClick={requestSubmit}
-                                            disabled={submitting}
-                                            className="btn text-white h-12 min-h-0 px-3.5 bg-done border-none rounded-full hover:opacity-90 disabled:opacity-25"
-                                        >
-                                            {submitting ? (
-                                                <Spinner size={16} />
-                                            ) : (
-                                                <Check className="h-4 w-4" />
-                                            )}
-                                            {submitting ? "Mengirim..." : "Kirim"}
-                                        </button>
-                                    )}
+                                    <PageIndicator total={total} current={current} onPrev={prev} onNext={next} onListClick={goToList} isRagu={question ? !!raguQuestions[question.id] : false} onRaguToggle={toggleRagu} onRequestSubmit={requestSubmit} submitting={submitting} />
                                 </div>
-
-                                <AnimatePresence>
-                                {error && (
-                                    <motion.div
-                                        key="form-error-mobile"
-                                        variants={alertPop}
-                                        initial="hidden"
-                                        animate="show"
-                                        exit="exit"
-                                        className="pointer-events-auto flex flex-col items-stretch gap-2 bg-red-500/10 border border-red-500/20 rounded-lg px-3.5 py-3"
-                                    >
-                                        <p className="text-sm text-red-600 font-medium">{error}</p>
-                                    </motion.div>
-                                )}
-                                </AnimatePresence>
                             </div>
                         </div>
 

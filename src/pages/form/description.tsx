@@ -226,7 +226,7 @@ function FormDescriptionPage() {
                         <button
                             onClick={handleStartClick}
                             disabled={loading}
-                            className="hidden sm:flex w-full py-3.5 bg-darks text-white font-bold rounded-lg hover:opacity-90 transition-opacity items-center justify-center gap-2 text-sm disabled:opacity-60"
+                            className="hidden sm:flex w-full py-3.5 bg-darks text-white font-bold rounded-lg hover:opacity-90 transition-opacity items-center justify-center gap-2 text-xl disabled:opacity-60"
                         >
                             {loading ? (
                                 <Spinner size={16} />

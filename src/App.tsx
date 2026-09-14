@@ -39,6 +39,7 @@ const FormDescription = lazy(() => import("./pages/form/description"))
 const FormResolver = lazy(() => import("./pages/form/resolver"))
 const FormList = lazy(() => import("./pages/form/formlist"))
 const ResultPage = lazy(() => import("./pages/form/result"))
+const DonePage = lazy(() => import("./pages/form/done"))
 // SATU titik lazy() untuk seluruh area /creator: semua halaman & guard diimpor
 // eager lewat modul ini, jadi ketika chunk pertama kali diunduh, seluruh area
 // creator ikut tersedia — bukan tiga chunk berurutan (layout → guard → halaman).
@@ -99,18 +100,21 @@ function AppShell() {
   // jadi Navbar umum & Dock disembunyikan biar halaman error tampil minim.
   const knownRoutes = ["/", "/history", "/profile", "/credit", "/upgrade-to-creator", "/admin/forms"]
   const isResultPage = location.pathname.startsWith("/form/result")
+  const isDonePage = location.pathname.startsWith("/form/done")
   const isKnownRoute =
     knownRoutes.includes(location.pathname) ||
     /^\/creator(?:\/.*)?$/.test(location.pathname) ||
     /^\/form\/[^/]+$/.test(location.pathname) ||
-    isResultPage
+    isResultPage ||
+    isDonePage
 
   // Navbar umum & Dock disembunyikan pada daftar path di bawah (auth, form,
   // credit, dll.) — senada dengan aturan di lib/nav.ts (isGeneralNavVisible).
   const navHiddenHere =
     hideNavPaths.includes(location.pathname) ||
     /^\/form\/[^/]+$/.test(location.pathname) ||
-    isResultPage
+    isResultPage ||
+    isDonePage
   const hideNav = !isKnownRoute || navHiddenHere
   // Dock bottom nav khusus mobile: sama seperti Navbar, tapi tidak tampil di creator
   // dashboard maupun halaman yang menyembunyikan navigasi (auth, form resolver, dll).
@@ -170,6 +174,7 @@ function AppShell() {
             <Route path="/form/:formId" element={<FormResolver />} />
             <Route path="/form/list" element={<FormList />} />
             <Route path="/form/result/:submissionId" element={<ResultPage />} />
+            <Route path="/form/done/:submissionId" element={<DonePage />} />
             <Route
               element={<CreatorLayout />}
             >

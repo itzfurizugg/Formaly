@@ -18,6 +18,7 @@ interface LocationState {
     questions?: Question[]
     deadline?: number
     submissionId?: string
+    rages?: Record<string, boolean>
 }
 
 function FormList() {
@@ -30,9 +31,11 @@ function FormList() {
     const questions = locationState?.questions || []
     const deadline = locationState?.deadline
     const submissionId = locationState?.submissionId
+    const rages = locationState?.rages || {}
+    const raguCount = questions.filter((q) => rages[q.id]).length
 
     const backToForm = (index: number) => {
-        navigate(`/form/${formId}`, { state: { current: index, answers, questions, submissionId, deadline } })
+        navigate(`/form/${formId}`, { state: { current: index, answers, questions, submissionId, deadline, rages } })
     }
 
     if (questions.length === 0) {
@@ -48,7 +51,7 @@ function FormList() {
 
     return (
         <div className="flex flex-col items-center px-3.5 py-6 pb-28 min-h-screen bg-base-300 lg:justify-center lg:pb-6">
-            <div className="w-full max-w-4xl lg:bg-base-200 lg:rounded-md lg:p-6 lg:shadow-sm">
+            <div className="w-full max-w-2xl lg:bg-base-200 lg:rounded-md lg:p-6 lg:shadow-sm">
                 <div className="mb-5 lg:p-0 lg:mt-0">
                     <h1 className="text-2xl lg:text-4xl font-bold text-darks">Daftar Soal</h1>
                     <p className="hidden sm:block text-xs lg:text-sm text-tinted mt-1">
@@ -56,11 +59,12 @@ function FormList() {
                     </p>
                 </div>
 
-                <div className="grid grid-cols-5 gap-2 mb-6 lg:grid-cols-8 lg:gap-3 lg:mb-6 lg:mt-4">
+                <div className="grid grid-cols-5 gap-2 mb-6 lg:grid-cols-5 lg:gap-3 lg:mb-6 lg:mt-4">
                     {questions.map((q, index) => {
                         const isCurrent = current === index
                         const isAnsweredQuestion = answers[q.id] !== undefined
                         const needsRequired = !!q.is_required && !isAnsweredQuestion
+                        const isRagu = !!rages[q.id]
 
                         return (
                             <motion.button
@@ -71,6 +75,7 @@ function FormList() {
                                 initial={{ opacity: 0, y: 12 }}
                                 animate={{ opacity: 1, y: 0 }}
                                 transition={{ duration: 0.3, ease: easeOutExpo, delay: Math.min(index * 20, 240) / 1000 }}
+                                title={isRagu ? `Soal ${index + 1} ditandai ragu-ragu` : `Ke soal ${index + 1}`}
                                 className={`relative aspect-square w-full h-full p-3 rounded-xl flex items-center justify-center text-xl lg:text-4xl font-medium cursor-pointer transition-all duration-300 active:scale-[0.95]
                                     ${isCurrent
                                         ? "ring-2 ring-darks ring-offset-3 bg-white/30 text-darks shadow-lg shadow-darks/10"
@@ -78,20 +83,34 @@ function FormList() {
                                             ? "bg-done/30 text-done hover:shadow-lg hover:shadow-done/20"
                                             : "bg-white text-tinted border border-second hover:shadow-lg hover:shadow-darks/5"
                                     }
+                                    ${isRagu && !isCurrent ? "ring-1 ring-warning/80" : ""}
                                 `}
                             >
                                 {index + 1}
                                 {needsRequired && (
                                     <span className="absolute top-0.5 right-1.5 text-red-600 font-bold text-sm">*</span>
                                 )}
+                                {isRagu && (
+                                    <span
+                                        aria-label="Ragu-ragu"
+                                        className="absolute bottom-1 left-1.5 h-2.5 w-2.5 rounded-full bg-warning shadow-sm"
+                                    />
+                                )}
                             </motion.button>
                         )
                     })}
                 </div>
 
+                {raguCount > 0 && (
+                    <p className="text-center text-xs text-tinted mb-6 flex items-center justify-center gap-1.5">
+                        <span className="inline-block h-2.5 w-2.5 rounded-full bg-warning" />
+                        {raguCount} soal ditandai ragu-ragu
+                    </p>
+                )}
+
                 <button
                     onClick={() => backToForm(current)}
-                    className="hidden lg:block btn w-1/2 mx-auto h-14 min-h-0 bg-darks text-white rounded-full hover:opacity-90"
+                    className="hidden lg:block btn w-fit px-5 mx-auto h-14 min-h-0 bg-darks text-lg text-white rounded-full hover:opacity-90"
                 >
                     Kembali ke soal
                 </button>
@@ -102,7 +121,7 @@ function FormList() {
                     <div className="w-full max-w-3xl">
                         <button
                             onClick={() => backToForm(current)}
-                            className="btn flex w-auto p-6 h-16 mb-3 min-h-0 bg-darks text-lg text-white hover:opacity-90 rounded-full! mx-auto items-center justify-center"
+                            className="btn flex w-auto p-6 h-16 mb-3 min-h-0 bg-darks text-lg text-white hover:opacity-90 rounded-full mx-auto items-center justify-center"
                         >
                             Kembali ke soal
                         </button>

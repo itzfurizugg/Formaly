@@ -11,6 +11,7 @@ interface HistoryItem {
     id: string
     form_id: string
     total_score: number
+    submitted_at: string | null
     forms: {
         title: string
         author_name: string
@@ -42,7 +43,7 @@ function History() {
         const { data } = await supabase
             .from("submissions")
             .select(`
-                id, form_id, total_score,
+                id, form_id, total_score, submitted_at,
                 forms (
                     id, title, duration, passing_score, show_score_to_respondent, header_image, header_color, media_url,
                     users:creator_id ( name ),
@@ -53,12 +54,13 @@ function History() {
             .order("submitted_at", { ascending: false })
 
         if (data) {
-            setItems((data as unknown as HistoryRow[]).map((item) => {
+            const rows = (data as unknown as HistoryRow[]).map((item) => {
                 const f = item.forms as unknown as { title: string; duration: number; passing_score?: number | null; show_score_to_respondent?: boolean | null; header_image?: string | null; header_color?: string | null; media_url?: string | null; users?: { name: string } | null; questions?: { id: string }[] | null }
                 return {
                     id: item.id,
                     form_id: item.form_id,
                     total_score: Number((item as unknown as { total_score?: number }).total_score) || 0,
+                    submitted_at: (item as unknown as { submitted_at?: string | null }).submitted_at ?? null,
                     forms: {
                         title: f?.title || "Form",
                         author_name: f?.users?.name || "Creator",
@@ -71,7 +73,13 @@ function History() {
                         media_url: f?.media_url || null,
                     },
                 }
-            }))
+            })
+            rows.sort((a, b) => {
+                const ta = a.submitted_at ? Date.parse(a.submitted_at) : 0
+                const tb = b.submitted_at ? Date.parse(b.submitted_at) : 0
+                return tb - ta
+            })
+            setItems(rows)
         }
         setLoading(false)
     }, [user])
@@ -93,10 +101,10 @@ function History() {
         <>
             {!authLoading && user && !loading && (
                 <div className="flex flex-col items-center px-3.5 sm:px-6 py-5">
-                    <div className="max-w-7xl grid w-full lg:mt-3">
+                    <div className="max-w-5xl grid w-full lg:mt-3">
                         <div className="ml-2 sm:ml-3 lg:ml-0">
                             <div className="flex items-center gap-2 mb-1">
-                                <h1 className="text-2xl lg:text-4xl text-darks font-bold font-display">Riwayat</h1>
+                                <h1 className="text-2xl lg:text-6xl text-darks font-bold font-display">Riwayat</h1>
                             </div>
                             <p className="text-sm text-tinted mb-6">
                                 Formulir yang pernah kamu kerjakan.
