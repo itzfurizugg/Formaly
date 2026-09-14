@@ -3,7 +3,6 @@ import { Link, useLocation, useNavigate } from "react-router-dom"
 import { AnimatePresence, motion } from "motion/react"
 import { UserPlus } from "lucide-react"
 import logo from "../../assets/logo.svg"
-import ash from "../../assets/ash.png"
 import { useAuth } from "../../lib/auth-context"
 import { safeNext } from "../../lib/redirect"
 import PasswordInput from "../../components/passwordInput"
@@ -50,21 +49,34 @@ function Register() {
 
     return (
         <div className="min-h-screen flex bg-base">
-            <div className="hidden lg:flex flex-1 flex-col justify-center px-3.5 bg-white from-darks/5 via-base to-darks/5">
-                <div className="max-w-lg ml-20">
-                    <img src={ash} alt="Ilustrasi" className="mb-8 h-72 object-contain" />
-                    <img src={logo} alt="Formaly" className="h-10 w-auto mb-2" />
-                    <h1 className="text-4xl font-bold text-darks leading-tight">
-                        Buat lebih mudah.
-                    </h1>
-                    <p className="text-2xl text-tinted">
-                        Kerjakan dengan gampang.
-                    </p>
-                    <p className="text-base text-tinted mt-6 leading-relaxed max-w-md">
-                        Kelola formulir dan data dengan cepat, mudah, dan efisien.
-                        Platform all-in-one untuk kebutuhan form kamu.
-                    </p>
+            <div className="hidden lg:flex flex-1 flex-col relative overflow-hidden bg-darks text-white">
+                {/* Dekorasi lembut: blob gradasi di pojok panel */}
+                <span className="pointer-events-none absolute -top-32 -right-24 h-96 w-96 rounded-full bg-white/5 blur-2xl" />
+                <span className="pointer-events-none absolute -bottom-40 -left-24 h-96 w-96 rounded-full bg-done/10 blur-2xl" />
+
+                <div className="flex flex-col h-full px-3.5 relative z-10 py-16">
+                    <div className="max-w-lg ml-10">
+                        <div className="flex items-center gap-3 mb-10">
+                            <img src={logo} alt="Formaly" className="h-9 w-auto brightness-0 invert" />
+                        </div>
+
+                        <h1 className="text-4xl xl:text-5xl font-bold leading-tight">
+                            Buat lebih mudah.
+                            <span className="block text-white/55 mt-2">Kerjakan dengan gampang.</span>
+                        </h1>
+
+                        <p className="text-white/60 text-lg mt-6 max-w-md leading-relaxed">
+                            Kelola formulir dan data dengan cepat, mudah, dan efisien.
+                            Platform all-in-one untuk kebutuhan form kamu.
+                        </p>
+                    </div>
                 </div>
+
+                {/* <img
+                    src={ash}
+                    alt="Ilustrasi"
+                    className="pointer-events-none absolute right-0 bottom-0 z-0 w-1/2 lg:w-3/5 xl:w-3/4 max-w-none object-contain object-right-bottom"
+                /> */}
             </div>
 
             <div className="flex-1 flex items-center justify-center px-3.5 py-12">

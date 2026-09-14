@@ -242,6 +242,9 @@ function ChatPage() {
 
     return (
         <div className="flex flex-col items-center justify-center min-h-screen px-3.5 sm:px-6 py-6">
+            {/* <span className="pointer-events-none absolute -top-32 -right-24 h-96 w-96 rounded-full bg-white/5 blur-2xl" />
+            <span className="pointer-events-none absolute -bottom-40 -left-24 h-96 w-96 rounded-full bg-done/10 blur-2xl" /> */}
+
             <motion.div variants={fadeSlide} initial="hidden" animate="show" className="w-full max-w-2xl">
                 <h1 className="text-center font-default text-4xl sm:text-4xl text-darks">
                     Halo, saya <span className="font-bold">Galileo</span>!
@@ -282,9 +285,8 @@ function ChatPage() {
                                                     type="button"
                                                     onMouseEnter={() => setPickIndex(i)}
                                                     onClick={() => pickForm(f)}
-                                                    className={`w-full flex items-center gap-2 px-3 py-2 text-left text-sm transition-colors ${
-                                                        i === pickIndex ? "bg-base" : "bg-transparent"
-                                                    }`}
+                                                    className={`w-full flex items-center gap-2 px-3 py-2 text-left text-sm transition-colors ${i === pickIndex ? "bg-base" : "bg-transparent"
+                                                        }`}
                                                 >
                                                     <LayoutTemplate className="h-4 w-4 text-tinted shrink-0" />
                                                     <span className="text-darks truncate">{f.title}</span>
@@ -333,7 +335,7 @@ function ChatPage() {
                     </div>
 
                     {error && <p className="text-sm text-wrong mt-2 px-2">{error}</p>}
-{/* 
+                    {/* 
                     <p className="text-xs text-tinted mt-3 px-1">
                         Coba ketik <span className="font-semibold text-darks">@</span> lalu pilih form — Galileo akan membaca soal yang sudah ada dan menambahkan soal baru ke form itu.
                     </p> */}
@@ -398,9 +400,8 @@ function ModelPicker({
                                         onSelect(m.id)
                                         setOpen(false)
                                     }}
-                                    className={`w-full flex items-start gap-2.5 px-3 py-2.5 text-left transition-colors ${
-                                        m.id === selected.id ? "bg-base" : "bg-transparent hover:bg-base/60"
-                                    }`}
+                                    className={`w-full flex items-start gap-2.5 px-3 py-2.5 text-left transition-colors ${m.id === selected.id ? "bg-base" : "bg-transparent hover:bg-base/60"
+                                        }`}
                                     role="option"
                                     aria-selected={m.id === selected.id}
                                 >
