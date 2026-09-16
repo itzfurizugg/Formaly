@@ -264,23 +264,28 @@ function CreatorDashboard() {
                                 ))}
                                 <Link
                                     to="/creator/galileo"
-                                    className="block transition-all active:scale-[0.98]"
+                                    className="relative overflow-hidden flex items-center justify-between gap-3 bg-white dark:bg-second border border-second dark:border-white/10 rounded-xl shadow-sm p-3 transition-all active:scale-[0.98]"
                                 >
-                                    <div className="relative z-10 overflow-hidden rounded-xl bg-base-400 backdrop-blur-xl px-8 py-14 flex flex-col items-center gap-10">
-                                        <div className="relative w-32 h-32 flex items-center justify-center shrink-0">
-                                            <span className="absolute inset-0 rounded-full border border-darks/15 border-t-darks/50" />
-                                            <span className="absolute inset-3 rounded-full border border-darks/10 border-t-darks/40" />
-                                            <span className="absolute inset-7 rounded-full border border-dashed border-darks/20">
-                                                <span className="absolute -top-1 left-1/2 -translate-x-1/2 w-2 h-2 rounded-full bg-darks" />
-                                            </span>
-                                            <div className="w-12 h-12 rounded-full bg-darks/95" />
-                                        </div>
-
-                                        <div className="flex flex-col items-center gap-1 text-center">
-                                            <span className="block text-sm font-bold text-darks">Galileo AI</span>
-                                            <span className="block text-xs text-tinted">Mulailah membuat form dengan bantuan Galileo!</span>
-                                        </div>
+                                    <div className="absolute -top-7 -right-13 w-32 h-32 flex items-center justify-center shrink-0 pointer-events-none">
+                                        <span className="absolute inset-0 rounded-full border border-darks/15 border-t-darks/50" />
+                                        <span className="absolute inset-3 rounded-full border border-darks/10 border-t-darks/40" />
+                                        <span className="absolute inset-7 rounded-full border border-dashed border-darks/20">
+                                            <span className="absolute -left-1 top-1/2 -translate-y-1/2 w-2 h-2 rounded-full bg-darks" />
+                                        </span>
+                                        <div className="w-12 h-12 rounded-full bg-darks/95" />
                                     </div>
+
+                                    <div className="relative z-10 flex-1 min-w-0 ml-1 pr-14">
+                                        <div className="flex items-center gap-1.5">
+                                            <span className="block text-sm font-bold text-darks mr-0.5">Galileo AI</span>
+                                            <span className="shrink-0 rounded-full px-1.5 py-0.5 text-[8px] font-semibold bg-darks text-white">
+                                                BETA
+                                            </span>
+                                        </div>
+                                        <span className="block text-xs text-tinted">Mulailah membuat form dengan bantuan Galileo!</span>
+                                    </div>
+
+                                    {/* <ChevronRight className="relative z-10 h-4 w-4 text-tinted shrink-0" /> */}
                                 </Link>
                             </div>
                         </div>

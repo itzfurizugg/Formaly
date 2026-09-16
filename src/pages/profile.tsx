@@ -315,7 +315,7 @@ function Profile() {
                             <Settings className="h-5 w-5 text-darks" />
                         </div>
                         <div className="flex-1 min-w-0">
-                            <p className="text font-bold text-darks">Pengaturan</p>
+                            <p className="text-sm font-bold text-darks">Pengaturan</p>
                             <p className="text-xs text-tinted">Kelola preferensi tampilan dan aplikasi.</p>
                         </div>
                         <ChevronRight className="h-4 w-4 text-tinted shrink-0" />
