@@ -12,6 +12,7 @@ import {
     X,
     ChevronRight,
     BadgeCheck,
+    Settings,
 } from "lucide-react"
 import { useAuth } from "../lib/auth-context"
 import { showAlert } from "../lib/alerts"
@@ -220,7 +221,7 @@ function Profile() {
 
     return (
         <div className="flex flex-col items-center px-3.5 py-2">
-            <div className="max-w-4xl w-full">
+            <div className="max-w-2xl w-full">
                 {/* Header */}
                 <div className="bg-white border border-second p-5 rounded-2xl lg:rounded-xl mb-3">
                     <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-5">
@@ -308,6 +309,22 @@ function Profile() {
                         </div>
                         <ChevronRight className="h-4 w-4 text-tinted shrink-0" />
                     </button> */}
+                </div>
+
+                <div className="bg-white border border-second mb-3 divide-y divide-second rounded-2xl lg:rounded-xl overflow-hidden">
+                    <button
+                        onClick={() => navigate("/settings")}
+                        className="w-full flex items-center gap-3 p-4 hover:bg-base transition-colors text-left"
+                    >
+                        <div className="w-9 h-9 shrink-0 rounded-full bg-base flex items-center justify-center">
+                            <Settings className="h-5 w-5 text-darks" />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                            <p className="text-sm font-bold text-darks">Pengaturan</p>
+                            <p className="text-xs text-tinted">Tema, notifikasi, bahasa, dan sistem</p>
+                        </div>
+                        <ChevronRight className="h-4 w-4 text-tinted shrink-0" />
+                    </button>
                 </div>
 
                 <div className="bg-white border border-second mb-3 divide-y divide-second rounded-2xl lg:rounded-xl overflow-hidden">

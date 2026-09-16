@@ -32,6 +32,7 @@ const ResetPassword = lazy(() => import("./pages/auth/resetPassword"))
 const Home = lazy(() => import("./pages/home"))
 const History = lazy(() => import("./pages/history"))
 const Profile = lazy(() => import("./pages/profile"))
+const SettingsPage = lazy(() => import("./pages/settings"))
 const CreditPage = lazy(() => import("./pages/credit"))
 const UpgradeToCreator = lazy(() => import("./pages/upgradeToCreator"))
 const AdminForms = lazy(() => import("./pages/admin/forms"))
@@ -61,7 +62,7 @@ const CreatorGalileo = lazy(() => import("./pages/galileo/chat"))
 const CreatorGalileoGenerate = lazy(() => import("./pages/galileo/generate"))
 const ErrorHandling = lazy(() => import("./pages/errorHandling"))
 
-const hideNavPaths = ["/login", "/register", "/auth", "/forgot-password", "/reset-password", "/form/description", "/form", "/form/list", "/form/result", "/credit", "/pages/errorHandling"]
+const hideNavPaths = ["/login", "/register", "/auth", "/forgot-password", "/reset-password", "/form/description", "/form", "/form/list", "/form/result", "/credit", "/pages/errorHandling", "/settings"]
 
 // App hanya menyediakan provider. Konten asli (gated auth) ada di AppShell,
 // biar useAuth() bisa dipanggil di dalam cakupan AuthProvider.
@@ -98,7 +99,7 @@ function AppShell() {
 
   // Path yang punya halaman nyata. Selain ini jatuh ke ErrorHandling (route "*"),
   // jadi Navbar umum & Dock disembunyikan biar halaman error tampil minim.
-  const knownRoutes = ["/", "/history", "/profile", "/credit", "/upgrade-to-creator", "/admin/forms"]
+  const knownRoutes = ["/", "/history", "/profile", "/settings", "/credit", "/upgrade-to-creator", "/admin/forms"]
   const isResultPage = location.pathname.startsWith("/form/result")
   const isDonePage = location.pathname.startsWith("/form/done")
   const isKnownRoute =
@@ -167,6 +168,7 @@ function AppShell() {
             <Route path="/" element={<Home />} />
             <Route path="/history" element={<History />} />
             <Route path="/profile" element={<Profile />} />
+            <Route path="/settings" element={<SettingsPage />} />
             <Route path="/credit" element={<CreditPage />} />
             <Route path="/upgrade-to-creator" element={<UpgradeToCreator />} />
             <Route path="/admin/forms" element={<AdminForms />} />

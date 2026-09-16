@@ -13,6 +13,7 @@ const HIDE_NAV_PATHS = [
     "/form/list",
     "/form/result",
     "/credit",
+    "/settings",
 ]
 
 /** Apakah Navbar umum dirender untuk path ini. */
