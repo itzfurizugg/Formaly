@@ -1,13 +1,15 @@
 import { useState, useRef, useEffect } from "react"
 import { Search as SearchIcon } from "lucide-react"
 import { Spinner } from "./loading"
+import { isMobileViewport } from "../lib/nav"
 
 interface SearchProps {
     onSearch: (tag: string) => void
     loading?: boolean
+    autoFocus?: boolean
 }
 
-function Search({ onSearch, loading = false }: SearchProps) {
+function Search({ onSearch, loading = false, autoFocus = false }: SearchProps) {
     const [tag, setTag] = useState("")
     const [focused, setFocused] = useState(false)
     const inputRef = useRef<HTMLInputElement>(null)
@@ -23,15 +25,36 @@ function Search({ onSearch, loading = false }: SearchProps) {
     }
 
     useEffect(() => {
+        const isMobile = isMobileViewport()
         const handler = (e: KeyboardEvent) => {
+            if (isMobile) return
             if (e.key === "/" && document.activeElement !== inputRef.current) {
                 e.preventDefault()
                 inputRef.current?.focus()
+                return
+            }
+            const el = document.activeElement
+            const typing = el instanceof HTMLInputElement ||
+                el instanceof HTMLTextAreaElement ||
+                el instanceof HTMLSelectElement ||
+                (el as HTMLElement | null)?.isContentEditable
+            if (typing || e.ctrlKey || e.metaKey || e.altKey) return
+            const target = e.target as HTMLElement
+            const inForm = target.closest("form") || target.closest("[role=dialog]")
+            if (inForm) return
+            if (e.key.length === 1 || e.key === "Backspace") {
+                e.preventDefault()
+                inputRef.current?.focus()
+                setTag((prev) => e.key === "Backspace" ? prev.slice(0, -1) : prev + e.key)
             }
         }
         window.addEventListener("keydown", handler)
         return () => window.removeEventListener("keydown", handler)
     }, [])
+
+    useEffect(() => {
+        if (autoFocus && !isMobileViewport()) inputRef.current?.focus()
+    }, [autoFocus])
 
     return (
         <div className="w-full">

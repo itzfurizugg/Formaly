@@ -1,5 +1,6 @@
 import { Link, useLocation } from "react-router-dom"
 import { motion } from "motion/react"
+import { useEffect, useState } from "react"
 import { House, UserRound, LayoutDashboard, History } from "lucide-react"
 import { useAuth } from "../lib/auth-context"
 import { BACKDROP_FILTER_SUPPORTED } from "../lib/glass"
@@ -22,6 +23,22 @@ const creatorItem = { to: "/creator", label: "Creator", icon: LayoutDashboard }
 function Dock() {
     const { pathname } = useLocation()
     const { user, profile } = useAuth()
+    const [hidden, setHidden] = useState(false)
+
+    // Sembunyikan dock saat input/textarea/select fokus (keyboard mobile terbuka),
+    // supaya dock tidak ikut terpental naik menimpa konten.
+    useEffect(() => {
+        const handleFocus = () => {
+            const el = document.activeElement
+            setHidden(!!(el && (el.tagName === "INPUT" || el.tagName === "TEXTAREA" || el.tagName === "SELECT")))
+        }
+        document.addEventListener("focusin", handleFocus)
+        document.addEventListener("focusout", handleFocus)
+        return () => {
+            document.removeEventListener("focusin", handleFocus)
+            document.removeEventListener("focusout", handleFocus)
+        }
+    }, [])
 
     if (!user) return null
 
@@ -31,7 +48,7 @@ function Dock() {
     const isCreatorActive = pathname === creatorItem.to
 
     return (
-        <div className="fixed bottom-0 inset-x-0 z-50 md:hidden pointer-events-none">
+        <div className={`fixed bottom-0 inset-x-0 z-50 md:hidden pointer-events-none transition-transform duration-200 ${hidden ? "translate-y-full" : ""}`}>
             {/* <div className="bg-gradient-to-t from-base-300 via-base-300/30 to-transparent px-4 pb-6 pt-30"> */}
                 <div className="mx-auto w-fit max-w-full flex items-center justify-center gap-3 px-4 pb-6">
                     <nav

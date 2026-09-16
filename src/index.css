@@ -572,6 +572,8 @@ body::-webkit-scrollbar {
   .fml-glass-nav--flat--solid,
   .fml-glass-nav--flat--solid:hover {
     background: rgb(255 255 255 / 0.4);
+    -webkit-backdrop-filter: blur(40px);
+    backdrop-filter: blur(40px);
   }
   .fml-glass-pill--solid {
     background: linear-gradient(to bottom, rgb(255 255 255 / 0.92), rgb(255 255 255 / 0.78));

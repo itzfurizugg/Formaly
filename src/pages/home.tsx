@@ -35,6 +35,47 @@ function Home() {
     const [searching, setSearching] = useState(false)
     const [error, setError] = useState("")
     const [formIndex, setFormIndex] = useState(0)
+    // Tinggi keyboard mobile (px): visualViewport menyusut saat keyboard terbuka.
+    // Hanya dihitung saat input search benar-benar fokus — pull-to-refresh juga
+    // menyusutkan viewport, harus diabaikan supaya searchbar tidak jatuh ke bawah.
+    const [kbHeight, setKbHeight] = useState(0)
+
+    useEffect(() => {
+        const vv = window.visualViewport
+        const isMobile = () => typeof window !== "undefined" && window.innerWidth < 768
+        if (!vv || !isMobile()) return
+        let searchFocused = false
+        const isSearchInput = (el: Element | null) =>
+            el instanceof HTMLInputElement && el.placeholder === "Cari berdasarkan tag"
+        const update = () => {
+            if (!searchFocused) {
+                setKbHeight(0)
+                return
+            }
+            setKbHeight(Math.max(0, window.innerHeight - vv.height))
+        }
+        const onFocusIn = (e: FocusEvent) => {
+            searchFocused = isSearchInput(e.target as Element)
+            update()
+        }
+        const onFocusOut = (e: FocusEvent) => {
+            const next = e.relatedTarget
+            if (isSearchInput(e.target as Element) && !isSearchInput(next as Element)) {
+                searchFocused = false
+                update()
+            }
+        }
+        vv.addEventListener("resize", update)
+        window.addEventListener("resize", update)
+        window.addEventListener("focusin", onFocusIn)
+        window.addEventListener("focusout", onFocusOut)
+        return () => {
+            vv.removeEventListener("resize", update)
+            window.removeEventListener("resize", update)
+            window.removeEventListener("focusin", onFocusIn)
+            window.removeEventListener("focusout", onFocusOut)
+        }
+    }, [])
 
     const formItems = [
         {
@@ -262,10 +303,19 @@ function Home() {
                         delay: 0.1
                     }}
                     className="w-3.5/4 max-w-xl"
+                    style={kbHeight > 0 ? {
+                        position: "fixed",
+                        left: 0,
+                        right: 0,
+                        bottom: kbHeight + 8,
+                        margin: "0 auto",
+                        zIndex: 50,
+                    } : undefined}
                 >
                     <Search
                         onSearch={handleTagSearch}
                         loading={searching}
+                        autoFocus
                     />
 
                     {/* Error Banner */}

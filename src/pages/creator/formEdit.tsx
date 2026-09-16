@@ -487,7 +487,7 @@ function FormEdit() {
                         Border transparan bawah dipakai untuk mencegah margin-bottom FormTabs
                         collapse keluar dari box sticky, sehingga strip 24px di bawah pill ikut
                         dilapisi bg-white dark:bg-second dan shadow card tidak bocor saat lewat di bawahnya. */}
-                        <div className="lg:sticky lg:top-0 lg:z-30 lg:bg-white dark:bg-second lg:pt-1 bg-base-300 w-full">
+                        <div className="lg:sticky lg:top-0 lg:z-30 lg:bg-base-300 dark:bg-base lg:pt-1 bg-base-300 w-full">
                             <FormTabs id={id} active="detail" />
                         </div>
 
