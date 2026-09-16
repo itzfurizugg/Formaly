@@ -19,6 +19,14 @@ dependencies:
 
   # Menyimpan session ujian sementara
   shared_preferences: ^2.5.3
+  supabase_flutter: ^2.17.2
+
+  # Keamanan saat mengerjakan ujian
+  screen_protector: ^1.5.3
+  wakelock_plus: ^1.7.0
+
+  # Renderer HTML/WYSIWYG untuk soal dan jawaban dari creator
+  flutter_widget_from_html_core: ^0.17.4
 
 dev_dependencies:
   flutter_test:

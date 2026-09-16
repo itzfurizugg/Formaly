@@ -1,10 +1,12 @@
 class FormModel {
+  // Data form.
   final String title;
   final String creator;
   final String tag;
   final int totalQuestion;
   final String duration;
 
+  // Constructor untuk mengisi data form.
   const FormModel({
     required this.title,
     required this.creator,

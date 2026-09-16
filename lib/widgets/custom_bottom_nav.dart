@@ -12,33 +12,55 @@ class CustomBottomNav extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = Theme.of(context).colorScheme;
+
     return NavigationBar(
       height: 70,
       elevation: 10,
       selectedIndex: currentIndex,
       onDestinationSelected: onTap,
-      backgroundColor: Colors.white,
 
-      indicatorColor: const Color(0xff3D424A).withOpacity(.15),
+      // Mengikuti tema aplikasi.
+      backgroundColor: colors.surface,
 
-      destinations: const [
+      // Sedikit highlight pada item yang sedang dipilih.
+      indicatorColor: colors.primary.withAlpha(38),
 
+      labelBehavior: NavigationDestinationLabelBehavior.alwaysShow,
+
+      destinations: [
         NavigationDestination(
-          icon: Icon(Icons.home_outlined),
-          selectedIcon: Icon(Icons.home),
-          label: "Beranda",
+          icon: Icon(
+            Icons.home_outlined,
+            color: colors.onSurfaceVariant,
+          ),
+          selectedIcon: Icon(
+            Icons.home,
+            color: colors.onSurface,
+          ),
+          label: 'Beranda',
         ),
-
         NavigationDestination(
-          icon: Icon(Icons.person_outline),
-          selectedIcon: Icon(Icons.person),
-          label: "Profil",
+          icon: Icon(
+            Icons.person_outline,
+            color: colors.onSurfaceVariant,
+          ),
+          selectedIcon: Icon(
+            Icons.person,
+            color: colors.onSurface,
+          ),
+          label: 'Profil',
         ),
-
         NavigationDestination(
-          icon: Icon(Icons.history),
-          selectedIcon: Icon(Icons.history),
-          label: "Riwayat",
+          icon: Icon(
+            Icons.history,
+            color: colors.onSurfaceVariant,
+          ),
+          selectedIcon: Icon(
+            Icons.history,
+            color: colors.onSurface,
+          ),
+          label: 'Riwayat',
         ),
       ],
     );

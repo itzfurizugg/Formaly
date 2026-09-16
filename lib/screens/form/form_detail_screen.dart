@@ -1,225 +1,1200 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 import 'question_screen.dart';
 
-class FormDetailScreen extends StatelessWidget {
-  const FormDetailScreen({super.key});
+class FormDetailScreen extends StatefulWidget {
+  /// ID form dari tabel `forms` di Supabase.
+  ///
+  /// TAG sudah digunakan pada HomeScreen untuk mencari form.
+  /// Screen ini menerima formId hasil pencarian tersebut, lalu
+  /// mengambil detail form, tag, dan jumlah soal dari Supabase.
+  final String formId;
+
+  const FormDetailScreen({
+    super.key,
+    required this.formId,
+  });
 
   @override
-  Widget build(BuildContext context) {
+  State<FormDetailScreen> createState() => _FormDetailScreenState();
+}
+
+class _FormDetailScreenState extends State<FormDetailScreen> {
+  final SupabaseClient _supabase =
+      Supabase.instance.client;
+
+  bool isLoading = true;
+  bool isStarting = false;
+
+  // Mencegah dialog persetujuan muncul lebih dari sekali.
+  bool _agreementShown = false;
+
+  String? errorMessage;
+
+  String formTitle = 'Memuat form...';
+  String formDescription = '';
+  String formTag = '-';
+
+  int durationMinutes = 0;
+  int questionCount = 0;
+
+  // Channel untuk mengaktifkan keamanan ujian Android.
+  static const MethodChannel _examSecurityChannel =
+      MethodChannel(
+    'com.example.formaly/exam_security',
+  );
+
+  @override
+  void initState() {
+    super.initState();
+    loadForm();
+  }
+
+  // ============================================================
+  // LOAD FORM
+  // ============================================================
+
+  Future<void> loadForm() async {
+    if (!mounted) return;
+
+    setState(() {
+      isLoading = true;
+      errorMessage = null;
+    });
+
+    try {
+      final String cleanFormId =
+          widget.formId.trim();
+
+      if (cleanFormId.isEmpty) {
+        throw Exception(
+          'ID form kosong.',
+        );
+      }
+
+      // ========================================================
+      // 1. AMBIL DATA FORM
+      //
+      // PENTING:
+      // Tabel `forms` TIDAK memiliki kolom `tag`.
+      // Jadi jangan pernah memakai:
+      //
+      // select('..., tag')
+      //
+      // ========================================================
+
+      final formResponse = await _supabase
+          .from('forms')
+          .select(
+            'id, title, description, duration',
+          )
+          .eq(
+            'id',
+            cleanFormId,
+          )
+          .maybeSingle();
+
+      if (formResponse == null) {
+        throw Exception(
+          'Form dengan ID "$cleanFormId" tidak ditemukan di Supabase.',
+        );
+      }
+
+      final String loadedFormId =
+          formResponse['id']
+                  ?.toString()
+                  .trim() ??
+              '';
+
+      if (loadedFormId.isEmpty) {
+        throw Exception(
+          'ID form dari Supabase tidak ditemukan.',
+        );
+      }
+
+      final String loadedTitle =
+          formResponse['title']
+                  ?.toString()
+                  .trim() ??
+              '';
+
+      final String loadedDescription =
+          formResponse['description']
+                  ?.toString() ??
+              '';
+
+      final int loadedDuration =
+          _toInt(
+        formResponse['duration'],
+      );
+
+      // ========================================================
+      // 2. AMBIL TAG MELALUI form_tags -> tags
+      //
+      // Relasi:
+      // form_tags.form_id -> forms.id
+      // form_tags.tag_id  -> tags.id
+      //
+      // Satu form secara teori bisa memiliki lebih dari satu tag.
+      // Untuk tampilan detail, gunakan tag pertama yang ditemukan.
+      // ========================================================
+
+      String loadedTag = '-';
+
+      try {
+        final formTagResponse =
+            await _supabase
+                .from('form_tags')
+                .select('tag_id')
+                .eq(
+                  'form_id',
+                  loadedFormId,
+                )
+                .limit(1);
+
+        if (formTagResponse.isNotEmpty) {
+          final String tagId =
+              formTagResponse.first[
+                        'tag_id']
+                    ?.toString()
+                    .trim() ??
+                  '';
+
+          if (tagId.isNotEmpty) {
+            final tagResponse =
+                await _supabase
+                    .from('tags')
+                    .select('id, name')
+                    .eq(
+                      'id',
+                      tagId,
+                    )
+                    .maybeSingle();
+
+            if (tagResponse != null) {
+              final String tagName =
+                  tagResponse['name']
+                          ?.toString()
+                          .trim() ??
+                      '';
+
+              if (tagName.isNotEmpty) {
+                loadedTag =
+                    tagName;
+              }
+            }
+          }
+        }
+      } catch (_) {
+        // Tag hanya untuk informasi pada halaman detail.
+        // Form tetap dapat dibuka karena formId sudah valid.
+        loadedTag = '-';
+      }
+
+      // ========================================================
+      // 3. HITUNG JUMLAH SOAL
+      //
+      // Soal terhubung ke forms melalui questions.form_id.
+      // ========================================================
+
+      final questionRows =
+          await _supabase
+              .from('questions')
+              .select('id')
+              .eq(
+                'form_id',
+                loadedFormId,
+              );
+
+      final int loadedQuestionCount =
+          questionRows.length;
+
+      if (!mounted) return;
+
+      setState(() {
+        formTitle =
+            loadedTitle.isEmpty
+                ? 'Form Ujian'
+                : loadedTitle;
+
+        formDescription =
+            loadedDescription;
+
+        formTag =
+            loadedTag;
+
+        durationMinutes =
+            loadedDuration;
+
+        questionCount =
+            loadedQuestionCount;
+
+        isLoading = false;
+        errorMessage = null;
+      });
+
+      // Tampilkan persetujuan otomatis setelah Detail Form siap.
+      if (mounted) {
+        WidgetsBinding.instance.addPostFrameCallback(
+          (_) {
+            _showExamAgreement();
+          },
+        );
+      }
+    } catch (e) {
+      if (!mounted) return;
+
+      setState(() {
+        isLoading = false;
+        errorMessage =
+            _cleanError(e);
+      });
+    }
+  }
+
+  // ============================================================
+  // PERSETUJUAN UJIAN
+  // ============================================================
+
+  Future<void> _showExamAgreement() async {
+    if (!mounted || _agreementShown) {
+      return;
+    }
+
+    _agreementShown = true;
+
+    await showDialog<void>(
+      context: context,
+      barrierDismissible: false,
+      builder: (dialogContext) {
+        final colors =
+            Theme.of(dialogContext).colorScheme;
+
+        return PopScope(
+          canPop: false,
+          child: AlertDialog(
+            shape: RoundedRectangleBorder(
+              borderRadius:
+                  BorderRadius.circular(20),
+            ),
+            title: Text(
+              'Persetujuan Ujian',
+              style: GoogleFonts.poppins(
+                fontWeight:
+                    FontWeight.bold,
+              ),
+            ),
+            content: Text(
+              'Ujian akan dikerjakan dalam mode layar penuh. '
+              'Pastikan Anda siap sebelum memulai ujian.',
+              style: GoogleFonts.poppins(
+                height: 1.5,
+              ),
+            ),
+            actions: [
+              SizedBox(
+                width:
+                    double.infinity,
+                child:
+                    ElevatedButton(
+                  onPressed: () async {
+                    // Tombol SETUJU hanya menutup dialog.
+                    // Security benar-benar dimulai saat tombol
+                    // START ditekan.
+                    if (!dialogContext.mounted) {
+                      return;
+                    }
+
+                    Navigator.pop(
+                      dialogContext,
+                    );
+                  },
+                  style:
+                      ElevatedButton
+                          .styleFrom(
+                    backgroundColor:
+                        colors.primary,
+                    foregroundColor:
+                        colors.onPrimary,
+                    elevation: 0,
+                    padding:
+                        const EdgeInsets
+                            .symmetric(
+                      vertical: 14,
+                    ),
+                    shape:
+                        RoundedRectangleBorder(
+                      borderRadius:
+                          BorderRadius
+                              .circular(
+                        12,
+                      ),
+                    ),
+                  ),
+                  child: Text(
+                    'SETUJU',
+                    style:
+                        GoogleFonts.poppins(
+                      fontWeight:
+                          FontWeight.bold,
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  // ============================================================
+  // START EXAM
+  // ============================================================
+
+  Future<void> startExam() async {
+    if (isStarting || isLoading) {
+      return;
+    }
+
+    final String cleanFormId =
+        widget.formId.trim();
+
+    if (cleanFormId.isEmpty) {
+      _showMessage(
+        'ID form tidak valid.',
+      );
+      return;
+    }
+
+    if (questionCount <= 0) {
+      _showMessage(
+        'Belum ada soal untuk form ini.',
+      );
+      return;
+    }
+
+    setState(() {
+      isStarting = true;
+    });
+
+    try {
+      // ========================================================
+      // 1. VERIFIKASI FORM
+      // ========================================================
+
+      final formResponse =
+          await _supabase
+              .from('forms')
+              .select('id')
+              .eq(
+                'id',
+                cleanFormId,
+              )
+              .maybeSingle();
+
+      if (formResponse == null) {
+        throw Exception(
+          'Form tidak ditemukan atau sudah tidak tersedia.',
+        );
+      }
+
+      final String verifiedFormId =
+          formResponse['id']
+                  ?.toString()
+                  .trim() ??
+              '';
+
+      if (verifiedFormId.isEmpty) {
+        throw Exception(
+          'ID form dari Supabase tidak valid.',
+        );
+      }
+
+      // ========================================================
+      // 2. VERIFIKASI SOAL
+      // ========================================================
+
+      final questionCheck =
+          await _supabase
+              .from('questions')
+              .select('id')
+              .eq(
+                'form_id',
+                verifiedFormId,
+              );
+
+      if (questionCheck.isEmpty) {
+        throw Exception(
+          'Belum ada soal untuk form ini.',
+        );
+      }
+
+      if (!mounted) return;
+
+      // ========================================================
+      // 3. SECURITY ON
+      //
+      // Android akan:
+      // - mengaktifkan FLAG_SECURE
+      // - mencoba masuk Lock Task
+      // ========================================================
+
+      final bool securityStarted =
+          await _examSecurityChannel
+                  .invokeMethod<bool>(
+                'startExamSecurity',
+              ) ??
+              false;
+
+      // Jangan buka QuestionScreen kalau security
+      // belum berhasil diaktifkan.
+      if (!securityStarted || !mounted) {
+        _showMessage(
+          'Keamanan ujian belum aktif. '
+          'Perangkat belum dikonfigurasi untuk mode ujian.',
+        );
+        return;
+      }
+
+      // ========================================================
+      // 4. FULLSCREEN
+      // ========================================================
+
+      await SystemChrome
+          .setEnabledSystemUIMode(
+        SystemUiMode.immersiveSticky,
+      );
+
+      if (!mounted) return;
+
+      // ========================================================
+      // 5. BUKA QUESTION SCREEN
+      //
+      // TAG sudah digunakan sebelum masuk ke halaman ini.
+      // QuestionScreen cukup menerima formId.
+      // Tidak bergantung pada token.
+      // ========================================================
+
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (_) =>
+              QuestionScreen(
+            formId:
+                verifiedFormId,
+          ),
+        ),
+      );
+    } catch (e) {
+      if (!mounted) return;
+
+      _showMessage(
+        'Gagal membuka ujian: '
+        '${_cleanError(e)}',
+      );
+    } finally {
+      if (!mounted) return;
+
+      setState(() {
+        isStarting = false;
+      });
+    }
+  }
+
+  // ============================================================
+  // MESSAGE
+  // ============================================================
+
+  void _showMessage(
+    String message,
+  ) {
+    if (!mounted) return;
+
+    ScaffoldMessenger.of(context)
+      ..hideCurrentSnackBar()
+      ..showSnackBar(
+        SnackBar(
+          content:
+              Text(message),
+          behavior:
+              SnackBarBehavior.floating,
+        ),
+      );
+  }
+
+  // ============================================================
+  // INTEGER HELPER
+  // ============================================================
+
+  int _toInt(dynamic value) {
+    if (value == null) {
+      return 0;
+    }
+
+    if (value is int) {
+      return value;
+    }
+
+    if (value is num) {
+      return value.toInt();
+    }
+
+    return int.tryParse(
+          value.toString().trim(),
+        ) ??
+        0;
+  }
+
+  // ============================================================
+  // ERROR HELPER
+  // ============================================================
+
+  String _cleanError(
+    Object error,
+  ) {
+    final String text =
+        error.toString();
+
+    if (text.startsWith(
+      'Exception: ',
+    )) {
+      return text.substring(
+        'Exception: '.length,
+      );
+    }
+
+    return text;
+  }
+
+  // ============================================================
+  // DURATION
+  // ============================================================
+
+  String get durationText {
+    if (durationMinutes <= 0) {
+      return '-';
+    }
+
+    if (durationMinutes >= 60) {
+      final int hours =
+          durationMinutes ~/ 60;
+
+      final int minutes =
+          durationMinutes % 60;
+
+      if (minutes == 0) {
+        return '$hours Jam';
+      }
+
+      return '$hours Jam $minutes Menit';
+    }
+
+    return '$durationMinutes Menit';
+  }
+
+  // ============================================================
+  // BUILD
+  // ============================================================
+
+  @override
+  Widget build(
+    BuildContext context,
+  ) {
+    final colors =
+        Theme.of(context)
+            .colorScheme;
+
     return Scaffold(
-      backgroundColor: const Color(0xffF5F5F5),
+      backgroundColor:
+          Theme.of(context)
+              .scaffoldBackgroundColor,
 
       appBar: AppBar(
-        backgroundColor: Colors.white,
-        surfaceTintColor: Colors.white,
+        backgroundColor:
+            colors.surface,
+        surfaceTintColor:
+            Colors.transparent,
         elevation: 0,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_new, color: Colors.black),
-          onPressed: () => Navigator.pop(context),
+
+        leading:
+            IconButton(
+          icon: Icon(
+            Icons
+                .arrow_back_ios_new,
+            color:
+                colors.onSurface,
+          ),
+          onPressed: () =>
+              Navigator.pop(
+            context,
+          ),
         ),
+
+        title:
+            Text(
+          'Detail Form',
+          style:
+              GoogleFonts.poppins(
+            color:
+                colors.onSurface,
+            fontWeight:
+                FontWeight.w600,
+          ),
+        ),
+
+        centerTitle: true,
       ),
 
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(24),
+      body: isLoading
+          ? _buildLoading()
+          : errorMessage !=
+                  null
+              ? _buildError()
+              : _buildContent(),
+    );
+  }
 
+  // ============================================================
+  // LOADING
+  // ============================================================
+
+  Widget _buildLoading() {
+    return const Center(
+      child:
+          CircularProgressIndicator(),
+    );
+  }
+
+  // ============================================================
+  // ERROR
+  // ============================================================
+
+  Widget _buildError() {
+    final colors =
+        Theme.of(context)
+            .colorScheme;
+
+    return Center(
+      child:
+          SingleChildScrollView(
+        padding:
+            const EdgeInsets.all(
+          30,
+        ),
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisAlignment:
+              MainAxisAlignment
+                  .center,
+
           children: [
-
-            Container(
-              width: double.infinity,
-              padding: const EdgeInsets.all(24),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(24),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withOpacity(.05),
-                    blurRadius: 12,
-                    offset: const Offset(0,5),
-                  ),
-                ],
-              ),
-
-              child: Column(
-                children: [
-
-                  Container(
-                    height: 80,
-                    width: 80,
-                    decoration: BoxDecoration(
-                      color: const Color(0xffECEFF3),
-                      borderRadius: BorderRadius.circular(20),
-                    ),
-                    child: const Icon(
-                      Icons.description_outlined,
-                      size: 42,
-                      color: Color(0xff343A40),
-                    ),
-                  ),
-
-                  const SizedBox(height:20),
-
-                  Text(
-                    "Uji Formal v.3",
-                    textAlign: TextAlign.center,
-                    style: GoogleFonts.poppins(
-                      fontSize: 28,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-
-                  const SizedBox(height:8),
-
-                  Text(
-                    "Dibuat oleh Fabian",
-                    style: GoogleFonts.poppins(
-                      color: Colors.grey.shade600,
-                      fontSize: 15,
-                    ),
-                  ),
-
-                ],
-              ),
+            Icon(
+              Icons
+                  .error_outline,
+              size: 64,
+              color:
+                  colors.error,
             ),
 
-            const SizedBox(height:25),
-
-            Row(
-              children: [
-
-                Expanded(
-                  child: _infoCard(
-                    Icons.timer_outlined,
-                    "Durasi",
-                    "120 Menit",
-                  ),
-                ),
-
-                const SizedBox(width:15),
-
-                Expanded(
-                  child: _infoCard(
-                    Icons.quiz_outlined,
-                    "Jumlah Soal",
-                    "50",
-                  ),
-                ),
-
-              ],
-            ),
-
-            const SizedBox(height:25),
+            const SizedBox(
+                height: 20),
 
             Text(
-              "Deskripsi",
-              style: GoogleFonts.poppins(
-                fontSize:18,
-                fontWeight: FontWeight.bold,
+              'Gagal Memuat Form',
+              textAlign:
+                  TextAlign.center,
+              style:
+                  GoogleFonts.poppins(
+                fontSize: 20,
+                fontWeight:
+                    FontWeight.bold,
               ),
             ),
 
-            const SizedBox(height:12),
+            const SizedBox(
+                height: 12),
 
-            Container(
-              width: double.infinity,
-              padding: const EdgeInsets.all(18),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(18),
-              ),
-              child: Text(
-                "Silakan membaca petunjuk dengan teliti sebelum memulai pengerjaan formulir. Pastikan koneksi internet stabil dan jawablah seluruh pertanyaan dengan benar.",
-                style: GoogleFonts.poppins(
-                  fontSize:14,
-                  height:1.7,
-                ),
+            Text(
+              errorMessage ??
+                  'Terjadi kesalahan.',
+              textAlign:
+                  TextAlign.center,
+              style:
+                  GoogleFonts.poppins(
+                fontSize: 14,
+                color: colors
+                    .onSurfaceVariant,
+                height: 1.5,
               ),
             ),
 
-            const SizedBox(height:35),
+            const SizedBox(
+                height: 25),
 
             SizedBox(
-              width: double.infinity,
-              height: 56,
-
-              child: ElevatedButton(
-                onPressed: (){
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (_) => const QuestionScreen(),
-                    ),
-                  );
-                },
-
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xff343A40),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(18),
+              height: 50,
+              child:
+                  ElevatedButton.icon(
+                onPressed:
+                    isLoading
+                        ? null
+                        : loadForm,
+                icon:
+                    const Icon(
+                  Icons.refresh,
+                ),
+                label:
+                    Text(
+                  'Coba Lagi',
+                  style:
+                      GoogleFonts
+                          .poppins(
+                    fontWeight:
+                        FontWeight.bold,
                   ),
                 ),
-
-                child: Text(
-                  "START",
-                  style: GoogleFonts.poppins(
-                    color: Colors.white,
-                    fontWeight: FontWeight.bold,
-                    fontSize:17,
+                style:
+                    ElevatedButton
+                        .styleFrom(
+                  backgroundColor:
+                      colors.primary,
+                  foregroundColor:
+                      colors.onPrimary,
+                  shape:
+                      RoundedRectangleBorder(
+                    borderRadius:
+                        BorderRadius
+                            .circular(
+                      14,
+                    ),
                   ),
                 ),
               ),
             ),
-
           ],
         ),
       ),
     );
   }
 
-  Widget _infoCard(
-    IconData icon,
-    String title,
-    String value,
-  ){
-    return Container(
-      padding: const EdgeInsets.all(18),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(18),
+  // ============================================================
+  // CONTENT
+  // ============================================================
+
+  Widget _buildContent() {
+    final colors =
+        Theme.of(context)
+            .colorScheme;
+
+    return SingleChildScrollView(
+      padding:
+          const EdgeInsets.all(
+        24,
       ),
+
       child: Column(
+        crossAxisAlignment:
+            CrossAxisAlignment
+                .start,
+
         children: [
+          // ======================================================
+          // HEADER
+          // ======================================================
 
-          Icon(
-            icon,
-            size:32,
-            color: const Color(0xff343A40),
-          ),
+          Container(
+            width:
+                double.infinity,
 
-          const SizedBox(height:10),
+            padding:
+                const EdgeInsets.all(
+              24,
+            ),
 
-          Text(
-            title,
-            style: GoogleFonts.poppins(
-              color: Colors.grey,
+            decoration:
+                BoxDecoration(
+              color:
+                  colors.surface,
+
+              borderRadius:
+                  BorderRadius.circular(
+                24,
+              ),
+
+              boxShadow: [
+                BoxShadow(
+                  color: Colors
+                      .black
+                      .withOpacity(
+                    .05,
+                  ),
+                  blurRadius: 12,
+                  offset:
+                      const Offset(
+                    0,
+                    5,
+                  ),
+                ),
+              ],
+            ),
+
+            child: Column(
+              children: [
+                Container(
+                  height: 80,
+                  width: 80,
+
+                  decoration:
+                      BoxDecoration(
+                    color: colors
+                        .surfaceContainerHighest,
+                    borderRadius:
+                        BorderRadius
+                            .circular(
+                      20,
+                    ),
+                  ),
+
+                  child:
+                      Icon(
+                    Icons
+                        .description_outlined,
+                    size: 42,
+                    color:
+                        colors.onSurface,
+                  ),
+                ),
+
+                const SizedBox(
+                    height: 20),
+
+                Text(
+                  formTitle,
+                  textAlign:
+                      TextAlign.center,
+                  style:
+                      GoogleFonts.poppins(
+                    fontSize: 28,
+                    fontWeight:
+                        FontWeight.bold,
+                  ),
+                ),
+
+                const SizedBox(
+                    height: 8),
+
+                Text(
+                  'Form ditemukan dari TAG Supabase',
+                  textAlign:
+                      TextAlign.center,
+                  style:
+                      GoogleFonts.poppins(
+                    color: colors
+                        .onSurfaceVariant,
+                    fontSize: 14,
+                  ),
+                ),
+
+                const SizedBox(
+                    height: 15),
+
+                Container(
+                  padding:
+                      const EdgeInsets
+                          .symmetric(
+                    horizontal: 14,
+                    vertical: 8,
+                  ),
+
+                  decoration:
+                      BoxDecoration(
+                    color: colors
+                        .surfaceContainerHighest,
+                    borderRadius:
+                        BorderRadius
+                            .circular(
+                      12,
+                    ),
+                  ),
+
+                  child: Row(
+                    mainAxisSize:
+                        MainAxisSize.min,
+
+                    children: [
+                      Icon(
+                        Icons.tag,
+                        size: 17,
+                        color:
+                            colors.onSurface,
+                      ),
+
+                      const SizedBox(
+                          width: 7),
+
+                      Text(
+                        'Tag: $formTag',
+                        style:
+                            GoogleFonts
+                                .poppins(
+                          fontWeight:
+                              FontWeight
+                                  .w600,
+                          fontSize:
+                              13,
+                          color:
+                              colors.onSurface,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
             ),
           ),
 
-          const SizedBox(height:5),
+          const SizedBox(
+              height: 25),
+
+          // ======================================================
+          // INFO
+          // ======================================================
+
+          Row(
+            children: [
+              Expanded(
+                child: _infoCard(
+                  Icons
+                      .timer_outlined,
+                  'Durasi',
+                  durationText,
+                ),
+              ),
+
+              const SizedBox(
+                  width: 15),
+
+              Expanded(
+                child: _infoCard(
+                  Icons
+                      .quiz_outlined,
+                  'Jumlah Soal',
+                  '$questionCount',
+                ),
+              ),
+            ],
+          ),
+
+          const SizedBox(
+              height: 25),
+
+          // ======================================================
+          // DESKRIPSI
+          // ======================================================
 
           Text(
-            value,
-            style: GoogleFonts.poppins(
-              fontWeight: FontWeight.bold,
-              fontSize:18,
+            'Deskripsi',
+            style:
+                GoogleFonts.poppins(
+              fontSize: 18,
+              fontWeight:
+                  FontWeight.bold,
             ),
           ),
 
+          const SizedBox(
+              height: 12),
+
+          Container(
+            width:
+                double.infinity,
+
+            padding:
+                const EdgeInsets.all(
+              18,
+            ),
+
+            decoration:
+                BoxDecoration(
+              color:
+                  colors.surface,
+              borderRadius:
+                  BorderRadius.circular(
+                18,
+              ),
+            ),
+
+            child: Text(
+              formDescription
+                      .trim()
+                      .isEmpty
+                  ? 'Tidak ada deskripsi untuk form ini.'
+                  : formDescription,
+
+              style:
+                  GoogleFonts.poppins(
+                fontSize: 14,
+                height: 1.7,
+                color:
+                    colors.onSurface,
+              ),
+            ),
+          ),
+
+          const SizedBox(
+              height: 35),
+
+          // ======================================================
+          // START
+          // ======================================================
+
+          SizedBox(
+            width:
+                double.infinity,
+            height: 56,
+
+            child:
+                ElevatedButton(
+              onPressed:
+                  isStarting ||
+                          questionCount <=
+                              0
+                      ? null
+                      : startExam,
+
+              style:
+                  ElevatedButton
+                      .styleFrom(
+                backgroundColor:
+                    colors.primary,
+                foregroundColor:
+                    colors.onPrimary,
+                disabledBackgroundColor:
+                    colors
+                        .surfaceContainerHighest,
+                elevation: 0,
+
+                shape:
+                    RoundedRectangleBorder(
+                  borderRadius:
+                      BorderRadius
+                          .circular(
+                    18,
+                  ),
+                ),
+              ),
+
+              child:
+                  isStarting
+                      ? SizedBox(
+                          width: 24,
+                          height: 24,
+                          child:
+                              CircularProgressIndicator(
+                            strokeWidth:
+                                2.5,
+                            color:
+                                colors.onPrimary,
+                          ),
+                        )
+                      : Text(
+                          questionCount <=
+                                  0
+                              ? 'TIDAK ADA SOAL'
+                              : 'START',
+                          style:
+                              GoogleFonts
+                                  .poppins(
+                            color:
+                                colors.onPrimary,
+                            fontWeight:
+                                FontWeight
+                                    .bold,
+                            fontSize:
+                                17,
+                          ),
+                        ),
+            ),
+          ),
+
+          const SizedBox(
+              height: 20),
         ],
       ),
     );
   }
-}
+
+  // ============================================================
+  // INFO CARD
+  // ============================================================
+
+  Widget _infoCard(
+    IconData icon,
+    String title,
+    String value,
+  ) {
+    final colors =
+        Theme.of(context)
+            .colorScheme;
+
+    return Container(
+      padding:
+          const EdgeInsets.all(
+        18,
+      ),
+
+      decoration:
+          BoxDecoration(
+        color:
+            colors.surface,
+        borderRadius:
+            BorderRadius.circular(
+          18,
+        ),
+      ),
+
+      child: Column(
+        children: [
+          Icon(
+            icon,
+            size: 32,
+            color:
+                colors.onSurface,
+          ),
+
+          const SizedBox(
+              height: 10),
+
+          Text(
+            title,
+            textAlign:
+                TextAlign.center,
+            style:
+                GoogleFonts.poppins(
+              color:
+                  colors.onSurfaceVariant,
+            ),
+          ),
+
+          const SizedBox(
+              height: 5),
+
+          Text(
+            value,
+            textAlign:
+                TextAlign.center,
+            style:
+                GoogleFonts.poppins(
+              fontWeight:
+                  FontWeight.bold,
+              fontSize: 18,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}  

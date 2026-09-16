@@ -1,36 +1,51 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 
+import '../../core/models/history_model.dart';
 import '../home/home_screen.dart';
 
 class ResultScreen extends StatelessWidget {
-  const ResultScreen({super.key});
+  final HistoryModel history;
+
+  const ResultScreen({
+    super.key,
+    required this.history,
+  });
 
   @override
   Widget build(BuildContext context) {
+    final colors = Theme.of(context).colorScheme;
+
     return Scaffold(
-      backgroundColor: const Color(0xffF5F5F5),
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
 
       body: SafeArea(
-        child: Padding(
+        child: SingleChildScrollView(
           padding: const EdgeInsets.all(24),
-
           child: Column(
             children: [
+              const SizedBox(height: 25),
 
-              const Spacer(),
+              // =========================
+              // ICON BERHASIL
+              // =========================
 
-              const CircleAvatar(
+              CircleAvatar(
                 radius: 45,
-                backgroundColor: Colors.green,
+                backgroundColor: colors.primary,
                 child: Icon(
                   Icons.check,
-                  color: Colors.white,
+                  color: colors.onPrimary,
                   size: 50,
                 ),
               ),
 
               const SizedBox(height: 25),
+
+              // =========================
+              // JUDUL
+              // =========================
 
               Text(
                 "Form Berhasil Disubmit",
@@ -44,51 +59,180 @@ class ResultScreen extends StatelessWidget {
               const SizedBox(height: 10),
 
               Text(
-                "Terima kasih telah mengisi formulir.",
+                "Jawaban kamu berhasil disimpan ke riwayat.",
                 textAlign: TextAlign.center,
                 style: GoogleFonts.poppins(
-                  color: Colors.grey.shade600,
+                  color: colors.onSurfaceVariant,
                 ),
               ),
 
-              const SizedBox(height: 40),
+              const SizedBox(height: 35),
+
+              // =========================
+              // DETAIL HASIL
+              // =========================
 
               Container(
                 width: double.infinity,
                 padding: const EdgeInsets.all(22),
                 decoration: BoxDecoration(
-                  color: Colors.white,
+                  color: colors.surface,
                   borderRadius: BorderRadius.circular(20),
+                  boxShadow: [
+                    BoxShadow(
+                      color: colors.shadow.withOpacity(.05),
+                      blurRadius: 10,
+                      offset: const Offset(0, 4),
+                    ),
+                  ],
                 ),
-
                 child: Column(
                   children: [
+                    buildItem(
+                      context,
+                      "Nama Form",
+                      history.title,
+                    ),
 
-                    buildItem("Nama Form", "Uji Formal v.3"),
+                    const Divider(height: 25),
 
-                    const Divider(),
+                    // TAG, bukan token.
+                    buildItem(
+                      context,
+                      "Tag",
+                      history.token.trim().isEmpty ||
+                              history.token == '-'
+                          ? '-'
+                          : history.token,
+                    ),
 
-                    buildItem("Durasi", "01 : 45 : 20"),
+                    const Divider(height: 25),
 
-                    const Divider(),
+                    buildItem(
+                      context,
+                      "Tanggal",
+                      history.date,
+                    ),
 
-                    buildItem("Jumlah Soal", "50"),
+                    const Divider(height: 25),
 
-                    const Divider(),
+                    buildItem(
+                      context,
+                      "Waktu Mulai",
+                      history.startTime,
+                    ),
 
-                    buildItem("Jawaban", "50 / 50"),
+                    const Divider(height: 25),
+
+                    buildItem(
+                      context,
+                      "Waktu Selesai",
+                      history.finishTime,
+                    ),
+
+                    const Divider(height: 25),
+
+                    buildItem(
+                      context,
+                      "Durasi",
+                      history.duration,
+                    ),
+
+                    const Divider(height: 25),
+
+                    buildItem(
+                      context,
+                      "Jumlah Soal",
+                      history.totalQuestion.toString(),
+                    ),
+
+                    const Divider(height: 25),
+
+                    buildItem(
+                      context,
+                      "Benar",
+                      history.correctAnswer.toString(),
+                    ),
+
+                    const Divider(height: 25),
+
+                    buildItem(
+                      context,
+                      "Salah",
+                      history.wrongAnswer.toString(),
+                    ),
+
+                    // Nilai/SCORE sengaja tidak ditampilkan
+                    // karena hasil score disembunyikan dari user.
                   ],
                 ),
               ),
 
-              const Spacer(),
+              const SizedBox(height: 25),
+
+              // =========================
+              // STATUS
+              // =========================
+
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.symmetric(
+                  vertical: 14,
+                  horizontal: 20,
+                ),
+                decoration: BoxDecoration(
+                  color: colors.secondaryContainer,
+                  borderRadius: BorderRadius.circular(15),
+                  border: Border.all(
+                    color: colors.secondary.withAlpha(90),
+                  ),
+                ),
+                child: Row(
+                  mainAxisAlignment:
+                      MainAxisAlignment.center,
+                  children: [
+                    Icon(
+                      history.isFinished
+                          ? Icons.check_circle
+                          : Icons.info_outline,
+                      color: colors.onSecondaryContainer,
+                    ),
+
+                    const SizedBox(width: 8),
+
+                    Text(
+                      history.isFinished
+                          ? "SELESAI"
+                          : "BELUM SELESAI",
+                      style: GoogleFonts.poppins(
+                        fontWeight: FontWeight.bold,
+                        color: colors.onSecondaryContainer,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+
+              const SizedBox(height: 25),
+
+              // =========================
+              // TOMBOL KEMBALI
+              // =========================
 
               SizedBox(
                 width: double.infinity,
                 height: 56,
-
                 child: ElevatedButton(
-                  onPressed: () {
+                  onPressed: () async {
+                    // Keluar fullscreen sebelum kembali ke beranda.
+                    await SystemChrome.setEnabledSystemUIMode(
+                      SystemUiMode.edgeToEdge,
+                    );
+
+                    if (!context.mounted) {
+                      return;
+                    }
+
                     Navigator.pushAndRemoveUntil(
                       context,
                       MaterialPageRoute(
@@ -97,24 +241,28 @@ class ResultScreen extends StatelessWidget {
                       (route) => false,
                     );
                   },
-
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xff343A40),
+                    backgroundColor:
+                        colors.primary,
+                    foregroundColor: colors.onPrimary,
+                    elevation: 0,
                     shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(16),
+                      borderRadius:
+                          BorderRadius.circular(16),
                     ),
                   ),
-
                   child: Text(
                     "Kembali ke Beranda",
                     style: GoogleFonts.poppins(
-                      color: Colors.white,
+                      color: colors.onPrimary,
                       fontWeight: FontWeight.bold,
+                      fontSize: 16,
                     ),
                   ),
                 ),
               ),
 
+              const SizedBox(height: 20),
             ],
           ),
         ),
@@ -122,30 +270,38 @@ class ResultScreen extends StatelessWidget {
     );
   }
 
-  Widget buildItem(String title, String value) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 12),
+  Widget buildItem(
+    BuildContext context,
+    String title,
+    String value,
+  ) {
+    final colors = Theme.of(context).colorScheme;
 
-      child: Row(
-        children: [
-
-          Text(
+    return Row(
+      crossAxisAlignment:
+          CrossAxisAlignment.start,
+      children: [
+        Expanded(
+          child: Text(
             title,
             style: GoogleFonts.poppins(
-              color: Colors.grey.shade700,
+              color: colors.onSurfaceVariant,
             ),
           ),
+        ),
 
-          const Spacer(),
+        const SizedBox(width: 15),
 
-          Text(
+        Flexible(
+          child: Text(
             value,
+            textAlign: TextAlign.right,
             style: GoogleFonts.poppins(
               fontWeight: FontWeight.bold,
             ),
           ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 }

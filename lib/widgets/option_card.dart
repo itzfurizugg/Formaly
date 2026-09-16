@@ -17,6 +17,28 @@ class OptionCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = Theme.of(context).colorScheme;
+
+    final Color cardColor = selected
+        ? colors.primary
+        : colors.surface;
+
+    final Color borderColor = selected
+        ? colors.primary
+        : colors.outlineVariant;
+
+    final Color letterBackground = selected
+        ? colors.onPrimary
+        : colors.surfaceContainerHighest;
+
+    final Color letterColor = selected
+        ? colors.primary
+        : colors.onSurface;
+
+    final Color textColor = selected
+        ? colors.onPrimary
+        : colors.onSurface;
+
     return GestureDetector(
       onTap: onTap,
       child: AnimatedContainer(
@@ -24,18 +46,17 @@ class OptionCard extends StatelessWidget {
         margin: const EdgeInsets.only(bottom: 15),
         padding: const EdgeInsets.all(18),
         decoration: BoxDecoration(
-          color: selected
-              ? const Color(0xff343A40)
-              : Colors.white,
+          color: cardColor,
           borderRadius: BorderRadius.circular(18),
           border: Border.all(
-            color: selected
-                ? const Color(0xff343A40)
-                : Colors.grey.shade300,
+            color: borderColor,
+            width: selected ? 1.4 : 1,
           ),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(.04),
+              color: colors.shadow.withAlpha(
+                selected ? 31 : 13,
+              ),
               blurRadius: 8,
               offset: const Offset(0, 4),
             ),
@@ -43,19 +64,14 @@ class OptionCard extends StatelessWidget {
         ),
         child: Row(
           children: [
-
             CircleAvatar(
               radius: 18,
-              backgroundColor: selected
-                  ? Colors.white
-                  : Colors.grey.shade200,
+              backgroundColor: letterBackground,
               child: Text(
                 String.fromCharCode(65 + index),
                 style: GoogleFonts.poppins(
                   fontWeight: FontWeight.bold,
-                  color: selected
-                      ? const Color(0xff343A40)
-                      : Colors.black,
+                  color: letterColor,
                 ),
               ),
             ),
@@ -68,12 +84,20 @@ class OptionCard extends StatelessWidget {
                 style: GoogleFonts.poppins(
                   fontSize: 15,
                   fontWeight: FontWeight.w500,
-                  color: selected
-                      ? Colors.white
-                      : Colors.black,
+                  color: textColor,
+                  height: 1.45,
                 ),
               ),
             ),
+
+            if (selected) ...[
+              const SizedBox(width: 10),
+              Icon(
+                Icons.check_circle_rounded,
+                color: colors.onPrimary,
+                size: 22,
+              ),
+            ],
           ],
         ),
       ),

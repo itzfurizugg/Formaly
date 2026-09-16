@@ -11,15 +11,20 @@ class QuestionCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = Theme.of(context).colorScheme;
+
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(22),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: colors.surface,
         borderRadius: BorderRadius.circular(20),
+        border: Border.all(
+          color: colors.outlineVariant,
+        ),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(.05),
+            color: colors.shadow.withAlpha(13),
             blurRadius: 12,
             offset: const Offset(0, 5),
           ),
@@ -28,14 +33,31 @@ class QuestionCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-
-          Text(
-            "Pertanyaan",
-            style: GoogleFonts.poppins(
-              fontSize: 14,
-              color: Colors.grey,
-              fontWeight: FontWeight.w500,
-            ),
+          Row(
+            children: [
+              Container(
+                width: 34,
+                height: 34,
+                decoration: BoxDecoration(
+                  color: colors.primaryContainer,
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Icon(
+                  Icons.help_outline_rounded,
+                  size: 19,
+                  color: colors.onPrimaryContainer,
+                ),
+              ),
+              const SizedBox(width: 10),
+              Text(
+                'Pertanyaan',
+                style: GoogleFonts.poppins(
+                  fontSize: 14,
+                  color: colors.primary,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ],
           ),
 
           const SizedBox(height: 15),
@@ -46,6 +68,7 @@ class QuestionCard extends StatelessWidget {
               fontSize: 18,
               height: 1.5,
               fontWeight: FontWeight.w600,
+              color: colors.onSurface,
             ),
           ),
         ],

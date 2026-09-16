@@ -14,24 +14,43 @@ class CustomTextField extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = Theme.of(context).colorScheme;
+
     return TextField(
       controller: controller,
       obscureText: obscureText,
+      style: TextStyle(
+        color: colors.onSurface,
+      ),
+      cursorColor: colors.primary,
       decoration: InputDecoration(
         hintText: hintText,
-        hintStyle: const TextStyle(
+        hintStyle: TextStyle(
           fontSize: 14,
-          color: Colors.grey,
+          color: colors.onSurfaceVariant,
         ),
         filled: true,
-        fillColor: const Color(0xffEFEFEF),
+        fillColor: colors.surfaceContainerHighest,
         contentPadding: const EdgeInsets.symmetric(
           horizontal: 15,
           vertical: 16,
         ),
         border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(4),
+          borderRadius: BorderRadius.circular(8),
           borderSide: BorderSide.none,
+        ),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(8),
+          borderSide: BorderSide(
+            color: colors.outlineVariant,
+          ),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(8),
+          borderSide: BorderSide(
+            color: colors.primary,
+            width: 1.2,
+          ),
         ),
       ),
     );
