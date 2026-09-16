@@ -5,11 +5,11 @@ import { Toaster, toast } from "sonner"
 type AlertType = "success" | "error" | "info" | "warning"
 
 const toastClasses = {
-    base: "!rounded-xl !border !border-second !bg-white !font-sans !text-darks !shadow-lg",
+    base: "!rounded-xl !border !border-second dark:!border-white/10 !bg-white dark:!bg-second !font-sans !text-darks !shadow-lg",
     success: "!border-done/30",
     error: "!border-wrong/30",
-    info: "!border-second",
-    warning: "!border-amber-500/50 !bg-amber-50",
+    info: "!border-second dark:!border-white/10",
+    warning: "!border-amber-500/50 !bg-amber-50 dark:!bg-amber-950/30",
 }
 
 /** Toaster global Formaly. Render sekali di root aplikasi. */

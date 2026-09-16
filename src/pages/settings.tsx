@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react"
+import { useState } from "react"
 import { useNavigate } from "react-router-dom"
 import { motion } from "motion/react"
 import {
@@ -7,21 +7,26 @@ import {
     Shield,
     Info,
     ChevronRight,
+    LogOut,
 } from "lucide-react"
 import BackButton from "../components/backButton"
 import { showAlert } from "../lib/alerts"
 import { easeOutExpo } from "../lib/motion"
+import { useAuth } from "../lib/auth-context"
+import { useTheme } from "../lib/theme-context"
+import { Spinner } from "../components/loading"
 
 function SettingsPage() {
     const navigate = useNavigate()
+    const { logout } = useAuth()
+    const { theme, toggleTheme } = useTheme()
+    const [loggingOut, setLoggingOut] = useState(false)
 
-    const [theme, setTheme] = useState<"light" | "dark">(() => {
-        return (localStorage.getItem("setting_theme") as "light" | "dark") || "light"
-    })
-
-    useEffect(() => {
-        localStorage.setItem("setting_theme", theme)
-    }, [theme])
+    const handleLogout = async () => {
+        setLoggingOut(true)
+        await logout()
+        navigate("/login")
+    }
 
     return (
         <div className="flex flex-col items-center px-3.5 sm:px-6 py-5 sm:py-15">
@@ -40,7 +45,7 @@ function SettingsPage() {
                     className="space-y-3"
                 >
                     {/* Preferensi Tampilan & Notifikasi */}
-                    <div className="bg-white border border-second rounded-2xl lg:rounded-xl overflow-hidden divide-y divide-second">
+                    <div className="bg-white dark:bg-second border border-second dark:border-white/10 rounded-2xl lg:rounded-xl overflow-hidden divide-y divide-second dark:divide-white/10">
                         <div className="p-4 flex items-center justify-between">
                             <div className="flex items-center gap-3">
                                 <div className="w-9 h-9 rounded-full bg-base flex items-center justify-center shrink-0">
@@ -61,12 +66,11 @@ function SettingsPage() {
                                 aria-checked={theme === "dark"}
                                 onClick={() => {
                                     const next = theme === "dark" ? "light" : "dark"
-                                    setTheme(next)
-                                    showAlert(`Mode ${next === "dark" ? "Gelap" : "Terang"} disimpan`, "info")
+                                    toggleTheme()
+                                    showAlert(`Mode ${next === "dark" ? "Gelap" : "Terang"} diaktifkan`, "info")
                                 }}
-                                className={`w-12 h-6 flex items-center rounded-full p-1 transition-colors ${
-                                    theme === "dark" ? "bg-done justify-end" : "bg-second justify-start"
-                                }`}
+                                className={`w-12 h-6 flex items-center rounded-full p-1 transition-colors ${theme === "dark" ? "bg-done justify-end" : "bg-second dark:bg-base justify-start"
+                                    }`}
                             >
                                 <span className="bg-white w-4 h-4 rounded-full shadow-sm" />
                             </button>
@@ -74,10 +78,10 @@ function SettingsPage() {
                     </div>
 
                     {/* Tentang & Legalitas */}
-                    <div className="bg-white border border-second rounded-2xl lg:rounded-xl overflow-hidden divide-y divide-second">
+                    <div className="bg-white dark:bg-second border border-second dark:border-white/10 rounded-2xl lg:rounded-xl overflow-hidden divide-y divide-second dark:divide-white/10">
                         <button
                             onClick={() => navigate("/credit")}
-                            className="w-full flex items-center gap-3 p-4 hover:bg-base transition-colors text-left"
+                            className="w-full flex items-center gap-3 p-4 hover:bg-base/70 transition-colors text-left"
                         >
                             <div className="w-9 h-9 rounded-full bg-base flex items-center justify-center shrink-0">
                                 <Info className="h-4 w-4 text-darks" />
@@ -99,6 +103,20 @@ function SettingsPage() {
                             </div>
                         </div>
                     </div>
+
+                    {/* Tombol Logout */}
+                    <button
+                        onClick={handleLogout}
+                        disabled={loggingOut}
+                        className="w-full flex items-center justify-center gap-2 p-5 bg-white dark:bg-second text-wrong hover:bg-wrong/10 border border-second dark:border-white/10 hover:border-wrong rounded-xl transition-colors font-semibold text-sm disabled:opacity-60"
+                    >
+                        {loggingOut ? (
+                            <Spinner size={16} />
+                        ) : (
+                            <LogOut className="h-4 w-4" />
+                        )}
+                        {loggingOut ? "Keluar..." : "Keluar"}
+                    </button>
                 </motion.div>
             </div>
         </div>

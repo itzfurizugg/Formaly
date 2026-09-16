@@ -1,7 +1,6 @@
 import { useEffect, useState } from "react"
 import { useNavigate } from "react-router-dom"
 import {
-    LogOut,
     Save,
     UserRound,
     Mail,
@@ -114,8 +113,7 @@ function Modal({
 
 function Profile() {
     const navigate = useNavigate()
-    const { user, profile, logout, updateProfile, updatePassword, loading: authLoading } = useAuth()
-    const [loggingOut, setLoggingOut] = useState(false)
+    const { user, profile, updateProfile, updatePassword, loading: authLoading } = useAuth()
 
     const [showAccountModal, setShowAccountModal] = useState(false)
     const [showPasswordModal, setShowPasswordModal] = useState(false)
@@ -209,12 +207,6 @@ function Profile() {
         }
     }
 
-    const handleLogout = async () => {
-        setLoggingOut(true)
-        await logout()
-        navigate("/login")
-    }
-
     if (!user) return null
 
     const role = (profile?.role as string | undefined) || "user"
@@ -250,19 +242,6 @@ function Profile() {
                                 Bergabung pada {formatJoinDate(profile?.created_at)}
                             </span>
                         </div>
-
-                        <button
-                            onClick={handleLogout}
-                            disabled={loggingOut}
-                            className="btn bg-wrong/10 text-wrong border-none hidden lg:flex sm:ml-auto hover:opacity-90 transition-opacity shrink-0 rounded-full"
-                        >
-                            {loggingOut ? (
-                                <Spinner size={16} />
-                            ) : (
-                                <LogOut className="h-4 w-4" />
-                            )}
-                            {loggingOut ? "Keluar..." : "Keluar"}
-                        </button>
                     </div>
                 </div>
 
@@ -345,7 +324,7 @@ function Profile() {
                     )}
                 </div>
 
-                <button
+                {/* <button
                     onClick={handleLogout}
                     disabled={loggingOut}
                     className="btn flex w-full py-6 mx-auto bg-base text-wrong border-wrong/20 border-2 mt-2 lg:hidden hover:opacity-90 transition-opacity rounded-2xl"
@@ -356,7 +335,7 @@ function Profile() {
                         <LogOut className="h-4 w-4" />
                     )}
                     {loggingOut ? "Keluar..." : "Keluar"}
-                </button>
+                </button> */}
             </div>
 
             {/* Modal: Informasi Akun */}

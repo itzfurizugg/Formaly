@@ -1,16 +1,82 @@
 @import "tailwindcss";
 @plugin "daisyui";
 
+@custom-variant dark (&:where([data-theme=dark], [data-theme=dark] *, .dark, .dark *));
+
 @theme {
   --font-sans: "Funnel Display", "DM Sans", ui-sans-serif, system-ui, sans-serif;
   --font-display: "Funnel Display", ui-sans-serif, system-ui, sans-serif;
-  --color-base: #F7F7F7;
-  --color-second: #EEEEEE;
-  --color-tinted: #929AAB;
-  --color-darks: #393E46;
-  --color-done: #007DCC;
-  --color-pass: #2FA084;
-  --color-wrong: #D90000;
+  --color-base: var(--fml-base, #F7F7F7);
+  --color-second: var(--fml-second, #EEEEEE);
+  --color-tinted: var(--fml-tinted, #929AAB);
+  --color-darks: var(--fml-darks, #393E46);
+  --color-done: var(--fml-done, #007DCC);
+  --color-pass: var(--fml-pass, #2FA084);
+  --color-wrong: var(--fml-wrong, #D90000);
+}
+
+:root {
+  --fml-base: #F7F7F7;
+  --fml-second: #EEEEEE;
+  --fml-tinted: #929AAB;
+  --fml-darks: #393E46;
+  --fml-done: #007DCC;
+  --fml-pass: #2FA084;
+  --fml-wrong: #D90000;
+  --color-base-100: #FFFFFF;
+  --color-base-200: #F7F7F7;
+  --color-base-300: #EEEEEE;
+  --color-base-content: #393E46;
+  color-scheme: light;
+}
+
+html,
+body {
+  background-color: var(--fml-second);
+  color: var(--fml-darks);
+}
+
+[data-theme="dark"],
+.dark,
+[data-theme="dark"] body,
+.dark body {
+  background-color: var(--fml-base);
+  color: var(--fml-darks);
+}
+
+/* Penyesuaian kartu permukaan (card surface) di mode gelap */
+[data-theme="dark"] .bg-white.border-second,
+.dark .bg-white.border-second,
+[data-theme="dark"] .card.bg-white,
+.dark .card.bg-white,
+[data-theme="dark"] .modal-box.bg-white,
+.dark .modal-box.bg-white {
+  background-color: var(--fml-second);
+  border-color: rgba(255, 255, 255, 0.08);
+}
+
+/* Pembagi konten di dalam kartu pada mode gelap */
+[data-theme="dark"] .divide-second > :not([hidden]) ~ :not([hidden]),
+.dark .divide-second > :not([hidden]) ~ :not([hidden]) {
+  border-color: rgba(255, 255, 255, 0.08);
+}
+
+/* Input, select, dan textarea pada mode gelap */
+[data-theme="dark"] input.bg-white,
+.dark input.bg-white,
+[data-theme="dark"] textarea.bg-white,
+.dark textarea.bg-white,
+[data-theme="dark"] select.bg-white,
+.dark select.bg-white {
+  background-color: var(--fml-base);
+  color: var(--fml-darks);
+  border-color: rgba(255, 255, 255, 0.12);
+}
+
+/* Logo Formaly otomatis cerah di mode gelap */
+[data-theme="dark"] img[alt="Formaly"],
+.dark img[alt="Formaly"] {
+  filter: brightness(0) invert(0.96);
 }
 
 /* Animasi yang sebelumnya di sini (loadingbar, page-enter, fade-in, slide-up,
@@ -509,5 +575,35 @@ body::-webkit-scrollbar {
   }
   .fml-glass-nav--solid:hover {
     background: rgb(255 255 255 / 0.97);
+  }
+
+  /* Liquid glass versi tema gelap */
+  [data-theme="dark"] .fml-glass-nav,
+  .dark .fml-glass-nav {
+    background: rgba(68, 68, 78, 0.7);
+  }
+  [data-theme="dark"] .fml-glass-nav:hover,
+  .dark .fml-glass-nav:hover {
+    background: rgba(68, 68, 78, 0.85);
+  }
+  [data-theme="dark"] .fml-glass-nav--solid,
+  .dark .fml-glass-nav--solid {
+    background: rgba(68, 68, 78, 0.95);
+  }
+  [data-theme="dark"] .fml-glass-nav--solid:hover,
+  .dark .fml-glass-nav--solid:hover {
+    background: rgba(68, 68, 78, 1);
+  }
+  [data-theme="dark"] .fml-glass-pill,
+  .dark .fml-glass-pill {
+    background: linear-gradient(to bottom, rgba(68, 68, 78, 0.85), rgba(34, 40, 49, 0.85));
+  }
+  [data-theme="dark"] .fml-glass-pill:hover,
+  .dark .fml-glass-pill:hover {
+    background: linear-gradient(to bottom, rgba(68, 68, 78, 0.95), rgba(34, 40, 49, 0.95));
+  }
+  [data-theme="dark"] .fml-glass-pill--solid,
+  .dark .fml-glass-pill--solid {
+    background: linear-gradient(to bottom, rgba(68, 68, 78, 0.95), rgba(34, 40, 49, 0.9));
   }
 }

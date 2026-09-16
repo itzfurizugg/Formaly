@@ -3,6 +3,7 @@ import { lazy, Suspense, useEffect } from "react"
 import { AnimatePresence, MotionConfig, motion } from "motion/react"
 import { easeOutExpo } from "./lib/motion"
 import { AuthProvider } from "./lib/auth"
+import { ThemeProvider } from "./lib/theme"
 import { useAuth } from "./lib/auth-context"
 import { supabase } from "./lib/supabase"
 import Navbar from "./components/navbar"
@@ -68,10 +69,12 @@ const hideNavPaths = ["/login", "/register", "/auth", "/forgot-password", "/rese
 // biar useAuth() bisa dipanggil di dalam cakupan AuthProvider.
 function App() {
   return (
-    <AuthProvider>
-      <AppShell />
-      <AlertToaster />
-    </AuthProvider>
+    <ThemeProvider>
+      <AuthProvider>
+        <AppShell />
+        <AlertToaster />
+      </AuthProvider>
+    </ThemeProvider>
   )
 }
 
@@ -125,7 +128,7 @@ function AppShell() {
 
   return (
       <MotionConfig reducedMotion="user">
-      <div className="bg-second min-h-screen flex flex-col">
+      <div className="bg-second dark:bg-base min-h-screen flex flex-col text-darks transition-colors duration-150">
         <ScrollToTop />
         <AnimatePresence initial={false}>
           {!hideNav && !isCreator && (
