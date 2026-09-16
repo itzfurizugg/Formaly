@@ -1,0 +1,18 @@
+services:
+  storage:
+    build:
+      context: .
+      dockerfile: Dockerfile
+
+    container_name: formaly-storage
+
+    restart: unless-stopped
+
+    ports:
+      - "48484:48484"
+
+    volumes:
+      - ./uploads:/app/uploads
+
+    environment:
+      TZ: Asia/Jakarta
