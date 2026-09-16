@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from "react"
 import { AnimatePresence, motion } from "motion/react"
 import { useNavigate, useParams, useLocation } from "react-router-dom"
-import { Check, Clock, ZoomIn, X } from "lucide-react"
+import { Check, Clock, ZoomIn, ZoomOut, X } from "lucide-react"
 import PageIndicator from "../../components/pageindicator"
 import { RichText } from "../../components/richText"
 import QuestionMedia from "../../components/QuestionMedia"
@@ -80,6 +80,7 @@ function FormPage() {
     const [notFound, setNotFound] = useState(false)
     const [submitting, setSubmitting] = useState(false)
     const [modalImage, setModalImage] = useState<string | null>(null)
+    const [pageZoom, setPageZoom] = useState(1)
     const [showSubmitConfirm, setShowSubmitConfirm] = useState(false)
     const [hasTimer, setHasTimer] = useState(false)
     const autoSubmitted = useRef(false)
@@ -437,6 +438,10 @@ function FormPage() {
         navigate('/form/list', { state: { current, answers, formId, questions, submissionId, deadline: deadlineRef.current || undefined, rages: raguQuestions } })
     }
 
+    const zoomPage = (delta: number) => {
+        setPageZoom(Math.min(2, Math.max(0.5, pageZoom + delta)))
+    }
+
     const toggleRagu = () => {
         if (!question) return
         setRaguQuestions((prev) => ({ ...prev, [question.id]: !prev[question.id] }))
@@ -461,7 +466,7 @@ function FormPage() {
                     </div>
                 ) : (
                     <div className="flex flex-col items-center px-3.5 pt-6 pb-28 md:pb-6">
-                        <div className="w-full max-w-3xl xl:mt-3">
+                        <div className="w-full max-w-3xl xl:mt-3" style={{ zoom: pageZoom }}>
                             {/* Banner header hanya di desktop; mobile fokus ke soal. Full width, proporsi 3105x1100 via FormHeader. */}
                             {/* {headerImage && (
                     <div className="hidden lg:block w-full rounded-xl overflow-hidden border border-second shadow-sm mb-4">
@@ -644,9 +649,59 @@ function FormPage() {
                                 </div>
                             </motion.div>
 
+                            {/* Zoom control mobile di bawah kolom form */}
+                            <div className="flex md:hidden items-center justify-center mt-3">
+                                <div className="bg-white/90 backdrop-blur-xs px-2 py-1 rounded-full border border-second shadow-xs flex items-center gap-1">
+                                    <button
+                                        onClick={() => zoomPage(-0.25)}
+                                        className="p-1 rounded-full text-darks hover:bg-second active:scale-95 transition-transform"
+                                        aria-label="Zoom out"
+                                        title="Zoom out"
+                                    >
+                                        <ZoomOut className="h-3.5 w-3.5" />
+                                    </button>
+                                    <span className="text-[11px] font-semibold text-tinted tabular-nums min-w-[36px] text-center">
+                                        {Math.round(pageZoom * 100)}%
+                                    </span>
+                                    <button
+                                        onClick={() => zoomPage(0.25)}
+                                        className="p-1 rounded-full text-darks hover:bg-second active:scale-95 transition-transform"
+                                        aria-label="Zoom in"
+                                        title="Zoom in"
+                                    >
+                                        <ZoomIn className="h-3.5 w-3.5" />
+                                    </button>
+                                </div>
+                            </div>
+
                             {/* NOTE: LAYOUT DESKTOP (>= md) — PageIndicator & tombol Kirim inline di bawah konten */}
                             <div className="hidden md:flex items-center justify-between gap-3 sticky bottom-0 z-30 mt-4 py-3 bg-gradient-to-t from-second via-second/90 to-transparent">
                                 <PageIndicator total={total} current={current} onPrev={prev} onNext={next} onListClick={goToList} isRagu={question ? !!raguQuestions[question.id] : false} onRaguToggle={toggleRagu} onRequestSubmit={requestSubmit} submitting={submitting} groupRagu />
+                            </div>
+                        </div>
+
+                        {/* Zoom control desktop di ujung bawah layar */}
+                        <div className="hidden md:flex fixed bottom-4 right-4 z-40 items-center">
+                            <div className="bg-white p-2 rounded-full border border-second shadow-md flex items-center gap-1.5">
+                                <button
+                                    onClick={() => zoomPage(-0.25)}
+                                    className="p-2 rounded-full border border-second bg-white text-darks hover:bg-second"
+                                    aria-label="Zoom out"
+                                    title="Zoom out"
+                                >
+                                    <ZoomOut className="h-4 w-4" />
+                                </button>
+                                <span className="text-xs font-semibold text-tinted tabular-nums w-10 text-center">
+                                    {Math.round(pageZoom * 100)}%
+                                </span>
+                                <button
+                                    onClick={() => zoomPage(0.25)}
+                                    className="p-2 rounded-full border border-second bg-white text-darks hover:bg-second"
+                                    aria-label="Zoom in"
+                                    title="Zoom in"
+                                >
+                                    <ZoomIn className="h-4 w-4" />
+                                </button>
                             </div>
                         </div>
 
