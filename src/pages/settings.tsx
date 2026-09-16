@@ -4,8 +4,6 @@ import { motion } from "motion/react"
 import {
     Moon,
     Sun,
-    Bell,
-    Globe,
     Shield,
     Info,
     ChevronRight,
@@ -17,30 +15,13 @@ import { easeOutExpo } from "../lib/motion"
 function SettingsPage() {
     const navigate = useNavigate()
 
-    const [emailNotifications, setEmailNotifications] = useState(() => {
-        const saved = localStorage.getItem("setting_notifications")
-        return saved !== null ? saved === "true" : true
-    })
-
     const [theme, setTheme] = useState<"light" | "dark">(() => {
         return (localStorage.getItem("setting_theme") as "light" | "dark") || "light"
     })
 
-    const [language, setLanguage] = useState(() => {
-        return localStorage.getItem("setting_language") || "id"
-    })
-
-    useEffect(() => {
-        localStorage.setItem("setting_notifications", String(emailNotifications))
-    }, [emailNotifications])
-
     useEffect(() => {
         localStorage.setItem("setting_theme", theme)
     }, [theme])
-
-    useEffect(() => {
-        localStorage.setItem("setting_language", language)
-    }, [language])
 
     return (
         <div className="flex flex-col items-center px-3.5 sm:px-6 py-5 sm:py-15">

@@ -127,15 +127,15 @@ function AppShell() {
       <MotionConfig reducedMotion="user">
       <div className="bg-second min-h-screen flex flex-col">
         <ScrollToTop />
-        <AnimatePresence mode="wait" initial={false}>
+        <AnimatePresence initial={false}>
           {!hideNav && !isCreator && (
             <motion.div
               key="nav-general"
-              className="sticky top-0 z-50"
-              initial={{ opacity: 0, y: -8 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0 }}
-              transition={{ duration: 0.35, ease: easeOutExpo }}
+              className="sticky top-0 z-50 overflow-hidden"
+              initial={{ height: 0, opacity: 0, y: -16 }}
+              animate={{ height: "auto", opacity: 1, y: 0 }}
+              exit={{ height: 0, opacity: 0, y: -16 }}
+              transition={{ duration: 0.38, ease: easeOutExpo }}
             >
               <Navbar />
             </motion.div>
@@ -159,6 +159,7 @@ function AppShell() {
           {/* Key = pathname agar tiap pindah halaman me-replay animasi pembukaan halaman */}
           <motion.div
             key={location.pathname}
+            layout="position"
             className={`flex-1 ${showDock ? "pb-24 md:pb-0" : ""}`}
             initial={{ opacity: 0, y: 12 }}
             animate={{ opacity: 1, y: 0 }}

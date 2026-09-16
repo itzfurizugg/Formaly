@@ -1,4 +1,4 @@
-import * as XLSX from "xlsx"
+import * as XLSX from "xlsx-js-style"
 import { supabase } from "./supabase"
 import { richTextToPlain } from "./richtext"
 
@@ -26,6 +26,151 @@ function fmtDate(d: string | null) {
 function sanitizeFileName(name: string) {
     return name.replace(/[\\/:*?"<>|]+/g, "-").trim() || "form"
 }
+
+// ---------------------------------------------------------------------------
+// Styling helpers — dipakai bersama oleh exportFormXlsx & exportSubmissionXlsx
+// biar tampilan semua sheet konsisten.
+// ---------------------------------------------------------------------------
+
+type CellStyle = Record<string, unknown>
+type ColAlign = "left" | "center" | "right"
+
+const FONT_NAME = "Arial"
+
+const BORDER_THIN = { style: "thin", color: { rgb: "E2E2E2" } }
+const CELL_BORDER = { top: BORDER_THIN, bottom: BORDER_THIN, left: BORDER_THIN, right: BORDER_THIN }
+
+const TITLE_STYLE: CellStyle = {
+    font: { name: FONT_NAME, sz: 14, bold: true, color: { rgb: "111827" } },
+    alignment: { horizontal: "left", vertical: "center" },
+}
+
+const SUBTITLE_STYLE: CellStyle = {
+    font: { name: FONT_NAME, sz: 10, italic: true, color: { rgb: "6B7280" } },
+    alignment: { horizontal: "left", vertical: "center" },
+}
+
+const HEADER_STYLE: CellStyle = {
+    font: { name: FONT_NAME, sz: 11, bold: true, color: { rgb: "FFFFFF" } },
+    fill: { patternType: "solid", fgColor: { rgb: "0F766E" } },
+    alignment: { horizontal: "center", vertical: "center", wrapText: true },
+    border: CELL_BORDER,
+}
+
+function bodyStyle(fillColor: string | undefined, align: ColAlign, fontColor = "1F2937", bold = false): CellStyle {
+    return {
+        font: { name: FONT_NAME, sz: 10, color: { rgb: fontColor }, bold },
+        ...(fillColor ? { fill: { patternType: "solid", fgColor: { rgb: fillColor } } } : {}),
+        alignment: { horizontal: align, vertical: "center", wrapText: align === "left" },
+        border: CELL_BORDER,
+    }
+}
+
+interface HighlightRule {
+    colIndex: number
+    colorFor: (value: string | number | undefined) => { fill: string; font: string } | null
+}
+
+function setCellStyle(ws: XLSX.WorkSheet, addr: string, style: CellStyle) {
+    const cell = (ws as Record<string, { s?: CellStyle } | undefined>)[addr]
+    if (cell) cell.s = style
+}
+
+/**
+ * Bangun satu worksheet bergaya: judul + subjudul (merge selebar tabel),
+ * header berwarna, body dengan border + zebra-striping, kolom auto-width,
+ * freeze header, dan autofilter. Dipakai untuk semua sheet export.
+ */
+function createStyledSheet(
+    title: string,
+    subtitle: string,
+    headers: string[],
+    rows: (string | number)[][],
+    colAligns: ColAlign[],
+    colWidths: number[],
+    highlight?: HighlightRule,
+) {
+    const lastCol = headers.length - 1
+    const headerRowIdx = 3 // baris ke-4 (0-based): 0=judul, 1=subjudul, 2=kosong, 3=header
+    const dataStartIdx = headerRowIdx + 1
+    const dataEndIdx = dataStartIdx + rows.length - 1
+
+    const aoa: (string | number)[][] = [[title], [subtitle], [], headers, ...rows]
+    const ws = XLSX.utils.aoa_to_sheet(aoa)
+
+    // Merge baris judul & subjudul selebar tabel
+    ws["!merges"] = [
+        { s: { r: 0, c: 0 }, e: { r: 0, c: lastCol } },
+        { s: { r: 1, c: 0 }, e: { r: 1, c: lastCol } },
+    ]
+
+    setCellStyle(ws, XLSX.utils.encode_cell({ r: 0, c: 0 }), TITLE_STYLE)
+    setCellStyle(ws, XLSX.utils.encode_cell({ r: 1, c: 0 }), SUBTITLE_STYLE)
+
+    for (let c = 0; c <= lastCol; c++) {
+        setCellStyle(ws, XLSX.utils.encode_cell({ r: headerRowIdx, c }), HEADER_STYLE)
+    }
+
+    for (let r = dataStartIdx; r <= dataEndIdx; r++) {
+        const isEven = (r - dataStartIdx) % 2 === 1
+        for (let c = 0; c <= lastCol; c++) {
+            const addr = XLSX.utils.encode_cell({ r, c })
+            const cellObj = (ws as Record<string, { v?: string | number } | undefined>)[addr]
+            const align = colAligns[c] || "left"
+            let fillColor = isEven ? "F9FAFB" : undefined
+            let fontColor = "1F2937"
+            let bold = false
+
+            if (highlight && c === highlight.colIndex) {
+                const res = highlight.colorFor(cellObj?.v)
+                if (res) {
+                    fillColor = res.fill
+                    fontColor = res.font
+                    bold = true
+                }
+            }
+
+            setCellStyle(ws, addr, bodyStyle(fillColor, align, fontColor, bold))
+        }
+    }
+
+    ws["!cols"] = colWidths.map((wch) => ({ wch }))
+    ws["!rows"] = [{ hpx: 28 }, { hpx: 18 }, { hpx: 6 }, { hpx: 22 }]
+
+    ws["!views"] = [
+        {
+            state: "frozen",
+            xSplit: 0,
+            ySplit: dataStartIdx,
+            topLeftCell: XLSX.utils.encode_cell({ r: dataStartIdx, c: 0 }),
+            activePane: "bottomLeft",
+        },
+    ]
+
+    ws["!autofilter"] = {
+        ref: XLSX.utils.encode_range({ s: { r: headerRowIdx, c: 0 }, e: { r: headerRowIdx, c: lastCol } }),
+    }
+
+    return ws
+}
+
+function statusColor(value: string | number | undefined): { fill: string; font: string } | null {
+    if (value === "Selesai") return { fill: "DCFCE7", font: "15803D" }
+    if (value === "Proses") return { fill: "FEF3C7", font: "92400E" }
+    return null
+}
+
+function hasilColor(value: string | number | undefined): { fill: string; font: string } | null {
+    if (value === "Benar") return { fill: "DCFCE7", font: "15803D" }
+    if (value === "Salah") return { fill: "FEE2E2", font: "B91C1C" }
+    if (value === "Tanpa Penilaian") return { fill: "F3F4F6", font: "6B7280" }
+    return null
+}
+
+const RESPONDEN_HEADERS = ["No", "Nama Responden", "Email", "Nilai", "Status", "Token", "Waktu Mulai", "Waktu Dikirim"]
+const RESPONDEN_ALIGNS: ColAlign[] = ["center", "left", "left", "center", "center", "center", "left", "left"]
+const RESPONDEN_WIDTHS = [5, 26, 28, 10, 12, 14, 20, 20]
+const RESPONDEN_STATUS_COL = 4
 
 /**
  * Export data responden form (bukan soal) dalam bentuk spreadsheet .xlsx.
@@ -61,7 +206,6 @@ export async function exportFormXlsx({
         submissions = (fetched || []) as unknown as ExportRespondentItem[]
     }
 
-    const sHeader = ["No", "Nama Responden", "Email", "Nilai", "Status", "Token", "Waktu Mulai", "Waktu Dikirim"]
     const sRows = submissions.map((s, index) => [
         index + 1,
         s.user?.name || "-",
@@ -74,7 +218,15 @@ export async function exportFormXlsx({
     ])
 
     const workbook = XLSX.utils.book_new()
-    const sheet = XLSX.utils.aoa_to_sheet([sHeader, ...sRows])
+    const sheet = createStyledSheet(
+        `Data Responden - ${formTitle}`,
+        `Diekspor pada ${new Date().toLocaleString("id-ID")} • Total responden: ${submissions.length}`,
+        RESPONDEN_HEADERS,
+        sRows,
+        RESPONDEN_ALIGNS,
+        RESPONDEN_WIDTHS,
+        { colIndex: RESPONDEN_STATUS_COL, colorFor: statusColor },
+    )
     XLSX.utils.book_append_sheet(workbook, sheet, "Data Responden")
     XLSX.writeFile(workbook, `Data-Responden-${sanitizeFileName(formTitle)}.xlsx`)
 }
@@ -150,6 +302,11 @@ function answerText(a: ExportAnswerDetail): string {
     return texts.length ? texts.join(", ") : "-"
 }
 
+const JAWABAN_HEADERS = ["No", "Soal", "Tipe", "Jawaban", "Hasil", "Skor Diperoleh"]
+const JAWABAN_ALIGNS: ColAlign[] = ["center", "left", "center", "left", "center", "center"]
+const JAWABAN_WIDTHS = [5, 45, 14, 40, 16, 14]
+const JAWABAN_HASIL_COL = 4
+
 /**
  * Export jawaban milik satu submission/responden tertentu (revisi #10).
  * Berisi ringkasan responden + rincian jawaban per soal dalam satu file .xlsx.
@@ -198,7 +355,6 @@ export async function exportSubmissionXlsx({
         )
 
     // Sheet 1: ringkasan responden.
-    const sHeader = ["No", "Nama Responden", "Email", "Nilai", "Status", "Token", "Waktu Mulai", "Waktu Dikirim"]
     const sRows = [[
         1,
         sub.user?.name || "-",
@@ -211,7 +367,6 @@ export async function exportSubmissionXlsx({
     ]]
 
     // Sheet 2: jawaban tiap soal dari responden tersebut.
-    const jHeader = ["No", "Soal", "Tipe", "Jawaban", "Hasil", "Skor Diperoleh"]
     const jRows = rows.map((a, i) => {
         const correct = isAnswerCorrect(a)
         const hasil = correct === null ? "Tanpa Penilaian" : correct ? "Benar" : "Salah"
@@ -226,7 +381,28 @@ export async function exportSubmissionXlsx({
     })
 
     const workbook = XLSX.utils.book_new()
-    XLSX.utils.book_append_sheet(workbook, XLSX.utils.aoa_to_sheet([sHeader, ...sRows]), "Ringkasan")
-    XLSX.utils.book_append_sheet(workbook, XLSX.utils.aoa_to_sheet([jHeader, ...jRows]), "Jawaban")
+
+    const ringkasanSheet = createStyledSheet(
+        `Ringkasan Responden - ${formTitle}`,
+        `Diekspor pada ${new Date().toLocaleString("id-ID")}`,
+        RESPONDEN_HEADERS,
+        sRows,
+        RESPONDEN_ALIGNS,
+        RESPONDEN_WIDTHS,
+        { colIndex: RESPONDEN_STATUS_COL, colorFor: statusColor },
+    )
+    XLSX.utils.book_append_sheet(workbook, ringkasanSheet, "Ringkasan")
+
+    const jawabanSheet = createStyledSheet(
+        `Jawaban ${sub.user?.name || "Responden"} - ${formTitle}`,
+        `Total soal: ${jRows.length} • Skor: ${sub.total_score != null ? sub.total_score : "-"}`,
+        JAWABAN_HEADERS,
+        jRows,
+        JAWABAN_ALIGNS,
+        JAWABAN_WIDTHS,
+        { colIndex: JAWABAN_HASIL_COL, colorFor: hasilColor },
+    )
+    XLSX.utils.book_append_sheet(workbook, jawabanSheet, "Jawaban")
+
     XLSX.writeFile(workbook, `Jawaban-Responden-${sanitizeFileName(formTitle)}.xlsx`)
 }

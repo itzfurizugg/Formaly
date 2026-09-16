@@ -1,5 +1,5 @@
 import Papa from "papaparse"
-import * as XLSX from "xlsx"
+import * as XLSX from "xlsx-js-style"
 import { OPTION_LETTERS, type ParsedQuestion, validateParsedQuestion } from "./types"
 
 type SourceRow = Record<string, unknown>
