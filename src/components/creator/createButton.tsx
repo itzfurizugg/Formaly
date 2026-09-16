@@ -47,7 +47,7 @@ function CreateButton({ onCreate, onImport, onDownload, label = "Buat" }: Create
                     <motion.div
                         key="create-panel"
                         role="menu"
-                        className="absolute right-0 top-full mt-2 z-50 min-w-[13rem] rounded-2xl bg-white border border-second shadow-xl overflow-hidden origin-top-right"
+                        className="absolute right-0 top-full mt-2 z-50 min-w-[13rem] rounded-2xl bg-white dark:bg-second border border-second shadow-xl overflow-hidden origin-top-right"
                         initial={{ opacity: 0, y: -8, scale: 0.95 }}
                         animate={{ opacity: 1, y: 0, scale: 1 }}
                         exit={{ opacity: 0, y: -8, scale: 0.95 }}

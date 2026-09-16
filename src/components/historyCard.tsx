@@ -25,7 +25,7 @@ function HistoryCard({ formId, title, author, duration, questions, score, to, st
         <Link
             to={to}
             state={state}
-            className="card bg-white border border-second rounded-xl transition-all duration-300 hover:shadow-lg hover:shadow-darks/5 active:scale-[0.98] overflow-hidden cursor-pointer h-full"
+            className="card bg-white dark:bg-second border border-second rounded-xl transition-all duration-300 hover:shadow-lg hover:shadow-darks/5 active:scale-[0.98] overflow-hidden cursor-pointer h-full"
         >
             <FormHeader formId={formId} title={title} headerImage={headerImage} headerColor={headerColor} headerMedia={headerMedia} play={false} />
             <div className="card-body gap-4 p-4 sm:p-5">

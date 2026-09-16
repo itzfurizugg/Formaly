@@ -2,7 +2,7 @@ import * as React from "react"
 import { useEffect, useState, useRef } from "react"
 import { useNavigate } from "react-router-dom"
 import { FileText, Paperclip, Send, LayoutTemplate } from "lucide-react"
-import { motion } from "motion/react"
+import { motion, AnimatePresence } from "motion/react"
 import { Spinner } from "../../components/loading"
 import { supabase } from "../../lib/supabase"
 import { useAuth } from "../../lib/auth-context"
@@ -58,6 +58,34 @@ function resolveMentionId(text: string, forms: FormRef[]): string | null {
     return best?.id ?? null
 }
 
+const QUICK_PROMPTS = [
+    {
+        icon: "📝",
+        label: "Kuis Pilihan Ganda",
+        prompt: "Buatkan kuis pilihan ganda 10 soal dengan 4 opsi jawaban dengan tingkat kesulitan Kelas 7 SMP tentang materi mitosis dan meiosis",
+    },
+    {
+        icon: "🔢",
+        label: "Ujian Matematika",
+        prompt: "Buatkan ujian matematika 10 soal campuran (pilihan ganda & isian singkat) untuk kelas 5 SD. Topik: pecahan, bangun datar, dan operasi hitung campuran.",
+    },
+    {
+        icon: "📋",
+        label: "Form Pendaftaran",
+        prompt: "Buatkan form pendaftaran online dengan field: nama lengkap, email, nomor telepon, alamat, asal sekolah, dan jurusan yang dipilih.",
+    },
+    {
+        icon: "📊",
+        label: "Soal HOTS",
+        prompt: "Posisikan anda sebagai guru ... , tolong buatkan saya ... soal HOTS (High Order Thinking Skills) tentang ... untuk ... dengan tingkat kesulitan seperti ...",
+    },
+    // {
+    //     icon: "📖",
+    //     label: "Soal Literasi",
+    //     prompt: "Buatkan soal literasi membaca 5 soal berdasarkan teks pendek. Setiap soal memiliki 4 pilihan jawaban dengan kunci jawaban.",
+    // },
+]
+
 function ChatPage() {
     const navigate = useNavigate()
     const { user } = useAuth()
@@ -79,6 +107,16 @@ function ChatPage() {
     // Form yang dipilih lewat popup "@" — dipakai langsung untuk mengisi form_id
     // (tidak bergantung pada regex teks, lebih andal).
     const [selectedFormId, setSelectedFormId] = useState<string | null>(null)
+    const [textareaFocused, setTextareaFocused] = useState(false)
+
+    // Auto-resize textarea: reset ke auto, lalu paksa sesuai scrollHeight.
+    // CSS max-h-[45vh] + overflow-y-auto menghandle scroll kalau melebihi batas.
+    useEffect(() => {
+        const el = textareaRef.current
+        if (!el) return
+        el.style.height = "auto"
+        el.style.height = `${el.scrollHeight}px`
+    }, [message])
 
     useEffect(() => {
         if (!user) return
@@ -243,20 +281,61 @@ function ChatPage() {
             <div className="w-full max-w-2xl flex flex-col my-auto">
 
                 <motion.div variants={fadeSlide} initial="hidden" animate="show" className="w-full">
-                    <h1 className="text-center font-default text-3xl sm:text-4xl text-darks">
-                        Halo, saya <span className="font-bold">Galileo</span>!
-                    </h1>
-                    <p className="text-center text-xs sm:text-sm text-tinted mt-2 mb-5 sm:mb-6 px-2">
-                        Mulai membuat form dengan mudah! Galileo adalah AI Form Builder milik <span className="font-bold">Formaly</span>
-                    </p>
+                    <motion.div
+                        layout
+                        transition={{ layout: { type: "spring", stiffness: 340, damping: 30 } }}
+                    >
+                        <h1 className="text-center font-default text-3xl sm:text-4xl text-darks">
+                            Halo, saya <span className="font-bold">Galileo</span>!
+                        </h1>
+                        <p className="text-center text-xs sm:text-sm text-tinted mt-2 mb-5 sm:mb-6 px-2">
+                            Mulai membuat form dengan mudah! Galileo adalah AI Form Builder milik <span className="font-bold">Formaly</span>
+                        </p>
+                    </motion.div>
 
-                    <div className="gap-3 mb-3">
-                        <button className="btn rounded-full">🔢 Ujian Matematika</button>
-                        <button className="btn rounded-full">Form Pendaftaran</button>
-                        <button className="btn rounded-full"></button>
-                    </div>
+                    <AnimatePresence mode="popLayout">
+                        {textareaFocused && (
+                            <motion.div
+                                layout
+                                initial="hidden"
+                                animate="show"
+                                exit="hidden"
+                                variants={{
+                                    hidden: {},
+                                    show: { transition: { staggerChildren: 0.06, delayChildren: 0.05 } },
+                                }}
+                                transition={{ layout: { type: "spring", stiffness: 340, damping: 30 } }}
+                                className="flex flex-wrap justify-center gap-2 mb-3"
+                            >
+                                {QUICK_PROMPTS.map((qp) => (
+                                    <motion.div
+                                        key={qp.label}
+                                        variants={{
+                                            hidden: { opacity: 0, y: 18, scale: 0.9 },
+                                            show: { opacity: 1, y: 0, scale: 1 },
+                                        }}
+                                        transition={{ type: "spring", stiffness: 380, damping: 26 }}
+                                    >
+                                        <button
+                                            type="button"
+                                            onMouseDown={(e) => e.preventDefault()}
+                                            onClick={() => setMessage(qp.prompt)}
+                                            className="btn btn-sm rounded-full bg-white dark:bg-second border-none text-darks hover:bg-darks/20 transition-colors text-xs"
+                                        >
+                                            {qp.icon} {qp.label}
+                                        </button>
+                                    </motion.div>
+                                ))}
+                            </motion.div>
+                        )}
+                    </AnimatePresence>
 
-                    <form onSubmit={handleSubmit} className="bg-white border border-second rounded-2xl shadow-sm p-3.5 sm:p-5">
+                    <motion.form
+                        layout
+                        transition={{ layout: { type: "spring", stiffness: 340, damping: 30 } }}
+                        onSubmit={handleSubmit}
+                        className="relative bg-white dark:bg-second border border-second rounded-2xl shadow-sm p-3.5 sm:p-5 min-h-[8rem]"
+                    >
                         {file && (
                             <div className="flex items-center gap-2 mb-2 px-3 py-2 bg-base rounded-lg w-fit max-w-full">
                                 <FileText className="h-4 w-4 text-darks shrink-0" />
@@ -274,7 +353,7 @@ function ChatPage() {
 
                         <div className="relative">
                             <AnimateBlur open={mention !== null && filteredForms.length > 0}>
-                                <div className="absolute bottom-full left-0 right-0 mb-2 rounded-xl border border-second bg-white shadow-lg overflow-hidden">
+                                <div className="absolute bottom-full left-0 right-0 mb-2 rounded-xl border border-second bg-white dark:bg-second shadow-lg overflow-hidden">
                                     {formsLoading ? (
                                         <p className="px-3 py-2.5 text-sm text-tinted">Memuat daftar form...</p>
                                     ) : filteredForms.length === 0 ? (
@@ -300,44 +379,35 @@ function ChatPage() {
                                 </div>
                             </AnimateBlur>
 
-
                             <textarea
                                 ref={textareaRef}
                                 value={message}
                                 onChange={handleChange}
                                 onKeyDown={handleKeyDown}
-                                placeholder="Contoh: Buatkan kuis pilihan ganda 10 soal tentang sejarah Indonesia kelas 5 SD."
-                                rows={3}
-                                className="w-full resize-none bg-transparent text-darks placeholder:text-tinted text-sm sm:text-darks outline-none px-1"
+                                onFocus={() => setTextareaFocused(true)}
+                                onBlur={() => setTextareaFocused(false)}
+                                placeholder="Form anda mulai diketik dari sini!"
+                                rows={1}
+                                className="w-full h-full resize-none bg-transparent text-darks placeholder:text-tinted text-sm sm:text-darks outline-none min-h-[6rem] pb-12 max-h-[45vh] overflow-y-auto"
                             />
                         </div>
 
-                        <div className="flex flex-wrap items-center justify-between gap-2 mt-3 pt-2.5 border-t border-second/50 px-1">
-                            <div className="flex items-center gap-2 flex-wrap">
-                                <button
-                                    type="button"
-                                    onClick={() => fileInputRef.current?.click()}
-                                    className="btn btn-sm rounded-full bg-base-300 border-none text-darks hover:bg-darks/20 transition-colors gap-1.5 px-3 text-xs"
-                                    aria-label="Tambahkan dokumen untuk konteks"
-                                    title="Tambahkan dokumen untuk konteks"
-                                >
-                                    <Paperclip className="h-3.5 w-3.5 shrink-0" />
-                                    <span>Sisipkan Materi</span>
-                                </button>
-                                {/* 
-                                <span
-                                    className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-base-300 text-[11px] text-tinted"
-                                    title="Smart Route otomatis memilih model: tugas ringan → Gemini, tugas berat → Nemotron."
-                                >
-                                    <span className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: "#9B59B6" }} />
-                                    Smart Route
-                                </span> */}
-                            </div>
+                        <div className="absolute bottom-4 left-3.5 right-3.5 sm:left-4 sm:right-4 sm:bottom-5 flex items-center justify-between gap-2 px-1 pt-2.5">
+                            <button
+                                type="button"
+                                onClick={() => fileInputRef.current?.click()}
+                                className="btn btn-sm rounded-full bg-base-300 border-none text-darks hover:bg-darks/20 transition-colors gap-1.5 px-3 text-xs"
+                                aria-label="Tambahkan dokumen untuk konteks"
+                                title="Tambahkan dokumen untuk konteks"
+                            >
+                                <Paperclip className="h-3.5 w-3.5 shrink-0" />
+                                <span>Sisipkan Materi</span>
+                            </button>
 
                             <button
                                 type="submit"
                                 disabled={(!message.trim() && !file) || loading}
-                                className="btn btn-sm rounded-full bg-darks border-none text-base disabled:opacity-40 hover:opacity-90 transition-opacity shrink-0 ml-auto"
+                                className="btn btn-sm rounded-full bg-darks border-none text-base disabled:opacity-40 hover:opacity-90 transition-opacity shrink-0"
                                 aria-label="Kirim"
                             >
                                 {loading ? <Spinner size={16} /> : <Send className="h-4 w-4" />}
@@ -345,7 +415,7 @@ function ChatPage() {
                         </div>
 
                         {error && <p className="text-sm text-wrong mt-2 px-2">{error}</p>}
-                    </form>
+                    </motion.form>
                 </motion.div>
 
                 <input

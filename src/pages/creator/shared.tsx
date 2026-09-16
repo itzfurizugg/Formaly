@@ -58,7 +58,7 @@ function Shared() {
                 <FormTabs id={id} active="shared" />
 
                 <motion.div variants={listContainer} initial="hidden" animate="show" className="flex flex-col md:flex-row gap-3">
-                    <motion.div variants={listItem} className="bg-white border border-second p-3 lg:p-6 sm:p-4 shadow-sm rounded-xl shrink-0">
+                    <motion.div variants={listItem} className="bg-white dark:bg-second border border-second p-3 lg:p-6 sm:p-4 shadow-sm rounded-xl shrink-0">
                         <div className="flex flex-col items-center gap-4">
                             <div className="bg-base border border-second rounded-lg p-3 w-fit">
                                 <img
@@ -74,7 +74,7 @@ function Shared() {
                         </div>
                     </motion.div>
 
-                    <motion.div variants={listItem} className="bg-white border border-second p-3 lg:p-6 sm:p-4 shadow-sm rounded-xl flex-1 min-w-0">
+                    <motion.div variants={listItem} className="bg-white dark:bg-second border border-second p-3 lg:p-6 sm:p-4 shadow-sm rounded-xl flex-1 min-w-0">
                         <div className="flex items-center gap-2 mb-1">
                             <h2 className="font-semibold text-darks mt-2 ml-2">Bagikan Form</h2>
                         </div>
@@ -123,7 +123,7 @@ function Shared() {
 
                 </motion.div>
 
-                {/* <div className="bg-white border border-second p-3 lg:p-6 sm:p-4 shadow-sm rounded-xl mt-4">
+                {/* <div className="bg-white dark:bg-second border border-second p-3 lg:p-6 sm:p-4 shadow-sm rounded-xl mt-4">
                     <div className="flex items-center gap-2 mb-1">
                         <h2 className="font-semibold text-darks mt-2 ml-2">QR Code</h2>
                     </div>

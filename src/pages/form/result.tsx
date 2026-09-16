@@ -237,7 +237,7 @@ function ResultPage() {
                             </p>
 
                             {showScore && (
-                                <div className="bg-white border border-second p-6 shadow-sm rounded-xl mb-3 lg:mb-6">
+                                <div className="bg-white dark:bg-second border border-second p-6 shadow-sm rounded-xl mb-3 lg:mb-6">
                                     <div className="flex items-center gap-4">
                                         <div className="flex-1">
                                             <p className="text-xs text-tinted">Total Skor</p>
@@ -282,7 +282,7 @@ function ResultPage() {
                             )}
 
                             {!showAnswers ? (
-                                <div className="bg-white border border-second p-6 shadow-sm rounded-xl text-center py-5">
+                                <div className="bg-white dark:bg-second border border-second p-6 shadow-sm rounded-xl text-center py-5">
                                     {/* <EyeOff className="h-8 w-8 text-tinted/50 mx-auto mb-3" /> */}
                                     <p className="text-sm text-tinted">Rincian jawaban tidak ditampilkan untuk form ini.</p>
                                 </div>
@@ -313,12 +313,12 @@ function ResultPage() {
                                                 <div className="space-y-3">
                                                     <div className="flex items-center gap-3">
                                                         <h3 className="text-sm font-bold text-darks whitespace-nowrap">Soal Pilihan (PG)</h3>
-                                                        <div className="flex-1 h-px bg-second"></div>
+                                                        <div className="flex-1 h-px bg-white dark:bg-second"></div>
                                                     </div>
                                                     {pgAnswers.map((a) => {
                                                         const idx = answers.indexOf(a)
                                                         return (
-                                                            <motion.div key={a.id} variants={listItem} className="bg-white border border-second p-5 shadow-sm rounded-xl transition-colors hover:bg-base-200">
+                                                            <motion.div key={a.id} variants={listItem} className="bg-white dark:bg-second border border-second p-5 shadow-sm rounded-xl transition-colors hover:bg-base-200">
                                                                 <div className="flex items-center gap-2 flex-wrap mb-1">
                                                                     <span className="text-sm font-bold text-darks">Soal {idx + 1}</span>
                                                                     <span className="badge badge-ghost text-tinted rounded-full text-xs">{typeLabel(a.question?.question_type || "")}</span>
@@ -400,12 +400,12 @@ function ResultPage() {
                                                 <div className="space-y-3">
                                                     <div className="flex items-center gap-3">
                                                         <h3 className="text-sm font-bold text-darks whitespace-nowrap">Soal Isian &amp; Jawaban Bebas</h3>
-                                                        <div className="flex-1 h-px bg-second"></div>
+                                                        <div className="flex-1 h-px bg-white dark:bg-second"></div>
                                                     </div>
                                                     {textAnswers.map((a) => {
                                                         const idx = answers.indexOf(a)
                                                         return (
-                                                            <motion.div key={a.id} variants={listItem} className="bg-white border border-second p-5 shadow-sm rounded-xl transition-colors hover:bg-base-200">
+                                                            <motion.div key={a.id} variants={listItem} className="bg-white dark:bg-second border border-second p-5 shadow-sm rounded-xl transition-colors hover:bg-base-200">
                                                                 <div className="flex items-center gap-2 flex-wrap mb-1">
                                                                     <span className="text-sm font-bold text-darks">Soal {idx + 1}</span>
                                                                     <span className="badge badge-ghost text-tinted rounded-full text-xs">{typeLabel(a.question?.question_type || "")}</span>

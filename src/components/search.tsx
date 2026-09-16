@@ -38,7 +38,7 @@ function Search({ onSearch, loading = false }: SearchProps) {
             <div
                 className={`flex items-center w-full rounded-full border bg-white dark:bg-second transition-all duration-200 ${focused
                         ? "shadow-lg shadow-darks/10"
-                        : "border-second dark:border-white/10 shadow-md shadow-darks/5 hover:border-tinted/50"
+                        : "border-second dark:border-darks/15 shadow-md shadow-darks/5 hover:border-tinted/50"
                     }`}
             >
                 <div className="flex-1 relative flex items-center min-w-0">

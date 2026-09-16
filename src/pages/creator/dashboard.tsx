@@ -5,7 +5,7 @@ import { FileText, CheckCircle2, ClipboardList, ChevronRight, ChartNoAxesColumn 
 import { supabase } from "../../lib/supabase"
 import { useAuth } from "../../lib/auth-context"
 import { DistributionChart, MiniDistributionChart, type BarDatum } from "../../components/charts"
-import { colors } from "../../lib/colorbase"
+import { useThemeColors } from "../../lib/theme-context"
 import { pageGet, pageSet } from "../../lib/pageCache"
 import { easeOutExpo, listContainer, listItem } from "../../lib/motion"
 import Loading from "../../components/loading"
@@ -57,6 +57,7 @@ function CreatorDashboard() {
     const { user, loading: authLoading } = useAuth()
     const navigate = useNavigate()
     const isLg = useIsLg()
+    const c = useThemeColors()
     const [cached] = useState<DashboardCache | undefined>(() =>
         user ? pageGet<DashboardCache>(`dashboard:${user.id}`) : undefined
     )
@@ -179,7 +180,7 @@ function CreatorDashboard() {
     return (
         <div className="flex flex-col items-center px-3.5 sm:px-6 py-5 sm:py-10 lg:py-23">
             <div className="xl:max-w-7xl lg:max-w-5xl w-full">
-                <BackButton to="/" />
+                <BackButton />
 
                 <div className="ml-2">
                     <div className="flex items-center justify-between mb-1">
@@ -205,11 +206,11 @@ function CreatorDashboard() {
                                 {barData.length > 0 ? (
                                     <MiniDistributionChart
                                         data={barData}
-                                        barColor={colors.done}
+                                        barColor={c.done}
                                         onBarClick={goToForm}
                                     />
                                 ) : (
-                                    <div className="bg-white border border-second p-5 shadow-sm rounded-xl flex items-center justify-center h-44 sm:h-[260px]">
+                                    <div className="bg-white dark:bg-second border border-second p-5 shadow-sm rounded-xl flex items-center justify-center h-44 sm:h-[260px]">
                                         <p className="text-sm text-tinted">Belum ada submission untuk ditampilkan.</p>
                                     </div>
                                 )}
@@ -218,7 +219,7 @@ function CreatorDashboard() {
                             <motion.div variants={listContainer} initial="hidden" animate="show" className="grid grid-cols-2 gap-3 w-full">
                                 {statCards.slice(0, 2).map((card) => (
                                     <motion.div key={card.label} variants={listItem} className="min-w-0">
-                                        <div className="relative overflow-hidden bg-white border border-second rounded-xl shadow-sm p-3 sm:p-4 min-w-0">
+                                        <div className="relative overflow-hidden bg-white dark:bg-second border border-second rounded-xl shadow-sm p-3 sm:p-4 min-w-0">
                                             <div className={"absolute -right-3 -top-3 h-16 w-16 rounded-full " + card.blobClass} />
                                             <div className="relative flex items-start justify-between gap-2">
                                                 <div className="min-w-0">
@@ -249,7 +250,7 @@ function CreatorDashboard() {
                                     >
                                         <Link
                                             to={item.to}
-                                            className="flex items-center gap-3 bg-white border border-second rounded-xl shadow-sm p-3 transition-all active:scale-[0.98]"
+                                            className="flex items-center gap-3 bg-white dark:bg-second border border-second rounded-xl shadow-sm p-3 transition-all active:scale-[0.98]"
                                         >
                                             <span className="ml-2 mr-1 shrink-0 flex items-center justify-center">
                                                 <item.icon className="h-5 w-5" />
@@ -264,7 +265,7 @@ function CreatorDashboard() {
                                 ))}
                                 <Link
                                     to="/creator/galileo"
-                                    className="relative mb-5 overflow-hidden flex items-center justify-between gap-3 bg-white dark:bg-second border border-second dark:border-white/10 rounded-xl shadow-sm p-3 transition-all active:scale-[0.98]"
+                                    className="relative mb-5 overflow-hidden flex items-center justify-between gap-3 bg-white dark:bg-second border border-second dark:border-darks/15 rounded-xl shadow-sm p-3 transition-all active:scale-[0.98]"
                                 >
                                     <div className="absolute -top-7 -right-13 w-32 h-32 flex items-center justify-center shrink-0 pointer-events-none">
                                         <span className="absolute inset-0 rounded-full border border-darks/15 border-t-darks/50" />
@@ -278,7 +279,7 @@ function CreatorDashboard() {
                                     <div className="relative z-10 flex-1 min-w-0 ml-1 pr-14">
                                         <div className="flex items-center gap-1.5">
                                             <span className="block text-sm font-bold text-darks mr-0.5">Galileo AI</span>
-                                            <span className="shrink-0 rounded-full px-1.5 py-0.5 text-[8px] font-semibold bg-darks text-white">
+                                            <span className="shrink-0 rounded-full px-1.5 py-0.5 text-[8px] font-semibold bg-darks text-white dark:text-second">
                                                 BETA
                                             </span>
                                         </div>
@@ -295,7 +296,7 @@ function CreatorDashboard() {
                             <motion.div variants={listContainer} initial="hidden" animate="show" className="grid grid-cols-3 gap-4 w-full">
                                 {statCards.map((card) => (
                                     <motion.div key={card.label} variants={listItem} className="min-w-0">
-                                        <div className="relative overflow-hidden bg-white border border-second rounded-xl shadow-sm p-3 sm:p-4 min-w-0">
+                                        <div className="relative overflow-hidden bg-white dark:bg-second border border-second rounded-xl shadow-sm p-3 sm:p-4 min-w-0">
                                             <div className={"absolute -right-3 -top-3 h-16 w-16 rounded-full " + card.blobClass} />
                                             <div className="relative flex items-start justify-between gap-2">
                                                 <div className="min-w-0 ml-1">
@@ -325,25 +326,25 @@ function CreatorDashboard() {
                                                 title="Responden per Form"
                                                 subtitle="Jumlah responden tiap formulir."
                                                 data={barData}
-                                                barColor={colors.done}
+                                                barColor={c.done}
                                                 onBarClick={goToForm}
                                             />
                                         ) : (
                                             <MiniDistributionChart
                                                 data={barData}
-                                                barColor={colors.done}
+                                                barColor={c.done}
                                                 onBarClick={goToForm}
                                             />
                                         )
                                     ) : (
-                                        <div className="bg-white border border-second rounded-xl shadow-sm p-6 flex items-center justify-center h-[260px]">
+                                        <div className="bg-white dark:bg-second border border-second rounded-xl shadow-sm p-6 flex items-center justify-center h-[260px]">
                                             <p className="text-sm text-tinted">Belum ada submission untuk ditampilkan.</p>
                                         </div>
                                     )}
                                 </motion.div>
 
                                 <motion.div
-                                    className="min-w-0 bg-white border border-second rounded-xl shadow-sm p-6"
+                                    className="min-w-0 bg-white dark:bg-second border border-second rounded-xl shadow-sm p-6"
                                     initial={{ opacity: 0, y: 10 }}
                                     animate={{ opacity: 1, y: 0 }}
                                     transition={{ duration: 0.4, ease: easeOutExpo, delay: 0.15 }}

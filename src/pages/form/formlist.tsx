@@ -102,10 +102,10 @@ function FormList() {
                                     title={isRagu ? `Soal ${index + 1} ditandai ragu-ragu` : `Ke soal ${index + 1}`}
                                     className={`relative aspect-square w-full h-full p-3 rounded-xl flex items-center justify-center text-xl lg:text-4xl font-medium cursor-pointer transition-all duration-300 active:scale-[0.95]
                                         ${isCurrent
-                                            ? "ring-2 ring-darks ring-offset-3 bg-white/30 text-darks shadow-lg shadow-darks/10"
+                                            ? "ring-2 ring-darks ring-offset-3 bg-white dark:bg-second text-darks shadow-lg shadow-darks/10"
                                             : isAnsweredQuestion
                                                 ? "bg-done/30 text-done hover:shadow-lg hover:shadow-done/20"
-                                                : "bg-white text-tinted border border-second hover:shadow-lg hover:shadow-darks/5"
+                                                : "bg-white dark:bg-second text-tinted border border-second hover:shadow-lg hover:shadow-darks/5"
                                         }
                                         ${isRagu && !isCurrent ? "ring-1 ring-warning/80" : ""}
                                     `}
@@ -143,10 +143,10 @@ function FormList() {
                                     transition={{ duration: 0.3, ease: easeOutExpo, delay: Math.min(index * 40, 300) / 1000 }}
                                     className={`relative w-full p-4 rounded-xl flex flex-col gap-1 text-left cursor-pointer transition-all duration-300 active:scale-[0.97]
                                         ${isCurrent
-                                            ? "ring-2 ring-darks ring-offset-3 bg-white/30 text-darks shadow-lg shadow-darks/10"
+                                            ? "ring-2 ring-darks ring-offset-3 bg-white dark:bg-second text-darks shadow-lg shadow-darks/10"
                                             : isComplete
                                                 ? "bg-done/30 text-done hover:shadow-lg hover:shadow-done/20"
-                                                : "bg-white text-tinted border border-second hover:shadow-lg hover:shadow-darks/5"
+                                                : "bg-white dark:bg-second text-tinted border border-second hover:shadow-lg hover:shadow-darks/5"
                                         }
                                     `}
                                 >
@@ -173,7 +173,7 @@ function FormList() {
 
                 <button
                     onClick={() => backToForm(current)}
-                    className="hidden lg:block btn w-fit px-5 mx-auto h-14 min-h-0 bg-darks text-lg text-white rounded-full hover:opacity-90"
+                    className="hidden lg:block btn w-fit px-5 mx-auto h-14 min-h-0 bg-darks text-lg text-white dark:text-second rounded-full hover:opacity-90"
                 >
                     Kembali ke {isStandard ? "bagian" : "soal"}
                 </button>
@@ -184,7 +184,7 @@ function FormList() {
                     <div className="w-full max-w-3xl">
                         <button
                             onClick={() => backToForm(current)}
-                            className="btn flex w-auto p-6 h-16 mb-3 min-h-0 bg-darks text-lg text-white hover:opacity-90 rounded-full mx-auto items-center justify-center"
+                            className="btn flex w-auto p-6 h-16 mb-3 min-h-0 bg-darks text-lg text-white dark:text-second hover:opacity-90 rounded-full mx-auto items-center justify-center"
                         >
                             Kembali ke {isStandard ? "bagian" : "soal"}
                         </button>

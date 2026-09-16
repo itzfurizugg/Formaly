@@ -467,7 +467,7 @@ function FormEdit() {
         })
     }
 
-    const inputCls = "input w-full bg-white text-xl lg:text-3xl h-auto p-2 border-second focus:border-done focus:outline-none transition-colors"
+    const inputCls = "input w-full bg-white dark:bg-second text-xl lg:text-3xl h-auto p-2 border-second focus:border-done focus:outline-none transition-colors"
     const inputWithVal = "input w-full bg-base text-sm lg:text-xl border-second focus:border-done focus:outline-none transition-colors"
 
     return (
@@ -486,8 +486,8 @@ function FormEdit() {
                         {/* Tabs sticky di atas; yang ikut scroll cuma kolom kiri.
                         Border transparan bawah dipakai untuk mencegah margin-bottom FormTabs
                         collapse keluar dari box sticky, sehingga strip 24px di bawah pill ikut
-                        dilapisi bg-second dan shadow card tidak bocor saat lewat di bawahnya. */}
-                        <div className="lg:sticky lg:top-0 lg:z-30 lg:bg-second lg:pt-1 bg-base-300 w-full">
+                        dilapisi bg-white dark:bg-second dan shadow card tidak bocor saat lewat di bawahnya. */}
+                        <div className="lg:sticky lg:top-0 lg:z-30 lg:bg-white dark:bg-second lg:pt-1 bg-base-300 w-full">
                             <FormTabs id={id} active="detail" />
                         </div>
 
@@ -498,7 +498,7 @@ function FormEdit() {
                             {/* Kolom kiri: Detail Form + Pengaturan Form ditumpuk */}
                             <div className="contents lg:block lg:col-span-7 lg:space-y-6">
                                 {/* 1. Detail Form */}
-                                <div className="order-1 lg:order-1 bg-white border border-second p-3 sm:p-4 lg:p-6 shadow-sm rounded-xl flex flex-col justify-between">
+                                <div className="order-1 lg:order-1 bg-white dark:bg-second border border-second p-3 sm:p-4 lg:p-6 shadow-sm rounded-xl flex flex-col justify-between">
                                     <form onSubmit={handleSaveAll} className="space-y-3">
                                         <div className="overflow-hidden rounded-lg border border-second">
                                             <FormHeader formId={id ?? ""} title={title} headerImage={headerImage} headerColor={headerColor} headerMedia={headerMedia} />
@@ -583,7 +583,7 @@ function FormEdit() {
                                 </div>
 
                                 {/* 3. Pengaturan Form */}
-                                <div className="order-4 lg:order-none bg-white border border-second p-3 sm:p-4 lg:p-6 shadow-sm rounded-xl flex flex-col justify-between">
+                                <div className="order-4 lg:order-none bg-white dark:bg-second border border-second p-3 sm:p-4 lg:p-6 shadow-sm rounded-xl flex flex-col justify-between">
                                     <div>
                                         <div className="flex items-center gap-2 mb-1 mt-2 ml-2">
                                             <h2 className="font-semibold text-darks text-lg">Pengaturan Form</h2>
@@ -615,7 +615,7 @@ function FormEdit() {
                                                             settings[row.key] ? "bg-done justify-end" : "bg-second dark:bg-base justify-start"
                                                         }`}
                                                     >
-                                                        <span className="bg-white w-4 h-4 rounded-full shadow-sm" />
+                                                        <span className="bg-base-content w-4 h-4 rounded-full shadow-sm" />
                                                     </button>
                                                 </div>
                                             ))}
@@ -628,7 +628,7 @@ function FormEdit() {
                             supaya Banner urut ke-2 (setelah Detail) dan Hapus di paling bawah. */}
                             <div className="contents lg:block lg:col-span-5 lg:space-y-6 lg:sticky lg:top-20 lg:self-start mr-1">
                                 {/* 2. Header (Tampilan Banner) */}
-                                <div className="order-2 lg:order-none bg-white border border-second p-3 shadow-sm rounded-xl">
+                                <div className="order-2 lg:order-none bg-white dark:bg-second border border-second p-3 shadow-sm rounded-xl">
                                     <div>
                                         <div className="flex items-center gap-2 mb-1 mt-2 ml-2">
                                             <h2 className="font-semibold text-darks text-lg">Tampilan Banner</h2>
@@ -657,7 +657,7 @@ function FormEdit() {
                                                         onClick={() => setHeaderColor(color)}
                                                         style={{ backgroundColor: color }}
                                                         className={`h-8 w-8 rounded-full transition-all duration-150 hover:scale-110 ${headerColor.toLowerCase() === color.toLowerCase()
-                                                            ? "ring-2 ring-darks ring-offset-2 ring-offset-white"
+                                                            ? "ring-2 ring-darks ring-offset-2 ring-offset-white dark:ring-offset-second"
                                                             : ""
                                                             }`}
                                                     />
@@ -665,8 +665,8 @@ function FormEdit() {
 
                                                 <label
                                                     title="Warna kustom"
-                                                    className={`relative h-8 w-8 rounded-full overflow-hidden cursor-pointer border border-dashed border-second bg-base items-center justify-center hover:bg-second transition-colors ${headerColor && !PRESET_HEADER_COLORS.some((c) => c.toLowerCase() === headerColor.toLowerCase())
-                                                        ? "ring-2 ring-darks ring-offset-2 ring-offset-white"
+                                                    className={`relative h-8 w-8 rounded-full overflow-hidden cursor-pointer border border-dashed border-second bg-base items-center justify-center hover:bg-white dark:bg-second transition-colors ${headerColor && !PRESET_HEADER_COLORS.some((c) => c.toLowerCase() === headerColor.toLowerCase())
+                                                        ? "ring-2 ring-darks ring-offset-2 ring-offset-white dark:ring-offset-second"
                                                         : ""
                                                         } flex`}
                                                 >
@@ -684,7 +684,7 @@ function FormEdit() {
                                                     type="button"
                                                     onClick={() => setHeaderColor("")}
                                                     disabled={!headerColor}
-                                                    className="btn btn-sm rounded-full bg-base text-tinted border border-second hover:bg-white disabled:opacity-50 transition-all duration-200 text-xs py-1 h-8 min-h-0"
+                                                    className="btn btn-sm rounded-full bg-base text-tinted border border-second hover:bg-white dark:bg-second disabled:opacity-50 transition-all duration-200 text-xs py-1 h-8 min-h-0"
                                                 >
                                                     Reset
                                                 </button>
@@ -694,14 +694,14 @@ function FormEdit() {
                                 </div>
 
                                 {/* Tag */}
-                                <div className="order-3 lg:order-none bg-white shadow-sm border border-second p-5 rounded-xl">
+                                <div className="order-3 lg:order-none bg-white dark:bg-second shadow-sm border border-second p-5 rounded-xl">
                                     <div className="ml-2">
                                         <TagInput formId={id ?? ""} />
                                     </div>
                                 </div>
 
                                 {/* 4. Hapus Form */}
-                                <div className="order-5 lg:order-none bg-white border border-second p-3 shadow-sm rounded-xl flex flex-col justify-between">
+                                <div className="order-5 lg:order-none bg-white dark:bg-second border border-second p-3 shadow-sm rounded-xl flex flex-col justify-between">
                                     <div>
                                         <div className="flex items-center gap-2 mb-1 mt-2 ml-2">
                                             <h2 className="font-semibold text-wrong text-lg">Hapus Form</h2>
@@ -735,7 +735,7 @@ function FormEdit() {
                                 type="button"
                                 onClick={() => handleSaveAll()}
                                 disabled={saving || uploadingBanner || migrating}
-                                className="w-fit px-5 h-14 bg-darks mx-auto text-lg text-white font-bold rounded-full flex items-center justify-center gap-2 pointer-events-auto shadow-lg hover:opacity-90 transition-opacity disabled:opacity-60"
+                                className="w-fit px-5 h-14 bg-darks mx-auto text-lg text-white dark:text-second font-bold rounded-full flex items-center justify-center gap-2 pointer-events-auto shadow-lg hover:opacity-90 transition-opacity disabled:opacity-60"
                             >
                                 {saving || migrating ? <Spinner size={16} /> : uploadingBanner ? <Spinner size={16} /> : <Save className="h-4 w-4" />}
                                 {saving ? "Menyimpan..." : migrating ? "Mengubah mode..." : uploadingBanner ? "Mengupload banner..." : "Simpan Perubahan"}
@@ -763,7 +763,7 @@ function FormEdit() {
                             animate={{ opacity: 1, scale: 1, y: 0 }}
                             exit={{ opacity: 0, scale: 0.96, y: 12 }}
                             transition={{ duration: 0.25 }}
-                            className="relative bg-white border border-second rounded-2xl w-full max-w-sm p-5 shadow-xl"
+                            className="relative bg-white dark:bg-second border border-second rounded-2xl w-full max-w-sm p-5 shadow-xl"
                         >
                             <div className="items-start text-start">
                                 <h3 className="text-base font-bold text-darks text-xl">
@@ -779,7 +779,7 @@ function FormEdit() {
                                 <button
                                     onClick={() => setModeConfirm(null)}
                                     disabled={migrating}
-                                    className="btn flex-1 rounded-full bg-base text-darks border border-second hover:bg-second disabled:opacity-60"
+                                    className="btn flex-1 rounded-full bg-base text-darks border border-second hover:bg-white dark:bg-second disabled:opacity-60"
                                 >
                                     Batal
                                 </button>

@@ -189,7 +189,7 @@ function FormDescriptionPage() {
                         </div>
                     </div>
 
-                    <div className="w-full sm:max-w-3xl bg-base-300 md:bg-white sm:border sm:border-second p-4 pt-0 sm:p-8 sm:shadow-sm sm:rounded-lg relative mt-3 sm:mt-4">
+                    <div className="w-full sm:max-w-3xl bg-base-300 md:bg-white dark:bg-second sm:border sm:border-second p-4 pt-0 sm:p-8 sm:shadow-sm sm:rounded-lg relative mt-3 sm:mt-4">
                         <div className="border-b border-second pb-3 sm:pb-4">
                             <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold text-darks leading-snug sm:leading-tight">
                                 {form.title}
@@ -226,7 +226,7 @@ function FormDescriptionPage() {
                         <button
                             onClick={handleStartClick}
                             disabled={loading}
-                            className="hidden sm:flex w-full py-3.5 bg-darks text-white font-bold rounded-lg hover:opacity-90 transition-opacity items-center justify-center gap-2 text-xl disabled:opacity-60"
+                            className="hidden sm:flex w-full py-3.5 bg-darks text-white dark:text-second font-bold rounded-lg hover:opacity-90 transition-opacity items-center justify-center gap-2 text-xl disabled:opacity-60"
                         >
                             {loading ? (
                                 <Spinner size={16} />
@@ -247,7 +247,7 @@ function FormDescriptionPage() {
                                     beginAttempt()
                                 }}
                                 disabled={loading}
-                                className="w-auto p-6 h-16 bg-darks text-lg text-white font-bold rounded-full hover:opacity-90 transition-opvalidacity flex items-center justify-center gap-2 mb-4 mx-auto pointer-events-auto disabled:pointer-events-none"
+                                className="w-auto p-6 h-16 bg-darks text-lg text-white dark:text-second font-bold rounded-full hover:opacity-90 transition-opvalidacity flex items-center justify-center gap-2 mb-4 mx-auto pointer-events-auto disabled:pointer-events-none"
                             >
                                 {loading ? (
                                     <Spinner size={16} />

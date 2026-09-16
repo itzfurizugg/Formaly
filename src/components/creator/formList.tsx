@@ -49,7 +49,7 @@ function FormActionsMenu({ formId, deleting, open, onOpenChange, onNavigate, onD
         >
             <button
                 onClick={toggle}
-                className="btn btn-xs lg:btn-sm btn-circle bg-white text-darks hover:bg-second flex items-center justify-center"
+                className="btn btn-xs lg:btn-sm btn-circle bg-white dark:bg-second text-darks hover:bg-white dark:bg-second flex items-center justify-center"
                 aria-label="Aksi form"
                 aria-expanded={open}
             >
@@ -59,7 +59,7 @@ function FormActionsMenu({ formId, deleting, open, onOpenChange, onNavigate, onD
             <AnimatePresence>
                 {open && (
                     <motion.div
-                        className="absolute right-0 bottom-full mb-2 z-50 min-w-[12rem] rounded-2xl bg-white border border-second shadow-xl overflow-hidden origin-bottom-right"
+                        className="absolute right-0 bottom-full mb-2 z-50 min-w-[12rem] rounded-2xl bg-white dark:bg-second border border-second shadow-xl overflow-hidden origin-bottom-right"
                         initial={{ opacity: 0, y: 8, scale: 0.95 }}
                         animate={{ opacity: 1, y: 0, scale: 1 }}
                         exit={{ opacity: 0, scale: 0.95 }}
@@ -205,7 +205,7 @@ function FormList() {
                                 {/* h-full agar kartu melar mengikuti tinggi baris grid — semua kartu
                     satu baris jadi sama tinggi seperti tampilan di halaman Responden */}
                                 <div className="relative h-full">
-                                    <div className="card bg-white border border-second rounded-xl transition-all duration-300 hover:shadow-lg hover:shadow-darks/5 overflow-hidden h-full">
+                                    <div className="card bg-white dark:bg-second border border-second rounded-xl transition-all duration-300 hover:shadow-lg hover:shadow-darks/5 overflow-hidden h-full">
                                         <FormHeader formId={form.id} title={form.title} headerImage={form.header_image} headerColor={form.header_color} headerMedia={form.media_url} play={false} />
                                         <div className="card-body gap-3 p-4">
                                             <div className="flex items-start justify-between gap-3">
@@ -243,13 +243,13 @@ function FormList() {
                                             <div className="card-actions justify-end flex-wrap gap-2 items-center mt-auto pt-1">
                                                 <button
                                                     onClick={() => navigate(`/creator/forms/${form.id}/shared`)}
-                                                    className="btn btn-sm rounded-full bg-base text-darks border border-second hover:bg-second hover:border-second"
+                                                    className="btn btn-sm rounded-full bg-base text-darks border border-second hover:bg-white dark:bg-second hover:border-second"
                                                 >
                                                     <Share2 className="h-3.5 w-3.5" /> Bagikan
                                                 </button>
                                                 <button
                                                     onClick={() => navigate(`/creator/forms/${form.id}`)}
-                                                    className="btn btn-sm rounded-full bg-base text-darks border border-second hover:bg-second hover:border-second"
+                                                    className="btn btn-sm rounded-full bg-base text-darks border border-second hover:bg-white dark:bg-second hover:border-second"
                                                 >
                                                     <Pencil className="h-3.5 w-3.5" /> Edit
                                                 </button>

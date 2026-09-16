@@ -207,7 +207,7 @@ function SubmissionDetail() {
                         </div>
 
                         {info && info.total_score != null && (
-                            <div className="bg-white border border-second p-5 shadow-sm rounded-xl mb-6">
+                            <div className="bg-white dark:bg-second border border-second p-5 shadow-sm rounded-xl mb-6">
                                 <div className="flex items-center justify-between gap-6">
                                     <div className="flex-1">
                                         <div className="flex justify-between">
@@ -265,7 +265,7 @@ function SubmissionDetail() {
                                         animate={{ opacity: 1, y: 0 }}
                                         transition={{ duration: 0.35, ease: easeOutExpo, delay: Math.min(idx * 0.06, 0.4) }}
                                     >
-                                        <div className="bg-white border border-second p-5 shadow-sm rounded-xl transition-colors hover:bg-base-200">
+                                        <div className="bg-white dark:bg-second border border-second p-5 shadow-sm rounded-xl transition-colors hover:bg-base-200">
                                             <div className="flex items-center gap-2 flex-wrap mb-1">
                                                 <span className="text-sm font-bold text-darks">Soal {idx + 1}</span>
                                                 <span className="badge badge-ghost text-tinted rounded-full text-xs">{typeLabel(a.question?.question_type || "")}</span>

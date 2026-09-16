@@ -9,7 +9,7 @@ import { exportFormXlsx } from "../../lib/exportForm"
 import { richTextToPlain } from "../../lib/richtext"
 import ModalPortal from "../../components/modalPortal"
 import { modalBackdrop, modalPanel } from "../../lib/motion"
-import { colors } from "../../lib/colorbase"
+import { useThemeColors } from "../../lib/theme-context"
 import { getOptionColor } from "../../lib/optionColors"
 import { DonutChart, MiniStackedBarChart } from "../../components/charts"
 import { Bar, BarChart, ResponsiveContainer, Tooltip, XAxis, YAxis, type TooltipContentProps } from "recharts"
@@ -106,10 +106,10 @@ interface ActiveQuestionFilter {
  * Tanpa nilai → bar abu netral; sisanya diisi warna kedua. */
 function SplitProgress({ valueA, valueB, colorA, colorB }: { valueA: number; valueB: number; colorA: string; colorB: string }) {
     const total = valueA + valueB
-    if (total <= 0) return <div className="h-2 w-full rounded-full bg-second mt-1.5" />
+    if (total <= 0) return <div className="h-2 w-full rounded-full bg-white dark:bg-second mt-1.5" />
     const pctA = (valueA / total) * 100
     return (
-        <div className="h-2 w-full rounded-full overflow-hidden bg-second flex mt-1.5">
+        <div className="h-2 w-full rounded-full overflow-hidden bg-white dark:bg-second flex mt-1.5">
             <div className="h-full" style={{ width: `${pctA}%`, background: colorA }} />
             <div className="h-full" style={{ width: `${100 - pctA}%`, background: colorB }} />
         </div>
@@ -121,6 +121,7 @@ function Submissions() {
     const navigate = useNavigate()
     const { user } = useAuth()
     const isLg = useIsLg()
+    const c = useThemeColors()
 
     const [submissions, setSubmissions] = useState<Submission[]>([])
     const [loading, setLoading] = useState(true)
@@ -481,7 +482,7 @@ function Submissions() {
         const row = payload[0].payload as StackBarDatum
         const title = row.soal_text ? `${label} - ${row.soal_text}` : String(label)
         return (
-            <div style={{ background: "white", border: `1px solid ${colors.second}`, borderRadius: 12, padding: "8px 12px", fontSize: 12, maxWidth: 320 }}>
+            <div style={{ background: c.second, border: `1px solid ${c.second}`, borderRadius: 12, padding: "8px 12px", fontSize: 12, maxWidth: 320 }}>
                 <p className="font-medium text-darks">{title}</p>
                 {barSeries.map((s) => {
                     const count = Number(row[s.key]) || 0
@@ -507,19 +508,19 @@ function Submissions() {
         const row = payload[0].payload as PerQuestionStat
         const title = row.soal_text ? `${label} - ${row.soal_text}` : String(label)
         return (
-            <div style={{ background: "white", border: `1px solid ${colors.second}`, borderRadius: 12, padding: "8px 12px", fontSize: 12, maxWidth: 320 }}>
+            <div style={{ background: c.second, border: `1px solid ${c.second}`, borderRadius: 12, padding: "8px 12px", fontSize: 12, maxWidth: 320 }}>
                 <p className="font-medium text-darks">{title}</p>
                 <p className="flex items-center gap-1.5 text-tinted mt-1">
-                    <span className="h-2.5 w-2.5 rounded-full shrink-0" style={{ background: colors.pass }} />
+                    <span className="h-2.5 w-2.5 rounded-full shrink-0" style={{ background: c.pass }} />
                     Benar: <span className="font-medium text-darks">{row.benar}</span> responden
                 </p>
                 <p className="flex items-center gap-1.5 text-tinted mt-1">
-                    <span className="h-2.5 w-2.5 rounded-full shrink-0" style={{ background: colors.wrong }} />
+                    <span className="h-2.5 w-2.5 rounded-full shrink-0" style={{ background: c.wrong }} />
                     Salah: <span className="font-medium text-darks">{row.salah}</span> responden
                 </p>
                 {row.kosong > 0 && (
                     <p className="flex items-center gap-1.5 text-tinted mt-1">
-                        <span className="h-2.5 w-2.5 rounded-full shrink-0" style={{ background: colors.tinted }} />
+                        <span className="h-2.5 w-2.5 rounded-full shrink-0" style={{ background: c.tinted }} />
                         Kosong: <span className="font-medium text-darks">{row.kosong}</span> responden
                     </p>
                 )}
@@ -590,7 +591,7 @@ function Submissions() {
                                 {/* Kolom Kiri: Stats + Donut (3/12) */}
                                 <div className="lg:col-span-3 flex flex-col gap-4">
                                     {/* Mobile/tablet split view: satu kartu */}
-                                    <div className="lg:hidden bg-white border border-second p-4 shadow-sm rounded-xl grid grid-cols-[1fr_1.35fr] gap-3">
+                                    <div className="lg:hidden bg-white dark:bg-second border border-second p-4 shadow-sm rounded-xl grid grid-cols-[1fr_1.35fr] gap-3">
                                         <div className="flex flex-col items-center justify-center text-center border-r border-dashed border-second pr-1">
                                             <p className="text-xs font-semibold text-darks">Total Responded</p>
                                             <p className="text-5xl font-bold text-darks leading-none mt-2">{submissions.length}</p>
@@ -601,33 +602,33 @@ function Submissions() {
                                                 <div className="flex items-baseline justify-between gap-2">
                                                     <p className="text-[10px] font-medium text-tinted truncate">Rata-rata Benar vs Salah</p>
                                                     <p className="text-[10px] text-tinted whitespace-nowrap">
-                                                        <span className="inline-block h-1.5 w-1.5 rounded-full align-middle mr-0.5" style={{ background: colors.pass }} />
+                                                        <span className="inline-block h-1.5 w-1.5 rounded-full align-middle mr-0.5" style={{ background: c.pass }} />
                                                         {avgCorrect}
                                                         <span className="mx-1">·</span>
-                                                        <span className="inline-block h-1.5 w-1.5 rounded-full align-middle mr-0.5" style={{ background: colors.wrong }} />
+                                                        <span className="inline-block h-1.5 w-1.5 rounded-full align-middle mr-0.5" style={{ background: c.wrong }} />
                                                         {avgWrong}
                                                     </p>
                                                 </div>
-                                                <SplitProgress valueA={avgCorrect} valueB={avgWrong} colorA={colors.pass} colorB={colors.wrong} />
+                                                <SplitProgress valueA={avgCorrect} valueB={avgWrong} colorA={c.pass} colorB={c.wrong} />
                                             </div>
                                             <div className="min-w-0">
                                                 <div className="flex items-baseline justify-between gap-2">
                                                     <p className="text-[10px] font-medium text-tinted truncate">Total Benar vs Salah</p>
                                                     <p className="text-[10px] text-tinted whitespace-nowrap">
-                                                        <span className="inline-block h-1.5 w-1.5 rounded-full align-middle mr-0.5" style={{ background: colors.pass }} />
+                                                        <span className="inline-block h-1.5 w-1.5 rounded-full align-middle mr-0.5" style={{ background: c.pass }} />
                                                         {totalCorrect}
                                                         <span className="mx-1">·</span>
-                                                        <span className="inline-block h-1.5 w-1.5 rounded-full align-middle mr-0.5" style={{ background: colors.wrong }} />
+                                                        <span className="inline-block h-1.5 w-1.5 rounded-full align-middle mr-0.5" style={{ background: c.wrong }} />
                                                         {totalWrong}
                                                     </p>
                                                 </div>
-                                                <SplitProgress valueA={totalCorrect} valueB={totalWrong} colorA={colors.pass} colorB={colors.wrong} />
+                                                <SplitProgress valueA={totalCorrect} valueB={totalWrong} colorA={c.pass} colorB={c.wrong} />
                                             </div>
                                         </div>
                                     </div>
 
                                     {/* Desktop: satu kartu gabung stats + donut (lg ke atas) */}
-                                    <div className="hidden lg:flex flex-col bg-white border border-second p-3 shadow-sm rounded-xl h-full">
+                                    <div className="hidden lg:flex flex-col bg-white dark:bg-second border border-second p-3 shadow-sm rounded-xl h-full">
                                         {/* Total Responded */}
                                         <div className="flex flex-col items-start justify-center text-center pb-3 border-b border-dashed border-second">
                                             <p className="text-[10px] font-bold uppercase tracking-wider text-tinted ml-2 mt-2">Total Responded</p>
@@ -641,7 +642,7 @@ function Submissions() {
                                                 <p className="text-[10px] font-bold uppercase tracking-wider text-tinted truncate">Rata-rata Benar vs Salah</p>
                                                 <p className="text-[10px] font-semibold text-darks bg-base border border-second px-2 py-0.5 rounded-lg whitespace-nowrap">
                                                     <span className="text-done">{avgCorrect} B</span>
-                                                    <span className="mx-1 text-second">·</span>
+                                                    <span className="mx-1 text-white dark:text-second">·</span>
                                                     <span className="text-wrong">{avgWrong} S</span>
                                                 </p>
                                             </div>
@@ -651,8 +652,8 @@ function Submissions() {
                                                     showLegend={false}
                                                     height={110}
                                                     data={[
-                                                        { name: "Rata-rata Benar", value: avgCorrect, color: colors.pass },
-                                                        { name: "Rata-rata Salah", value: avgWrong, color: colors.wrong },
+                                                        { name: "Rata-rata Benar", value: avgCorrect, color: c.pass },
+                                                        { name: "Rata-rata Salah", value: avgWrong, color: c.wrong },
                                                     ]}
                                                 />
                                             </div>
@@ -664,7 +665,7 @@ function Submissions() {
                                                 <p className="text-[10px] font-bold uppercase tracking-wider text-tinted truncate">Total Benar vs Salah</p>
                                                 <p className="text-[10px] font-semibold text-darks bg-base border border-second px-2 py-0.5 rounded-lg whitespace-nowrap">
                                                     <span className="text-done">{totalCorrect} B</span>
-                                                    <span className="mx-1 text-second">·</span>
+                                                    <span className="mx-1 text-white dark:text-second">·</span>
                                                     <span className="text-wrong">{totalWrong} S</span>
                                                 </p>
                                             </div>
@@ -674,8 +675,8 @@ function Submissions() {
                                                     showLegend={false}
                                                     height={110}
                                                     data={[
-                                                        { name: "Benar", value: totalCorrect, color: colors.pass },
-                                                        { name: "Salah", value: totalWrong, color: colors.wrong },
+                                                        { name: "Benar", value: totalCorrect, color: c.pass },
+                                                        { name: "Salah", value: totalWrong, color: c.wrong },
                                                     ]}
                                                 />
                                             </div>
@@ -685,7 +686,7 @@ function Submissions() {
 
                                 {/* Kolom Kanan: Detail Charts (9/12) */}
                                 {(perQuestionStats.length > 0 || barData.length > 0) && (
-                                    <div className="lg:col-span-9 bg-white border border-second p-3.5 shadow-sm rounded-xl flex flex-col">
+                                    <div className="lg:col-span-9 bg-white dark:bg-second border border-second p-3.5 shadow-sm rounded-xl flex flex-col">
                                         <div className="flex items-start justify-between gap-3 flex-wrap mb-4 shrink-0">
                                             <div>
                                                 <p className="font-semibold text-darks mb-0.5">
@@ -700,14 +701,14 @@ function Submissions() {
                                             <div className="flex items-center gap-1 p-1 bg-base border border-second rounded-full shrink-0">
                                                 <button
                                                     onClick={() => setChartView("distribusi")}
-                                                    className={`px-3.5 py-1.5 text-xs font-semibold rounded-full transition-all ${chartView === "distribusi" ? "bg-darks text-white shadow-sm" : "text-tinted hover:text-darks"
+                                                    className={`px-3.5 py-1.5 text-xs font-semibold rounded-full transition-all ${chartView === "distribusi" ? "bg-darks text-white dark:text-second shadow-sm" : "text-tinted hover:text-darks"
                                                         }`}
                                                 >
                                                     Distribusi
                                                 </button>
                                                 <button
                                                     onClick={() => setChartView("statistik")}
-                                                    className={`px-3.5 py-1.5 text-xs font-semibold rounded-full transition-all ${chartView === "statistik" ? "bg-darks text-white shadow-sm" : "text-tinted hover:text-darks"
+                                                    className={`px-3.5 py-1.5 text-xs font-semibold rounded-full transition-all ${chartView === "statistik" ? "bg-darks text-white dark:text-second shadow-sm" : "text-tinted hover:text-darks"
                                                         }`}
                                                 >
                                                     Statistik
@@ -723,27 +724,27 @@ function Submissions() {
                                                             <div className="h-full" style={{ width: `max(100%, ${Math.max(1, perQuestionStats.length) * 64}px)` }}>
                                                                 <ResponsiveContainer width="100%" height="100%" debounce={100}>
                                                                     <BarChart data={perQuestionStats} margin={{ top: 8, right: 16, left: -14, bottom: 0 }}>
-                                                                        <XAxis dataKey="name" tick={{ fontSize: 11, fill: colors.tinted }} axisLine={false} tickLine={false} interval={0} />
-                                                                        <YAxis tick={{ fontSize: 11, fill: colors.tinted }} axisLine={false} tickLine={false} allowDecimals={false} />
-                                                                        <Tooltip cursor={{ fill: colors.second }} content={renderPerQuestionTooltip} />
-                                                                        <Bar dataKey="benar" stackId="q" name="Benar" fill={colors.pass} />
-                                                                        <Bar dataKey="salah" stackId="q" name="Salah" fill={colors.wrong} />
-                                                                        <Bar dataKey="kosong" stackId="q" name="Kosong" fill={colors.tinted} radius={[4, 4, 0, 0]} />
+                                                                        <XAxis dataKey="name" tick={{ fontSize: 11, fill: c.tinted }} axisLine={false} tickLine={false} interval={0} />
+                                                                        <YAxis tick={{ fontSize: 11, fill: c.tinted }} axisLine={false} tickLine={false} allowDecimals={false} />
+                                                                        <Tooltip cursor={{ fill: c.second }} content={renderPerQuestionTooltip} />
+                                                                        <Bar dataKey="benar" stackId="q" name="Benar" fill={c.pass} />
+                                                                        <Bar dataKey="salah" stackId="q" name="Salah" fill={c.wrong} />
+                                                                        <Bar dataKey="kosong" stackId="q" name="Kosong" fill={c.tinted} radius={[4, 4, 0, 0]} />
                                                                     </BarChart>
                                                                 </ResponsiveContainer>
                                                             </div>
                                                         </div>
                                                         <div className="mt-3 flex flex-wrap gap-x-4 gap-y-1.5 shrink-0">
                                                             <span className="inline-flex items-center gap-1.5 text-xs text-tinted">
-                                                                <span className="h-2.5 w-2.5 rounded-full shrink-0" style={{ background: colors.pass }} />
+                                                                <span className="h-2.5 w-2.5 rounded-full shrink-0" style={{ background: c.pass }} />
                                                                 Benar
                                                             </span>
                                                             <span className="inline-flex items-center gap-1.5 text-xs text-tinted">
-                                                                <span className="h-2.5 w-2.5 rounded-full shrink-0" style={{ background: colors.wrong }} />
+                                                                <span className="h-2.5 w-2.5 rounded-full shrink-0" style={{ background: c.wrong }} />
                                                                 Salah
                                                             </span>
                                                             <span className="inline-flex items-center gap-1.5 text-xs text-tinted">
-                                                                <span className="h-2.5 w-2.5 rounded-full shrink-0" style={{ background: colors.tinted }} />
+                                                                <span className="h-2.5 w-2.5 rounded-full shrink-0" style={{ background: c.tinted }} />
                                                                 Kosong
                                                             </span>
                                                         </div>
@@ -752,9 +753,9 @@ function Submissions() {
                                                     <MiniStackedBarChart
                                                         data={perQuestionStats}
                                                         series={[
-                                                            { key: "benar", label: "Benar", color: colors.pass },
-                                                            { key: "salah", label: "Salah", color: colors.wrong },
-                                                            { key: "kosong", label: "Kosong", color: colors.tinted },
+                                                            { key: "benar", label: "Benar", color: c.pass },
+                                                            { key: "salah", label: "Salah", color: c.wrong },
+                                                            { key: "kosong", label: "Kosong", color: c.tinted },
                                                         ]}
                                                         tooltip={renderPerQuestionTooltip}
                                                     />
@@ -768,9 +769,9 @@ function Submissions() {
                                                             <div className="h-full" style={{ width: `max(100%, ${Math.max(1, barData.length) * 56}px)` }}>
                                                                 <ResponsiveContainer width="100%" height="100%" debounce={100}>
                                                                     <BarChart data={barData} margin={{ top: 8, right: 16, left: -14, bottom: 0 }}>
-                                                                        <XAxis dataKey="name" tick={{ fontSize: 11, fill: colors.tinted }} axisLine={false} tickLine={false} interval={0} />
-                                                                        <YAxis tick={{ fontSize: 11, fill: colors.tinted }} axisLine={false} tickLine={false} allowDecimals={false} />
-                                                                        <Tooltip cursor={{ fill: colors.second }} content={renderTooltip} />
+                                                                        <XAxis dataKey="name" tick={{ fontSize: 11, fill: c.tinted }} axisLine={false} tickLine={false} interval={0} />
+                                                                        <YAxis tick={{ fontSize: 11, fill: c.tinted }} axisLine={false} tickLine={false} allowDecimals={false} />
+                                                                        <Tooltip cursor={{ fill: c.second }} content={renderTooltip} />
                                                                         {barSeries.map((s) => (
                                                                             <Bar key={s.key} dataKey={s.key} stackId="opt" name={s.label} fill={s.color} />
                                                                         ))}
@@ -813,12 +814,12 @@ function Submissions() {
                                         <button
                                             type="button"
                                             onClick={() => setShowFilterPanel(true)}
-                                            className="btn h-10 min-h-0 rounded-full bg-base text-darks border border-second hover:bg-white hover:shadow-sm px-4 gap-2 shrink-0"
+                                            className="btn h-10 min-h-0 rounded-full bg-base text-darks border border-second hover:bg-white dark:bg-second hover:shadow-sm px-4 gap-2 shrink-0"
                                         >
                                             <ListFilter className="h-4 w-4" />
                                             <span className="hidden sm:block">Filter Tanggapan</span>
                                             {activeFilterCount > 0 && (
-                                                <span className="badge badge-sm rounded-full border-none bg-darks text-white px-1.5">
+                                                <span className="badge badge-sm rounded-full border-none bg-darks text-white dark:text-second px-1.5">
                                                     {activeFilterCount}
                                                 </span>
                                             )}
@@ -843,19 +844,19 @@ function Submissions() {
                                             value={searchQuery}
                                             onChange={(e) => setSearchQuery(e.target.value)}
                                             placeholder="Mulai Mencari"
-                                            className="input input-sm w-full pl-4 bg-white border-second rounded-lg text-sm h-10 focus:outline-none focus:border-darks/40 transition-colors"
+                                            className="input input-sm w-full pl-4 bg-white dark:bg-second border-second rounded-lg text-sm h-10 focus:outline-none focus:border-darks/40 transition-colors"
                                         />
                                     </div>
                                     {/* 
                                     <button
                                         type="button"
                                         onClick={() => setShowFilterPanel(true)}
-                                        className="btn h-10 min-h-0 rounded-full bg-base text-darks border border-second hover:bg-white hover:shadow-sm px-4 gap-2 shrink-0"
+                                        className="btn h-10 min-h-0 rounded-full bg-base text-darks border border-second hover:bg-white dark:bg-second hover:shadow-sm px-4 gap-2 shrink-0"
                                     >
                                         <ListFilter className="h-4 w-4" />
                                         Filter Tanggapan
                                         {activeFilterCount > 0 && (
-                                            <span className="badge badge-sm rounded-full border-none bg-darks text-white px-1.5">
+                                            <span className="badge badge-sm rounded-full border-none bg-darks text-white dark:text-second px-1.5">
                                                 {activeFilterCount}
                                             </span>
                                         )}
@@ -881,13 +882,13 @@ function Submissions() {
                                                 />
                                                 <motion.div
                                                     variants={modalPanel}
-                                                    className="relative bg-white border border-second rounded-2xl w-full max-w-lg p-5 sm:p-6 shadow-xl"
+                                                    className="relative bg-white dark:bg-second border border-second rounded-2xl w-full max-w-lg p-5 sm:p-6 shadow-xl"
                                                 >
                                                     <div className="flex items-center justify-between mb-4">
                                                         <div className="flex items-center gap-2.5">
                                                             <h3 className="text-base font-bold text-darks text-2xl">Filter Tanggapan</h3>
                                                             {activeFilterCount > 0 && (
-                                                                <span className="badge badge-sm rounded-full border-none bg-darks text-white px-2">{activeFilterCount}</span>
+                                                                <span className="badge badge-sm rounded-full border-none bg-darks text-white dark:text-second px-2">{activeFilterCount}</span>
                                                             )}
                                                         </div>
                                                         <button
@@ -968,8 +969,8 @@ function Submissions() {
                                                                         type="button"
                                                                         onClick={() => setSelectedOptionId(opt.id)}
                                                                         className={`px-3 py-1.5 flex items-start rounded-sm w-full text-xs border transition-colors ${selectedOptionId === opt.id
-                                                                            ? "bg-darks text-white border-darks"
-                                                                            : "bg-white text-darks border-second hover:bg-second"
+                                                                            ? "bg-darks text-white dark:text-second border-darks"
+                                                                            : "bg-white dark:bg-second text-darks border-second hover:bg-white dark:bg-second"
                                                                             }`}
                                                                     >
                                                                         {String.fromCharCode(65 + oIdx)}. {richTextToPlain(opt.option_text)}
@@ -995,7 +996,7 @@ function Submissions() {
                                                                 setShowFilterPanel(false)
                                                             }}
                                                             disabled={!hasActiveFilters && (!selectedQuestionId || !selectedOptionId)}
-                                                            className="btn btn-sm bg-darks text-white border-none rounded-full px-4 hover:opacity-90 transition-all duration-200 hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50 disabled:hover:scale-100 text-xs"
+                                                            className="btn btn-sm bg-darks text-white dark:text-second border-none rounded-full px-4 hover:opacity-90 transition-all duration-200 hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50 disabled:hover:scale-100 text-xs"
                                                         >
                                                             Terapkan
                                                         </button>
@@ -1069,19 +1070,19 @@ function Submissions() {
                                 )}
 
                                 {filteredSubmissions.length === 0 ? (
-                                    <div className="text-center py-16 bg-white border border-second shadow-sm rounded-xl">
+                                    <div className="text-center py-16 bg-white dark:bg-second border border-second shadow-sm rounded-xl">
                                         <p className="text-darks font-semibold">Tidak ada responden yang cocok dengan kriteria filter.</p>
                                         <p className="text-xs text-tinted mt-1">Coba ubah opsi jawaban atau reset filter di atas.</p>
                                         <button
                                             onClick={handleResetAllFilters}
-                                            className="btn btn-sm bg-darks text-white border-none rounded-full mt-4 px-4 hover:opacity-90"
+                                            className="btn btn-sm bg-darks text-white dark:text-second border-none rounded-full mt-4 px-4 hover:opacity-90"
                                         >
                                             Reset Filter
                                         </button>
                                     </div>
                                 ) : (
                                     filteredSubmissions.map((s) => (
-                                        <div key={s.id} className="bg-white border border-second p-5 shadow-sm rounded-xl">
+                                        <div key={s.id} className="bg-white dark:bg-second border border-second p-5 shadow-sm rounded-xl">
                                             <div className="flex items-start justify-between gap-2">
                                                 <div className="min-w-0">
                                                     <p className="font-semibold text-darks">{s.user?.name || "Pengguna"}</p>
@@ -1115,7 +1116,7 @@ function Submissions() {
                                                     <div className="flex items-center gap-1">
                                                         <button
                                                             onClick={() => navigate(`/creator/forms/${id}/submissions/${s.id}`)}
-                                                            className="btn btn-sm bg-base text-darks border border-second hover:bg-second"
+                                                            className="btn btn-sm bg-base text-darks border border-second hover:bg-white dark:bg-second"
                                                         >
                                                             <Eye className="h-3.5 w-3.5" /> <span className="hidden sm:block">Lihat</span>
                                                         </button>

@@ -49,9 +49,9 @@ function Register() {
 
     return (
         <div className="min-h-screen flex bg-base">
-            <div className="hidden lg:flex flex-1 flex-col relative overflow-hidden bg-darks text-white">
+            <div className="hidden lg:flex flex-1 flex-col relative overflow-hidden bg-darks text-white dark:text-second">
                 {/* Dekorasi lembut: blob gradasi di pojok panel */}
-                <span className="pointer-events-none absolute -top-32 -right-24 h-96 w-96 rounded-full bg-white/5 blur-2xl" />
+                <span className="pointer-events-none absolute -top-32 -right-24 h-96 w-96 rounded-full bg-white dark:bg-second blur-2xl" />
                 <span className="pointer-events-none absolute -bottom-40 -left-24 h-96 w-96 rounded-full bg-done/10 blur-2xl" />
 
                 <div className="flex flex-col h-full px-3.5 relative z-10 py-16">
@@ -62,10 +62,10 @@ function Register() {
 
                         <h1 className="text-4xl xl:text-5xl font-bold leading-tight">
                             Buat lebih mudah.
-                            <span className="block text-white/55 mt-2">Kerjakan dengan gampang.</span>
+                            <span className="block text-white dark:text-second mt-2">Kerjakan dengan gampang.</span>
                         </h1>
 
-                        <p className="text-white/60 text-lg mt-6 max-w-md leading-relaxed">
+                        <p className="text-white dark:text-second text-lg mt-6 max-w-md leading-relaxed">
                             Kelola formulir dan data dengan cepat, mudah, dan efisien.
                             Platform all-in-one untuk kebutuhan form kamu.
                         </p>
@@ -89,7 +89,7 @@ function Register() {
                         variants={fadeSlide}
                         initial="hidden"
                         animate="show"
-                        className="bg-white rounded-3xl lg:rounded-2xl border border-second p-4 lg:p-8 shadow-sm"
+                        className="bg-white dark:bg-second rounded-3xl lg:rounded-2xl border border-second p-4 lg:p-8 shadow-sm"
                     >
                         <h2 className="text-2xl font-bold text-darks">Daftar</h2>
                         <p className="text-sm text-tinted mt-1 mb-6">
@@ -185,7 +185,7 @@ function Register() {
                             </button>
                         </form>
 
-                        <Link to={`/login${nextQuery}`} className="btn bg-base text-darks border border-second hover:bg-second transition-colors w-full mt-2 rounded-full lg:rounded-xl">
+                        <Link to={`/login${nextQuery}`} className="btn bg-base text-darks border border-second hover:bg-white dark:bg-second transition-colors w-full mt-2 rounded-full lg:rounded-xl">
                             Sudah punya akun? Masuk
                         </Link>
                     </motion.div>

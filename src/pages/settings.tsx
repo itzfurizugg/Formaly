@@ -45,7 +45,7 @@ function SettingsPage() {
                     className="space-y-3"
                 >
                     {/* Preferensi Tampilan & Notifikasi */}
-                    <div className="bg-white dark:bg-second border border-second dark:border-white/10 rounded-2xl lg:rounded-xl overflow-hidden divide-y divide-second dark:divide-white/10">
+                    <div className="bg-white dark:bg-second border border-second dark:border-darks/15 rounded-2xl lg:rounded-xl overflow-hidden divide-y divide-second dark:divide-darks/15">
                         <div className="p-4 flex items-center justify-between">
                             <div className="flex items-center gap-3">
                                 <div className="w-9 h-9 rounded-full bg-base flex items-center justify-center shrink-0">
@@ -72,13 +72,13 @@ function SettingsPage() {
                                 className={`w-12 h-6 flex items-center rounded-full p-1 transition-colors ${theme === "dark" ? "bg-done justify-end" : "bg-second dark:bg-base justify-start"
                                     }`}
                             >
-                                <span className="bg-white w-4 h-4 rounded-full shadow-sm" />
+                                <span className="bg-base-content w-4 h-4 rounded-full shadow-sm" />
                             </button>
                         </div>
                     </div>
 
                     {/* Tentang & Legalitas */}
-                    <div className="bg-white dark:bg-second border border-second dark:border-white/10 rounded-2xl lg:rounded-xl overflow-hidden divide-y divide-second dark:divide-white/10">
+                    <div className="bg-white dark:bg-second border border-second dark:border-darks/15 rounded-2xl lg:rounded-xl overflow-hidden divide-y divide-second dark:divide-darks/15">
                         <button
                             onClick={() => navigate("/credit")}
                             className="w-full flex items-center gap-3 p-4 hover:bg-base/70 transition-colors text-left"
@@ -108,7 +108,7 @@ function SettingsPage() {
                     <button
                         onClick={handleLogout}
                         disabled={loggingOut}
-                        className="w-full flex items-center justify-center gap-2 p-5 bg-white dark:bg-second text-wrong hover:bg-wrong/10 border border-second dark:border-white/10 hover:border-wrong rounded-xl transition-colors font-semibold text-sm disabled:opacity-60"
+                        className="w-full flex items-center justify-center gap-2 p-5 bg-white dark:bg-second text-wrong hover:bg-wrong/10 border border-second dark:border-darks/15 hover:border-wrong rounded-xl transition-colors font-semibold text-sm disabled:opacity-60"
                     >
                         {loggingOut ? (
                             <Spinner size={16} />

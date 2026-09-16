@@ -57,7 +57,7 @@ function ForgotPassword() {
                         variants={fadeSlide}
                         initial="hidden"
                         animate="show"
-                        className="bg-white rounded-3xl lg:rounded-2xl border border-second p-8 shadow-sm"
+                        className="bg-white dark:bg-second rounded-3xl lg:rounded-2xl border border-second p-8 shadow-sm"
                     >
                         <BackButton to="/login" />
 
@@ -86,7 +86,7 @@ function ForgotPassword() {
                                 <button
                                     type="button"
                                     onClick={() => { setSent(false); setEmail("") }}
-                                    className="btn bg-base text-darks border border-second hover:bg-second transition-colors w-full rounded-full lg:rounded-xl"
+                                    className="btn bg-base text-darks border border-second hover:bg-white dark:bg-second transition-colors w-full rounded-full lg:rounded-xl"
                                 >
                                     Kirim ulang
                                 </button>
@@ -146,7 +146,7 @@ function ForgotPassword() {
                                     </button>
                                 </form>
 
-                                <Link to="/login" className="btn bg-base text-darks border border-second hover:bg-second transition-colors w-full mt-2 rounded-full lg:rounded-xl">
+                                <Link to="/login" className="btn bg-base text-darks border border-second hover:bg-white dark:bg-second transition-colors w-full mt-2 rounded-full lg:rounded-xl">
                                     Sudah ingat? Masuk
                                 </Link>
                             </motion.div>

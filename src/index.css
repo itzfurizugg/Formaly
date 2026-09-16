@@ -567,6 +567,12 @@ body::-webkit-scrollbar {
   .fml-glass-nav:hover {
     background: rgb(255 255 255 / 0.55);
   }
+  .fml-glass-nav--flat,
+  .fml-glass-nav--flat:hover,
+  .fml-glass-nav--flat--solid,
+  .fml-glass-nav--flat--solid:hover {
+    background: rgb(255 255 255 / 0.4);
+  }
   .fml-glass-pill--solid {
     background: linear-gradient(to bottom, rgb(255 255 255 / 0.92), rgb(255 255 255 / 0.78));
   }
@@ -577,33 +583,50 @@ body::-webkit-scrollbar {
     background: rgb(255 255 255 / 0.97);
   }
 
-  /* Liquid glass versi tema gelap */
-  [data-theme="dark"] .fml-glass-nav,
-  .dark .fml-glass-nav {
-    background: rgba(68, 68, 78, 0.7);
-  }
-  [data-theme="dark"] .fml-glass-nav:hover,
-  .dark .fml-glass-nav:hover {
-    background: rgba(68, 68, 78, 0.85);
-  }
-  [data-theme="dark"] .fml-glass-nav--solid,
-  .dark .fml-glass-nav--solid {
-    background: rgba(68, 68, 78, 0.95);
-  }
-  [data-theme="dark"] .fml-glass-nav--solid:hover,
-  .dark .fml-glass-nav--solid:hover {
-    background: rgba(68, 68, 78, 1);
-  }
+  /* Liquid glass versi tema gelap — efek highlight/glass DIMATIKAN:
+     ganti ke warna solid --fml-second (dari colorsDark) tanpa blur,
+     tanpa gradasi transparan. Elemen tetap kontras di atas kanvas gelap. */
   [data-theme="dark"] .fml-glass-pill,
-  .dark .fml-glass-pill {
-    background: linear-gradient(to bottom, rgba(68, 68, 78, 0.85), rgba(34, 40, 49, 0.85));
-  }
   [data-theme="dark"] .fml-glass-pill:hover,
-  .dark .fml-glass-pill:hover {
-    background: linear-gradient(to bottom, rgba(68, 68, 78, 0.95), rgba(34, 40, 49, 0.95));
-  }
   [data-theme="dark"] .fml-glass-pill--solid,
-  .dark .fml-glass-pill--solid {
-    background: linear-gradient(to bottom, rgba(68, 68, 78, 0.95), rgba(34, 40, 49, 0.9));
+  [data-theme="dark"] .fml-glass-nav,
+  [data-theme="dark"] .fml-glass-nav:hover,
+  [data-theme="dark"] .fml-glass-nav--solid,
+  [data-theme="dark"] .fml-glass-nav--solid:hover,
+  [data-theme="dark"] .fml-glass-nav--flat,
+  [data-theme="dark"] .fml-glass-nav--flat:hover,
+  [data-theme="dark"] .fml-glass-nav--flat--solid,
+  [data-theme="dark"] .fml-glass-nav--flat--solid:hover,
+  .dark .fml-glass-pill,
+  .dark .fml-glass-pill:hover,
+  .dark .fml-glass-pill--solid,
+  .dark .fml-glass-nav,
+  .dark .fml-glass-nav:hover,
+  .dark .fml-glass-nav--solid,
+  .dark .fml-glass-nav--solid:hover,
+  .dark .fml-glass-nav--flat,
+  .dark .fml-glass-nav--flat:hover,
+  .dark .fml-glass-nav--flat--solid,
+  .dark .fml-glass-nav--flat--solid:hover {
+    background: var(--fml-second);
+    background-image: none;
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+  }
+  /* hover: naikkan sedikit via lighten solid (tanpa efek glass) — hanya tombol creator */
+  [data-theme="dark"] .fml-glass-pill:hover,
+  [data-theme="dark"] .fml-glass-nav:hover,
+  [data-theme="dark"] .fml-glass-nav--solid:hover,
+  .dark .fml-glass-pill:hover,
+  .dark .fml-glass-nav:hover,
+  .dark .fml-glass-nav--solid:hover {
+    background: color-mix(in srgb, var(--fml-second) 85%, var(--fml-darks));
+  }
+  /* varian "flat" (dock utama): hover TIDAK berubah warna */
+  [data-theme="dark"] .fml-glass-nav--flat:hover,
+  [data-theme="dark"] .fml-glass-nav--flat--solid:hover,
+  .dark .fml-glass-nav--flat:hover,
+  .dark .fml-glass-nav--flat--solid:hover {
+    background: var(--fml-second);
   }
 }

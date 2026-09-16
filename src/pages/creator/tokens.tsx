@@ -198,7 +198,7 @@ function Tokens() {
                         </div>
 
                         {/* Saklar gerbang: peserta wajib memasukkan token sebelum mulai */}
-                        <div className="bg-white border border-second p-4 sm:p-5 shadow-sm rounded-xl mb-4 flex items-center justify-between gap-3">
+                        <div className="bg-white dark:bg-second border border-second p-4 sm:p-5 shadow-sm rounded-xl mb-4 flex items-center justify-between gap-3">
                             <div className="min-w-0">
                                 <p className="text-sm font-medium text-darks">Wajibkan token untuk mengerjakan</p>
                                 <p className="text-xs text-tinted mt-0.5">
@@ -230,7 +230,7 @@ function Tokens() {
                                     <div className="absolute inset-0 bg-darks/50" onClick={() => !saving && setShowCreate(false)} />
                                     <motion.div
                                         variants={modalPanel}
-                                        className="relative bg-white border border-second p-6 shadow-xl rounded-2xl w-full max-w-md space-y-4"
+                                        className="relative bg-white dark:bg-second border border-second p-6 shadow-xl rounded-2xl w-full max-w-md space-y-4"
                                     >
                                         <div className="flex items-center justify-between">
                                             <h2 className="text-base font-bold text-darks">Buat Token Baru</h2>
@@ -253,7 +253,7 @@ function Tokens() {
                                                 <button
                                                     type="button"
                                                     onClick={() => setTokenCode(generateCode())}
-                                                    className="btn bg-base text-darks border border-second hover:bg-second rounded-lg text-xs"
+                                                    className="btn bg-base text-darks border border-second hover:bg-white dark:bg-second rounded-lg text-xs"
                                                     >
                                                     Acak
                                                 </button>
@@ -287,7 +287,7 @@ function Tokens() {
                                                 type="button"
                                                 onClick={() => setShowCreate(false)}
                                                 disabled={saving}
-                                                className="btn flex-1 bg-base text-darks border border-second hover:bg-second rounded-full lg:rounded-xl text-xs"
+                                                className="btn flex-1 bg-base text-darks border border-second hover:bg-white dark:bg-second rounded-full lg:rounded-xl text-xs"
                                             >
                                                 Batal
                                             </button>
@@ -322,7 +322,7 @@ function Tokens() {
                                     animate={{ opacity: 1, y: 0 }}
                                     transition={{ duration: 0.35, ease: easeOutExpo, delay: Math.min(index * 0.06, 0.4) }}
                                     >
-                                <div className="bg-white border border-second p-5 shadow-sm rounded-2xl transition-colors hover:bg-base-200">
+                                <div className="bg-white dark:bg-second border border-second p-5 shadow-sm rounded-2xl transition-colors hover:bg-base-200">
                                     <div className="flex items-start justify-between gap-2">
                                         <div className="min-w-0">
                                             <div className="flex items-center gap-2 flex-wrap mb-1">

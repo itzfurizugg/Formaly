@@ -209,7 +209,7 @@ export default function UpgradeToCreator() {
                         variants={listItem}
                         initial="hidden"
                         animate="show"
-                        className="bg-white border border-second rounded-2xl lg:rounded-xl p-6 shadow-sm flex flex-col items-center text-center gap-3"
+                        className="bg-white dark:bg-second border border-second rounded-2xl lg:rounded-xl p-6 shadow-sm flex flex-col items-center text-center gap-3"
                     >
                         <CheckCircle2 className="h-10 w-10 text-done" />
                         <p className="font-semibold text-darks">Kamu sudah berstatus {role === "admin" ? "Admin" : "Creator"}.</p>
@@ -239,7 +239,7 @@ export default function UpgradeToCreator() {
                                 variants={fadeSlide}
                                 initial="hidden"
                                 animate="show"
-                                className="bg-white border border-second rounded-2xl lg:rounded-xl p-6 shadow-sm"
+                                className="bg-white dark:bg-second border border-second rounded-2xl lg:rounded-xl p-6 shadow-sm"
                             >
                                 <h2 className="font-semibold text-darks mb-2 text-lg">Cek persyaratan akun</h2>
                                 {checkingAge ? (
@@ -300,7 +300,7 @@ export default function UpgradeToCreator() {
                                 variants={fadeSlide}
                                 initial="hidden"
                                 animate="show"
-                                className="bg-white dark:bg-second border border-second dark:border-white/10 rounded-2xl sm:rounded-3xl p-5 sm:p-7 shadow-sm"
+                                className="bg-white dark:bg-second border border-second dark:border-darks/15 rounded-2xl sm:rounded-3xl p-5 sm:p-7 shadow-sm"
                             >
                                 <div className="flex flex-row items-start gap-3.5 sm:gap-4 mb-6 text-left">
                                     <div className="w-11 h-11 sm:w-12 sm:h-12 shrink-0 rounded-xl bg-done/10 dark:bg-done/20 text-done flex items-center justify-center">
@@ -312,14 +312,14 @@ export default function UpgradeToCreator() {
                                             {otpSent ? (
                                                 <>
                                                     Masukkan 6 digit kode verifikasi yang telah dikirim ke{" "}
-                                                    <span className="inline-flex items-center gap-1 font-semibold text-darks bg-base dark:bg-base/70 px-2 py-0.5 rounded-full border border-second dark:border-white/10 text-xs">
+                                                    <span className="inline-flex items-center gap-1 font-semibold text-darks bg-base dark:bg-base/70 px-2 py-0.5 rounded-full border border-second dark:border-darks/15 text-xs">
                                                         {email || "email kamu"}
                                                     </span>
                                                 </>
                                             ) : (
                                                 <>
                                                     Kami akan mengirim kode OTP ke{" "}
-                                                    <span className="inline-flex items-center gap-1 font-semibold text-darks bg-base dark:bg-base/70 px-2 py-0.5 rounded-full border border-second dark:border-white/10 text-xs">
+                                                    <span className="inline-flex items-center gap-1 font-semibold text-darks bg-base dark:bg-base/70 px-2 py-0.5 rounded-full border border-second dark:border-darks/15 text-xs">
                                                         {email || "email kamu"}
                                                     </span>{" "}
                                                     untuk konfirmasi akun.
@@ -359,7 +359,7 @@ export default function UpgradeToCreator() {
                                                     className={`w-11 sm:w-13 h-13 sm:h-14 text-center font-mono text-xl sm:text-2xl font-bold rounded-xl sm:rounded-2xl border-2 transition-all outline-none ${
                                                         digit
                                                             ? "bg-done/5 dark:bg-done/10 border-done text-darks shadow-sm"
-                                                            : "bg-base dark:bg-base/60 border-second dark:border-white/10 text-darks hover:border-tinted/50 focus:border-done focus:ring-4 focus:ring-done/15"
+                                                            : "bg-base dark:bg-base/60 border-second dark:border-darks/15 text-darks hover:border-tinted/50 focus:border-done focus:ring-4 focus:ring-done/15"
                                                     }`}
                                                     value={digit}
                                                     onChange={(e) => handleOtpChange(i, e.target.value)}
@@ -380,7 +380,7 @@ export default function UpgradeToCreator() {
 
                                             <div className="flex items-center justify-center pt-1">
                                                 {resendCountdown > 0 ? (
-                                                    <span className="inline-flex items-center gap-1.5 text-xs text-tinted bg-base dark:bg-base/70 border border-second dark:border-white/10 px-3.5 py-1.5 rounded-full font-medium">
+                                                    <span className="inline-flex items-center gap-1.5 text-xs text-tinted bg-base dark:bg-base/70 border border-second dark:border-darks/15 px-3.5 py-1.5 rounded-full font-medium">
                                                         <Clock className="h-3.5 w-3.5" />
                                                         Kirim ulang dalam <span className="font-semibold text-darks font-mono">{resendCountdown}s</span>
                                                     </span>
@@ -412,7 +412,7 @@ export default function UpgradeToCreator() {
                                 variants={fadeSlide}
                                 initial="hidden"
                                 animate="show"
-                                className="bg-white border border-second rounded-2xl lg:rounded-xl p-6 shadow-sm flex flex-col items-center text-center gap-3"
+                                className="bg-white dark:bg-second border border-second rounded-2xl lg:rounded-xl p-6 shadow-sm flex flex-col items-center text-center gap-3"
                             >
                                 <CheckCircle2 className="h-12 w-12 text-done" />
                                 <h2 className="text-xl font-bold text-darks">Selamat! Akun kamu kini Creator.</h2>

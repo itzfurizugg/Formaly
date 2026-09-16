@@ -20,7 +20,7 @@ export const colors = {
  */
 export const colorsDark = {
   base: "#222831",
-  second: "rgb(47, 47, 54)",
+  second: "rgb(44, 52, 63)",
   tinted: "#9AA3B5",
   darks: "#F1F2F4",
   done: "#3B9EFF",

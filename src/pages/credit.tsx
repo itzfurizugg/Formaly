@@ -54,7 +54,7 @@ function CreditPage() {
                     initial={{ opacity: 0, y: 16 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.45, ease: easeOutExpo }}
-                    className="bg-white border border-second rounded-2xl lg:rounded-xl mb-3 px-3.5 py-10 flex flex-col items-center text-center"
+                    className="bg-white dark:bg-second border border-second rounded-2xl lg:rounded-xl mb-3 px-3.5 py-10 flex flex-col items-center text-center"
                 >
                     <img src={logo} alt="Formaly" className="h-10 w-auto mb-5" />
                     <h1 className="text-3xl md:text-4xl font-display font-bold uppercase text-darks">
@@ -72,7 +72,7 @@ function CreditPage() {
                     variants={container}
                     initial="hidden"
                     animate="show"
-                    className="bg-white border border-second rounded-2xl lg:rounded-xl mb-3 p-5"
+                    className="bg-white dark:bg-second border border-second rounded-2xl lg:rounded-xl mb-3 p-5"
                 >
                     <div className="flex items-center gap-2.5 mb-4">
                         <div className="w-9 h-9 shrink-0 rounded-full bg-base flex items-center justify-center">
@@ -93,7 +93,7 @@ function CreditPage() {
                                 <div
                                     className={`w-14 h-14 shrink-0 rounded-full ${AVATAR_STYLE[i % AVATAR_STYLE.length]} flex items-center justify-center`}
                                 >
-                                    <span className="text-xl font-bold text-white">
+                                    <span className="text-xl font-bold text-white dark:text-second">
                                         {member.name.charAt(0).toUpperCase()}
                                     </span>
                                 </div>
@@ -109,7 +109,7 @@ function CreditPage() {
                     variants={container}
                     initial="hidden"
                     animate="show"
-                    className="bg-white border border-second rounded-2xl lg:rounded-xl mb-3 p-5"
+                    className="bg-white dark:bg-second border border-second rounded-2xl lg:rounded-xl mb-3 p-5"
                 >
                     <div className="flex items-center gap-2.5 mb-4">
                         <div className="w-9 h-9 shrink-0 rounded-full bg-base flex items-center justify-center">

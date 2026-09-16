@@ -168,7 +168,7 @@ function Otp() {
                         variants={fadeSlide}
                         initial="hidden"
                         animate="show"
-                        className="bg-white rounded-3xl lg:rounded-2xl border border-second p-4 lg:p-8 shadow-sm"
+                        className="bg-white dark:bg-second rounded-3xl lg:rounded-2xl border border-second p-4 lg:p-8 shadow-sm"
                     >
                         <BackButton to={`/login${nextQuery}`} />
                         <div className="flex items-center gap-2 mb-1">
@@ -265,7 +265,7 @@ function Otp() {
                             type="button"
                             onClick={handleResendOtp}
                             disabled={resendLoading || resendCountdown > 0 || !email}
-                            className="btn bg-base text-darks border border-second hover:bg-second transition-colors w-full mt-2 disabled:opacity-60 rounded-full lg:rounded-xl"
+                            className="btn bg-base text-darks border border-second hover:bg-white dark:bg-second transition-colors w-full mt-2 disabled:opacity-60 rounded-full lg:rounded-xl"
                         >
                             {resendLoading ? (
                                 <Spinner size={16} />

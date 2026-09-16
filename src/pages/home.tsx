@@ -172,7 +172,7 @@ function Home() {
                             initial={{ scale: 0.95, rotate: -2 }}
                             animate={{ scale: 1, rotate: 0 }}
                             transition={{ duration: 0.3 }}
-                            className="relative z-10 w-full max-w-[260px] sm:w-56 rounded-2xl bg-white border border-second/60 p-3 sm:p-3.5 shadow-xl shadow-darks/10 text-left shrink-0 sm:ml-6 sm:scale-115 lg:scale-120 lg:ml-30"
+                            className="relative z-10 w-full max-w-[260px] sm:w-56 rounded-2xl bg-white dark:bg-second border border-second/60 p-3 sm:p-3.5 shadow-xl shadow-darks/10 text-left shrink-0 sm:ml-6 sm:scale-115 lg:scale-120 lg:ml-30"
                         >
                             <div className="flex items-center gap-2.5 mb-3">
                                 <div className="w-7 h-7 rounded-lg bg-done/10 text-done flex items-center justify-center font-bold text-xs shrink-0">
@@ -221,10 +221,10 @@ function Home() {
                                             animate={{ opacity: 1, scale: 1 }}
                                             exit={{ opacity: 0, scale: 0.95 }}
                                             transition={{ duration: 0.2 }}
-                                            className="px-2.5 py-1.5 rounded-lg bg-done text-white text-xs font-medium flex items-center justify-between shadow-sm shadow-done/30"
+                                            className="px-2.5 py-1.5 rounded-lg bg-done text-white dark:text-second text-xs font-medium flex items-center justify-between shadow-sm shadow-done/30"
                                         >
                                             <span>{formItems[formIndex].options[0]}</span>
-                                            <span className="w-1.5 h-1.5 rounded-full bg-white shrink-0" />
+                                            <span className="w-1.5 h-1.5 rounded-full bg-white dark:bg-second shrink-0" />
                                         </motion.div>
                                     </AnimatePresence>
 

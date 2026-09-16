@@ -4,7 +4,7 @@ import {
     Tooltip, XAxis, YAxis, PieChart, Pie, Cell, Legend, LabelList,
     type TooltipContentProps,
 } from "recharts"
-import { colors } from "../../lib/colorbase"
+import { useThemeColors } from "../../lib/theme-context"
 
 export interface BarDatum {
     name: string
@@ -27,7 +27,7 @@ interface ChartCardProps {
 
 function Card({ title, subtitle, children, height = 260 }: ChartCardProps) {
     return (
-        <div className="bg-white border border-second p-5 shadow-sm rounded-xl">
+        <div className="bg-white dark:bg-second border border-second p-5 shadow-sm rounded-xl">
             <p className="font-semibold text-darks mb-0.5">{title}</p>
             {subtitle && <p className="text-xs text-tinted mb-4">{subtitle}</p>}
             <div style={{ height }}>{children}</div>
@@ -45,9 +45,10 @@ export interface DistributionChartProps {
 }
 
 function ChartTooltip({ active, payload, label }: TooltipContentProps) {
+    const c = useThemeColors()
     if (!active || !payload?.length) return null
     return (
-        <div style={{ background: "white", border: `1px solid ${colors.second}`, borderRadius: 12, padding: "8px 12px", fontSize: 12 }}>
+        <div style={{ background: c.second, border: `1px solid ${c.tinted}`, borderRadius: 12, padding: "8px 12px", fontSize: 12 }}>
             <p className="font-medium text-darks">{label}</p>
             <p className="text-tinted">Responden: {payload[0].value}</p>
         </div>
@@ -58,21 +59,22 @@ export const DistributionChart = memo(function DistributionChart({
     title,
     subtitle,
     data,
-    barColor = colors.done,
+    barColor,
     height = 260,
     onBarClick,
 }: DistributionChartProps) {
+    const c = useThemeColors()
     return (
         <Card title={title} subtitle={subtitle} height={height}>
             <ResponsiveContainer width="100%" height="100%" debounce={100}>
                 <BarChart data={data} margin={{ top: 8, right: 8, left: -14, bottom: 0 }}>
-                    <XAxis dataKey="name" tick={{ fontSize: 11, fill: colors.tinted }} axisLine={false} tickLine={false} />
-                    <YAxis tick={{ fontSize: 11, fill: colors.tinted }} axisLine={false} tickLine={false} allowDecimals={false} />
-                    <Tooltip cursor={{ fill: colors.second }} content={ChartTooltip} />
+                    <XAxis dataKey="name" tick={{ fontSize: 11, fill: c.tinted }} axisLine={false} tickLine={false} />
+                    <YAxis tick={{ fontSize: 11, fill: c.tinted }} axisLine={false} tickLine={false} allowDecimals={false} />
+                    <Tooltip cursor={{ fill: c.second }} content={ChartTooltip} />
                     <Bar
                         dataKey="value"
                         radius={[6, 6, 0, 0]}
-                        fill={barColor}
+                        fill={barColor ?? c.done}
                         isAnimationActive={false}
                         style={onBarClick ? { cursor: "pointer" } : undefined}
                         onClick={(data) => {
@@ -99,22 +101,23 @@ export interface MiniDistributionChartProps {
 export const MiniDistributionChart = memo(function MiniDistributionChart({
     title = "Responden per Form",
     data,
-    barColor = colors.done,
+    barColor,
     height = 150,
     onBarClick,
 }: MiniDistributionChartProps) {
+    const c = useThemeColors()
     return (
-        <div className="bg-white border border-second rounded-xl px-3.5 pt-3 pb-2">
+        <div className="bg-white dark:bg-second border border-second rounded-xl px-3.5 pt-3 pb-2">
             {title && <p className="text-xs font-semibold text-darks mb-2">{title}</p>}
             <div style={{ height }}>
                 <ResponsiveContainer width="100%" height="100%" debounce={100}>
                     <BarChart data={data} margin={{ top: 12, right: 4, left: 4, bottom: 0 }}>
-                        <XAxis dataKey="name" tick={{ fontSize: 10, fill: colors.tinted }} axisLine={false} tickLine={false} />
-                        <Tooltip cursor={{ fill: colors.second }} content={ChartTooltip} />
+                        <XAxis dataKey="name" tick={{ fontSize: 10, fill: c.tinted }} axisLine={false} tickLine={false} />
+                        <Tooltip cursor={{ fill: c.second }} content={ChartTooltip} />
                         <Bar
                              dataKey="value"
                             radius={[5, 5, 0, 0]}
-                            fill={barColor}
+                            fill={barColor ?? c.done}
                             isAnimationActive={false}
                             style={onBarClick ? { cursor: "pointer" } : undefined}
                             onClick={(data) => {
@@ -122,7 +125,7 @@ export const MiniDistributionChart = memo(function MiniDistributionChart({
                                 if (formId) onBarClick?.(formId)
                             }}
                         >
-                            <LabelList dataKey="value" position="top" style={{ fontSize: 10, fill: colors.tinted }} />
+                            <LabelList dataKey="value" position="top" style={{ fontSize: 10, fill: c.tinted }} />
                         </Bar>
                     </BarChart>
                 </ResponsiveContainer>
@@ -164,6 +167,7 @@ export function MiniStackedBarChart({
     tooltip,
 }: MiniStackedBarChartProps) {
     const rows = data as Array<Record<string, unknown>>
+    const c = useThemeColors()
     return (
         <>
             {(title || subtitle) && (
@@ -176,8 +180,8 @@ export function MiniStackedBarChart({
                 <div style={{ width: `max(100%, ${Math.max(1, rows.length) * pxPerBar}px)`, height }}>
                     <ResponsiveContainer width="100%" height="100%" debounce={100}>
                         <BarChart data={rows} margin={{ top: 8, right: 4, left: 4, bottom: 0 }}>
-                            <XAxis dataKey="name" tick={{ fontSize: 9, fill: colors.tinted }} axisLine={false} tickLine={false} interval={0} />
-                            <Tooltip cursor={{ fill: colors.second }} content={tooltip} />
+                            <XAxis dataKey="name" tick={{ fontSize: 9, fill: c.tinted }} axisLine={false} tickLine={false} interval={0} />
+                            <Tooltip cursor={{ fill: c.second }} content={tooltip} />
                             {series.map((s, i) => (
                                 <Bar
                                     key={s.key}
@@ -217,15 +221,16 @@ export interface DonutChartProps {
 }
 
 export function DonutChart({ title, subtitle, data, height = 260, bare = false, showLegend = true }: DonutChartProps) {
+    const c = useThemeColors()
     const pie = (
         <ResponsiveContainer width="100%" height="100%" debounce={100}>
             <PieChart>
                 <Pie data={data} dataKey="value" nameKey="name" isAnimationActive={false} innerRadius="55%" outerRadius="80%" paddingAngle={2} strokeWidth={0}>
                     {data.map((d, i) => (
-                        <Cell key={i} fill={d.color ?? colors.done} />
+                        <Cell key={i} fill={d.color ?? c.done} />
                     ))}
                 </Pie>
-                <Tooltip />
+                <Tooltip content={ChartTooltip} />
                 {showLegend && <Legend iconType="circle" wrapperStyle={{ fontSize: 12 }} />}
             </PieChart>
         </ResponsiveContainer>

@@ -105,7 +105,7 @@ function CreatorSidebar() {
                 <Icon className="relative z-10 h-4 w-4 shrink-0" fill={active && filled ? "currentColor" : "none"} />
                 <span className="relative z-10 truncate text-[15px] flex-1">{label}</span>
                 {badge && (
-                    <span className={`relative z-10 shrink-0 rounded-full px-1.5 py-0.5 text-[10px] font-semibold transition-colors ${active ? "bg-white text-darks" : "bg-darks text-white"}`}>
+                    <span className={`relative z-10 shrink-0 rounded-full px-1.5 py-0.5 text-[10px] font-semibold transition-colors ${active ? "bg-white dark:bg-second text-darks" : "bg-darks text-white dark:text-second"}`}>
                         {badge}
                     </span>
                 )}
@@ -120,7 +120,7 @@ function CreatorSidebar() {
             initial={{ x: "-100%" }}
             animate={{ x: hidden ? "-100%" : "0%" }}
             transition={{ duration: 0.45, ease: easeOutExpo }}
-            className="flex fixed inset-y-0 left-0 z-40 w-[19.5vw] flex-col bg-base-200 border-r border-second"
+            className="flex fixed inset-y-0 left-0 z-40 w-[19.5vw] flex-col bg-base-200 dark:bg-[#1A2028] border-r border-second"
         >
             <div className="flex flex-row items-center h-28 px-6 shrink-0">
                 <Link to="/" className="flex items-center gap-2 overflow-hidden">
@@ -144,8 +144,8 @@ function CreatorSidebar() {
 
             <div className="p-3 border-t border-second shrink-0 pb-5">
                 <div className="flex items-center gap-3 rounded-lg px-2 py-2 min-w-0">
-                    <div className="w-9 h-9 rounded-full bg-done overflow-hidden flex items-center justify-center shrink-0 ring-2 ring-white">
-                        <span className="text-sm font-bold text-white">
+                    <div className="w-9 h-9 rounded-full bg-done overflow-hidden flex items-center justify-center shrink-0 ring-2 ring-white dark:ring-second">
+                        <span className="text-sm font-bold text-white dark:text-second">
                             {(profile?.name || "U").charAt(0).toUpperCase()}
                         </span>
                     </div>

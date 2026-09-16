@@ -4,7 +4,8 @@ import { House, UserRound, LayoutDashboard, History } from "lucide-react"
 import { useAuth } from "../lib/auth-context"
 import { BACKDROP_FILTER_SUPPORTED } from "../lib/glass"
 
-const glassNavClass = BACKDROP_FILTER_SUPPORTED ? "fml-glass-nav" : "fml-glass-nav--solid"
+const glassNavClass = BACKDROP_FILTER_SUPPORTED ? "fml-glass-nav--flat" : "fml-glass-nav--flat--solid"
+const glassCreatorClass = BACKDROP_FILTER_SUPPORTED ? "fml-glass-nav" : "fml-glass-nav--solid"
 
 const baseItems = [
     { to: "/", label: "Beranda", icon: House },
@@ -34,7 +35,7 @@ function Dock() {
             {/* <div className="bg-gradient-to-t from-base-300 via-base-300/30 to-transparent px-4 pb-6 pt-30"> */}
                 <div className="mx-auto w-fit max-w-full flex items-center justify-center gap-3 px-4 pb-6">
                     <nav
-                        className={`w-fit max-w-full flex items-center justify-around gap-1 rounded-full border border-white/70 ${glassNavClass} shadow-[0_8px_32px_rgba(57,62,70,0.25)] px-2 py-2 pointer-events-auto`}
+                        className={`w-fit max-w-full flex items-center justify-around gap-1 rounded-full border border-white/70 dark:border-tinted/30 ${glassNavClass} shadow-[0_8px_32px_rgba(57,62,70,0.25)] px-2 py-2 pointer-events-auto`}
                         aria-label="Navigasi utama"
                     >
                     {items.map(({ to, label, icon: Icon }) => {
@@ -77,8 +78,8 @@ function Dock() {
                         aria-label={creatorItem.label}
                         className={`pointer-events-auto flex items-center justify-center size-14 rounded-full border transition-all duration-200 shadow-[0_8px_32px_rgba(57,62,70,0.25)] ${
                             isCreatorActive
-                                ? "bg-darks border-darks text-white"
-                                : `border-white/70 ${glassNavClass} text-darks active:scale-95`
+                                ? "bg-darks border-darks text-white dark:text-second"
+                                : `border-white/70 dark:border-tinted/30 ${glassCreatorClass} text-darks active:scale-95`
                         }`}
                     >
                         <creatorItem.icon

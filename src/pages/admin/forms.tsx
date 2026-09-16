@@ -101,7 +101,7 @@ function AdminForms() {
                                         <div className="flex items-center gap-2 shrink-0">
                                             <span
                                                 className={`badge rounded-xl ${
-                                                    form.status === "published" ? "badge-success text-white" : "badge-ghost text-tinted"
+                                                    form.status === "published" ? "badge-success text-white dark:text-second" : "badge-ghost text-tinted"
                                                 }`}
                                             >
                                                 {form.status === "published" ? "public" : "draft"}

@@ -547,7 +547,7 @@ function FormPage() {
     }
 
     const renderQuestionContent = (q: Question, indexLabel: number, isStandardModeCard = false) => (
-        <div className="bg-base-300 lg:bg-white border border-second p-1 lg:p-6 lg:shadow-sm rounded-xl">
+        <div className="bg-base-300 lg:bg-white dark:bg-second border border-second p-1 lg:p-6 lg:shadow-sm rounded-xl">
             <div className="flex items-center justify-between mb-3">
                 <div className="flex gap-2">
                     <p className="text-sm text-tinted font-semibold">Soal {indexLabel}</p>
@@ -557,7 +557,7 @@ function FormPage() {
                     <div className="flex items-center gap-2">
                         <span
                             className={`inline-flex items-center gap-1 px-3.5 py-1 rounded-full text-xs font-semibold tabular-nums transition-colors ${!hasTimer
-                                ? "bg-second text-tinted"
+                                ? "bg-white dark:bg-second text-tinted"
                                 : timeLeft <= 60
                                     ? "bg-red-500/10 text-red-600"
                                     : "bg-done/10 text-done"
@@ -583,7 +583,7 @@ function FormPage() {
                     />
                     <button
                         onClick={() => setModalImage(q.image_question ?? null)}
-                        className="absolute bottom-2 right-2 bg-base/70 hover:bg-darks text-medium text-darks hover:text-white p-1.5 rounded-md opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-1 text-xs"
+                        className="absolute bottom-2 right-2 bg-base/70 hover:bg-darks text-medium text-darks hover:text-white dark:text-second p-1.5 rounded-md opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-1 text-xs"
                     >
                         <ZoomIn className="h-4 w-4" /> Perbesar
                     </button>
@@ -604,7 +604,7 @@ function FormPage() {
                                     />
                                     <button
                                         onClick={() => setModalImage(q.media_url! ?? null)}
-                                        className="absolute bottom-2 right-2 bg-base/70 hover:bg-darks text-medium text-darks hover:text-white p-1.5 rounded-md opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-1 text-xs"
+                                        className="absolute bottom-2 right-2 bg-base/70 hover:bg-darks text-medium text-darks hover:text-white dark:text-second p-1.5 rounded-md opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-1 text-xs"
                                     >
                                         <ZoomIn className="h-4 w-4" /> Perbesar
                                     </button>
@@ -637,14 +637,14 @@ function FormPage() {
                         onChange={(e) => setAnswers((prev) => ({ ...prev, [q.id]: e.target.value }))}
                         rows={5}
                         placeholder="Tulis jawabanmu di sini..."
-                        className="textarea w-full bg-white border-second focus:border-done focus:outline-none transition-colors text-sm resize-y"
+                        className="textarea w-full bg-white dark:bg-second border-second focus:border-done focus:outline-none transition-colors text-sm resize-y"
                     />
                 ) : q.question_type === "dropdown" ? (
                     <div>
                         <select
                             value={Array.isArray(answers[q.id]) ? "" : (answers[q.id] as string) || ""}
                             onChange={(e) => setAnswers((prev) => ({ ...prev, [q.id]: e.target.value }))}
-                            className="select w-full bg-white border-second focus:border-done focus:outline-none rounded-lg text-sm"
+                            className="select w-full bg-white dark:bg-second border-second focus:border-done focus:outline-none rounded-lg text-sm"
                         >
                             <option value="">-- Pilih salah satu --</option>
                             {q.question_options?.map((option) => (
@@ -684,8 +684,8 @@ function FormPage() {
                                 key={option.id}
                                 onClick={() => selectOption(q, option.id)}
                                 className={`w-full text-left px-3.5 py-3 rounded-lg border text-sm transition-colors ${selected
-                                    ? "bg-darks border-darks text-white font-medium"
-                                    : "bg-white border-second text-darks hover:border-darks/50"
+                                    ? "bg-darks border-darks text-white dark:text-second font-medium"
+                                    : "bg-white dark:bg-second border-second text-darks hover:border-darks/50"
                                     }`}
                             >
                                 <span className="flex items-center gap-3">
@@ -693,7 +693,7 @@ function FormPage() {
                                         className={`shrink-0 w-5 h-5 rounded-full border-2 flex items-center justify-center ${isMulti ? "rounded-md" : "rounded-full"
                                             } ${selected ? "border-darks bg-darks" : "border-tinted"}`}
                                     >
-                                        {selected && <Check className="h-3 w-3 text-white" strokeWidth={3} />}
+                                        {selected && <Check className="h-3 w-3 text-white dark:text-second" strokeWidth={3} />}
                                     </span>
                                     {option.media_url && (
                                         <span className="shrink-0">
@@ -716,14 +716,14 @@ function FormPage() {
                 notFound ? (
                     <div className="flex flex-col items-center justify-center min-h-screen px-3.5">
                         <p className="text-tinted mb-4">Form tidak ditemukan atau belum dipublikasikan.</p>
-                        <button onClick={() => navigate("/")} className="btn rounded-full p-4 bg-darks text-white border-none">
+                        <button onClick={() => navigate("/")} className="btn rounded-full p-4 bg-darks text-white dark:text-second border-none">
                             Kembali
                         </button>
                     </div>
                 ) : questions.length === 0 || (isStandard && sections.length === 0) ? (
                     <div className="flex flex-col items-center justify-center min-h-screen px-3.5">
                         <p className="text-tinted mb-4">Form tidak memiliki soal.</p>
-                        <button onClick={() => navigate("/")} className="btn rounded-full p-4 bg-darks text-white border-none">
+                        <button onClick={() => navigate("/")} className="btn rounded-full p-4 bg-darks text-white dark:text-second border-none">
                             Kembali
                         </button>
                     </div>
@@ -741,7 +741,7 @@ function FormPage() {
                                     </div>
                                     <span
                                         className={`shrink-0 inline-flex items-center gap-1 px-3.5 py-1 rounded-full text-xs font-semibold tabular-nums transition-colors ${!hasTimer
-                                            ? "bg-second text-tinted"
+                                            ? "bg-white dark:bg-second text-tinted"
                                             : timeLeft <= 60
                                                 ? "bg-red-500/10 text-red-600"
                                                 : "bg-done/10 text-done"
@@ -780,10 +780,10 @@ function FormPage() {
                         </div>
 
                         <div className="hidden md:flex fixed bottom-4 right-4 z-40 items-center">
-                            <div className="bg-white p-2 rounded-full border border-second shadow-md flex items-center gap-1.5">
+                            <div className="bg-white dark:bg-second p-2 rounded-full border border-second shadow-md flex items-center gap-1.5">
                                 <button
                                     onClick={() => zoomPage(-0.25)}
-                                    className="p-2 rounded-full border border-second bg-white text-darks hover:bg-second"
+                                    className="p-2 rounded-full border border-second bg-white dark:bg-second text-darks hover:bg-white dark:bg-second"
                                     aria-label="Zoom out"
                                     title="Zoom out"
                                 >
@@ -794,7 +794,7 @@ function FormPage() {
                                 </span>
                                 <button
                                     onClick={() => zoomPage(0.25)}
-                                    className="p-2 rounded-full border border-second bg-white text-darks hover:bg-second"
+                                    className="p-2 rounded-full border border-second bg-white dark:bg-second text-darks hover:bg-white dark:bg-second"
                                     aria-label="Zoom in"
                                     title="Zoom in"
                                 >
@@ -809,7 +809,7 @@ function FormPage() {
                                 <div className="w-full max-w-3xl mx-auto flex flex-col items-center gap-2 pointer-events-auto mb-2">
                                     <span
                                         className={`inline-flex items-center gap-1 px-3 py-0.5 rounded-full text-[11px] font-semibold tabular-nums ${!hasTimer
-                                            ? "bg-second/80 text-tinted"
+                                            ? "bg-white dark:bg-second/80 text-tinted"
                                             : timeLeft <= 60
                                                 ? "bg-red-500/10 text-red-600"
                                                 : "bg-done/10 text-done"
@@ -826,7 +826,7 @@ function FormPage() {
                 ) : !question || total === 0 ? (
                     <div className="flex flex-col items-center justify-center min-h-screen px-3.5">
                         <p className="text-tinted mb-4">Form tidak memiliki soal.</p>
-                        <button onClick={() => navigate("/")} className="btn rounded-full p-4 bg-darks text-white border-none">
+                        <button onClick={() => navigate("/")} className="btn rounded-full p-4 bg-darks text-white dark:text-second border-none">
                             Kembali
                         </button>
                     </div>
@@ -852,10 +852,10 @@ function FormPage() {
 
                             {/* Zoom control mobile di bawah kolom form */}
                             <div className="flex md:hidden items-center justify-center mt-3">
-                                <div className="bg-white/90 backdrop-blur-xs px-2 py-1 rounded-full border border-second shadow-xs flex items-center gap-1">
+                                <div className="bg-white dark:bg-second backdrop-blur-xs px-2 py-1 rounded-full border border-second shadow-xs flex items-center gap-1">
                                     <button
                                         onClick={() => zoomPage(-0.25)}
-                                        className="p-1 rounded-full text-darks hover:bg-second active:scale-95 transition-transform"
+                                        className="p-1 rounded-full text-darks hover:bg-white dark:bg-second active:scale-95 transition-transform"
                                         aria-label="Zoom out"
                                         title="Zoom out"
                                     >
@@ -866,7 +866,7 @@ function FormPage() {
                                     </span>
                                     <button
                                         onClick={() => zoomPage(0.25)}
-                                        className="p-1 rounded-full text-darks hover:bg-second active:scale-95 transition-transform"
+                                        className="p-1 rounded-full text-darks hover:bg-white dark:bg-second active:scale-95 transition-transform"
                                         aria-label="Zoom in"
                                         title="Zoom in"
                                     >
@@ -883,10 +883,10 @@ function FormPage() {
 
                         {/* Zoom control desktop di ujung bawah layar */}
                         <div className="hidden md:flex fixed bottom-4 right-4 z-40 items-center">
-                            <div className="bg-white p-2 rounded-full border border-second shadow-md flex items-center gap-1.5">
+                            <div className="bg-white dark:bg-second p-2 rounded-full border border-second shadow-md flex items-center gap-1.5">
                                 <button
                                     onClick={() => zoomPage(-0.25)}
-                                    className="p-2 rounded-full border border-second bg-white text-darks hover:bg-second"
+                                    className="p-2 rounded-full border border-second bg-white dark:bg-second text-darks hover:bg-white dark:bg-second"
                                     aria-label="Zoom out"
                                     title="Zoom out"
                                 >
@@ -897,7 +897,7 @@ function FormPage() {
                                 </span>
                                 <button
                                     onClick={() => zoomPage(0.25)}
-                                    className="p-2 rounded-full border border-second bg-white text-darks hover:bg-second"
+                                    className="p-2 rounded-full border border-second bg-white dark:bg-second text-darks hover:bg-white dark:bg-second"
                                     aria-label="Zoom in"
                                     title="Zoom in"
                                 >
@@ -932,14 +932,14 @@ function FormPage() {
                             <motion.div variants={modalPanel} className="relative max-w-4xl max-h-[90vh] w-full flex items-center justify-center">
                                 <button
                                     onClick={() => setModalImage(null)}
-                                    className="absolute -top-10 right-0 text-white hover:text-gray-300 bg-darks/50 p-2 rounded-full"
+                                    className="absolute -top-10 right-0 text-white dark:text-second hover:text-gray-300 bg-darks/50 p-2 rounded-full"
                                 >
                                     <X className="h-6 w-6" />
                                 </button>
                                 <img
                                     src={modalImage}
                                     alt="Zoom Preview"
-                                    className="max-w-full max-h-[85vh] object-contain rounded-lg shadow-2xl bg-white"
+                                    className="max-w-full max-h-[85vh] object-contain rounded-lg shadow-2xl bg-white dark:bg-second"
                                 />
                             </motion.div>
                         </motion.div>
@@ -969,7 +969,7 @@ function FormPage() {
                                 animate={{ opacity: 1, scale: 1, y: 0 }}
                                 exit={{ opacity: 0, scale: 0.96, y: 12 }}
                                 transition={{ duration: 0.25 }}
-                                className="relative bg-white border border-second rounded-2xl w-full max-w-sm p-5 shadow-xl"
+                                className="relative bg-white dark:bg-second border border-second rounded-2xl w-full max-w-sm p-5 shadow-xl"
                             >
                                 <div className="items-start text-start">
                                     <div className="w-12 h-12 rounded-full bg-done/10 flex items-center justify-center mb-3">
@@ -984,14 +984,14 @@ function FormPage() {
                                     <button
                                         onClick={() => setShowSubmitConfirm(false)}
                                         disabled={submitting}
-                                        className="btn flex-1 rounded-full bg-base text-darks border border-second hover:bg-second disabled:opacity-60"
+                                        className="btn flex-1 rounded-full bg-base text-darks border border-second hover:bg-white dark:bg-second disabled:opacity-60"
                                     >
                                         Batal
                                     </button>
                                     <button
                                         onClick={confirmSubmit}
                                         disabled={submitting}
-                                        className="btn flex-1 rounded-full bg-done text-white border-none hover:opacity-90 disabled:opacity-60"
+                                        className="btn flex-1 rounded-full bg-done text-white dark:text-second border-none hover:opacity-90 disabled:opacity-60"
                                     >
                                         {submitting ? <Spinner size={16} /> : "Ya, Kirim"}
                                     </button>

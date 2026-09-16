@@ -67,7 +67,7 @@ function FormNew() {
                 <h1 className="text-2xl sm:text-4xl font-bold text-darks mb-1">Buat Form Baru</h1>
                 <p className="text-sm text-tinted mb-4">Lengkapi informasi dasar form.</p>
 
-                <form onSubmit={handleSubmit} className="space-y-4 bg-white border border-second p-3 lg:p-6 shadow-sm rounded-xl">
+                <form onSubmit={handleSubmit} className="space-y-4 bg-white dark:bg-second border border-second p-3 lg:p-6 shadow-sm rounded-xl">
                     <div>
                         {/* <label className="block text-sm font-medium text-darks mb-1.5">Judul</label> */}
                         <input

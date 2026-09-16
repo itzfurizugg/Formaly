@@ -53,7 +53,7 @@ function PageIndicator({ total, current, onPrev, onNext, onListClick, isRagu = f
         <button
             onClick={onRaguToggle}
             title={isRagu ? "Hapus tanda ragu-ragu" : "Tandai ragu-ragu"}
-            className={`btn h-12 min-h-0 px-3.5 rounded-full ${isRagu ? "bg-warning text-white border-warning" : "bg-base text-tinted"}`}
+            className={`btn h-12 min-h-0 px-3.5 rounded-full ${isRagu ? "bg-warning text-white dark:text-second border-warning" : "bg-base text-tinted"}`}
         >
             <HelpCircle className="h-4 w-4" />
             Ragu
@@ -79,7 +79,7 @@ function PageIndicator({ total, current, onPrev, onNext, onListClick, isRagu = f
                 <button
                     onClick={onRequestSubmit}
                     disabled={submitting}
-                    className="btn text-white h-12 min-h-0 px-3.5 bg-done border-none rounded-full hover:opacity-90 disabled:opacity-25"
+                    className="btn text-white dark:text-second h-12 min-h-0 px-3.5 bg-done border-none rounded-full hover:opacity-90 disabled:opacity-25"
                 >
                     {submitting ? <Spinner size={16} /> : <Check className="h-4 w-4" />}
                     {submitting ? "Mengirim..." : "Kirim"}

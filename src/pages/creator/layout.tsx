@@ -27,7 +27,7 @@ function CreatorLayout() {
     const targetPad = isDesktop && !sidebarHidden ? "20vw" : "0rem"
 
     return (
-        <div className="bg-second min-h-screen transition-[padding-left] duration-500 ease-in-out" style={{ paddingLeft: targetPad }}>
+        <div className="bg-second dark:bg-base min-h-screen transition-[padding-left] duration-500 ease-in-out" style={{ paddingLeft: targetPad }}>
             <Outlet />
         </div>
     )

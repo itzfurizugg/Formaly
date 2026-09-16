@@ -25,8 +25,8 @@ function UserMenu() {
                 aria-label="Menu akun"
                 aria-expanded={open}
             >
-                <div className="w-9 h-9 rounded-full bg-done overflow-hidden flex items-center justify-center ring-2 ring-white shadow-sm">
-                    <span className="text-base font-bold text-white">
+                <div className="w-9 h-9 rounded-full bg-done overflow-hidden flex items-center justify-center ring-2 ring-white dark:ring-second shadow-sm">
+                    <span className="text-base font-bold text-white dark:text-second">
                         {(profile?.name || "U").charAt(0).toUpperCase()}
                     </span>
                 </div>
@@ -47,7 +47,7 @@ function UserMenu() {
                 {open && (
                     <motion.div
                         key="usermenu-panel"
-                        className="absolute right-0 top-full mt-3 z-50 min-w-[16rem] max-w-[20rem] rounded-3xl lg:rounded-2xl bg-white border border-second shadow-xl overflow-hidden origin-top-right"
+                        className="absolute right-0 top-full mt-3 z-50 min-w-[16rem] max-w-[20rem] rounded-3xl lg:rounded-2xl bg-white dark:bg-second border border-second shadow-xl overflow-hidden origin-top-right"
                         initial={{ opacity: 0, y: -8, scale: 0.95 }}
                         animate={{ opacity: 1, y: 0, scale: 1 }}
                         exit={{ opacity: 0, y: -8, scale: 0.95 }}
@@ -55,7 +55,7 @@ function UserMenu() {
                     >
                         <div className="flex items-center gap-3 px-4 py-4 border-b border-base">
                             <div className="w-10 h-10 shrink-0 rounded-full bg-done overflow-hidden flex items-center justify-center">
-                                <span className="text-lg font-bold text-white">
+                                <span className="text-lg font-bold text-white dark:text-second">
                                     {(profile?.name || "U").charAt(0).toUpperCase()}
                                 </span>
                             </div>

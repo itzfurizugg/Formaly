@@ -557,7 +557,7 @@ function RichTextEditor({ value, onChange, placeholder, className = "", compact 
                         }
                     }}
                     className={`rich-preview min-h-[44px] cursor-text border rounded-lg px-3 py-2 text-darks shadow-sm transition-all hover:border-done/50 ${
-                        value && sanitizeRichText(value).trim() ? "bg-white border-second" : "bg-base border-second text-tinted hover:shadow-md"
+                        value && sanitizeRichText(value).trim() ? "bg-white dark:bg-second border-second" : "bg-base border-second text-tinted hover:shadow-md"
                     }`}
                 >
                     {value && sanitizeRichText(value).trim() ? (
@@ -650,7 +650,7 @@ function LinkModal({
                 role="dialog"
                 aria-modal="true"
                 aria-labelledby="formaly-link-title"
-                className="w-full max-w-md rounded-2xl border border-second bg-white p-6 shadow-2xl"
+                className="w-full max-w-md rounded-2xl border border-second bg-white dark:bg-second p-6 shadow-2xl"
             >
                 <div className="flex items-center justify-between mb-4">
                     <div className="flex items-center gap-2.5">
@@ -697,7 +697,7 @@ function LinkModal({
                 <button
                     type="button"
                     onClick={() => onTargetChange(target === "new" ? "" : "new")}
-                    className="mt-4 flex items-center gap-2.5 w-full text-sm text-darks rounded-lg px-3 py-2 hover:bg-second/60 transition-colors"
+                    className="mt-4 flex items-center gap-2.5 w-full text-sm text-darks rounded-lg px-3 py-2 hover:bg-white dark:bg-second/60 transition-colors"
                 >
                     <span
                         className={`w-4 h-4 rounded border flex items-center justify-center transition-colors ${
@@ -705,7 +705,7 @@ function LinkModal({
                         }`}
                     >
                         {target === "new" && (
-                            <svg viewBox="0 0 24 24" className="w-3 h-3 text-white" fill="none" stroke="currentColor" strokeWidth={3}>
+                            <svg viewBox="0 0 24 24" className="w-3 h-3 text-white dark:text-second" fill="none" stroke="currentColor" strokeWidth={3}>
                                 <path strokeLinecap="round" d="M5 13l4 4L19 7" />
                             </svg>
                         )}
@@ -714,7 +714,7 @@ function LinkModal({
                 </button>
 
                 <div className="mt-6 flex justify-end gap-3">
-                    <button type="button" onClick={onCancel} className="btn rounded-xl border border-second bg-base text-darks hover:bg-second">
+                    <button type="button" onClick={onCancel} className="btn rounded-xl border border-second bg-base text-darks hover:bg-white dark:bg-second">
                         Batal
                     </button>
                     <button
@@ -769,7 +769,7 @@ function FormulaModal({
                 role="dialog"
                 aria-modal="true"
                 aria-labelledby="formaly-formula-title"
-                className="w-full max-w-lg rounded-2xl border border-second bg-white shadow-2xl overflow-hidden flex flex-col max-h-[90vh] sm:max-h-[85vh]"
+                className="w-full max-w-lg rounded-2xl border border-second bg-white dark:bg-second shadow-2xl overflow-hidden flex flex-col max-h-[90vh] sm:max-h-[85vh]"
             >
                 <div className="flex items-center justify-between px-5 py-4 border-b border-second bg-base/60">
                     <div className="flex items-center gap-2.5">
@@ -822,7 +822,7 @@ function FormulaModal({
                                 type="button"
                                 onClick={() => onBlockChange(false)}
                                 className={`flex-1 sm:flex-initial px-4 py-2 rounded-xl text-sm font-medium transition-all ${
-                                    !block ? "bg-darks text-white shadow-sm" : "bg-base text-tinted hover:bg-second border border-transparent"
+                                    !block ? "bg-darks text-white dark:text-second shadow-sm" : "bg-base text-tinted hover:bg-second border border-transparent"
                                 }`}
                             >
                                 Di tengah kalimat
@@ -831,7 +831,7 @@ function FormulaModal({
                                 type="button"
                                 onClick={() => onBlockChange(true)}
                                 className={`flex-1 sm:flex-initial px-4 py-2 rounded-xl text-sm font-medium transition-all ${
-                                    block ? "bg-darks text-white shadow-sm" : "bg-base text-tinted hover:bg-second border border-transparent"
+                                    block ? "bg-darks text-white dark:text-second shadow-sm" : "bg-base text-tinted hover:bg-second border border-transparent"
                                 }`}
                             >
                                 Di baris sendiri
@@ -850,7 +850,7 @@ function FormulaModal({
                                     key={tpl.id}
                                     type="button"
                                     onClick={() => onApplyTemplate(tpl)}
-                                    className="flex items-center gap-3 rounded-xl border border-second bg-base/40 px-3.5 py-3 text-left transition-all hover:border-done/40 hover:bg-white hover:shadow-sm group"
+                                    className="flex items-center gap-3 rounded-xl border border-second bg-base/40 px-3.5 py-3 text-left transition-all hover:border-done/40 hover:bg-white dark:bg-second hover:shadow-sm group"
                                     title={`${tpl.block ? "Di baris sendiri" : "Di tengah kalimat"}: ${tpl.tex}`}
                                 >
                                     <span className="flex-1 min-w-0">
@@ -865,14 +865,14 @@ function FormulaModal({
 
                 <div className="flex items-center justify-end gap-3 px-5 py-4 border-t border-second bg-base/60">
                     <div className="flex justify-end gap-3 w-full sm:w-auto">
-                        <button type="button" onClick={onCancel} className="btn rounded-xl border border-second bg-base text-darks hover:bg-second font-medium px-5">
+                        <button type="button" onClick={onCancel} className="btn rounded-xl border border-second bg-base text-darks hover:bg-white dark:bg-second font-medium px-5">
                             Batal
                         </button>
                         <button
                             type="button"
                             onClick={onConfirm}
                             disabled={!latex.trim()}
-                            className="btn rounded-xl border-none bg-darks text-white hover:opacity-90 disabled:opacity-50 font-medium px-5 flex items-center gap-2"
+                            className="btn rounded-xl border-none bg-darks text-white dark:text-second hover:opacity-90 disabled:opacity-50 font-medium px-5 flex items-center gap-2"
                         >
                             <Sigma className="h-4 w-4" />
                             {editing ? "Perbarui" : "Sisipkan"}

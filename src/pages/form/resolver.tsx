@@ -99,7 +99,7 @@ function FormResolver() {
             ) : (
                 <motion.div variants={fadeSlide} initial="hidden" animate="show" className="flex flex-col items-center justify-center min-h-screen px-3.5">
                     <p className="text-tinted mb-4">Form tidak ditemukan atau belum dipublikasikan.</p>
-                    <button onClick={() => navigate("/")} className="btn bg-darks text-white border-none">
+                    <button onClick={() => navigate("/")} className="btn bg-darks text-white dark:text-second border-none">
                         Kembali
                     </button>
                 </motion.div>

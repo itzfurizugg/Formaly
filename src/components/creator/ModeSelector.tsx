@@ -45,10 +45,10 @@ function ModeSelector({ value, onChange, disabled = false }: ModeSelectorProps) 
                         role="radio"
                         aria-checked={selected}
                         onClick={() => onChange(opt.key)}
-                        className={`relative text-left rounded-xl border p-4 transition-all duration-200 focus:outline-none ring-offset-2 ring-offset-white ${
+                        className={`relative text-left rounded-xl border p-4 transition-all duration-200 focus:outline-none ring-offset-2 ring-offset-white dark:ring-offset-second ${
                             selected
                                 ? "border-done bg-done/5 ring-2 ring-done/30"
-                                : "border-second bg-white hover:border-done/50 hover:shadow-sm"
+                                : "border-second bg-white dark:bg-second hover:border-done/50 hover:shadow-sm"
                         } ${disabled ? "opacity-100 cursor-default" : "cursor-pointer"}`}
                     >
                         <div className="flex items-start justify-between gap-3">
@@ -63,10 +63,10 @@ function ModeSelector({ value, onChange, disabled = false }: ModeSelectorProps) 
                             </div>
                             <span
                                 className={`shrink-0 flex h-5 w-5 items-center justify-center rounded-full border-2 transition-all ${
-                                    selected ? "border-done bg-done" : "border-tinted/40 bg-white"
+                                    selected ? "border-done bg-done" : "border-tinted/40 bg-white dark:bg-second"
                                 }`}
                             >
-                                {selected && <Check className="h-3 w-3 text-white" strokeWidth={3.5} />}
+                                {selected && <Check className="h-3 w-3 text-white dark:text-second" strokeWidth={3.5} />}
                             </span>
                         </div>
                     </button>

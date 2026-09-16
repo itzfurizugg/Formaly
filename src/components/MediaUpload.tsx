@@ -221,7 +221,7 @@ function MediaUpload({ value, onChange, label = "Media", helpText, allow = ["ima
                     onClick={handleDelete}
                     disabled={uploading}
                     aria-label="Hapus media"
-                    className="absolute top-2 right-2 p-1.5 bg-darks/80 text-white rounded-none opacity-0 group-hover:opacity-100 transition-opacity hover:bg-darks disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="absolute top-2 right-2 p-1.5 bg-darks/80 text-white dark:text-second rounded-none opacity-0 group-hover:opacity-100 transition-opacity hover:bg-darks disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                     <X className="h-4 w-4" />
                 </button>
@@ -245,7 +245,7 @@ function MediaUpload({ value, onChange, label = "Media", helpText, allow = ["ima
                     onDragLeave={handleDragLeave}
                 >
                     <div className="flex items-center gap-2.5 min-w-0">
-                        <div className="shrink-0 h-9 w-12 rounded-md border border-second bg-white overflow-hidden flex items-center justify-center">
+                        <div className="shrink-0 h-9 w-12 rounded-md border border-second bg-white dark:bg-second overflow-hidden flex items-center justify-center">
                             {value && mediaType === "image" ? (
                                 <img src={value} alt="Preview media" className="h-full w-full object-cover" loading="lazy" />
                             ) : (
@@ -269,7 +269,7 @@ function MediaUpload({ value, onChange, label = "Media", helpText, allow = ["ima
                                 <button
                                     type="button"
                                     onClick={handleClickUpload}
-                                    className="btn btn-xs bg-white text-darks border border-second hover:bg-second transition-colors"
+                                    className="btn btn-xs bg-white dark:bg-second text-darks border border-second hover:bg-white dark:bg-second transition-colors"
                                 >
                                     <Upload className="h-3 w-3" />
                                     {value ? "Ganti" : "Upload"}
@@ -279,7 +279,7 @@ function MediaUpload({ value, onChange, label = "Media", helpText, allow = ["ima
                                         type="button"
                                         onClick={handleDelete}
                                         aria-label="Hapus media"
-                                        className="btn btn-xs bg-white text-wrong border border-wrong/25 hover:bg-wrong/10 transition-colors"
+                                        className="btn btn-xs bg-white dark:bg-second text-wrong border border-wrong/25 hover:bg-wrong/10 transition-colors"
                                     >
                                         <X className="h-3 w-3" />
                                     </button>
@@ -298,7 +298,7 @@ function MediaUpload({ value, onChange, label = "Media", helpText, allow = ["ima
                         aria-valuenow={Math.round(uploadProgress * 100)}
                         aria-label="Progres upload media"
                     >
-                        <div className="h-1.5 w-full overflow-hidden rounded-full bg-second">
+                        <div className="h-1.5 w-full overflow-hidden rounded-full bg-white dark:bg-second">
                             {uploadProgress > 0 ? (
                                 <div
                                     className="h-full rounded-full bg-done transition-[width] duration-200 ease-out"
@@ -374,7 +374,7 @@ function MediaUpload({ value, onChange, label = "Media", helpText, allow = ["ima
                             aria-valuenow={Math.round(uploadProgress * 100)}
                             aria-label="Progres upload media"
                         >
-                            <div className="h-2 w-full overflow-hidden rounded-full bg-second">
+                            <div className="h-2 w-full overflow-hidden rounded-full bg-white dark:bg-second">
                                 {uploadProgress > 0 ? (
                                     <div
                                         className="h-full rounded-full bg-done transition-[width] duration-200 ease-out"

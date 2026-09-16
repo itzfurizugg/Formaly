@@ -85,7 +85,7 @@ function Modal({
                         />
                         <motion.div
                             variants={modalPanel}
-                            className="relative bg-white border border-second rounded-2xl lg:rounded-xl w-full max-w-md p-5 shadow-xl"
+                            className="relative bg-white dark:bg-second border border-second rounded-2xl lg:rounded-xl w-full max-w-md p-5 shadow-xl"
                         >
                             <div className="flex items-center justify-between mb-4">
                                 <div className="flex items-center gap-2.5">
@@ -215,10 +215,10 @@ function Profile() {
         <div className="flex flex-col items-center px-3.5 py-2">
             <div className="max-w-2xl w-full">
                 {/* Header */}
-                <div className="bg-white border border-second p-5 rounded-2xl lg:rounded-xl mb-3">
+                <div className="bg-white dark:bg-second border border-second p-5 rounded-2xl lg:rounded-xl mb-3">
                     <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-5">
                         <div className="w-20 h-20 shrink-0 rounded-full bg-done flex items-center justify-center">
-                            <span className="text-4xl font-bold text-base">
+                            <span className="text-4xl font-bold text-white">
                                 {(profile?.name || "U").charAt(0).toUpperCase()}
                             </span>
                         </div>
@@ -246,7 +246,7 @@ function Profile() {
                 </div>
 
                 {/* Menu: buka modal */}
-                <div className="bg-white border border-second mb-3 divide-y divide-second rounded-2xl lg:rounded-xl overflow-hidden">
+                <div className="bg-white dark:bg-second border border-second mb-3 divide-y divide-second rounded-2xl lg:rounded-xl overflow-hidden">
                     <button
                         onClick={() => setShowAccountModal(true)}
                         className="w-full flex items-center gap-3 p-4 hover:bg-base transition-colors text-left"
@@ -290,7 +290,7 @@ function Profile() {
                     </button> */}
                 </div>
 
-                <div className="bg-white border border-second mb-3 divide-y divide-second rounded-2xl lg:rounded-xl overflow-hidden">
+                <div className="bg-white dark:bg-second border border-second mb-3 divide-y divide-second rounded-2xl lg:rounded-xl overflow-hidden">
                     {role === "user" && (
                         <button
                             onClick={() => navigate("/upgrade-to-creator")}
@@ -323,7 +323,7 @@ function Profile() {
 
                 </div>
 
-                {/* <div className="bg-white border border-second mb-3 divide-y divide-second rounded-2xl lg:rounded-xl overflow-hidden">
+                {/* <div className="bg-white dark:bg-second border border-second mb-3 divide-y divide-second rounded-2xl lg:rounded-xl overflow-hidden">
                     {role === "user" && (
                         <button
                             onClick={() => navigate("/upgrade-to-creator")}

@@ -118,7 +118,7 @@ function ResetPassword() {
                         <img src={logo} alt="Formaly" className="h-10 w-auto" />
                     </div>
 
-                    <div className="bg-white rounded-3xl lg:rounded-2xl border border-second p-8 shadow-sm">
+                    <div className="bg-white dark:bg-second rounded-3xl lg:rounded-2xl border border-second p-8 shadow-sm">
                         <AnimatePresence mode="wait">
                         {checking ? (
                             <motion.div
@@ -130,7 +130,7 @@ function ResetPassword() {
                                 className="flex flex-col items-center justify-center py-16 px-3.5"
                             >
                                 <div className="w-full max-w-xs">
-                                    <div className="relative h-1.5 w-full bg-second rounded-full overflow-hidden">
+                                    <div className="relative h-1.5 w-full bg-white dark:bg-second rounded-full overflow-hidden">
                                         <motion.div
                                             className="absolute h-full bg-darks rounded-full"
                                             initial={{ left: "-35%", right: "100%" }}
@@ -186,7 +186,7 @@ function ResetPassword() {
                                     Request Link Baru
                                 </button>
 
-                                <Link to="/login" className="btn bg-base text-darks border border-second hover:bg-second transition-colors w-full mt-2 rounded-full lg:rounded-xl">
+                                <Link to="/login" className="btn bg-base text-darks border border-second hover:bg-white dark:bg-second transition-colors w-full mt-2 rounded-full lg:rounded-xl">
                                     Kembali ke Login
                                 </Link>
                             </motion.div>

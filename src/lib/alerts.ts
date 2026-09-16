@@ -5,10 +5,10 @@ import { Toaster, toast } from "sonner"
 type AlertType = "success" | "error" | "info" | "warning"
 
 const toastClasses = {
-    base: "!rounded-xl !border !border-second dark:!border-white/10 !bg-white dark:!bg-second !font-sans !text-darks !shadow-lg",
+    base: "!rounded-xl !border !border-second dark:!border-darks/15 !bg-white dark:!bg-second !font-sans !text-darks !shadow-lg",
     success: "!border-done/30",
     error: "!border-wrong/30",
-    info: "!border-second dark:!border-white/10",
+    info: "!border-second dark:!border-darks/15",
     warning: "!border-amber-500/50 !bg-amber-50 dark:!bg-amber-950/30",
 }
 
@@ -122,7 +122,7 @@ function DeleteDialog({ options, onClose }: { options: ConfirmDeleteOptions; onC
                 "aria-modal": true,
                 "aria-labelledby": "delete-dialog-title",
                 "aria-describedby": "delete-dialog-description",
-                className: `w-full max-w-md rounded-xl border border-second bg-white p-6 font-sans shadow-xl transition-all duration-200 ${show && !closing ? "opacity-100 scale-100" : "opacity-0 scale-95"}`,
+                className: `w-full max-w-md rounded-xl border border-second bg-white dark:bg-second p-6 font-sans shadow-xl transition-all duration-200 ${show && !closing ? "opacity-100 scale-100" : "opacity-0 scale-95"}`,
             },
             createElement("h2", { id: "delete-dialog-title", className: "text-lg font-semibold text-darks" }, options.title),
             createElement("p", { id: "delete-dialog-description", className: "mt-2 text-sm leading-relaxed text-tinted" }, options.description),
@@ -230,7 +230,7 @@ function PromptDialog({ options, onClose }: { options: PromptTextOptions; onClos
                 role: "alertdialog",
                 "aria-modal": true,
                 "aria-labelledby": "prompt-dialog-title",
-                className: `w-full max-w-md rounded-xl border border-second bg-white p-6 font-sans shadow-xl transition-all duration-200 ${show && !closing ? "opacity-100 scale-100" : "opacity-0 scale-95"}`,
+                className: `w-full max-w-md rounded-xl border border-second bg-white dark:bg-second p-6 font-sans shadow-xl transition-all duration-200 ${show && !closing ? "opacity-100 scale-100" : "opacity-0 scale-95"}`,
             },
             createElement("h2", { id: "prompt-dialog-title", className: "text-lg font-semibold text-darks" }, options.title),
             options.description

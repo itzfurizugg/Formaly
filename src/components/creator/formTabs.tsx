@@ -43,7 +43,7 @@ function FormTabs({ id, active }: { id?: string; active: FormTabKey }) {
                     className={`btn btn-sm rounded-full ${
                         active === key
                             ? "bg-darks text-base border-none"
-                            : "bg-base text-darks border border-second hover:bg-white hover:shadow-sm"
+                            : "bg-base text-darks border border-second hover:bg-white dark:bg-second hover:shadow-sm"
                     }`}
                 >
                     <Icon className="h-3.5 w-3.5" />

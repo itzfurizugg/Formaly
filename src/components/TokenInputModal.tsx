@@ -87,7 +87,7 @@ function TokenInputModal({ open, onClose, formId, onStarted }: TokenInputModalPr
                         <div className="absolute inset-0 bg-darks/50" onClick={() => !starting && onClose()} />
                         <motion.div
                             variants={panelVariants}
-                            className="relative bg-white border border-second rounded-2xl lg:rounded-xl w-full max-w-md p-5 shadow-xl"
+                            className="relative bg-white dark:bg-second border border-second rounded-2xl lg:rounded-xl w-full max-w-md p-5 shadow-xl"
                         >
                             <div className="flex items-center justify-between mb-4">
                                 <div className="flex items-center gap-2.5">

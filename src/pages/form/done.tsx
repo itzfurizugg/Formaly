@@ -69,7 +69,7 @@ function DonePage() {
                     <div className="flex flex-col items-center px-3.5 py-5 sm:py-10">
                         <div className="w-full max-w-2xl text-center">
                             <p className="text-sm text-tinted">{error}</p>
-                            <button onClick={() => navigate("/")} className="btn rounded-full p-4 bg-darks text-white border-none mt-4">
+                            <button onClick={() => navigate("/")} className="btn rounded-full p-4 bg-darks text-white dark:text-second border-none mt-4">
                                 Kembali
                             </button>
                         </div>
@@ -81,7 +81,7 @@ function DonePage() {
                                 initial={{ opacity: 0, y: 16 }}
                                 animate={{ opacity: 1, y: 0 }}
                                 transition={{ duration: 0.45, ease: easeOutExpo }}
-                                className="bg-white border border-second p-6 sm:p-8 shadow-sm rounded-xl text-center"
+                                className="bg-white dark:bg-second border border-second p-6 sm:p-8 shadow-sm rounded-xl text-center"
                             >
                                 <div className="w-16 h-16 rounded-full bg-done/10 flex items-center justify-center mx-auto mb-4">
                                     <Check className="h-8 w-8 text-done" strokeWidth={3} />
@@ -95,13 +95,13 @@ function DonePage() {
                                 <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
                                     <button
                                         onClick={() => navigate(`/form/result/${submissionId}`)}
-                                        className="btn w-full sm:w-auto bg-darks text-white border-none rounded-full px-6 hover:opacity-90 transition-opacity"
+                                        className="btn w-full sm:w-auto bg-darks text-white dark:text-second border-none rounded-full px-6 hover:opacity-90 transition-opacity"
                                     >
                                         Lihat Hasil
                                     </button>
                                     <button
                                         onClick={() => navigate("/history")}
-                                        className="btn w-full sm:w-auto bg-base text-darks border border-second rounded-full px-6 hover:bg-second transition-colors"
+                                        className="btn w-full sm:w-auto bg-base text-darks border border-second rounded-full px-6 hover:bg-white dark:bg-second transition-colors"
                                     >
                                         Lihat Riwayat
                                     </button>

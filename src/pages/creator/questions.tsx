@@ -757,7 +757,7 @@ function Questions({ embedded = false }: { embedded?: boolean }) {
                 animate={{ opacity: 1, y: 0, scale: 1 }}
                 exit={{ opacity: 0, y: 24, scale: 0.98 }}
                 transition={{ duration: 0.25, ease: easeOutExpo }}
-                className="relative w-full sm:max-w-3xl max-h-[88vh] sm:max-h-[85vh] overflow-y-auto bg-white border border-second shadow-2xl rounded-t-2xl sm:rounded-2xl p-4 sm:p-6 pb-8"
+                className="relative w-full sm:max-w-3xl max-h-[88vh] sm:max-h-[85vh] overflow-y-auto bg-white dark:bg-second border border-second shadow-2xl rounded-t-2xl sm:rounded-2xl p-4 sm:p-6 pb-8"
             >
                 <div className="flex items-start justify-between mb-5">
                     <div>
@@ -776,7 +776,7 @@ function Questions({ embedded = false }: { embedded?: boolean }) {
                     <div className="mb-5">
                         <label className="block text-sm font-medium text-darks mb-1.5 ml-1">Masukkan ke Section</label>
                         <select
-                            className="select w-full bg-white border-second focus:border-done focus:outline-none rounded-xl"
+                            className="select w-full bg-white dark:bg-second border-second focus:border-done focus:outline-none rounded-xl"
                             value={targetPageId ?? activeSectionId ?? pages[0].id}
                             onChange={(e) => setTargetPageId(e.target.value)}
                         >
@@ -811,7 +811,7 @@ function Questions({ embedded = false }: { embedded?: boolean }) {
                             <div className="sm:col-span-2">
                                 <label className="block text-sm font-medium text-darks mb-1.5 ml-1">Tipe</label>
                                 <select
-                                    className="select w-full bg-white border-second focus:border-done focus:outline-none rounded-xl"
+                                    className="select w-full bg-white dark:bg-second border-second focus:border-done focus:outline-none rounded-xl"
                                     value={questionType}
                                     onChange={(e) => handleTypeChange(e.target.value)}
                                 >
@@ -830,7 +830,7 @@ function Questions({ embedded = false }: { embedded?: boolean }) {
                                     min={0}
                                     max={100}
                                     step={1}
-                                    className="input w-full bg-white border-second focus:border-done focus:outline-none"
+                                    className="input w-full bg-white dark:bg-second border-second focus:border-done focus:outline-none"
                                     value={scoreValue}
                                     onChange={(e) => setScoreValue(Number(e.target.value))}
                                     placeholder="0"
@@ -841,7 +841,7 @@ function Questions({ embedded = false }: { embedded?: boolean }) {
                                 <input
                                     type="number"
                                     min={0}
-                                    className="input w-full bg-white border-second focus:border-done focus:outline-none"
+                                    className="input w-full bg-white dark:bg-second border-second focus:border-done focus:outline-none"
                                     value={orderIndex}
                                     onChange={(e) => setOrderIndex(Number(e.target.value))}
                                 />
@@ -860,11 +860,11 @@ function Questions({ embedded = false }: { embedded?: boolean }) {
                                 aria-checked={isRequired}
                                 aria-label="Tandai sebagai wajib dijawab"
                                 className={`relative shrink-0 h-6 w-11 rounded-full mt-3 transition-colors ${
-                                    isRequired ? "bg-darks" : "bg-second"
+                                    isRequired ? "bg-darks" : "bg-white dark:bg-second"
                                 }`}
                             >
                                 <span
-                                    className={`absolute top-0.5 left-0.5 h-5 w-5 rounded-full bg-white shadow transition-transform ${
+                                    className={`absolute top-0.5 left-0.5 h-5 w-5 rounded-full bg-white dark:bg-second shadow transition-transform ${
                                         isRequired ? "translate-x-5" : "translate-x-0"
                                     }`}
                                 />
@@ -907,7 +907,7 @@ function Questions({ embedded = false }: { embedded?: boolean }) {
                                         <span className="ml-2 text-xs text-tinted font-normal">({options.length})</span>
                                     )}
                                 </label>
-                                <button onClick={addOption} className="btn btn-sm bg-white text-darks border border-second hover:bg-second">
+                                <button onClick={addOption} className="btn btn-sm bg-white dark:bg-second text-darks border border-second hover:bg-white dark:bg-second">
                                     <Plus className="h-3.5 w-3.5" /> Tambah Pilihan
                                 </button>
                             </div>
@@ -939,7 +939,7 @@ function Questions({ embedded = false }: { embedded?: boolean }) {
                                         className={`rounded-xl border transition-colors ${
                                             isCorrect
                                                 ? "border-done/60 bg-done/5"
-                                                : "border-second bg-white hover:border-done/40 hover:bg-base/40"
+                                                : "border-second bg-white dark:bg-second hover:border-done/40 hover:bg-base/40"
                                         }`}
                                     >
                                         <div className="flex items-center gap-3 p-2.5 pr-1.5">
@@ -963,7 +963,7 @@ function Questions({ embedded = false }: { embedded?: boolean }) {
                                             } ${
                                                 isCorrect
                                                     ? "border-done bg-done text-base shadow-sm"
-                                                    : "border-tinted/40 bg-white text-transparent hover:border-done/70"
+                                                    : "border-tinted/40 bg-white dark:bg-second text-transparent hover:border-done/70"
                                             }`}
                                         >
                                             <Check className="h-3 w-3" strokeWidth={3.5} />
@@ -1143,7 +1143,7 @@ function Questions({ embedded = false }: { embedded?: boolean }) {
                                 onChange={(e) => {
                                     if (e.target.value) handleMoveQuestion(q, opts.pageId!, e.target.value)
                                 }}
-                                className="select select-xs select-bordered bg-white border-second text-tinted h-8 min-h-0 max-w-[8.5rem] w-full"
+                                className="select select-xs select-bordered bg-white dark:bg-second border-second text-tinted h-8 min-h-0 max-w-[8.5rem] w-full"
                                 title="Pindah ke section lain"
                             >
                                 <option value="">Pindah ke...</option>
@@ -1173,7 +1173,7 @@ function Questions({ embedded = false }: { embedded?: boolean }) {
                 initial={{ opacity: 0, y: 12 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.3, ease: easeOutExpo, delay: Math.min(sectionIdx * 0.05, 0.3) }}
-                className={`bg-white border border-second shadow-sm rounded-xl overflow-hidden ${
+                className={`bg-white dark:bg-second border border-second shadow-sm rounded-xl overflow-hidden ${
                     isActive ? "ring-1 ring-done/30" : ""
                 }`}
             >
@@ -1195,7 +1195,7 @@ function Questions({ embedded = false }: { embedded?: boolean }) {
                                 }}
                                 onBlur={(e) => handleRenameSection(page.id, e.currentTarget.value)}
                                 onClick={(e) => e.stopPropagation()}
-                                className="bg-transparent border border-transparent hover:border-second focus:border-done focus:bg-white rounded-md px-1.5 py-0.5 text-sm font-semibold text-darks w-40 sm:w-64 focus:outline-none transition-colors"
+                                className="bg-transparent border border-transparent hover:border-second focus:border-done focus:bg-white dark:bg-second rounded-md px-1.5 py-0.5 text-sm font-semibold text-darks w-40 sm:w-64 focus:outline-none transition-colors"
                                 title="Klik untuk ganti nama section"
                             />
                             <p className="text-xs text-tinted mt-0.5">
@@ -1303,7 +1303,7 @@ function Questions({ embedded = false }: { embedded?: boolean }) {
                                         className={`btn btn-sm rounded-full shrink-0 ${
                                             activeSectionId === p.id
                                                 ? "bg-darks text-base border-none"
-                                                : "bg-white text-darks border border-second"
+                                                : "bg-white dark:bg-second text-darks border border-second"
                                         }`}
                                     >
                                         {p.title}
@@ -1348,7 +1348,7 @@ function Questions({ embedded = false }: { embedded?: boolean }) {
                                     y: { duration: 0.3, ease: easeOutExpo, delay: dragId ? 0 : Math.min(idx * 0.05, 0.3) },
                                 }}
                             >
-                                <div className={dragId === q.id ? "bg-done/5 border border-done/60 border-dashed rounded-xl" : "bg-white border border-second rounded-xl"}>
+                                <div className={dragId === q.id ? "bg-done/5 border border-done/60 border-dashed rounded-xl" : "bg-white dark:bg-second border border-second rounded-xl"}>
                                     {renderQuestionCard(q, idx)}
                                 </div>
                             </motion.div>
@@ -1389,7 +1389,7 @@ function Questions({ embedded = false }: { embedded?: boolean }) {
                             animate={{ opacity: 1, y: 0, scale: 1 }}
                             exit={{ opacity: 0, y: 24, scale: 0.98 }}
                             transition={{ duration: 0.25, ease: easeOutExpo }}
-                            className="relative w-full sm:max-w-md bg-white border border-second shadow-2xl rounded-2xl p-5"
+                            className="relative w-full sm:max-w-md bg-white dark:bg-second border border-second shadow-2xl rounded-2xl p-5"
                             onClick={(e) => e.stopPropagation()}
                         >
                             <h2 className="font-semibold text-darks text-lg">Hapus Section</h2>
@@ -1410,7 +1410,7 @@ function Questions({ embedded = false }: { embedded?: boolean }) {
                                         <div className="min-w-0 flex-1">
                                             <p className="text-sm font-medium text-darks">Pindahkan soal ke section lain</p>
                                             <select
-                                                className="select select-sm select-bordered w-full mt-1.5 bg-white border-second"
+                                                className="select select-sm select-bordered w-full mt-1.5 bg-white dark:bg-second border-second"
                                                 value={deleteSectionChoice.moveToId ?? ""}
                                                 disabled={deleteSectionChoice.mode !== "move"}
                                                 onChange={(e) => setDeleteSectionChoice((prev) => prev ? { ...prev, moveToId: e.target.value || null } : prev)}
@@ -1446,7 +1446,7 @@ function Questions({ embedded = false }: { embedded?: boolean }) {
                                 <button
                                     onClick={() => setDeleteSectionChoice(null)}
                                     disabled={deleteSectionChoice.deleting}
-                                    className="btn rounded-xl border border-second bg-base text-darks hover:bg-second disabled:opacity-60"
+                                    className="btn rounded-xl border border-second bg-base text-darks hover:bg-white dark:bg-second disabled:opacity-60"
                                 >
                                     Batal
                                 </button>
