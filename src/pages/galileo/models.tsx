@@ -51,20 +51,38 @@ export interface AIModel {
     apiKey: string
     description: string
     color: string
+    /**
+     * Stacking / routing ala 9router: kalau dimuat, model ini bertindak sebagai
+     * router otomatis. Tugas ringan diarahkan ke `light`, tugas berat ke `heavy`,
+     * dan gagal/garing ke satu model akan otomatis jatuh ke model lain.
+     */
+    route?: { light: string; heavy: string }
 }
 
 export const AI_MODELS: AIModel[] = [
-    // {
-    //     id: "openai",
-    //     name: "OpenAI",
-    //     provider: "OpenAI",
-    //     model: "gpt-4o-mini",
-    //     baseUrl: "https://api.openai.com/v1",
-    //     endpoint: "/chat/completions",
-    //     apiKey: import.meta.env.VITE_OPENAI_API_KEY ?? "",
-    //     description: "GPT-4o mini · cepat & hemat untuk percakapan umum.",
-    //     color: "#10A37F",
-    // },
+    {
+        id: "smart-route",
+        name: "Smart Route",
+        provider: "OpenRouter",
+        model: "",
+        baseUrl: "",
+        endpoint: "",
+        apiKey: "",
+        description: "Router otomatis (ala 9router): tugas ringan pakai Gemini, tugas berat otomatis naik ke Nemotron. Ada failover jika satu model gagal.",
+        color: "#9B59B6",
+        route: { light: "gemini", heavy: "nemotron-super" },
+    },
+    {
+        id: "gemini",
+        name: "Gemini",
+        provider: "Google",
+        model: "gemini-3.6-flash",
+        baseUrl: "https://generativelanguage.googleapis.com/v1beta",
+        endpoint: "/models/gemini-3.6-flash:generateContent",
+        apiKey: import.meta.env.VITE_GEMINI_API_KEY ?? "",
+        description: "Gemini 3.6 Flash · cepat, hemat, multimodal — default untuk tugas ringan di Smart Route.",
+        color: "#4285F4",
+    },
     {
         id: "nemotron-super",
         name: "Nemotron 3 Super",
@@ -73,7 +91,7 @@ export const AI_MODELS: AIModel[] = [
         baseUrl: "https://openrouter.ai/api/v1",
         endpoint: "/chat/completions",
         apiKey: import.meta.env.VITE_OPENROUTER_API_KEY ?? "",
-        description: "Nemotron 3 Super (free) · 12B parameter aktif, jauh lebih cepat dari Nemotron Ultra.",
+        description: "Nemotron 3 Super (free) · 12B parameter aktif, jauh lebih cepat dari Nemotron Ultra — andalan Smart Route untuk tugas berat.",
         color: "#76B900",
     },
     {
@@ -86,17 +104,6 @@ export const AI_MODELS: AIModel[] = [
         apiKey: import.meta.env.VITE_OPENROUTER_API_KEY ?? "",
         description: "MiniMax M2.7 (free) · alternatif kalau Nemotron Super kurang cocok.",
         color: "#FF4D4F",
-    },
-    {
-        id: "gemini",
-        name: "Gemini",
-        provider: "Google",
-        model: "gemini-3.6-flash",
-        baseUrl: "https://generativelanguage.googleapis.com/v1beta",
-        endpoint: "/models/gemini-3.6-flash:generateContent",
-        apiKey: import.meta.env.VITE_GEMINI_API_KEY ?? "",
-        description: "Gemini 3.6 Flash · multimodal, konteks besar & berbahasa Indonesia baik (limit lebih ketat).",
-        color: "#4285F4",
     },
     // {
     //     id: "nemotron-ultra",

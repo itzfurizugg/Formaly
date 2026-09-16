@@ -26,7 +26,17 @@ import BackButton from "../../components/backButton"
 import FormTabs from "../../components/creator/formTabs"
 import FormHeader from "../../components/creator/formHeader"
 import TagInput from "../../components/creator/TagInput"
+import ModeSelector from "../../components/creator/ModeSelector"
 import Loading, { Spinner } from "../../components/loading"
+import {
+    LAYOUT_QUIZ,
+    LAYOUT_STANDARD,
+    isQuizMode,
+    migrateToQuiz,
+    migrateToStandard,
+    type FormLayoutMode,
+} from "../../lib/formPages"
+import ModalPortal from "../../components/modalPortal"
 
 interface FormSettingsData {
     show_score_to_respondent: boolean
@@ -99,6 +109,7 @@ interface FormEditCache {
     headerColor: string
     headerMedia: string
     settings: FormSettingsData
+    layoutMode: string
 }
 
 function FormEdit() {
@@ -128,6 +139,17 @@ function FormEdit() {
     const [headerColor, setHeaderColor] = useState(cached?.headerColor ?? "")
     const [headerImage, setHeaderImage] = useState(cached?.headerImage ?? "")
     const [headerMedia, setHeaderMedia] = useState<string | null>(cached?.headerMedia ?? "")
+    const [layoutMode, setLayoutMode] = useState<FormLayoutMode>(
+        cached?.layoutMode === LAYOUT_STANDARD ? LAYOUT_STANDARD : LAYOUT_QUIZ
+    )
+    // Mode asli yang tersimpan di database — dipakai untuk mendeteksi perubahan
+    // mode dan memicu konfirmasi migrasi soal antar section.
+    const [savedLayoutMode, setSavedLayoutMode] = useState<string | null>(
+        cached?.layoutMode ?? null
+    )
+    // Konfirmasi migrasi saat mode diubah dan form sudah punya soal.
+    const [modeConfirm, setModeConfirm] = useState<FormLayoutMode | null>(null)
+    const [migrating, setMigrating] = useState(false)
 
     const cacheKey = user && id ? `formEdit:${user.id}:${id}` : null
 
@@ -169,6 +191,9 @@ function FormEdit() {
         setHeaderColor(nextHeaderColor)
         setHeaderImage(nextHeaderImage)
         setHeaderMedia(nextHeaderMedia)
+        const nextLayout: string = data.layout_mode ?? LAYOUT_QUIZ
+        setLayoutMode(isQuizMode(nextLayout) ? LAYOUT_QUIZ : LAYOUT_STANDARD)
+        setSavedLayoutMode(nextLayout)
 
         if (cacheKey) {
             pageSet<FormEditCache>(cacheKey, {
@@ -182,6 +207,7 @@ function FormEdit() {
                 headerColor: nextHeaderColor,
                 headerMedia: nextHeaderMedia,
                 settings: nextSettings,
+                layoutMode: nextLayout,
             })
         }
         setLoading(false)
@@ -251,8 +277,9 @@ function FormEdit() {
             headerColor,
             headerMedia: headerMedia || "",
             settings,
+            layoutMode,
         })
-    }, [cacheKey, title, description, duration, passingScore, status, createdAt, headerImage, headerColor, headerMedia, settings])
+    }, [cacheKey, title, description, duration, passingScore, status, createdAt, headerImage, headerColor, headerMedia, settings, layoutMode])
 
     // Sama seperti halaman Soal: kalau kreator pindah tab / keluar sebelum
     // menekan "Simpan Perubahan", draft saat ini (termasuk banner yang baru
@@ -280,7 +307,7 @@ function FormEdit() {
         }
     }
 
-    // Satu tombol simpan untuk SEMUA perubahan: detail form + banner + pengaturan.
+    // Satu tombol simpan untuk SEMUA perubahan: detail form + banner + pengaturan + mode.
     const handleSaveAll = async (e?: FormEvent) => {
         if (e) e.preventDefault()
         if (!id) return
@@ -293,9 +320,37 @@ function FormEdit() {
             showAlert("URL gambar header harus diawali http:// atau https://.", "error")
             return
         }
+
+        // Jika mode form diubah dan form sudah punya soal, tampilkan konfirmasi dulu.
+        const modeChanged = savedLayoutMode && layoutMode !== savedLayoutMode
+        if (modeChanged) {
+            const { count } = await supabase
+                .from("questions")
+                .select("id", { count: "exact", head: true })
+                .eq("form_id", id)
+            if ((count ?? 0) > 0) {
+                setModeConfirm(layoutMode)
+                return
+            }
+        }
+
         setSaving(true)
 
         try {
+            // Simpan mode jika berubah
+            if (modeChanged) {
+                if (layoutMode === LAYOUT_STANDARD) {
+                    await migrateToStandard(id)
+                } else {
+                    await migrateToQuiz(id)
+                }
+                const { error: layoutErr } = await supabase
+                    .from("forms")
+                    .update({ layout_mode: layoutMode })
+                    .eq("id", id)
+                if (layoutErr) throw new Error("Gagal menyimpan mode form: " + layoutErr.message)
+            }
+
             await saveFormData()
 
             // Banner + pengaturan (beberapa kolom ini mungkin belum ada di
@@ -312,6 +367,7 @@ function FormEdit() {
                     header_color: headerColor || null,
                     header_image: headerImage.trim() || null,
                     media_url: headerMedia?.trim() || null,
+                    layout_mode: layoutMode,
                 })
                 .eq("id", id)
                 .select("id")
@@ -321,6 +377,7 @@ function FormEdit() {
             if (error) throw new Error(error.message)
             if (!data) throw new Error("Perubahan tidak tersimpan. Pastikan kamu pemilik form ini.")
 
+            setSavedLayoutMode(layoutMode)
             syncBannerCaches()
             saveCache()
             alertSaveSuccess()
@@ -333,6 +390,52 @@ function FormEdit() {
             alertSaveError(msg)
         } finally {
             setSaving(false)
+        }
+    }
+
+    // Lanjutkan simpan setelah konfirmasi mode switch.
+    const confirmModeSwitch = async () => {
+        if (!id || !modeConfirm) return
+        setMigrating(true)
+        try {
+            const targetMode = modeConfirm
+            if (targetMode === LAYOUT_STANDARD) {
+                await migrateToStandard(id)
+            } else {
+                await migrateToQuiz(id)
+            }
+            await supabase.from("forms").update({ layout_mode: targetMode }).eq("id", id)
+            setLayoutMode(targetMode)
+            setSavedLayoutMode(targetMode)
+            setModeConfirm(null)
+            // Sekarang jalankan saveAll untuk data form lainnya
+            setSaving(true)
+            await saveFormData()
+            const { error } = await supabase
+                .from("forms")
+                .update({
+                    show_score_to_respondent: settings.show_score_to_respondent,
+                    show_answers_to_respondent: settings.show_answers_to_respondent,
+                    show_correct_filter_to_respondent: settings.show_correct_filter_to_respondent,
+                    randomize_questions: settings.randomize_questions,
+                    allow_multiple_submissions: settings.allow_multiple_submissions,
+                    header_color: headerColor || null,
+                    header_image: headerImage.trim() || null,
+                    media_url: headerMedia?.trim() || null,
+                    layout_mode: targetMode,
+                })
+                .eq("id", id)
+                .select("id")
+                .maybeSingle()
+            if (error) throw new Error(error.message)
+            syncBannerCaches()
+            saveCache()
+            alertSaveSuccess("Mode form berhasil diubah.")
+        } catch (err) {
+            alertSaveError(err instanceof Error ? err.message : "Gagal mengubah mode form.")
+        } finally {
+            setSaving(false)
+            setMigrating(false)
         }
     }
 
@@ -463,13 +566,18 @@ function FormEdit() {
                                             </p>
                                         </div>
 
+                                        <div>
+                                            <label className="block text-sm font-medium text-darks mb-2">Mode Form</label>
+                                            <ModeSelector value={layoutMode} onChange={setLayoutMode} />
+                                        </div>
+
                                         <button
                                             type="submit"
-                                            disabled={saving || uploadingBanner}
+                                            disabled={saving || uploadingBanner || migrating}
                                             className="btn bg-darks text-base border-none w-full hidden sm:flex hover:opacity-90 transition-opacity disabled:opacity-60 mb-2 mt-5"
                                         >
-                                            {saving ? <Spinner size={16} /> : uploadingBanner ? <Spinner size={16} /> : <Save className="h-4 w-4" />}
-                                            {saving ? "Menyimpan..." : uploadingBanner ? "Mengupload banner..." : "Simpan Perubahan"}
+                                            {saving || migrating ? <Spinner size={16} /> : uploadingBanner ? <Spinner size={16} /> : <Save className="h-4 w-4" />}
+                                            {saving ? "Menyimpan..." : migrating ? "Mengubah mode..." : uploadingBanner ? "Mengupload banner..." : "Simpan Perubahan"}
                                         </button>
                                     </form>
                                 </div>
@@ -626,15 +734,66 @@ function FormEdit() {
                             <button
                                 type="button"
                                 onClick={() => handleSaveAll()}
-                                disabled={saving || uploadingBanner}
+                                disabled={saving || uploadingBanner || migrating}
                                 className="w-fit px-5 h-14 bg-darks mx-auto text-lg text-white font-bold rounded-full flex items-center justify-center gap-2 pointer-events-auto shadow-lg hover:opacity-90 transition-opacity disabled:opacity-60"
                             >
-                                {saving ? <Spinner size={16} /> : uploadingBanner ? <Spinner size={16} /> : <Save className="h-4 w-4" />}
-                                {saving ? "Menyimpan..." : uploadingBanner ? "Mengupload banner..." : "Simpan Perubahan"}
+                                {saving || migrating ? <Spinner size={16} /> : uploadingBanner ? <Spinner size={16} /> : <Save className="h-4 w-4" />}
+                                {saving ? "Menyimpan..." : migrating ? "Mengubah mode..." : uploadingBanner ? "Mengupload banner..." : "Simpan Perubahan"}
                             </button>
                         </div>
                     </div>
                 </motion.div>
+            )}
+
+            {/* Modal Konfirmasi Ubah Mode Form */}
+            {modeConfirm && (
+                <ModalPortal>
+                    <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        transition={{ duration: 0.2 }}
+                        className="fixed inset-0 z-50 flex items-center justify-center px-3.5"
+                        role="dialog"
+                        aria-modal="true"
+                    >
+                        <div className="absolute inset-0 bg-darks/50" onClick={() => !migrating && setModeConfirm(null)} />
+                        <motion.div
+                            initial={{ opacity: 0, scale: 0.95, y: 16 }}
+                            animate={{ opacity: 1, scale: 1, y: 0 }}
+                            exit={{ opacity: 0, scale: 0.96, y: 12 }}
+                            transition={{ duration: 0.25 }}
+                            className="relative bg-white border border-second rounded-2xl w-full max-w-sm p-5 shadow-xl"
+                        >
+                            <div className="items-start text-start">
+                                <h3 className="text-base font-bold text-darks text-xl">
+                                    {modeConfirm === LAYOUT_STANDARD ? "Ubah ke Mode Form Biasa" : "Ubah ke Mode Quiz / Ujian"}
+                                </h3>
+                                <p className="text-sm text-tinted mt-1">
+                                    {modeConfirm === LAYOUT_STANDARD
+                                        ? "Semua soal akan digabung ke dalam satu section \"Bagian 1\". Kamu bisa memindahkan dan mengelompokkan soal setelahnya."
+                                        : "Setiap soal akan dipindahkan ke halaman sendiri-sendiri (1 soal = 1 halaman)."}
+                                </p>
+                            </div>
+                            <div className="mt-5 flex gap-3">
+                                <button
+                                    onClick={() => setModeConfirm(null)}
+                                    disabled={migrating}
+                                    className="btn flex-1 rounded-full bg-base text-darks border border-second hover:bg-second disabled:opacity-60"
+                                >
+                                    Batal
+                                </button>
+                                <button
+                                    onClick={confirmModeSwitch}
+                                    disabled={migrating}
+                                    className="btn flex-1 rounded-full bg-darks text-base border-none hover:opacity-90 disabled:opacity-60"
+                                >
+                                    {migrating ? <Spinner size={16} /> : "Ya, Ubah Mode"}
+                                </button>
+                            </div>
+                        </motion.div>
+                    </motion.div>
+                </ModalPortal>
             )}
         </>
     )

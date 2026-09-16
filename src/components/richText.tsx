@@ -8,7 +8,7 @@ import katex from "katex"
 import "katex/dist/katex.min.css"
 import { motion, AnimatePresence } from "motion/react"
 import { Sigma, Link2, X } from "lucide-react"
-import { sanitizeRichText, inlineRichText, embedsToText } from "../lib/richtext"
+import { sanitizeRichText, inlineRichText, embedsToText, tokenizeLatex, toBlockLatex, fromBlockLatex, convertLatexInHtml, convertCodeBlocksInHtml } from "../lib/richtext"
 import { enhanceVideoIframes } from "../lib/videoGui"
 import { modalBackdrop, modalPanel } from "../lib/motion"
 
@@ -48,7 +48,7 @@ function RichText({ html, as = "div", className = "", enhanceMedia = true }: { h
 // "header" dipertahankan di daftar format (kompatibilitas konten tersimpan & hasil
 // paste), tetapi KONTROL heading (H1..H5) sudah DIHAPUS dari toolbar editor.
 const fullFormats = ["header", "bold", "italic", "underline", "strike", "list", "link", "formula", "video", "code-block"]
-const compactFormats = ["bold", "italic", "underline", "link"]
+const compactFormats = ["bold", "italic", "underline", "link", "formula"]
 
 interface LaTeXTemplate {
     id: string
@@ -95,12 +95,7 @@ function katexPreview(latex: string): string {
     }
 }
 
-// Rumus block (display) dirender dengan mode display KaTeX agar tampil besar,
-// jelas berbeda dari rumus inline. Kita menegaskan lewat perintah LaTeX
-// `\displaystyle` yang valid di editor maupun viewer (sanitizeRichText).
-const DISPLAY_PREFIX = "\\displaystyle "
-const toBlockLatex = (latex: string) => DISPLAY_PREFIX + latex
-const fromBlockLatex = (latex: string) => latex.replace(/^\\displaystyle\s+/, "")
+// Main editor — helper LaTeX display/block sudah diimpor dari lib/richtext.
 
 /**
  * Editor WYSIWYG yang hanya menampilkan toolbar saat field sedang aktif (digunakan).
@@ -232,6 +227,172 @@ function RichTextEditor({ value, onChange, placeholder, className = "", compact 
         return () => {
             cancelled = true
             window.clearTimeout(t)
+        }
+    }, [active])
+
+    // Autoconvert LaTeX & code block saat mengetik/paste → langsung WYSIWYG.
+    useEffect(() => {
+        if (!active) return
+        let cancelled = false
+        const cleanups: (() => void)[] = []
+
+        const t = window.setTimeout(() => {
+            if (cancelled) return
+            const quill = getEditor()
+            if (!quill) return
+
+            let isConverting = false
+
+            const checkEndingFormula = (text: string) => {
+                const blockDollar = /\$\$([^\$]+?)\$\$$/.exec(text)
+                if (blockDollar) return { match: blockDollar[0], tex: blockDollar[1].trim(), block: true }
+                const blockBracket = /\\\[([\s\S]+?)\\\]$/.exec(text)
+                if (blockBracket) return { match: blockBracket[0], tex: blockBracket[1].trim(), block: true }
+                const inlineParen = /\\\(([\s\S]+?)\\\)$/.exec(text)
+                if (inlineParen) return { match: inlineParen[0], tex: inlineParen[1].trim(), block: false }
+                const inlineDollar = /(?:^|[^\$])(\$([^\s\$](?:[^\$]*?[^\s\$])?)\$)$/.exec(text)
+                if (inlineDollar) return { match: inlineDollar[1], tex: inlineDollar[2].trim(), block: false }
+                return null
+            }
+
+            const parseCodeBlock = (raw: string) => {
+                const inner = raw.slice(3, -3)
+                // Strip bahasa opsional di baris pertama: ```javascript\n... → ...
+                const code = /^[a-zA-Z][\w-]*\n/.test(inner) ? inner.replace(/^[^\n]*\n/, "") : inner
+                return code.replace(/^\n/, "").replace(/\n$/, "")
+            }
+
+            const checkEndingCode = (text: string) => {
+                const m = /(```[\s\S]+?```)$/.exec(text)
+                if (!m) return null
+                const code = parseCodeBlock(m[1])
+                return { match: m[1], code }
+            }
+
+            const onTextChange = (_delta: unknown, _oldDelta: unknown, source: string) => {
+                if (source !== "user" || isConverting) return
+                const sel = quill.getSelection()
+                if (!sel || sel.length > 0) return
+
+                const curIdx = sel.index
+                const textBefore = quill.getText(0, curIdx)
+
+                // Cek code block dulu (``` ... ```)
+                const codeMatch = checkEndingCode(textBefore)
+                if (codeMatch) {
+                    isConverting = true
+                    try {
+                        const blockStart = curIdx - codeMatch.match.length
+                        const lines = codeMatch.code === "" ? [""] : codeMatch.code.split("\n")
+                        const d = new Delta().retain(blockStart).delete(codeMatch.match.length)
+                        for (const line of lines) {
+                            d.insert(line).insert("\n", { "code-block": true })
+                        }
+                        quill.updateContents(d, "user")
+                        const newPos = blockStart + lines.reduce((acc, l) => acc + l.length + 1, 0)
+                        quill.setSelection(newPos, 0, "silent")
+                    } finally {
+                        isConverting = false
+                    }
+                    return
+                }
+
+                // Cek formula LaTeX
+                const formulaMatch = checkEndingFormula(textBefore)
+                if (!formulaMatch || !formulaMatch.tex) return
+
+                try {
+                    katex.renderToString(formulaMatch.tex, { throwOnError: true })
+                } catch {
+                    return
+                }
+
+                isConverting = true
+                try {
+                    const formulaIndex = curIdx - formulaMatch.match.length
+                    const stored = formulaMatch.block ? toBlockLatex(formulaMatch.tex) : formulaMatch.tex
+                    quill.updateContents(
+                        new Delta().retain(formulaIndex).delete(formulaMatch.match.length).insert({ formula: stored }),
+                        "user"
+                    )
+                    quill.setSelection(formulaIndex + 1, 0, "silent")
+                } finally {
+                    isConverting = false
+                }
+            }
+
+            const onPaste = (e: ClipboardEvent) => {
+                const text = e.clipboardData?.getData("text/plain")
+                if (!text) return
+
+                type PasteToken =
+                    | { type: "text"; value: string }
+                    | { type: "formula"; value: string; block: boolean }
+                    | { type: "code"; value: string }
+
+                const pasteTokens: PasteToken[] = []
+                const splitRegex = /(```[\s\S]*?```|\$\$[\s\S]+?\$\$|\\\[[\s\S]+?\\\]|\\\([\s\S]+?\\\)|(?<!\$)\$(?:[^\s\$](?:[\s\S]*?[^\s\$])?)\$(?!\$))/g
+                let lastIdx = 0
+                let m: RegExpExecArray | null
+                while ((m = splitRegex.exec(text)) !== null) {
+                    if (m.index > lastIdx) pasteTokens.push({ type: "text", value: text.slice(lastIdx, m.index) })
+                    const raw = m[0]
+                    if (raw.startsWith("```") && raw.endsWith("```")) {
+                        pasteTokens.push({ type: "code", value: parseCodeBlock(raw) })
+                    } else {
+                        const latexTokens = tokenizeLatex(raw)
+                        for (const lt of latexTokens) {
+                            if (lt.type === "formula") pasteTokens.push({ type: "formula", value: lt.value, block: lt.block ?? false })
+                            else pasteTokens.push({ type: "text", value: lt.value })
+                        }
+                    }
+                    lastIdx = splitRegex.lastIndex
+                }
+                if (lastIdx < text.length) pasteTokens.push({ type: "text", value: text.slice(lastIdx) })
+
+                const hasSpecial = pasteTokens.some((t) => t.type === "formula" || t.type === "code")
+                if (!hasSpecial) return
+
+                e.preventDefault()
+                e.stopPropagation()
+
+                const sel = quill.getSelection(true)
+                const range = sel ?? { index: quill.getLength(), length: 0 }
+
+                const pasteDelta = new Delta()
+                for (const tok of pasteTokens) {
+                    if (tok.type === "text") {
+                        pasteDelta.insert(tok.value)
+                    } else if (tok.type === "formula") {
+                        const stored = tok.block ? toBlockLatex(tok.value) : tok.value
+                        pasteDelta.insert({ formula: stored })
+                    } else if (tok.type === "code") {
+                        const lines = tok.value === "" ? [""] : tok.value.split("\n")
+                        for (const line of lines) {
+                            pasteDelta.insert(line).insert("\n", { "code-block": true })
+                        }
+                    }
+                }
+
+                quill.updateContents(
+                    new Delta().retain(range.index).delete(range.length).concat(pasteDelta),
+                    "user"
+                )
+                quill.setSelection(range.index + pasteDelta.length(), 0, "user")
+            }
+
+            quill.on("text-change", onTextChange)
+            quill.root.addEventListener("paste", onPaste, true)
+            cleanups.push(() => {
+                quill.off("text-change", onTextChange)
+                quill.root.removeEventListener("paste", onPaste, true)
+            })
+        }, 0)
+
+        return () => {
+            cancelled = true
+            window.clearTimeout(t)
+            cleanups.forEach((c) => c())
         }
     }, [active])
 
@@ -377,7 +538,7 @@ function RichTextEditor({ value, onChange, placeholder, className = "", compact 
                 <ReactQuill
                     ref={quillRef}
                     theme="snow"
-                    value={value}
+                    value={convertLatexInHtml(convertCodeBlocksInHtml(value))}
                     onChange={onChange}
                     useSemanticHTML={false}
                     modules={modules}

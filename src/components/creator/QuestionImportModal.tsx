@@ -11,6 +11,10 @@ import { Spinner } from "../loading"
 interface QuestionImportModalProps {
     formId: string
     startingOrder: number
+    /** Section tujuan (mode standard). Semua soal import masuk ke section ini. */
+    fallbackPageId?: string
+    /** Mode quiz: bikin 1 halaman per soal. Default false. */
+    oneQuestionPerPage?: boolean
     onClose: () => void
     onImported: (summary: string) => void
 }
@@ -28,7 +32,7 @@ async function parseFile(file: File): Promise<ParsedQuestion[]> {
     }
 }
 
-export default function QuestionImportModal({ formId, startingOrder, onClose, onImported }: QuestionImportModalProps) {
+export default function QuestionImportModal({ formId, startingOrder, fallbackPageId, oneQuestionPerPage = false, onClose, onImported }: QuestionImportModalProps) {
     const inputRef = useRef<HTMLInputElement>(null)
     const [rows, setRows] = useState<ParsedQuestion[]>([])
     const [fileName, setFileName] = useState("")
@@ -74,6 +78,38 @@ export default function QuestionImportModal({ formId, startingOrder, onClose, on
         }
 
         setSaving(true)
+
+        // Siapkan page_id untuk tiap soal valid sebelum insert.
+        // Mode quiz: 1 soal = 1 halaman (buat halaman baru per soal).
+        // Mode standard: semua soal masuk ke fallbackPageId (bila tersedia).
+        let pageIds: (string | null)[] = validRows.map(() => (oneQuestionPerPage ? null : (fallbackPageId ?? null)))
+        if (oneQuestionPerPage) {
+            const { data: lastPage } = await supabase
+                .from("form_pages")
+                .select("position")
+                .eq("form_id", formId)
+                .order("position", { ascending: false })
+                .limit(1)
+            let pageIndex = (lastPage && lastPage.length > 0 && lastPage[0].position != null) ? lastPage[0].position + 1 : 0
+
+            pageIds = []
+            for (let i = 0; i < validRows.length; i++) {
+                const title = `Halaman ${pageIndex + 1}`
+                const { data: newPage, error: pageErr } = await supabase
+                    .from("form_pages")
+                    .insert({ form_id: formId, title, position: pageIndex })
+                    .select("id")
+                    .single()
+                if (pageErr || !newPage) {
+                    setSaving(false)
+                    showAlert("Gagal membuat halaman untuk soal import: " + (pageErr?.message ?? "unexpected"), "error")
+                    return
+                }
+                pageIds.push(newPage.id)
+                pageIndex++
+            }
+        }
+
         const { data: insertedQuestions, error: questionError } = await supabase
             .from("questions")
             .insert(validRows.map((row, index) => ({
@@ -84,6 +120,7 @@ export default function QuestionImportModal({ formId, startingOrder, onClose, on
                 is_required: row.is_required ?? false,
                 order_index: startingOrder + index,
                 image_question: null,
+                page_id: pageIds[index] ?? null,
             })))
             .select("id")
 

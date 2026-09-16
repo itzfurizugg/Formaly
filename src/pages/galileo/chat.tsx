@@ -1,13 +1,13 @@
 import * as React from "react"
 import { useEffect, useState, useRef } from "react"
 import { useNavigate } from "react-router-dom"
-import { FileText, Paperclip, Send, LayoutTemplate, ChevronDown, Check } from "lucide-react"
+import { FileText, Paperclip, Send, LayoutTemplate } from "lucide-react"
 import { motion } from "motion/react"
 import { Spinner } from "../../components/loading"
 import { supabase } from "../../lib/supabase"
 import { useAuth } from "../../lib/auth-context"
 import { extractFileText } from "../../lib/fileText"
-import { AI_MODELS, DEFAULT_MODEL_ID, getModel, type AIModel } from "./models"
+import { DEFAULT_MODEL_ID } from "./models"
 import { fadeSlide } from "../../lib/motion"
 import BackButton from "../../components/backButton"
 
@@ -21,7 +21,7 @@ interface PromptPayload {
     fileText: string | null
     /** id form yang dipilih untuk ditambah soal (null = buat form baru). */
     form_id: string | null
-    /** id model AI yang dipilih pengguna lewat model picker di chat. */
+    /** Model AI — selalu Smart Route: tugas ringan otomatis ke Gemini, berat ke Nemotron. */
     model_id: string
 }
 
@@ -68,10 +68,6 @@ function ChatPage() {
     const [error, setError] = useState("")
     const fileInputRef = useRef<HTMLInputElement>(null)
     const textareaRef = useRef<HTMLTextAreaElement>(null)
-
-    // Model AI yang dipakai untuk generate — dipilih lewat picker di sebelah "Sisipkan Materi".
-    const [selectedModelId, setSelectedModelId] = useState<string>(DEFAULT_MODEL_ID)
-    const selectedModel = getModel(selectedModelId)
 
     // Daftar form milik kreator — dipanggil lewat mention "@" di kotak pesan.
     const [forms, setForms] = useState<FormRef[]>([])
@@ -225,7 +221,7 @@ function ChatPage() {
             // Prioritas: form yang dipilih eksplisit lewat popup "@".
             // Fallback: telusuri judul form yang disebut "@judul..." dalam teks.
             form_id: selectedFormId ?? resolveMentionId(text, forms),
-            model_id: selectedModelId,
+            model_id: DEFAULT_MODEL_ID,
         }
         sessionStorage.setItem("galileo:prompt", JSON.stringify(payload))
 
@@ -253,6 +249,12 @@ function ChatPage() {
                     <p className="text-center text-xs sm:text-sm text-tinted mt-2 mb-5 sm:mb-6 px-2">
                         Mulai membuat form dengan mudah! Galileo adalah AI Form Builder milik <span className="font-bold">Formaly</span>
                     </p>
+
+                    <div className="gap-3 mb-3">
+                        <button className="btn rounded-full">🔢 Ujian Matematika</button>
+                        <button className="btn rounded-full">Form Pendaftaran</button>
+                        <button className="btn rounded-full"></button>
+                    </div>
 
                     <form onSubmit={handleSubmit} className="bg-white border border-second rounded-2xl shadow-sm p-3.5 sm:p-5">
                         {file && (
@@ -298,6 +300,7 @@ function ChatPage() {
                                 </div>
                             </AnimateBlur>
 
+
                             <textarea
                                 ref={textareaRef}
                                 value={message}
@@ -305,7 +308,7 @@ function ChatPage() {
                                 onKeyDown={handleKeyDown}
                                 placeholder="Contoh: Buatkan kuis pilihan ganda 10 soal tentang sejarah Indonesia kelas 5 SD."
                                 rows={3}
-                                className="w-full resize-none bg-transparent text-darks placeholder:text-tinted text-sm sm:text-base outline-none px-1"
+                                className="w-full resize-none bg-transparent text-darks placeholder:text-tinted text-sm sm:text-darks outline-none px-1"
                             />
                         </div>
 
@@ -321,8 +324,14 @@ function ChatPage() {
                                     <Paperclip className="h-3.5 w-3.5 shrink-0" />
                                     <span>Sisipkan Materi</span>
                                 </button>
-
-                                <ModelPicker models={AI_MODELS} selected={selectedModel} onSelect={setSelectedModelId} />
+                                {/* 
+                                <span
+                                    className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-base-300 text-[11px] text-tinted"
+                                    title="Smart Route otomatis memilih model: tugas ringan → Gemini, tugas berat → Nemotron."
+                                >
+                                    <span className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: "#9B59B6" }} />
+                                    Smart Route
+                                </span> */}
                             </div>
 
                             <button
@@ -347,72 +356,6 @@ function ChatPage() {
                     onChange={handleFileChange}
                 />
             </div>
-        </div>
-    )
-}
-
-function ModelPicker({
-    models,
-    selected,
-    onSelect,
-}: {
-    models: AIModel[]
-    selected: AIModel
-    onSelect: (id: string) => void
-}) {
-    const [open, setOpen] = useState(false)
-    const ref = useRef<HTMLDivElement>(null)
-
-    useEffect(() => {
-        const handleClick = (e: MouseEvent) => {
-            if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false)
-        }
-        document.addEventListener("mousedown", handleClick)
-        return () => document.removeEventListener("mousedown", handleClick)
-    }, [])
-
-    return (
-        <div className="relative" ref={ref}>
-            <button
-                type="button"
-                onClick={() => setOpen((o) => !o)}
-                className="btn btn-sm rounded-full bg-base-300 border-none text-darks hover:bg-darks/20 transition-colors gap-1.5 px-3 text-xs"
-                aria-haspopup="listbox"
-                aria-expanded={open}
-            >
-                <span className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: selected.color }} />
-                <span className="truncate max-w-[100px] sm:max-w-none">{selected.name}</span>
-                <ChevronDown className={`h-3.5 w-3.5 shrink-0 transition-transform ${open ? "rotate-180" : ""}`} />
-            </button>
-
-            <AnimateBlur open={open}>
-                <div className="absolute bottom-full left-0 mb-2 w-72 max-w-[calc(100vw-3rem)] rounded-xl border border-second bg-white shadow-lg overflow-hidden z-20">
-                    <ul className="max-h-72 overflow-y-auto py-1" role="listbox">
-                        {models.map((m) => (
-                            <li key={m.id}>
-                                <button
-                                    type="button"
-                                    onClick={() => {
-                                        onSelect(m.id)
-                                        setOpen(false)
-                                    }}
-                                    className={`w-full flex items-start gap-2.5 px-3 py-2.5 text-left transition-colors ${m.id === selected.id ? "bg-base" : "bg-transparent hover:bg-base/60"
-                                        }`}
-                                    role="option"
-                                    aria-selected={m.id === selected.id}
-                                >
-                                    <span className="mt-1 w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: m.color }} />
-                                    <span className="min-w-0 flex-1">
-                                        <span className="block text-sm font-medium text-darks truncate">{m.name}</span>
-                                        <span className="block text-xs text-tinted mt-0.5 leading-snug">{m.description}</span>
-                                    </span>
-                                    {m.id === selected.id && <Check className="h-4 w-4 text-darks shrink-0 mt-0.5" />}
-                                </button>
-                            </li>
-                        ))}
-                    </ul>
-                </div>
-            </AnimateBlur>
         </div>
     )
 }

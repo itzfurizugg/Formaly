@@ -1,4 +1,4 @@
-import type { AIModel } from "../pages/galileo/models"
+import { getModel, type AIModel } from "../pages/galileo/models"
 
 export interface AIMedia {
     fileName: string
@@ -14,6 +14,81 @@ export interface AIHistoryMessage {
 }
 
 export const REQUEST_TIMEOUT_MS = 120_000
+
+/** Hasil estimasi berat-ringannya tugas — dipakai router Smart Route. */
+export interface RouteEstimate {
+    tier: "light" | "heavy"
+    score: number
+}
+
+const ROUTE_THRESHOLD = 2.5
+
+// Kata kunci yang menaikkan "berat" tugas. Kuat (skala besar) vs sedang.
+const HEAVY_KEYWORDS_STRONG = ["utbk", "sbmptn", "snbt", "bps", "cpns"]
+const HEAVY_KEYWORDS_MEDIUM = [
+    "hukum", "kedokteran", "medis", "kalkulus", "statistik", "pemrograman",
+    "algoritma", "analisis", "analisa", "jurnal", "penelitian", "debat",
+    "esai", "eskai", "kompleks", "rumit", "mendalam", "kode program",
+]
+
+// Estimasi kompleksitas berdasarkan panjang input, jumlah soal yang diminta,
+// lampiran file, mode "lengkapi form yang ada", dan kata kunci.
+export function estimateComplexity(messages: AIHistoryMessage[], system?: string): RouteEstimate {
+    let score = 0
+    const userText = messages
+        .filter((h) => h.role === "user")
+        .map((h) => h.content || "")
+        .join(" ")
+
+    // Panjang prompt: 500 karakter ≈ +1.
+    score += userText.length / 500
+
+    // Lampiran file (raw media): makin besar file, makin berat.
+    const mediaLen = messages.reduce((acc, h) => acc + (h.media?.base64?.length ?? 0), 0)
+    if (mediaLen > 0) {
+        // base64 menggelembung ~33%; 1MB file ≈ 1.33MB base64 → +1.5.
+        score += 1.5
+        score += mediaLen / 900_000
+    }
+
+    // Jumlah soal yang diminta ("N soal / pertanyaan / kuis").
+    const countMatch = userText.match(/(\d+)\s*(?:soal|pertanyaan|soal-soal|kuis)/i)
+    if (countMatch) {
+        const n = parseInt(countMatch[1], 10)
+        score += n >= 25 ? 2.5 : n >= 15 ? 1.5 : n >= 8 ? 0.8 : 0
+    }
+
+    // Mode melengkapi form yang sudah ada (append lewat @judul) — butuh menjaga konteks.
+    if (/yang sudah ada|eksisting/i.test(system ?? "")) score += 1.5
+
+    const lower = userText.toLowerCase()
+    for (const kw of HEAVY_KEYWORDS_STRONG) {
+        if (lower.includes(kw)) score += 1
+    }
+    let mediumBoost = 0
+    for (const kw of HEAVY_KEYWORDS_MEDIUM) {
+        if (lower.includes(kw)) mediumBoost += 0.5
+    }
+    score += Math.min(mediumBoost, 2.5)
+
+    return { score, tier: score >= ROUTE_THRESHOLD ? "heavy" : "light" }
+}
+
+/**
+ * Resolusi model yang "akan" dipakai untuk sebuah request. Untuk model router
+ * (punya `route`), kembalikan model ringan/berat sesuai estimasi. Untuk model
+ * biasa, kembalikan model itu sendiri. Dipakai untuk label/pratinjau UI.
+ */
+export function getRoutedModel(
+    m: AIModel,
+    messages: AIHistoryMessage[],
+    system?: string,
+): AIModel {
+    if (!m.route) return m
+    const { tier } = estimateComplexity(messages, system)
+    const ref = tier === "light" ? m.route.light : m.route.heavy
+    return getModel(ref)
+}
 
 async function parseHttpError(res: Response): Promise<string> {
     try {
@@ -192,7 +267,7 @@ async function callCustom(
     throw new Error("Respons dari endpoint kustom tidak dikenali. Pastikan format OpenAI-compatible.")
 }
 
-export async function requestAI(
+async function callModel(
     m: AIModel,
     messages: AIHistoryMessage[],
     system?: string,
@@ -223,4 +298,54 @@ export async function requestAI(
     } finally {
         clearTimeout(timer)
     }
+}
+
+/**
+ * Router otomatis (stacking ala 9router).
+ * - Tugas ringan (estimasi skor < threshold) → model `route.light` (mis. Gemini).
+ * - Tugas berat → model `route.heavy` (mis. Nemotron).
+ * - Kalau model utama gagal (error/rate-limit/kosong), otomatis jatuh ke model
+ *   satunya sebagai cadangan — supaya request tetap menghasilkan output.
+ */
+async function requestAIAuto(
+    m: AIModel,
+    messages: AIHistoryMessage[],
+    system?: string,
+): Promise<string> {
+    const light = getModel(m.route!.light)
+    const heavy = getModel(m.route!.heavy)
+    const { tier } = estimateComplexity(messages, system)
+    const primary = tier === "light" ? light : heavy
+    const backup = primary.id === light.id ? heavy : light
+
+    try {
+        return await callModel(primary, messages, system)
+    } catch (primaryErr) {
+        // Failover: coba model cadangan sebelum menyerah.
+        try {
+            return await callModel(backup, messages, system)
+        } catch (backupErr) {
+            throw new Error(
+                `Smart Route: ${primary.name} gagal (${errorMessage(primaryErr)}), ` +
+                    `fallback ${backup.name} juga gagal (${errorMessage(backupErr)}).`,
+                { cause: backupErr },
+            )
+        }
+    }
+}
+
+function errorMessage(err: unknown): string {
+    return err instanceof Error ? err.message : String(err)
+}
+
+export async function requestAI(
+    m: AIModel,
+    messages: AIHistoryMessage[],
+    system?: string,
+): Promise<string> {
+    // Model router diproses khusus sebelum pengecekan apiKey (router sendiri tidak punya key).
+    if (m.route) {
+        return requestAIAuto(m, messages, system)
+    }
+    return callModel(m, messages, system)
 }

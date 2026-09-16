@@ -264,7 +264,7 @@ function CreatorDashboard() {
                                 ))}
                                 <Link
                                     to="/creator/galileo"
-                                    className="relative overflow-hidden flex items-center justify-between gap-3 bg-white dark:bg-second border border-second dark:border-white/10 rounded-xl shadow-sm p-3 transition-all active:scale-[0.98]"
+                                    className="relative mb-5 overflow-hidden flex items-center justify-between gap-3 bg-white dark:bg-second border border-second dark:border-white/10 rounded-xl shadow-sm p-3 transition-all active:scale-[0.98]"
                                 >
                                     <div className="absolute -top-7 -right-13 w-32 h-32 flex items-center justify-center shrink-0 pointer-events-none">
                                         <span className="absolute inset-0 rounded-full border border-darks/15 border-t-darks/50" />

@@ -12,9 +12,13 @@ interface PageIndicatorProps {
     onRequestSubmit: () => void
     submitting: boolean
     groupRagu?: boolean
+    /** Label tampilan, mis. "Soal" (quiz) atau "Bagian" (standard). Default "Soal". */
+    label?: string
+    /** Sembunyikan tombol Ragu (mode standard — tanda ragu per soal tidak relevan). */
+    hideRagu?: boolean
 }
 
-function PageIndicator({ total, current, onPrev, onNext, onListClick, isRagu = false, onRaguToggle, onRequestSubmit, submitting, groupRagu = false }: PageIndicatorProps) {
+function PageIndicator({ total, current, onPrev, onNext, onListClick, isRagu = false, onRaguToggle, onRequestSubmit, submitting, groupRagu = false, label = "Soal", hideRagu = false }: PageIndicatorProps) {
     const isLast = current >= total - 1
 
     const nav = (
@@ -28,11 +32,11 @@ function PageIndicator({ total, current, onPrev, onNext, onListClick, isRagu = f
             </button>
             <button
                 onClick={onListClick}
-                // Di halaman terakhir tombol next tidak dirender, jadi sisi kanan
+                // Di halaman terakhir tombol "Lanjut" tidak dirender, jadi sisi kanan
                 // tombol ini jadi ujung grup join dan dibulatkan.
                 className={`join-item btn h-12 min-h-0 px-4 bg-base-400 ${isLast ? "rounded-r-full" : ""}`}
             >
-                Soal {current + 1}
+                {label} {current + 1}
             </button>
             {!isLast && (
                 <button
@@ -58,7 +62,9 @@ function PageIndicator({ total, current, onPrev, onNext, onListClick, isRagu = f
 
     return (
         <>
-            {groupRagu ? (
+            {hideRagu ? (
+                nav
+            ) : groupRagu ? (
                 <div className="flex items-center gap-3">
                     {nav}
                     {ragu}

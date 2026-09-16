@@ -8,6 +8,8 @@ import { alertSaveError, alertSaveSuccess } from "../../lib/alerts"
 import RichTextEditor from "../../components/richText"
 import { Spinner } from "../../components/loading"
 import { fadeSlide } from "../../lib/motion"
+import ModeSelector from "../../components/creator/ModeSelector"
+import { LAYOUT_QUIZ, type FormLayoutMode } from "../../lib/formPages"
 
 function FormNew() {
     const navigate = useNavigate()
@@ -17,6 +19,7 @@ function FormNew() {
     const [description, setDescription] = useState("")
     const [duration, setDuration] = useState<number | "">(0)
     const [passingScore, setPassingScore] = useState<number | "">(70)
+    const [layoutMode, setLayoutMode] = useState<FormLayoutMode>(LAYOUT_QUIZ)
     const [loading, setLoading] = useState(false)
 
     const handleSubmit = async (e: React.FormEvent) => {
@@ -33,6 +36,7 @@ function FormNew() {
                 duration: duration === "" ? null : duration,
                 passing_score: passingScore === "" ? 70 : passingScore,
                 status: "draft",
+                layout_mode: layoutMode,
             })
             .select("id")
             .single()
@@ -83,6 +87,14 @@ function FormNew() {
                             onChange={setDescription}
                             placeholder="Deskripsi Form"
                         />
+                    </div>
+
+                    <div>
+                        <label className="block text-sm font-medium text-darks mb-2 ml-1">Mode Form</label>
+                        <ModeSelector value={layoutMode} onChange={setLayoutMode} />
+                        <p className="text-xs text-tinted mt-1.5 ml-1">
+                            Mode menentukan cara soal ditampilkan ke responden. Bisa diubah nanti di halaman Detail form.
+                        </p>
                     </div>
 
                     <div className="grid grid-cols-2 gap-2 sm:gap-4">

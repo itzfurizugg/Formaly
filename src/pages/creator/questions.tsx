@@ -1,7 +1,7 @@
 import { useEffect, useState, useCallback, useMemo, useRef, type DragEvent } from "react"
 import { useParams } from "react-router-dom"
 import { AnimatePresence, motion } from "motion/react"
-import { Plus, Pencil, Trash2, Save, X, Check, GripVertical, ImageIcon, CheckCircle, ListChecks } from "lucide-react"
+import { Plus, Pencil, Trash2, Save, X, Check, GripVertical, ImageIcon, CheckCircle, ListChecks, LayoutList } from "lucide-react"
 import { supabase } from "../../lib/supabase"
 import { useAuth } from "../../lib/auth-context"
 import QuestionImportModal from "../../components/creator/QuestionImportModal"
@@ -25,9 +25,21 @@ import { easeOutExpo } from "../../lib/motion"
 import BackButton from "../../components/backButton"
 import FormTabs from "../../components/creator/formTabs"
 import { Spinner } from "../../components/loading"
+import {
+    fetchPagesWithQuestions,
+    createPage,
+    renamePage,
+    deletePage,
+    moveQuestionToPage,
+    reorderQuestions,
+    isQuizMode,
+    isStandardMode,
+    defaultPageTitle,
+    type FormPage,
+} from "../../lib/formPages"
 
 const TYPES_WITH_OPTIONS = ["single_choice", "multiple_choice", "dropdown"]
-const TYPES_NO_OPTIONS = ["text", "file_upload", "date_time"]
+const TYPES_NO_OPTIONS = ["text", "file_upload", "date_time"] as const
 
 // Kunci cache draft editor soal. Draft disimpan ke sessionStorage (via pageCache)
 // setiap kali editor ditutup lewat navigasi (pindah tab/keluar) sebelum disimpan,
@@ -49,6 +61,7 @@ interface QuestionDraft {
     options: Option[]
     removedOptionIds: string[]
     dateTimeVariant: DateTimeVariant
+    targetPageId: string | null
 }
 
 interface Option {
@@ -70,7 +83,23 @@ interface Question {
     is_required: boolean
     question_options: Option[]
     config?: QuestionConfig | null
+    page_id?: string | null
 }
+
+interface PageWithQuestions extends FormPage {
+    questions: Question[]
+}
+
+interface FormCacheData {
+    formTitle: string
+    layoutMode: string | null
+    pages: PageWithQuestions[]
+}
+
+// Opsi penghapusan section: soal dipindah ke section lain, atau ikut dihapus.
+type DeleteSectionChoice =
+    | { page: PageWithQuestions; mode: "move" | "delete"; moveToId: string | null; deleting: boolean }
+    | null
 
 function Questions({ embedded = false }: { embedded?: boolean }) {
     const { id } = useParams()
@@ -78,18 +107,18 @@ function Questions({ embedded = false }: { embedded?: boolean }) {
 
     // Cache daftar soal per form supaya kembali ke halaman ini cukup fade-in
     // tanpa overlay loading lagi; data tetap di-refresh diam-diam.
-    // Dibaca sekali lewat state initializer supaya identitasnya stabil; membaca
-    // langsung dari pageGet tiap render membuat loadAll (useCallback) selalu
-    // baru dan useEffect akan memicu fetch terus-menerus.
-    const [cached] = useState<{ formTitle: string; questions: Question[] } | undefined>(() =>
-        user && id ? pageGet<{ formTitle: string; questions: Question[] }>(`questions:${user.id}:${id}`) : undefined
+    const [cached] = useState<FormCacheData | undefined>(() =>
+        user && id ? pageGet<FormCacheData>(`questions:${user.id}:${id}`) : undefined
     )
-    const [questions, setQuestions] = useState<Question[]>(cached?.questions ?? [])
+    const [pages, setPages] = useState<PageWithQuestions[]>(cached?.pages ?? [])
+    const [formLayout, setFormLayout] = useState<string | null>(cached?.layoutMode ?? null)
     const [loading, setLoading] = useState(!cached)
 
+    // Section yang sedang aktif (mode standard) — soal baru dimasukkan ke sini.
+    const [activeSectionId, setActiveSectionId] = useState<string | null>(null)
+
     // Restore draft editor yang belum tersimpan (mis. media sudah di-upload tapi
-    // soal belum di-save lalu pindah tab/keluar halaman). Dibaca sekali lewat
-    // state initializer supaya identitasnya stabil, sama seperti `cached`.
+    // soal belum di-save lalu pindah tab/keluar halaman).
     const [savedDraft] = useState<QuestionDraft | null>(() => {
         const key = questionDraftKey(user?.id, id)
         return key ? (pageGet<QuestionDraft>(key) ?? null) : null
@@ -107,16 +136,22 @@ function Questions({ embedded = false }: { embedded?: boolean }) {
     const [options, setOptions] = useState<Option[]>(savedDraft?.options ?? [])
     const [removedOptionIds, setRemovedOptionIds] = useState<string[]>(savedDraft?.removedOptionIds ?? [])
     const [dateTimeVariant, setDateTimeVariant] = useState<DateTimeVariant>(savedDraft?.dateTimeVariant ?? "date_and_time")
+    const [targetPageId, setTargetPageId] = useState<string | null>(savedDraft?.targetPageId ?? null)
     const [optionMediaOpen, setOptionMediaOpen] = useState<Record<number, boolean>>({})
     const [saving, setSaving] = useState(false)
     const [mediaUploading, setMediaUploading] = useState(false)
     const [showImport, setShowImport] = useState(false)
     const [dragId, setDragId] = useState<string | null>(null)
     const [orderIds, setOrderIds] = useState<string[] | null>(null)
+    // Drag dalam satu section (mode standard)
+    const [sectionDrag, setSectionDrag] = useState<{ dragId: string; pageId: string } | null>(null)
+    const [sectionOrder, setSectionOrder] = useState<string[] | null>(null)
+    // Modal hapus section
+    const [deleteSectionChoice, setDeleteSectionChoice] = useState<DeleteSectionChoice>(null)
 
-    // Pantau state editor terbaru lewat ref (bukan lewat dependency array yang
-    // panjang), supaya saat komponen unmount (pindah tab/keluar) kita bisa
-    // menyimpan snapshot editor yang benar-benar terakhir di-render.
+    const isStandard = isStandardMode(formLayout)
+
+    // Pantau state editor terbaru lewat ref agar snapshot saat unmount akurat.
     const editorStateRef = useRef<{ showEditor: boolean; draft: QuestionDraft }>({
         showEditor,
         draft: {
@@ -131,6 +166,7 @@ function Questions({ embedded = false }: { embedded?: boolean }) {
             options,
             removedOptionIds,
             dateTimeVariant,
+            targetPageId,
         },
     })
     useEffect(() => {
@@ -148,13 +184,11 @@ function Questions({ embedded = false }: { embedded?: boolean }) {
                 options,
                 removedOptionIds,
                 dateTimeVariant,
+                targetPageId,
             },
         }
     })
 
-    // Simpan draft saat keluar halaman. Kalau editor sedang terbuka, snapshot
-    // dipertahankan supaya tidak hilang (termasuk media yang sudah di-upload
-    // tapi soal belum di-save); kalau editor ditutup/tidak aktif, hapus draft.
     useEffect(() => {
         return () => {
             const key = questionDraftKey(user?.id, id)
@@ -173,37 +207,42 @@ function Questions({ embedded = false }: { embedded?: boolean }) {
         if (!cached) setLoading(true)
 
         let newTitle = ""
-        let newQuestions: Question[] = []
+        let newLayout: string | null = null
+        let newPages: PageWithQuestions[] = []
 
         const { data: form } = await supabase
             .from("forms")
-            .select("title")
+            .select("title, layout_mode")
             .eq("id", id)
             .eq("creator_id", user.id)
             .single()
         if (form) {
             newTitle = form.title
+            newLayout = (form as { layout_mode?: string }).layout_mode ?? null
         }
 
-        const { data: qs } = await supabase
-            .from("questions")
-            .select(`
-                id, question_text, question_type, score_value, order_index, image_question, media_url, is_required,
-                question_options ( id, option_text, is_correct, order_index )
-            `)
-            .eq("form_id", id)
-            .order("order_index", { ascending: true })
-        if (qs) {
-            const withConfig = (qs as unknown as Question[]).map((q) => {
+        const pagesWithQuestions = await fetchPagesWithQuestions(id)
+        newPages = pagesWithQuestions.map((p) => ({
+            ...p,
+            questions: p.questions.map((q) => {
                 const { html, config } = extractQuestionConfig(q.question_text)
                 return { ...q, question_text: html, config }
-            })
-            setQuestions(withConfig)
-            newQuestions = withConfig
-        }
+            }),
+        }))
+
+        setFormLayout(newLayout)
+        setPages(newPages)
+        setActiveSectionId((prev) => {
+            if (prev && newPages.some((p) => p.id === prev)) return prev
+            return newPages[0]?.id ?? null
+        })
 
         if (user && id) {
-            pageSet(`questions:${user.id}:${id}`, { formTitle: newTitle, questions: newQuestions })
+            pageSet<FormCacheData>(`questions:${user.id}:${id}`, {
+                formTitle: newTitle,
+                layoutMode: newLayout,
+                pages: newPages,
+            })
         }
         setLoading(false)
     }, [user, id, cached])
@@ -213,9 +252,10 @@ function Questions({ embedded = false }: { embedded?: boolean }) {
         loadAll()
     }, [user, id, loadAll])
 
+    // Daftar soal flat (mode quiz) = gabungan urutan section 1:1.
+    const questions = useMemo(() => pages.flatMap((p) => p.questions), [pages])
+
     const resetEditor = () => {
-        // Tahan modal selama media masih di-upload: menutup di tengah proses
-        // berisiko menghilangkan referensi file yang belum selesai tersimpan.
         if (mediaUploading) {
             showAlert("Tunggu sampai upload media selesai.", "warning")
             return
@@ -231,17 +271,19 @@ function Questions({ embedded = false }: { embedded?: boolean }) {
         setOptions([])
         setRemovedOptionIds([])
         setDateTimeVariant("date_and_time")
+        setTargetPageId(null)
         setOptionMediaOpen({})
         setShowEditor(false)
-        // Editor sengaja ditutup / soal sudah disimpan: bersihkan draft agar
-        // tidak muncul lagi saat kembali ke halaman ini.
         const key = questionDraftKey(user?.id, id)
         if (key) pageSet(key, undefined)
     }
 
-    const startAdd = () => {
+    // Section tujuan untuk soal baru. Di mode quiz dibuat halaman baru saat
+    // disimpan; di mode standard pakai section aktif (atau buat section pertama).
+    const startAdd = (sectionId?: string) => {
         resetEditor()
         setOrderIndex(questions.length)
+        if (isStandard && sectionId) setTargetPageId(sectionId)
         setShowEditor(true)
     }
 
@@ -266,6 +308,7 @@ function Questions({ embedded = false }: { embedded?: boolean }) {
         setIsRequired(!!q.is_required)
         setOptions((q.question_options || []).map((o) => ({ id: o.id, option_text: o.option_text, is_correct: o.is_correct, media_url: o.media_url || null })))
         if (q.config?.dateTimeVariant) setDateTimeVariant(q.config.dateTimeVariant)
+        setTargetPageId(q.page_id ?? null)
         setShowEditor(true)
     }
 
@@ -279,7 +322,6 @@ function Questions({ embedded = false }: { embedded?: boolean }) {
 
     const removeOption = (index: number) => {
         const opt = options[index]
-        // Hapus juga file media opsi dari storage supaya tidak nyangkut.
         if (opt?.media_url) {
             deleteStoredMedia([opt.media_url])
         }
@@ -292,11 +334,9 @@ function Questions({ embedded = false }: { embedded?: boolean }) {
         })
     }
 
-    // Saat ganti ke tipe tanpa opsi, bersihkan pilihan yang tersisa supaya tidak
-    // ikut tersimpan (file_upload & date_time tidak memakai question_options).
     const handleTypeChange = (t: string) => {
         setQuestionType(t)
-        if (TYPES_NO_OPTIONS.includes(t)) {
+        if ((TYPES_NO_OPTIONS as readonly string[]).includes(t)) {
             setOptions([])
             setRemovedOptionIds((prev) => [...prev, ...options.map((o) => o.id || "").filter(Boolean)])
             setOptionMediaOpen({})
@@ -320,20 +360,26 @@ function Questions({ embedded = false }: { embedded?: boolean }) {
 
         setSaving(true)
 
-        // TODO(backend): kolom config per soal (mis. date_timeVariant, batas file)
-        // menyusul lewat migration. Sementara disisipkan ke question_text supaya
-        // sub-tipe soal tetap bertahan & terbaca di halaman responden.
         const finalQuestionText = embedQuestionConfig(
             questionText,
             questionType === "date_time" ? { dateTimeVariant } : null,
         )
 
-        // Panggil fungsi RPC yang sudah dibuat di database
+        // Untuk mode quiz, soal baru otomatis dibuatkan halaman baru sendiri.
+        let newPageId: string | null = null
+        if (!editingId && isQuizMode(formLayout)) {
+            const pos = pages.length
+            newPageId = await createPage(id, defaultPageTitle(pos, formLayout), pos)
+            if (!newPageId) {
+                setSaving(false)
+                showAlert("Gagal membuat halaman baru untuk soal.", "error")
+                return
+            }
+        }
+
         const { error: rpcErr } = await supabase.rpc("save_question_with_options", {
             p_question_id: editingId || null,
             p_form_id: id,
-            // TODO(backend): kolom question_options.media_url belum ada, jadi
-            // media opsi hanya disimpan di state frontend sampai migration jalan.
             p_question_text: finalQuestionText,
             p_question_type: questionType,
             p_score_value: scoreValue,
@@ -352,7 +398,6 @@ function Questions({ embedded = false }: { embedded?: boolean }) {
         setSaving(false)
 
         if (rpcErr) {
-            // Cek jika error disebabkan oleh Foreign Key (opsi sudah dipilih siswa)
             if (rpcErr.message.includes("violates foreign key constraint")) {
                 showAlert("Opsi jawaban ini tidak bisa dihapus karena sudah pernah dipilih oleh siswa yang mengerjakan.", "error")
             } else {
@@ -361,11 +406,6 @@ function Questions({ embedded = false }: { embedded?: boolean }) {
             return
         }
 
-        // RPC save_question_with_options tidak menangani media_url, dan kolom
-        // questions.media_url tidak bisa di-update langsung oleh client (RLS).
-        // Persist media_url lewat RPC terpisah set_question_media (SECURITY
-        // DEFINER). Untuk soal baru (editingId null) kita ambil soal terbaru
-        // pada form ini sebagai target, karena RPC tersebut tidak mengembalikan id.
         let mediaTargetId: string | null = editingId
         if (!mediaTargetId) {
             const { data: newest } = await supabase
@@ -376,7 +416,14 @@ function Questions({ embedded = false }: { embedded?: boolean }) {
                 .limit(1)
             if (newest && newest[0]) mediaTargetId = newest[0].id
         }
+
+        // Persist media_url + page_id + order_index untuk soal target.
         if (mediaTargetId) {
+            const pageIdForQuestion = editingId ? targetPageId : (
+                isStandard
+                    ? (targetPageId ?? activeSectionId ?? null)
+                    : newPageId
+            )
             const { error: mediaErr } = await supabase.rpc("set_question_media", {
                 p_question_id: mediaTargetId,
                 p_media_url: mediaUrl,
@@ -384,17 +431,20 @@ function Questions({ embedded = false }: { embedded?: boolean }) {
             if (mediaErr && !/does not exist|not found|PGRST202/i.test(mediaErr.message)) {
                 showAlert("Gagal menyimpan media soal: " + mediaErr.message, "error")
             }
-        }
 
-        // Jaminan posisi tersimpan di database: RPC lama bisa saja mengabaikan
-        // p_order_index, jadi posisi final di-update langsung untuk soal lama.
-        if (editingId) {
-            const { error: orderErr } = await supabase
-                .from("questions")
-                .update({ order_index: orderIndex })
-                .eq("id", editingId)
-            if (orderErr) {
-                showAlert("Gagal menyimpan urutan soal: " + orderErr.message, "error")
+            if (pageIdForQuestion) {
+                await supabase
+                    .from("questions")
+                    .update({ page_id: pageIdForQuestion, order_index: editingId ? orderIndex : orderIndex })
+                    .eq("id", mediaTargetId)
+            } else if (editingId) {
+                const { error: orderErr } = await supabase
+                    .from("questions")
+                    .update({ order_index: orderIndex })
+                    .eq("id", editingId)
+                if (orderErr) {
+                    showAlert("Gagal menyimpan urutan soal: " + orderErr.message, "error")
+                }
             }
         }
 
@@ -408,12 +458,9 @@ function Questions({ embedded = false }: { embedded?: boolean }) {
             title: "Hapus soal ini?",
             description: "Pilihan jawaban pada soal ini akan ikut terhapus.",
             onConfirm: async () => {
-                // Kumpulkan URL media dulu sebelum baris soal dihapus,
-                // supaya masih bisa di-query dari database.
                 const urls = await collectQuestionMediaUrls(q.id)
                 const { error } = await supabase.rpc("delete_question", { p_question_id: q.id })
                 if (error) {
-                    // RPC belum tersedia di database -> fallback ke DELETE langsung.
                     if (/does not exist|not found|PGRST202/i.test(error.message)) {
                         const { error: optionError } = await supabase.from("question_options").delete().eq("question_id", q.id)
                         if (optionError) throw new Error(optionError.message)
@@ -423,34 +470,43 @@ function Questions({ embedded = false }: { embedded?: boolean }) {
                         throw new Error(error.message)
                     }
                 }
-                // Setelah data dihapus, bersihkan file-nya di storage.
                 await deleteStoredMedia(urls)
                 await loadAll()
             },
         })
     }
 
-    const persistOrder = async (list: Question[]) => {
+    // ---- DRAG & DROP MODE QUIZ (1 soal per halaman, urutan flat global) ----
+
+    const persistQuizOrder = async (orderedIds: string[]) => {
+        const pageByQid = new Map<string, FormPage>()
+        for (const p of pages) {
+            for (const q of p.questions) pageByQid.set(q.id, p)
+        }
+        // Susun ulang posisi halaman mengikuti urutan soal flat.
         let failed = false
-        for (let i = 0; i < list.length; i++) {
-            if (list[i].order_index !== i) {
-                const { error } = await supabase.from("questions").update({ order_index: i }).eq("id", list[i].id)
+        for (let i = 0; i < orderedIds.length; i++) {
+            const page = pageByQid.get(orderedIds[i])
+            if (page && page.position !== i) {
+                const { error } = await supabase.from("form_pages").update({ position: i }).eq("id", page.id)
+                if (error) failed = true
+            }
+            const q = pages.flatMap((p) => p.questions).find((qq) => qq.id === orderedIds[i])
+            if (q && q.order_index !== i) {
+                const { error } = await supabase.from("questions").update({ order_index: i }).eq("id", orderedIds[i])
                 if (error) failed = true
             }
         }
         if (failed) showAlert("Sebagian urutan soal gagal disimpan ke database.", "error")
     }
 
-    const handleDragStart = (e: DragEvent, id: string) => {
-        setDragId(id)
-        setOrderIds(questions.map((q) => q.id))
+    const handleDragStart = (e: DragEvent, question: Question) => {
         e.dataTransfer.effectAllowed = "move"
-        e.dataTransfer.setData("text/plain", id)
+        e.dataTransfer.setData("text/plain", question.id)
+        setDragId(question.id)
+        setOrderIds(questions.map((q) => q.id))
 
-        // Gambar drag custom: pil kecil "Soal N" menggantikan screenshot kartu
-        // penuh bawaan browser yang besar & buram. Elemen diletakkan di luar
-        // viewport agar tidak terlihat, cukup untuk direkam setDragImage.
-        const srcIdx = questions.findIndex((q) => q.id === id)
+        const srcIdx = questions.findIndex((q) => q.id === question.id)
         const ghost = document.createElement("div")
         ghost.textContent = `Soal ${srcIdx + 1}`
         ghost.style.cssText =
@@ -462,24 +518,21 @@ function Questions({ embedded = false }: { embedded?: boolean }) {
         window.setTimeout(() => ghost.remove(), 0)
     }
 
-    // Selama drag, urutan kartu diperbarui mengikuti posisi kursor sehingga
-    // kreator melihat preview lokasi drop secara langsung sebelum melepas soal.
-    // Insertion memakai garis tengah kartu sebagai ambang agar urutan tidak
-    // bolak-balik (flicker) saat kursor tepat berada di batas dua kartu.
     const handleDragOver = (e: DragEvent, index: number) => {
         e.preventDefault()
         e.dataTransfer.dropEffect = "move"
         if (!dragId || !orderIds) return
+        const flat = questions
         const from = orderIds.indexOf(dragId)
         if (from === -1 || from === index) return
 
         const rect = e.currentTarget.getBoundingClientRect()
         const pastMid = e.clientY > rect.top + rect.height / 2
         const target = from < index ? (pastMid ? index : index - 1) : pastMid ? index + 1 : index
-        if (target < 0 || target >= orderIds.length) return
+        if (target < 0 || target >= flat.length) return
 
         setOrderIds((prev) => {
-            if (!prev || prev[index] === undefined) return prev
+            if (!prev || prev[target] === undefined) return prev
             const curFrom = prev.indexOf(dragId)
             if (curFrom === -1 || curFrom === target) return prev
             const next = [...prev]
@@ -490,11 +543,21 @@ function Questions({ embedded = false }: { embedded?: boolean }) {
     }
 
     const finishDrag = () => {
-        if (dragId && orderIds && questions.some((q, i) => q.id !== orderIds[i])) {
-            const byId = new Map(questions.map((q) => [q.id, q]))
-            const next = orderIds.map((qid) => byId.get(qid)).filter((q): q is Question => Boolean(q))
-            setQuestions(next)
-            persistOrder(next)
+        if (dragId && orderIds) {
+            const prevIds = questions.map((q) => q.id)
+            if (prevIds.some((sid, i) => sid !== orderIds[i])) {
+                const byId = new Map(questions.map((q) => [q.id, q]))
+                const next = orderIds.map((qid) => byId.get(qid)).filter((q): q is Question => Boolean(q))
+                // Reorder pages state menyesuaikan urutan soal flat
+                const pageByQid = new Map<string, PageWithQuestions>()
+                for (const p of pages) for (const q of p.questions) pageByQid.set(q.id, p)
+                const nextPages = next.map((q) => pageByQid.get(q.id)).filter((p): p is PageWithQuestions => Boolean(p))
+                setPages((cur) => {
+                    const curById = new Map(cur.map((p) => [p.id, p]))
+                    return nextPages.map((p) => ({ ...p, ...curById.get(p.id) }))
+                })
+                persistQuizOrder(next.map((q) => q.id))
+            }
         }
         setDragId(null)
         setOrderIds(null)
@@ -515,18 +578,171 @@ function Questions({ embedded = false }: { embedded?: boolean }) {
         return orderIds.map((qid) => byId.get(qid)).filter((q): q is Question => Boolean(q))
     }, [questions, dragId, orderIds])
 
+    // ---- DRAG & DROP MODE STANDARD (dalam satu section) ----
+
+    const sectionQuestions = (pageId: string) => {
+        return pages.find((p) => p.id === pageId)?.questions ?? []
+    }
+
+    const handleSectionDragStart = (e: DragEvent, pageId: string, q: Question) => {
+        e.dataTransfer.effectAllowed = "move"
+        e.dataTransfer.setData("text/plain", q.id)
+        setSectionDrag({ dragId: q.id, pageId })
+        setSectionOrder(sectionQuestions(pageId).map((x) => x.id))
+
+        const ghost = document.createElement("div")
+        ghost.textContent = `Soal ${q.id.slice(0, 4)}`
+        ghost.style.cssText =
+            "position:fixed;top:-200px;left:-200px;padding:7px 16px;border-radius:9999px;" +
+            "background:#393E46;color:#F7F7F7;font-size:13px;font-weight:600;line-height:1;" +
+            "font-family:'Funnel Display','DM Sans',ui-sans-serif,sans-serif;box-shadow:0 10px 28px rgba(0,0,0,.3);"
+        document.body.appendChild(ghost)
+        e.dataTransfer.setDragImage(ghost, 20, 20)
+        window.setTimeout(() => ghost.remove(), 0)
+    }
+
+    const handleSectionDragOver = (e: DragEvent, pageId: string, index: number) => {
+        e.preventDefault()
+        e.dataTransfer.dropEffect = "move"
+        if (!sectionDrag || sectionDrag.pageId !== pageId || !sectionOrder) return
+        const from = sectionOrder.indexOf(sectionDrag.dragId)
+        if (from === -1 || from === index) return
+
+        const rect = e.currentTarget.getBoundingClientRect()
+        const pastMid = e.clientY > rect.top + rect.height / 2
+        const target = from < index ? (pastMid ? index : index - 1) : pastMid ? index + 1 : index
+        const current = sectionQuestions(pageId)
+        if (target < 0 || target >= current.length) return
+
+        setSectionOrder((prev) => {
+            if (!prev || prev[target] === undefined) return prev
+            const curFrom = prev.indexOf(sectionDrag.dragId)
+            if (curFrom === -1 || curFrom === target) return prev
+            const next = [...prev]
+            next.splice(curFrom, 1)
+            next.splice(target, 0, sectionDrag.dragId)
+            return next
+        })
+    }
+
+    const finishSectionDrag = (pageId: string) => {
+        if (sectionDrag && sectionDrag.pageId === pageId && sectionOrder) {
+            const current = sectionQuestions(pageId)
+            const prevIds = current.map((q) => q.id)
+            if (prevIds.some((sid, i) => sid !== sectionOrder[i])) {
+                setPages((cur) =>
+                    cur.map((p) => {
+                        if (p.id !== pageId) return p
+                        const byId = new Map(p.questions.map((q) => [q.id, q]))
+                        const nextQ = sectionOrder.map((qid) => byId.get(qid)).filter((q): q is Question => Boolean(q))
+                        return { ...p, questions: nextQ }
+                    })
+                )
+                reorderQuestions(sectionOrder)
+            }
+        }
+        setSectionDrag(null)
+        setSectionOrder(null)
+    }
+
+    const handleSectionDrop = (e: DragEvent, pageId: string) => {
+        e.preventDefault()
+        finishSectionDrag(pageId)
+    }
+
+    // ---- OPERASI SECTION ----
+
+    const handleAddSection = async () => {
+        if (!id) return
+        const pos = pages.length
+        const newId = await createPage(id, defaultPageTitle(pos, formLayout), pos)
+        if (newId) {
+            setActiveSectionId(newId)
+            loadAll()
+        } else {
+            showAlert("Gagal membuat section.", "error")
+        }
+    }
+
+    const handleRenameSection = async (pageId: string, title: string) => {
+        const trimmed = title.trim()
+        if (!trimmed) return
+        await renamePage(pageId, trimmed)
+        loadAll()
+    }
+
+    // Pindahkan satu soal ke section lain (mode standard).
+    const handleMoveQuestion = async (q: Question, fromPageId: string, toPageId: string) => {
+        if (toPageId === fromPageId) return
+        const target = sectionQuestions(toPageId)
+        const ok = await moveQuestionToPage(q.id, toPageId, target.length)
+        if (ok) {
+            // Reindex sumber + muat ulang.
+            const source = sectionQuestions(fromPageId).filter((x) => x.id !== q.id)
+            await reorderQuestions(source.map((x) => x.id))
+            loadAll()
+        } else {
+            showAlert("Gagal memindahkan soal ke section lain.", "error")
+        }
+    }
+
+    const handleDeleteSection = async () => {
+        const choice = deleteSectionChoice
+        if (!choice || choice.deleting || !id) return
+
+        // Pemindahan soal ke section lain membutuhkan target terpilih.
+        if (choice.mode === "move" && choice.page.questions.length > 0 && !choice.moveToId) {
+            showAlert("Pilih section tujuan untuk memindahkan soal.", "warning")
+            return
+        }
+
+        const newChoice: DeleteSectionChoice = { ...choice, deleting: true }
+        setDeleteSectionChoice(newChoice)
+
+        try {
+            if (choice.mode === "move") {
+                const target = sectionQuestions(choice.moveToId!)
+                let idx = target.length
+                for (const q of choice.page.questions) {
+                    await moveQuestionToPage(q.id, choice.moveToId!, idx++)
+                }
+            } else {
+                // Hapus soal di section ini beserta media-nya.
+                for (const q of choice.page.questions) {
+                    const urls = await collectQuestionMediaUrls(q.id)
+                    const { error } = await supabase.rpc("delete_question", { p_question_id: q.id })
+                    if (error) {
+                        if (/does not exist|not found|PGRST202/i.test(error.message)) {
+                            await supabase.from("question_options").delete().eq("question_id", q.id)
+                            await supabase.from("questions").delete().eq("id", q.id)
+                        } else {
+                            throw new Error(error.message)
+                        }
+                    }
+                    await deleteStoredMedia(urls)
+                }
+            }
+            await deletePage(choice.page.id)
+            setDeleteSectionChoice(null)
+            await loadAll()
+            showAlert(choice.mode === "move" ? "Section dihapus, soal dipindahkan." : "Section beserta soal dihapus.", "success")
+        } catch (err) {
+            showAlert(err instanceof Error ? err.message : "Gagal menghapus section.", "error")
+            setDeleteSectionChoice({ ...choice, deleting: false })
+        }
+    }
+
     const typeLabel = (t: string) => {
-        if (t === "multiple_choice") return "Pilihan Ganda"
+        if (t === "multiple_choice") return "Checkbox"
         if (t === "text") return "Isian"
         if (t === "dropdown") return "Dropdown"
         if (t === "file_upload") return "Upload File"
         if (t === "date_time") return "Tanggal & Jam"
-        return "Pilihan Tunggal"
+        return "Pilihan Ganda"
     }
 
     const renderEditor = () => (
         <div className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center sm:p-6">
-            {/* Overlay gelap; klik di luar menutup editor */}
             <motion.div
                 className="absolute inset-0 bg-darks/60"
                 initial={{ opacity: 0 }}
@@ -555,8 +771,23 @@ function Questions({ embedded = false }: { embedded?: boolean }) {
                     </button>
                 </div>
 
+                {/* Pilihan section tujuan untuk soal baru di mode standard */}
+                {!editingId && isStandard && pages.length > 0 && (
+                    <div className="mb-5">
+                        <label className="block text-sm font-medium text-darks mb-1.5 ml-1">Masukkan ke Section</label>
+                        <select
+                            className="select w-full bg-white border-second focus:border-done focus:outline-none rounded-xl"
+                            value={targetPageId ?? activeSectionId ?? pages[0].id}
+                            onChange={(e) => setTargetPageId(e.target.value)}
+                        >
+                            {pages.map((p) => (
+                                <option key={p.id} value={p.id}>{p.title}</option>
+                            ))}
+                        </select>
+                    </div>
+                )}
+
                 <div className="space-y-6">
-                    {/* Media soal tampil paling atas dengan UI ringkas */}
                     <MediaUpload
                         compact
                         value={mediaUrl}
@@ -653,8 +884,6 @@ function Questions({ embedded = false }: { embedded?: boolean }) {
                                 <option value="date_only">Tanggal saja</option>
                                 <option value="time_only">Jam saja</option>
                             </select>
-                            {/* TODO(backend): pilihan sub-tipe ini sementara disisipkan ke
-                                question_text via embedQuestionConfig sampai kolom config permanen ada. */}
                         </div>
                     )}
 
@@ -714,7 +943,6 @@ function Questions({ embedded = false }: { embedded?: boolean }) {
                                         }`}
                                     >
                                         <div className="flex items-center gap-3 p-2.5 pr-1.5">
-                                        {/* Indikator kunci: radio untuk single/dropdown, checkbox untuk multiple */}
                                         <button
                                             type="button"
                                             onClick={() => {
@@ -749,7 +977,6 @@ function Questions({ embedded = false }: { embedded?: boolean }) {
                                             placeholder={`Pilihan ${index + 1}`}
                                         />
 
-                                        {/* Aksi ringkas: media & hapus */}
                                         <div className="flex shrink-0 items-center gap-0.5">
                                             <button
                                                 type="button"
@@ -777,8 +1004,6 @@ function Questions({ embedded = false }: { embedded?: boolean }) {
 
                                         {optionMediaOpen[index] && (
                                             <div className="mx-2.5 pb-2.5 border-t border-second/60 pt-2">
-                                                {/* TODO(backend): media opsi baru tersimpan penuh ke
-                                                    question_options.media_url setelah kolom + RPC dimigrasi. */}
                                                 <MediaUpload
                                                     compact
                                                     value={opt.media_url}
@@ -810,6 +1035,224 @@ function Questions({ embedded = false }: { embedded?: boolean }) {
         </div>
     )
 
+    // Kartu soal tunggal — dipakai mode quiz (flat) dan mode standard (dalam section).
+    const renderQuestionCard = (q: Question, idx: number, opts?: { pageId?: string; layout?: boolean }) => {
+        const isDragging = sectionDrag?.dragId === q.id || dragId === q.id
+        const pageId = opts?.pageId
+        // Dalam mode quiz: index global. Mode standard: index lokal.
+        const labelIdx = idx
+        return (
+            <div
+                draggable
+                onDragStart={(e) => {
+                    if (pageId) {
+                        handleSectionDragStart(e, pageId, q)
+                    } else {
+                        handleDragStart(e, q)
+                    }
+                }}
+                onDragOver={(e) => {
+                    if (pageId) {
+                        handleSectionDragOver(e, pageId, idx)
+                    } else {
+                        handleDragOver(e, idx)
+                    }
+                }}
+                onDrop={(e) => {
+                    if (pageId) {
+                        handleSectionDrop(e, pageId)
+                    } else {
+                        handleDrop(e)
+                    }
+                }}
+                onDragEnd={() => {
+                    if (pageId) {
+                        finishSectionDrag(pageId)
+                    } else {
+                        handleDragEnd()
+                    }
+                }}
+                className={
+                    isDragging
+                        ? "bg-done/5 border border-done/60 border-dashed p-5 rounded-xl cursor-grab active:cursor-grabbing transition-colors"
+                        : `border border-second p-5 shadow-sm rounded-xl cursor-grab active:cursor-grabbing transition-colors ${
+                            (dragId || sectionDrag) ? "opacity-60" : "hover:bg-base-200"
+                        }`
+                }
+            >
+                <div className="flex items-start justify-between gap-2">
+                    <div className="flex gap-3 min-w-0">
+                        <GripVertical className="h-5 w-5 text-tinted shrink-0 mt-0.5" />
+                        <div className="min-w-0">
+                        <div className="flex items-center gap-2 flex-wrap mb-1">
+                            <span className="text-sm font-bold text-darks">Soal {labelIdx + 1}</span>
+                            <span className="badge badge-ghost text-tinted rounded-full text-xs">{typeLabel(q.question_type)}</span>
+                            {q.is_required && <span className="badge badge-ghost text-wrong border-wrong/30 rounded-full text-xs">Wajib</span>}
+                            {Number(q.score_value) > 0 && <span className="badge badge-ghost text-tinted rounded-full text-xs">{q.score_value} poin</span>}
+                        </div>
+                        <div className="text-sm text-darks"><RichText html={q.question_text} /></div>
+                        {q.image_question && (
+                            <img src={q.image_question} alt="Soal" className="max-h-40 object-contain mt-2 border border-second rounded-lg" />
+                        )}
+                        {q.media_url && (
+                            <div className="mt-2">
+                                <QuestionMedia url={q.media_url} className="mt-2 border border-second rounded-lg" />
+                            </div>
+                        )}
+                        {TYPES_WITH_OPTIONS.includes(q.question_type) && q.question_options?.length > 0 && (
+                            <div className="mt-3 space-y-1.5">
+                                {q.question_options.map((o) => (
+                                    <div key={o.id} className="flex items-center gap-2 text-sm text-tinted">
+                                        <span
+                                            className={`inline-block w-2 h-2 rounded-full ${
+                                                o.is_correct ? "bg-done" : "bg-tinted/40"
+                                            }`}
+                                        />
+                                        {o.media_url && (
+                                            <span className="shrink-0">
+                                                <QuestionMedia url={o.media_url} maxHeight="max-h-14" className="rounded-md border border-second" />
+                                            </span>
+                                        )}
+                                        <RichText as="span" html={o.option_text} />
+                                        {o.is_correct && <span className="text-xs text-done font-medium">(kunci)</span>}
+                                    </div>
+                                ))}
+                            </div>
+                        )}
+                        {q.question_type === "date_time" && (
+                            <p className="mt-3 text-xs text-tinted bg-base border border-second rounded-lg px-3 py-1.5 w-fit">
+                                Jawaban:{" "}
+                                {q.config?.dateTimeVariant === "date_only"
+                                    ? "Tanggal saja"
+                                    : q.config?.dateTimeVariant === "time_only"
+                                        ? "Jam saja"
+                                        : "Tanggal & Jam"}
+                            </p>
+                        )}
+                        {q.question_type === "file_upload" && (
+                            <p className="mt-3 text-xs text-tinted bg-base border border-second rounded-lg px-3 py-1.5 w-fit">
+                                Jawaban berupa unggahan file (maks {FILE_UPLOAD_DEFAULTS.maxMB} MB)
+                            </p>
+                        )}
+                    </div>
+                    </div>
+                    <div className="flex gap-1 shrink-0 flex-col sm:flex-row sm:items-center">
+                        {isStandard && opts?.pageId && (
+                            <select
+                                value=""
+                                onChange={(e) => {
+                                    if (e.target.value) handleMoveQuestion(q, opts.pageId!, e.target.value)
+                                }}
+                                className="select select-xs select-bordered bg-white border-second text-tinted h-8 min-h-0 max-w-[8.5rem] w-full"
+                                title="Pindah ke section lain"
+                            >
+                                <option value="">Pindah ke...</option>
+                                {pages.filter((p) => p.id !== opts.pageId).map((p) => (
+                                    <option key={p.id} value={p.id}>{p.title}</option>
+                                ))}
+                            </select>
+                        )}
+                        <button onClick={() => startEdit(q)} className="btn btn-sm btn-ghost text-darks">
+                            <Pencil className="h-4 w-4" />
+                        </button>
+                        <button onClick={() => handleDelete(q)} className="btn btn-sm btn-ghost text-wrong">
+                            <Trash2 className="h-4 w-4" />
+                        </button>
+                    </div>
+                </div>
+            </div>
+        )
+    }
+
+    // Header + daftar soal dalam satu section (mode standard).
+    const renderSectionCard = (page: PageWithQuestions, sectionIdx: number) => {
+        const isActive = activeSectionId === page.id
+        return (
+            <motion.div
+                key={page.id}
+                initial={{ opacity: 0, y: 12 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.3, ease: easeOutExpo, delay: Math.min(sectionIdx * 0.05, 0.3) }}
+                className={`bg-white border border-second shadow-sm rounded-xl overflow-hidden ${
+                    isActive ? "ring-1 ring-done/30" : ""
+                }`}
+            >
+                <div
+                    className="flex items-start justify-between gap-3 px-4 sm:px-5 py-3 border-b border-second/70 bg-base/40"
+                    onClick={() => setActiveSectionId(page.id)}
+                >
+                    <div className="flex gap-2.5 items-center min-w-0">
+                        <LayoutList className="h-4 w-4 text-done shrink-0 mt-0.5" />
+                        <div className="min-w-0">
+                            <input
+                                defaultValue={page.title}
+                                key={page.title}
+                                onKeyDown={(e) => {
+                                    if (e.key === "Enter") {
+                                        handleRenameSection(page.id, e.currentTarget.value)
+                                        ;(e.currentTarget as HTMLInputElement).blur()
+                                    }
+                                }}
+                                onBlur={(e) => handleRenameSection(page.id, e.currentTarget.value)}
+                                onClick={(e) => e.stopPropagation()}
+                                className="bg-transparent border border-transparent hover:border-second focus:border-done focus:bg-white rounded-md px-1.5 py-0.5 text-sm font-semibold text-darks w-40 sm:w-64 focus:outline-none transition-colors"
+                                title="Klik untuk ganti nama section"
+                            />
+                            <p className="text-xs text-tinted mt-0.5">
+                                {page.questions.length} soal
+                            </p>
+                        </div>
+                    </div>
+                    <div className="flex items-center gap-1 shrink-0">
+                        <button
+                            onClick={(e) => {
+                                e.stopPropagation()
+                                startAdd(page.id)
+                            }}
+                            className="btn btn-sm btn-ghost text-done"
+                            title="Tambah soal di section ini"
+                        >
+                            <Plus className="h-4 w-4" /> <span className="hidden sm:inline">Soal</span>
+                        </button>
+                        <button
+                            onClick={(e) => {
+                                e.stopPropagation()
+                                setDeleteSectionChoice({ page, mode: "delete", moveToId: null, deleting: false })
+                            }}
+                            className="btn btn-sm btn-ghost text-wrong"
+                            title="Hapus section"
+                        >
+                            <Trash2 className="h-4 w-4" />
+                        </button>
+                    </div>
+                </div>
+
+                <div className="p-3 sm:p-4">
+                    {page.questions.length === 0 ? (
+                        <div className="text-center py-6 text-sm text-tinted border border-dashed border-second/70 rounded-lg">
+                            Section ini kosong. Klik <span className="text-done font-medium">+ Soal</span> untuk menambahkan.
+                        </div>
+                    ) : (
+                        <div className="space-y-3">
+                            {page.questions.map((q, idx) => (
+                                <div
+                                    key={q.id}
+                                    onDragOver={(e) => {
+                                        if (!sectionDrag || sectionDrag.pageId !== page.id) return
+                                        e.preventDefault()
+                                        e.dataTransfer.dropEffect = "move"
+                                    }}
+                                >
+                                    {renderQuestionCard(q, idx, { pageId: page.id })}
+                                </div>
+                            ))}
+                        </div>
+                    )}
+                </div>
+            </motion.div>
+        )
+    }
+
     return (
         <div className={embedded ? "w-full min-w-0 pb-8" : "flex flex-col items-center px-3.5 sm:px-6 py-5 sm:py-10"}>
             {!loading && (
@@ -825,24 +1268,77 @@ function Questions({ embedded = false }: { embedded?: boolean }) {
                 <div className={`flex justify-between px-3 gap-2 my-auto ${embedded ? "mb-3" : "mb-4"}`}>
                     <h1 className="text text-darks text-4xl font-default font-bold">Soal</h1>
                     {!showEditor && (
-                        <CreateButton onCreate={startAdd} onImport={() => setShowImport(true)} onDownload={downloadTemplate} />
+                        <div className="flex items-center gap-2">
+                            {isStandard && (
+                                <button
+                                    onClick={handleAddSection}
+                                    className="btn bg-base border border-second text-darks rounded-full h-9 min-h-0"
+                                    title="Tambah section baru"
+                                >
+                                    <LayoutList className="h-4 w-4" /> <span className="hidden sm:inline">Tambah Bagian</span>
+                                    <span className="sm:hidden">Bagian</span>
+                                </button>
+                            )}
+                            <CreateButton
+                                onCreate={() => startAdd(isStandard ? (activeSectionId ?? undefined) : undefined)}
+                                onImport={() => setShowImport(true)}
+                                onDownload={downloadTemplate}
+                            />
+                        </div>
                     )}
                 </div>
 
-                {questions.length === 0 && !showEditor ? (
+                {isStandard ? (
+                    <>
+                        {/* Navigasi antar section */}
+                        {pages.length > 0 && (
+                            <div className="flex gap-2 px-3 mb-4 overflow-x-auto pb-1">
+                                {pages.map((p) => (
+                                    <button
+                                        key={p.id}
+                                        onClick={() => {
+                                            setActiveSectionId(p.id)
+                                            document.getElementById(`section-${p.id}`)?.scrollIntoView({ behavior: "smooth", block: "start" })
+                                        }}
+                                        className={`btn btn-sm rounded-full shrink-0 ${
+                                            activeSectionId === p.id
+                                                ? "bg-darks text-base border-none"
+                                                : "bg-white text-darks border border-second"
+                                        }`}
+                                    >
+                                        {p.title}
+                                    </button>
+                                ))}
+                            </div>
+                        )}
+
+                        {pages.length === 0 ? (
+                            <div className="text-center py-16">
+                                <p className="text-tinted mb-4">Belum ada section. Buat bagian pertama untuk mulai menambah soal.</p>
+                                <button onClick={handleAddSection} className="btn bg-darks text-base border-none rounded-full">
+                                    <LayoutList className="h-4 w-4" /> Tambah Bagian
+                                </button>
+                            </div>
+                        ) : (
+                            <div id="section-list" className="space-y-5 pb-8">
+                                {pages.map((p, i) => (
+                                    <div key={p.id} id={`section-${p.id}`} className="scroll-mt-24">
+                                        {renderSectionCard(p, i)}
+                                    </div>
+                                ))}
+                            </div>
+                        )}
+                    </>
+                ) : questions.length === 0 && !showEditor ? (
                     <div className="text-center py-16">
                         <p className="text-tinted mb-4">Belum ada soal.</p>
                     </div>
                 ) : previewQuestions.length > 0 && (
                     <div className="space-y-3 pb-8">
-                        {previewQuestions.map((q, idx) => {
-                            const isDragging = dragId === q.id
-                            return (
+                        {previewQuestions.map((q, idx) => (
                             <AnimatePresence key={q.id} initial={false}>
                             <motion.div
-                                // Kartu pengganti hanya meluncur (posisi saja, ukuran tetap);
-                                // kartu yang di-drag snap langsung agar tidak "menumpuk" dengan ghost.
-                                layout={isDragging ? false : "position"}
+                                layout={dragId === q.id ? false : "position"}
                                 initial={{ opacity: 0, y: 12 }}
                                 animate={{ opacity: 1, y: 0 }}
                                 exit={{ opacity: 0, scale: 0.98 }}
@@ -852,97 +1348,21 @@ function Questions({ embedded = false }: { embedded?: boolean }) {
                                     y: { duration: 0.3, ease: easeOutExpo, delay: dragId ? 0 : Math.min(idx * 0.05, 0.3) },
                                 }}
                             >
-                            <div
-                                draggable
-                                onDragStart={(e) => handleDragStart(e, q.id)}
-                                onDragOver={(e) => handleDragOver(e, idx)}
-                                onDrop={handleDrop}
-                                onDragEnd={handleDragEnd}
-                                className={
-                                    isDragging
-                                        ? "bg-done/5 border border-done/60 border-dashed p-5 rounded-xl cursor-grab active:cursor-grabbing transition-colors"
-                                        : `bg-white border border-second p-5 shadow-sm rounded-xl cursor-grab active:cursor-grabbing transition-colors ${
-                                            dragId ? "opacity-60" : "hover:bg-base-200"
-                                        }`
-                                }
-                            >
-                                <div className="flex items-start justify-between gap-2">
-                                    <div className="flex gap-3 min-w-0">
-                                        <GripVertical className="h-5 w-5 text-tinted shrink-0 mt-0.5" />
-                                        <div className="min-w-0">
-                                        <div className="flex items-center gap-2 flex-wrap mb-1">
-                                            <span className="text-sm font-bold text-darks">Soal {idx + 1}</span>
-                                            <span className="badge badge-ghost text-tinted rounded-full text-xs">{typeLabel(q.question_type)}</span>
-                                            {q.is_required && <span className="badge badge-ghost text-wrong border-wrong/30 rounded-full text-xs">Wajib</span>}
-                                            {Number(q.score_value) > 0 && <span className="badge badge-ghost text-tinted rounded-full text-xs">{q.score_value} poin</span>}
-                                        </div>
-                                        <div className="text-sm text-darks"><RichText html={q.question_text} /></div>
-                                        {q.image_question && (
-                                            <img src={q.image_question} alt="Soal" className="max-h-40 object-contain mt-2 border border-second rounded-lg" />
-                                        )}
-                                        {q.media_url && (
-                                            <div className="mt-2">
-                                                <QuestionMedia url={q.media_url} className="mt-2 border border-second rounded-lg" />
-                                            </div>
-                                        )}
-                                        {TYPES_WITH_OPTIONS.includes(q.question_type) && q.question_options?.length > 0 && (
-                                            <div className="mt-3 space-y-1.5">
-                                                {q.question_options.map((o) => (
-                                                    <div key={o.id} className="flex items-center gap-2 text-sm text-tinted">
-                                                        <span
-                                                            className={`inline-block w-2 h-2 rounded-full ${
-                                                                o.is_correct ? "bg-done" : "bg-tinted/40"
-                                                            }`}
-                                                        />
-                                                        {o.media_url && (
-                                                            <span className="shrink-0">
-                                                                <QuestionMedia url={o.media_url} maxHeight="max-h-14" className="rounded-md border border-second" />
-                                                            </span>
-                                                        )}
-                                                        <RichText as="span" html={o.option_text} />
-                                                        {o.is_correct && <span className="text-xs text-done font-medium">(kunci)</span>}
-                                                    </div>
-                                                ))}
-                                            </div>
-                                        )}
-                                        {q.question_type === "date_time" && (
-                                            <p className="mt-3 text-xs text-tinted bg-base border border-second rounded-lg px-3 py-1.5 w-fit">
-                                                Jawaban:{" "}
-                                                {q.config?.dateTimeVariant === "date_only"
-                                                    ? "Tanggal saja"
-                                                    : q.config?.dateTimeVariant === "time_only"
-                                                        ? "Jam saja"
-                                                        : "Tanggal & Jam"}
-                                            </p>
-                                        )}
-                                        {q.question_type === "file_upload" && (
-                                            <p className="mt-3 text-xs text-tinted bg-base border border-second rounded-lg px-3 py-1.5 w-fit">
-                                                Jawaban berupa unggahan file (maks {FILE_UPLOAD_DEFAULTS.maxMB} MB)
-                                            </p>
-                                        )}
-                                    </div>
-                                    </div>
-                                    <div className="flex gap-1 shrink-0">
-                                        <button onClick={() => startEdit(q)} className="btn btn-sm btn-ghost text-darks">
-                                            <Pencil className="h-4 w-4" />
-                                        </button>
-                                        <button onClick={() => handleDelete(q)} className="btn btn-sm btn-ghost text-wrong">
-                                            <Trash2 className="h-4 w-4" />
-                                        </button>
-                                    </div>
+                                <div className={dragId === q.id ? "bg-done/5 border border-done/60 border-dashed rounded-xl" : "bg-white border border-second rounded-xl"}>
+                                    {renderQuestionCard(q, idx)}
                                 </div>
-                             </div>
-                             </motion.div>
-                         </AnimatePresence>
-                            )
-                        })}
-                        </div>
+                            </motion.div>
+                            </AnimatePresence>
+                        ))}
+                    </div>
                 )}
                 <AnimatePresence>
                 {showImport && id && (
                     <QuestionImportModal
                         formId={id}
                         startingOrder={questions.length}
+                        fallbackPageId={isStandard ? (activeSectionId ?? undefined) : undefined}
+                        oneQuestionPerPage={isQuizMode(formLayout)}
                         onClose={() => setShowImport(false)}
                         onImported={(summary) => {
                             setShowImport(false)
@@ -952,6 +1372,98 @@ function Questions({ embedded = false }: { embedded?: boolean }) {
                     />
                 )}
                 </AnimatePresence>
+
+                {/* Modal Hapus Section */}
+                <AnimatePresence>
+                {deleteSectionChoice && (
+                    <div className="fixed inset-0 z-[100] flex items-center justify-center sm:p-6">
+                        <motion.div
+                            className="absolute inset-0 bg-darks/60"
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            exit={{ opacity: 0 }}
+                            onClick={() => !deleteSectionChoice.deleting && setDeleteSectionChoice(null)}
+                        />
+                        <motion.div
+                            initial={{ opacity: 0, y: 24, scale: 0.98 }}
+                            animate={{ opacity: 1, y: 0, scale: 1 }}
+                            exit={{ opacity: 0, y: 24, scale: 0.98 }}
+                            transition={{ duration: 0.25, ease: easeOutExpo }}
+                            className="relative w-full sm:max-w-md bg-white border border-second shadow-2xl rounded-2xl p-5"
+                            onClick={(e) => e.stopPropagation()}
+                        >
+                            <h2 className="font-semibold text-darks text-lg">Hapus Section</h2>
+                            <p className="text-sm text-tinted mt-1">
+                                "{deleteSectionChoice.page.title}" berisi {deleteSectionChoice.page.questions.length} soal. Pilih cara menghapus:
+                            </p>
+
+                            <div className="mt-4 space-y-2">
+                                {deleteSectionChoice.page.questions.length > 0 && (
+                                    <label className={`flex items-start gap-3 rounded-xl border p-3 cursor-pointer transition-colors ${deleteSectionChoice.mode === "move" ? "border-done bg-done/5" : "border-second hover:border-done/40"}`}>
+                                        <input
+                                            type="radio"
+                                            name="deleteSectionChoice"
+                                            className="radio radio-sm mt-0.5"
+                                            checked={deleteSectionChoice.mode === "move"}
+                                            onChange={() => setDeleteSectionChoice((prev) => prev ? { ...prev, mode: "move" } : prev)}
+                                        />
+                                        <div className="min-w-0 flex-1">
+                                            <p className="text-sm font-medium text-darks">Pindahkan soal ke section lain</p>
+                                            <select
+                                                className="select select-sm select-bordered w-full mt-1.5 bg-white border-second"
+                                                value={deleteSectionChoice.moveToId ?? ""}
+                                                disabled={deleteSectionChoice.mode !== "move"}
+                                                onChange={(e) => setDeleteSectionChoice((prev) => prev ? { ...prev, moveToId: e.target.value || null } : prev)}
+                                            >
+                                                <option value="">Pilih section tujuan...</option>
+                                                {pages.filter((p) => p.id !== deleteSectionChoice.page.id).map((p) => (
+                                                    <option key={p.id} value={p.id}>{p.title}</option>
+                                                ))}
+                                            </select>
+                                        </div>
+                                    </label>
+                                )}
+                                <button
+                                    type="button"
+                                    onClick={() => setDeleteSectionChoice((prev) => prev ? { ...prev, mode: "delete", moveToId: null } : prev)}
+                                    className={`flex items-center gap-3 rounded-xl border p-3 w-full text-left transition-colors ${deleteSectionChoice.mode === "delete" ? "border-done bg-done/5" : "border-second hover:border-done/40"}`}
+                                >
+                                    <input
+                                        type="radio"
+                                        name="deleteSectionChoice"
+                                        className="radio radio-sm"
+                                        checked={deleteSectionChoice.mode === "delete"}
+                                        onChange={() => setDeleteSectionChoice((prev) => prev ? { ...prev, mode: "delete", moveToId: null } : prev)}
+                                    />
+                                    <div>
+                                        <p className="text-sm font-medium text-darks">Hapus soal ikut terhapus</p>
+                                        <p className="text-xs text-tinted">Section dan {deleteSectionChoice.page.questions.length} soal di dalamnya akan dihapus permanen.</p>
+                                    </div>
+                                </button>
+                            </div>
+
+                            <div className="mt-5 flex justify-end gap-3">
+                                <button
+                                    onClick={() => setDeleteSectionChoice(null)}
+                                    disabled={deleteSectionChoice.deleting}
+                                    className="btn rounded-xl border border-second bg-base text-darks hover:bg-second disabled:opacity-60"
+                                >
+                                    Batal
+                                </button>
+                                <button
+                                    onClick={handleDeleteSection}
+                                    disabled={deleteSectionChoice.deleting}
+                                    className="btn rounded-xl border border-wrong bg-wrong text-base hover:bg-wrong/90 disabled:opacity-60"
+                                >
+                                    {deleteSectionChoice.deleting ? <Spinner size={16} /> : <Trash2 className="h-4 w-4" />}
+                                    Hapus Section
+                                </button>
+                            </div>
+                        </motion.div>
+                    </div>
+                )}
+                </AnimatePresence>
+
                 <AnimatePresence>
                 {showEditor && renderEditor()}
                 </AnimatePresence>

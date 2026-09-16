@@ -5,7 +5,7 @@ import { AlertTriangle, Check } from "lucide-react"
 import { supabase } from "../../lib/supabase"
 import { useAuth } from "../../lib/auth-context"
 import { DEFAULT_MODEL_ID, getModel } from "./models"
-import { requestAI, type AIHistoryMessage } from "../../lib/galileoAI"
+import { requestAI, getRoutedModel, type AIHistoryMessage } from "../../lib/galileoAI"
 import { embedQuestionConfig, extractQuestionConfig } from "../../lib/questionConfig"
 import { richTextToPlain } from "../../lib/richtext"
 
@@ -76,7 +76,9 @@ const FORM_RULES =
     '- Tipe "text", "file_upload", dan "date_time" TIDAK punya opsi (options kosong).\n' +
     '- "file_upload" = responden mengunggah file sebagai jawaban; "date_time" = jawaban berupa tanggal/jam.\n' +
     '- Untuk "date_time", isi "variant": "date_only" (tanggal saja), "time_only" (jam saja), atau "date_and_time" (tanggal & jam); default "date_and_time".\n' +
-    '- Gunakan Bahasa Indonesia untuk semua teks soal.'
+    '- Gunakan Bahasa Indonesia untuk semua teks soal.\n' +
+    '- Jika soal memuat kode program, tulis kode di dalam nilai string question_text/option_text dengan diapit tiga backtick DAN gunakan escape \\n untuk baris baru, contoh: "question_text": "Perhatikan kode:\\n```\\nlet x = 5;\\n```\\nApa hasilnya?".\n' +
+    '- PENTING: JANGAN membungkus seluruh JSON dengan blok markdown ``` atau ```json. KELUARKAN langsung JSON murni yang valid, meskipun di dalamnya ada backtick berpasangan untuk kode soal.'
 
 // Instruksi sistem: minta model mengembalikan hanya satu JSON yang valid.
 const GENERATE_SYSTEM =
@@ -120,12 +122,34 @@ const STAGES = [
 ] as const
 
 function extractJson(raw: string): unknown {
-    const fenced = raw.match(/```(?:json)?\s*([\s\S]*?)```/i)
-    const candidate = fenced ? fenced[1] : raw
-    const start = candidate.indexOf("{")
-    const end = candidate.lastIndexOf("}")
-    if (start === -1 || end < start) throw new Error("Respons AI tidak mengandung JSON yang valid.")
-    return JSON.parse(candidate.slice(start, end + 1))
+    if (!raw) throw new Error("Respons AI kosong.")
+
+    const tryParse = (s: string): unknown | null => {
+        const start = s.indexOf("{")
+        const end = s.lastIndexOf("}")
+        if (start === -1 || end < start) return null
+        try {
+            return JSON.parse(s.slice(start, end + 1))
+        } catch {
+            return null
+        }
+    }
+
+    // 1. Coba parse langsung — ini juga melindungi kasus ` ``` ` di dalam
+    //    question_text (jangan pakai regex fence non-greedy, karena fence dari
+    //    dalam nilai string akan tertangkap duluan dan memotong JSON).
+    const direct = tryParse(raw)
+    if (direct !== null) return direct
+
+    // 2. Kalau respons dibungkus blok markdown (mis. ```json ... ```), buang
+    //    baris pembuka & penutup saja, lalu parse ulang.
+    const lines = raw.split("\n")
+    if (lines[0]?.trim().startsWith("```")) lines.shift()
+    if (lines[lines.length - 1]?.trim().startsWith("```")) lines.pop()
+    const stripped = tryParse(lines.join("\n"))
+    if (stripped !== null) return stripped
+
+    throw new Error("Respons AI tidak mengandung JSON yang valid.")
 }
 
 function asString(v: unknown): string {
@@ -364,6 +388,8 @@ function GeneratePage() {
     // Model yang dipilih pengguna di chat.tsx — dibaca dari payload sessionStorage,
     // fallback ke DEFAULT_MODEL_ID kalau tidak ada (mis. payload lama sebelum fitur ini ada).
     const [modelId, setModelId] = useState<string>(DEFAULT_MODEL_ID)
+    // Model yang benar-benar dipakai (untuk Smart Route: hasil estimasi ringan/berat).
+    const [activeModelName, setActiveModelName] = useState<string | null>(null)
 
     const model = getModel(modelId)
     const stageIndex = Math.max(0, STAGES.indexOf(step as (typeof STAGES)[number]))
@@ -430,7 +456,13 @@ function GeneratePage() {
                     "\n=== AKHIR ISI FILE ===\n"
             }
 
-            const raw = await requestAI(activeModel, [message], formIdEdit ? EDIT_SYSTEM : GENERATE_SYSTEM)
+            // Pratinjau model yang akan dipakai. Untuk Smart Route, tampilkan model
+            // hasil routing (ringan → Gemini, berat → Nemotron) di label loading.
+            const systemPrompt = formIdEdit ? EDIT_SYSTEM : GENERATE_SYSTEM
+            const routedModel = getRoutedModel(activeModel, [message], systemPrompt)
+            setActiveModelName(routedModel.name)
+
+            const raw = await requestAI(activeModel, [message], systemPrompt)
 
             setStep(STAGES[1])
             const form = parseGenerated(raw)
@@ -570,7 +602,7 @@ function GeneratePage() {
                                     </div>
 
                                     <p className="text-xs text-darks/50">
-                                        {model.name} sedang membuat form-mu
+                                        {(activeModelName ?? model.name)} sedang membuat form-mu
                                     </p>
                                 </div>
 {/* 
