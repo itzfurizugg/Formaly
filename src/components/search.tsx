@@ -35,22 +35,13 @@ function Search({ onSearch, loading = false }: SearchProps) {
 
     return (
         <div className="w-full">
-            {/* Liquid glass ala Dock: pill frosted-glass (backdrop-blur + border
-                transparan + shadow lembut) yang menguat saat input difokuskan. */}
             <div
-                className={`flex items-center w-full rounded-full border backdrop-blur-2xl transition-all duration-200 ${focused
-                        ? "border-white/90 bg-white/60 shadow-[0_8px_36px_rgba(57,62,70,0.30)]"
-                        : "border-white/70 bg-white/40 shadow-[0_8px_32px_rgba(57,62,70,0.18)] hover:bg-white/50"
+                className={`flex items-center w-full rounded-full border bg-white dark:bg-second transition-all duration-200 ${focused
+                        ? "shadow-lg shadow-darks/10"
+                        : "border-second dark:border-white/10 shadow-md shadow-darks/5 hover:border-tinted/50"
                     }`}
             >
                 <div className="flex-1 relative flex items-center min-w-0">
-                    {/* <span
-                        className={`absolute left-4 text-base font-medium pointer-events-none select-none transition-colors duration-200 ${focused ? "text-darks" : "text-tinted"
-                            }`}
-                    >
-                        @
-                    </span> */}
-
                     <input
                         ref={inputRef}
                         type="text"
@@ -60,7 +51,7 @@ function Search({ onSearch, loading = false }: SearchProps) {
                         onFocus={() => setFocused(true)}
                         onBlur={() => setFocused(false)}
                         onKeyDown={(e) => e.key === "Enter" && handleJoin()}
-                        className="w-full pl-5 pr-9 py-3 border-none outline-none bg-transparent placeholder:text-tinted"
+                        className="w-full pl-5 pr-9 py-3 border-none outline-none bg-transparent placeholder:text-tinted text-darks"
                     />
 
                     {tag && (

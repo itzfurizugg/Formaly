@@ -63,7 +63,7 @@ const CreatorGalileo = lazy(() => import("./pages/galileo/chat"))
 const CreatorGalileoGenerate = lazy(() => import("./pages/galileo/generate"))
 const ErrorHandling = lazy(() => import("./pages/errorHandling"))
 
-const hideNavPaths = ["/login", "/register", "/auth", "/forgot-password", "/reset-password", "/form/description", "/form", "/form/list", "/form/result", "/credit", "/pages/errorHandling", "/settings"]
+const hideNavPaths = ["/login", "/register", "/auth", "/forgot-password", "/reset-password", "/form/description", "/form", "/form/list", "/form/result", "/credit", "/pages/errorHandling", "/settings", "/upgrade-to-creator"]
 
 // App hanya menyediakan provider. Konten asli (gated auth) ada di AppShell,
 // biar useAuth() bisa dipanggil di dalam cakupan AuthProvider.

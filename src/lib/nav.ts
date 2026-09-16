@@ -14,6 +14,7 @@ const HIDE_NAV_PATHS = [
     "/form/result",
     "/credit",
     "/settings",
+    "/upgrade-to-creator",
 ]
 
 /** Apakah Navbar umum dirender untuk path ini. */

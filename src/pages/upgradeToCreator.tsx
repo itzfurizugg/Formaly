@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react"
 import { useNavigate } from "react-router-dom"
 import { AnimatePresence, motion } from "motion/react"
-import { CheckCircle2, Send, ShieldCheck, XCircle } from "lucide-react"
+import { CheckCircle2, Send, ShieldCheck, XCircle, Mail, RefreshCw, Clock } from "lucide-react"
 import { useAuth } from "../lib/auth-context"
 import { supabase } from "../lib/supabase"
 import { alertPop, easeOutExpo, fadeSlide, listContainer, listItem } from "../lib/motion"
@@ -192,6 +192,7 @@ export default function UpgradeToCreator() {
                 <BackButton
                     to={step === "age" ? "/profile" : undefined}
                     onClick={step !== "age" ? () => setStep("age") : undefined}
+                    showOnDesktop
                 />
 
                 <motion.div variants={fadeSlide} initial="hidden" animate="show">
@@ -299,39 +300,67 @@ export default function UpgradeToCreator() {
                                 variants={fadeSlide}
                                 initial="hidden"
                                 animate="show"
-                                className="bg-white border border-second rounded-2xl lg:rounded-xl p-6 shadow-sm"
+                                className="bg-white dark:bg-second border border-second dark:border-white/10 rounded-2xl sm:rounded-3xl p-5 sm:p-7 shadow-sm"
                             >
-                                <div className="flex items-center gap-2 mb-1">
-                                    <h2 className="font-semibold text-darks">Verifikasi email kamu</h2>
+                                <div className="flex flex-row items-start gap-3.5 sm:gap-4 mb-6 text-left">
+                                    <div className="w-11 h-11 sm:w-12 sm:h-12 shrink-0 rounded-xl bg-done/10 dark:bg-done/20 text-done flex items-center justify-center">
+                                        <Mail className="h-5 w-5 sm:h-6 sm:w-6" />
+                                    </div>
+                                    <div className="flex-1 min-w-0">
+                                        <h2 className="text-lg sm:text-xl font-bold text-darks mb-1">Verifikasi Email</h2>
+                                        <p className="text-xs sm:text-sm text-tinted leading-relaxed">
+                                            {otpSent ? (
+                                                <>
+                                                    Masukkan 6 digit kode verifikasi yang telah dikirim ke{" "}
+                                                    <span className="inline-flex items-center gap-1 font-semibold text-darks bg-base dark:bg-base/70 px-2 py-0.5 rounded-full border border-second dark:border-white/10 text-xs">
+                                                        {email || "email kamu"}
+                                                    </span>
+                                                </>
+                                            ) : (
+                                                <>
+                                                    Kami akan mengirim kode OTP ke{" "}
+                                                    <span className="inline-flex items-center gap-1 font-semibold text-darks bg-base dark:bg-base/70 px-2 py-0.5 rounded-full border border-second dark:border-white/10 text-xs">
+                                                        {email || "email kamu"}
+                                                    </span>{" "}
+                                                    untuk konfirmasi akun.
+                                                </>
+                                            )}
+                                        </p>
+                                    </div>
                                 </div>
-                                <p className="text-sm text-tinted mb-5">
-                                    Kami akan mengirim kode OTP ke <span className="font-semibold text-darks">{email || "email kamu"}</span> untuk memastikan kepemilikan akun.
-                                </p>
 
                                 {!otpSent ? (
                                     <button
                                         onClick={handleSendOtp}
                                         disabled={sendingOtp || !email}
-                                        className="btn bg-darks text-base border-none w-full hover:opacity-90 transition-opacity disabled:opacity-60 rounded-full lg:rounded-xl"
+                                        className="btn h-12 bg-darks text-base hover:bg-darks/90 border-none w-full font-semibold rounded-xl sm:rounded-2xl transition-all shadow-sm active:scale-[0.99] disabled:opacity-60"
                                     >
                                         {sendingOtp ? <Spinner size={16} /> : <Send className="h-4 w-4" />}
-                                        {sendingOtp ? "Mengirim OTP..." : "Kirim Kode OTP"}
+                                        {sendingOtp ? "Mengirim Kode OTP..." : "Kirim Kode OTP"}
                                     </button>
                                 ) : (
-                                    <form onSubmit={handleVerify} className="space-y-4">
-                                        <div className="flex w-full max-w-xs gap-2 sm:gap-3 justify-center mx-auto" onPaste={handleOtpPaste}>
+                                    <form onSubmit={handleVerify} className="space-y-6">
+                                        <div
+                                            className="flex w-full max-w-sm gap-2 sm:gap-2.5 justify-center mx-auto"
+                                            onPaste={handleOtpPaste}
+                                        >
                                             {otp.map((digit, i) => (
                                                 <motion.input
                                                     key={i}
                                                     ref={(el) => { inputsRef.current[i] = el }}
                                                     initial={{ opacity: 0, y: 8 }}
                                                     animate={{ opacity: 1, y: 0 }}
-                                                    transition={{ duration: 0.3, ease: easeOutExpo, delay: Math.min(i * 0.05, 0.3) }}
+                                                    transition={{ duration: 0.25, ease: easeOutExpo, delay: Math.min(i * 0.04, 0.2) }}
                                                     type="text"
                                                     inputMode="numeric"
                                                     maxLength={1}
                                                     required
-                                                    className="input flex-1 min-w-0 h-12 w-full text-center text-lg font-semibold bg-base border-second focus:border-done focus:outline-none transition-colors"
+                                                    aria-label={`Digit ${i + 1}`}
+                                                    className={`w-11 sm:w-13 h-13 sm:h-14 text-center font-mono text-xl sm:text-2xl font-bold rounded-xl sm:rounded-2xl border-2 transition-all outline-none ${
+                                                        digit
+                                                            ? "bg-done/5 dark:bg-done/10 border-done text-darks shadow-sm"
+                                                            : "bg-base dark:bg-base/60 border-second dark:border-white/10 text-darks hover:border-tinted/50 focus:border-done focus:ring-4 focus:ring-done/15"
+                                                    }`}
                                                     value={digit}
                                                     onChange={(e) => handleOtpChange(i, e.target.value)}
                                                     onKeyDown={(e) => handleOtpKeyDown(i, e)}
@@ -339,30 +368,39 @@ export default function UpgradeToCreator() {
                                             ))}
                                         </div>
 
-                                        <button
-                                            type="submit"
-                                            disabled={verifying || upgrading || !isComplete}
-                                            className="btn bg-darks text-base border-none w-full hover:opacity-90 transition-opacity disabled:opacity-60 rounded-full lg:rounded-xl"
-                                        >
-                                            {verifying || upgrading ? <Spinner size={16} /> : <ShieldCheck className="h-4 w-4" />}
-                                            {verifying ? "Memverifikasi..." : upgrading ? "Mengupgrade..." : "Verifikasi & Upgrade"}
-                                        </button>
+                                        <div className="space-y-3 pt-1">
+                                            <button
+                                                type="submit"
+                                                disabled={verifying || upgrading || !isComplete}
+                                                className="btn h-12 bg-darks text-base hover:bg-darks/90 border-none w-full font-semibold rounded-xl sm:rounded-2xl transition-all shadow-sm active:scale-[0.99] disabled:opacity-50 flex items-center justify-center gap-2"
+                                            >
+                                                {verifying || upgrading ? <Spinner size={16} /> : <ShieldCheck className="h-4 w-4" />}
+                                                {verifying ? "Memverifikasi..." : upgrading ? "Mengupgrade..." : "Verifikasi & Upgrade"}
+                                            </button>
 
-                                        <button
-                                            type="button"
-                                            onClick={handleResend}
-                                            disabled={resendLoading || resendCountdown > 0}
-                                            className="btn bg-base text-darks border border-second hover:bg-second transition-colors w-full disabled:opacity-60 rounded-full lg:rounded-xl"
-                                        >
-                                            {resendLoading ? (
-                                                <Spinner size={16} />
-                                            ) : (
-                                                <Send className="h-4 w-4" />
-                                            )}
-                                            {resendCountdown > 0
-                                                ? `Kirim ulang OTP dalam (${resendCountdown}s)`
-                                                : "Tidak menerima kode? Kirim ulang"}
-                                        </button>
+                                            <div className="flex items-center justify-center pt-1">
+                                                {resendCountdown > 0 ? (
+                                                    <span className="inline-flex items-center gap-1.5 text-xs text-tinted bg-base dark:bg-base/70 border border-second dark:border-white/10 px-3.5 py-1.5 rounded-full font-medium">
+                                                        <Clock className="h-3.5 w-3.5" />
+                                                        Kirim ulang dalam <span className="font-semibold text-darks font-mono">{resendCountdown}s</span>
+                                                    </span>
+                                                ) : (
+                                                    <button
+                                                        type="button"
+                                                        onClick={handleResend}
+                                                        disabled={resendLoading}
+                                                        className="inline-flex items-center gap-1.5 text-xs font-semibold text-done hover:text-done/80 hover:underline transition-colors disabled:opacity-60 cursor-pointer py-1 px-2"
+                                                    >
+                                                        {/* {resendLoading ? (
+                                                            <Spinner size={14} />
+                                                        ) : (
+                                                            <RefreshCw className="h-3.5 w-3.5" />
+                                                        )} */}
+                                                        {resendLoading ? "Mengirim ulang..." : "Tidak menerima kode? Kirim ulang"}
+                                                    </button>
+                                                )}
+                                            </div>
+                                        </div>
                                     </form>
                                 )}
                             </motion.div>

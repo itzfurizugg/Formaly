@@ -235,7 +235,7 @@ function CreatorDashboard() {
                             </motion.div>
 
                             <div className="flex flex-col gap-2.5 sm:gap-3 border-t border-dashed border-second pt-4">
-                                <p className="text-xs font-semibold uppercase tracking-wider text-tinted ml-1">Akses Form</p>
+                                <p className="text-xs font-semibold uppercase tracking-wider text-tinted ml-1">Akses Cepat</p>
                                 {[
                                     { to: "/creator/forms", label: "Kelola Form", desc: "Buat dan atur form kamu", icon: FileText },
                                     { to: "/creator/responden", label: "Responden", desc: "Lihat hasil pengisian form", icon: ChartNoAxesColumn },
@@ -260,9 +260,28 @@ function CreatorDashboard() {
                                             </span>
                                             <ChevronRight className="h-4 w-4 text-tinted shrink-0" />
                                         </Link>
-                                        
                                     </motion.div>
                                 ))}
+                                <Link
+                                    to="/creator/galileo"
+                                    className="block transition-all active:scale-[0.98]"
+                                >
+                                    <div className="relative z-10 overflow-hidden rounded-xl bg-base-400 backdrop-blur-xl px-8 py-14 flex flex-col items-center gap-10">
+                                        <div className="relative w-32 h-32 flex items-center justify-center shrink-0">
+                                            <span className="absolute inset-0 rounded-full border border-darks/15 border-t-darks/50" />
+                                            <span className="absolute inset-3 rounded-full border border-darks/10 border-t-darks/40" />
+                                            <span className="absolute inset-7 rounded-full border border-dashed border-darks/20">
+                                                <span className="absolute -top-1 left-1/2 -translate-x-1/2 w-2 h-2 rounded-full bg-darks" />
+                                            </span>
+                                            <div className="w-12 h-12 rounded-full bg-darks/95" />
+                                        </div>
+
+                                        <div className="flex flex-col items-center gap-1 text-center">
+                                            <span className="block text-sm font-bold text-darks">Galileo AI</span>
+                                            <span className="block text-xs text-tinted">Mulailah membuat form dengan bantuan Galileo!</span>
+                                        </div>
+                                    </div>
+                                </Link>
                             </div>
                         </div>
 

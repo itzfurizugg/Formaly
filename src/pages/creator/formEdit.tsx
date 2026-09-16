@@ -497,13 +497,18 @@ function FormEdit() {
                                                             {row.hint && <p className="text-xs text-tinted/70 mt-1.5 italic hidden sm:block">{row.hint}</p>}
                                                         </div>
                                                     </div>
-                                                    <input
-                                                        type="checkbox"
+                                                    <button
+                                                        type="button"
+                                                        role="switch"
+                                                        aria-checked={settings[row.key]}
                                                         aria-label={row.title}
-                                                        checked={settings[row.key]}
-                                                        onChange={() => setSettings((prev) => ({ ...prev, [row.key]: !prev[row.key] }))}
-                                                        className="toggle mt-1 shrink-0 border-second bg-tinted/30 checked:border-darks/50 checked:bg-darks/50 transition-colors duration-200"
-                                                    />
+                                                        onClick={() => setSettings((prev) => ({ ...prev, [row.key]: !prev[row.key] }))}
+                                                        className={`w-12 h-6 mt-1 shrink-0 flex items-center rounded-full p-1 transition-colors ${
+                                                            settings[row.key] ? "bg-done justify-end" : "bg-second dark:bg-base justify-start"
+                                                        }`}
+                                                    >
+                                                        <span className="bg-white w-4 h-4 rounded-full shadow-sm" />
+                                                    </button>
                                                 </div>
                                             ))}
                                         </div>
