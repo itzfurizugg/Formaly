@@ -82,68 +82,10 @@ class _QuestionScreenState extends State<QuestionScreen> {
   // Daftar pertanyaan.
   final List<Map<String, dynamic>> questions = [];
 
-  // Security violation selama ujian.
-  bool _securityViolationTriggered = false;
-
   @override
   void initState() {
     super.initState();
-
-    _examSecurityChannel.setMethodCallHandler(
-      _handleSecurityMethodCall,
-    );
-
     loadExam();
-  }
-
-  // Menangani pelanggaran security dari Android.
-  Future<void> _handleSecurityMethodCall(MethodCall call) async {
-    if (call.method != 'securityViolation') {
-      return;
-    }
-
-    await _handleSecurityViolation(
-      call.arguments?.toString() ?? 'security',
-    );
-  }
-
-  Future<void> _handleSecurityViolation(String reason) async {
-    if (!mounted ||
-        isLoading ||
-        isSubmitting ||
-        _securityViolationTriggered) {
-      return;
-    }
-
-    _securityViolationTriggered = true;
-    isAutoSubmitting = true;
-
-    try {
-      await _examSecurityChannel.invokeMethod(
-        'playViolationAlarm',
-      );
-    } catch (_) {
-      // Alarm gagal tidak boleh menghentikan auto-submit.
-    }
-
-    if (!mounted) {
-      return;
-    }
-
-    final String message = reason == 'notification'
-        ? 'Pelanggaran terdeteksi: notifikasi masuk. Ujian dikirim otomatis.'
-        : reason == 'multi_window'
-            ? 'Pelanggaran terdeteksi: mode split-screen/multi-window. Ujian dikirim otomatis.'
-            : 'Pelanggaran terdeteksi: kamu keluar dari fokus ujian. Ujian dikirim otomatis.';
-
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(message),
-        duration: const Duration(seconds: 3),
-      ),
-    );
-
-    await submitExam();
   }
 
   @override
@@ -151,7 +93,6 @@ class _QuestionScreenState extends State<QuestionScreen> {
     timer?.cancel();
     _serverSyncTimer?.cancel();
     _serverClock.stop();
-    _examSecurityChannel.setMethodCallHandler(null);
 
     for (final controller in essayControllers) {
       controller.dispose();
@@ -185,7 +126,6 @@ class _QuestionScreenState extends State<QuestionScreen> {
         isLoading = true;
         errorMessage = null;
         currentQuestion = 0;
-        _securityViolationTriggered = false;
       });
     }
 
@@ -2258,23 +2198,14 @@ class _QuestionScreenState extends State<QuestionScreen> {
                           ),
                         ],
                       ),
-                      child: InteractiveViewer(
-                        minScale: 0.8,
-                        maxScale: 3.0,
-                        scaleEnabled: true,
-                        panEnabled: true,
-                        constrained: true,
-                        clipBehavior: Clip.none,
-                        boundaryMargin: const EdgeInsets.all(80),
-                        child: _buildHtmlContent(
-                          question['question']
-                              ?.toString() ??
-                              '',
-                          fontSize: 19,
-                          fontWeight:
-                              FontWeight.bold,
-                          color: colors.onSurface,
-                        ),
+                      child: _buildHtmlContent(
+                        question['question']
+                            ?.toString() ??
+                            '',
+                        fontSize: 19,
+                        fontWeight:
+                            FontWeight.bold,
+                        color: colors.onSurface,
                       ),
                     ),
 

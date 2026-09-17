@@ -28,6 +28,12 @@ dependencies:
   # Renderer HTML/WYSIWYG untuk soal dan jawaban dari creator
   flutter_widget_from_html_core: ^0.17.4
 
+  # Sinkronisasi waktu server untuk timer ujian
+  flutter_ntp: ^0.1.0
+
+  # Scanner QR untuk verifikasi sebelum ujian
+  mobile_scanner: ^7.4.2
+
 dev_dependencies:
   flutter_test:
     sdk: flutter

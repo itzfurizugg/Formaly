@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:flutter_widget_from_html_core/flutter_widget_from_html_core.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import 'question_screen.dart';
@@ -28,9 +29,6 @@ class _FormDetailScreenState extends State<FormDetailScreen> {
 
   bool isLoading = true;
   bool isStarting = false;
-
-  // Mencegah dialog persetujuan muncul lebih dari sekali.
-  bool _agreementShown = false;
 
   String? errorMessage;
 
@@ -236,14 +234,6 @@ class _FormDetailScreenState extends State<FormDetailScreen> {
         errorMessage = null;
       });
 
-      // Tampilkan persetujuan otomatis setelah Detail Form siap.
-      if (mounted) {
-        WidgetsBinding.instance.addPostFrameCallback(
-          (_) {
-            _showExamAgreement();
-          },
-        );
-      }
     } catch (e) {
       if (!mounted) return;
 
@@ -253,102 +243,6 @@ class _FormDetailScreenState extends State<FormDetailScreen> {
             _cleanError(e);
       });
     }
-  }
-
-  // ============================================================
-  // PERSETUJUAN UJIAN
-  // ============================================================
-
-  Future<void> _showExamAgreement() async {
-    if (!mounted || _agreementShown) {
-      return;
-    }
-
-    _agreementShown = true;
-
-    await showDialog<void>(
-      context: context,
-      barrierDismissible: false,
-      builder: (dialogContext) {
-        final colors =
-            Theme.of(dialogContext).colorScheme;
-
-        return PopScope(
-          canPop: false,
-          child: AlertDialog(
-            shape: RoundedRectangleBorder(
-              borderRadius:
-                  BorderRadius.circular(20),
-            ),
-            title: Text(
-              'Persetujuan Ujian',
-              style: GoogleFonts.poppins(
-                fontWeight:
-                    FontWeight.bold,
-              ),
-            ),
-            content: Text(
-              'Ujian akan dikerjakan dalam mode layar penuh. '
-              'Pastikan Anda siap sebelum memulai ujian.',
-              style: GoogleFonts.poppins(
-                height: 1.5,
-              ),
-            ),
-            actions: [
-              SizedBox(
-                width:
-                    double.infinity,
-                child:
-                    ElevatedButton(
-                  onPressed: () async {
-                    // Tombol SETUJU hanya menutup dialog.
-                    // Security benar-benar dimulai saat tombol
-                    // START ditekan.
-                    if (!dialogContext.mounted) {
-                      return;
-                    }
-
-                    Navigator.pop(
-                      dialogContext,
-                    );
-                  },
-                  style:
-                      ElevatedButton
-                          .styleFrom(
-                    backgroundColor:
-                        colors.primary,
-                    foregroundColor:
-                        colors.onPrimary,
-                    elevation: 0,
-                    padding:
-                        const EdgeInsets
-                            .symmetric(
-                      vertical: 14,
-                    ),
-                    shape:
-                        RoundedRectangleBorder(
-                      borderRadius:
-                          BorderRadius
-                              .circular(
-                        12,
-                      ),
-                    ),
-                  ),
-                  child: Text(
-                    'SETUJU',
-                    style:
-                        GoogleFonts.poppins(
-                      fontWeight:
-                          FontWeight.bold,
-                    ),
-                  ),
-                ),
-              ),
-            ],
-          ),
-        );
-      },
-    );
   }
 
   // ============================================================
@@ -1027,21 +921,40 @@ class _FormDetailScreenState extends State<FormDetailScreen> {
               ),
             ),
 
-            child: Text(
-              formDescription
-                      .trim()
-                      .isEmpty
-                  ? 'Tidak ada deskripsi untuk form ini.'
-                  : formDescription,
-
-              style:
-                  GoogleFonts.poppins(
-                fontSize: 14,
-                height: 1.7,
-                color:
-                    colors.onSurface,
-              ),
-            ),
+            child:
+                formDescription
+                        .trim()
+                        .isEmpty
+                    ? Text(
+                        'Tidak ada deskripsi untuk form ini.',
+                        style:
+                            GoogleFonts.poppins(
+                          fontSize: 14,
+                          height: 1.7,
+                          color:
+                              colors.onSurface,
+                        ),
+                      )
+                    : HtmlWidget(
+                        formDescription,
+                        renderMode:
+                            RenderMode.column,
+                        textStyle:
+                            GoogleFonts.poppins(
+                          fontSize: 14,
+                          color:
+                              colors.onSurface,
+                          height: 1.7,
+                        ),
+                        customStylesBuilder: (element) {
+                          if (element.localName == 'p') {
+                            return {
+                              'margin': '0 0 8px 0',
+                            };
+                          }
+                          return null;
+                        },
+                      ),
           ),
 
           const SizedBox(
