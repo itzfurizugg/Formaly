@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef, useCallback, useMemo } from "react"
 import { AnimatePresence, motion } from "motion/react"
 import { useNavigate, useParams, useLocation } from "react-router-dom"
-import { Check, Clock, ZoomIn, ZoomOut, X, LayoutList } from "lucide-react"
+import { Check, Clock, Menu, ZoomIn, ZoomOut, X } from "lucide-react"
 import PageIndicator from "../../components/pageindicator"
 import { RichText } from "../../components/richText"
 import QuestionMedia from "../../components/QuestionMedia"
@@ -91,6 +91,7 @@ function FormPage() {
     const [modalImage, setModalImage] = useState<string | null>(null)
     const [pageZoom, setPageZoom] = useState(1)
     const [showSubmitConfirm, setShowSubmitConfirm] = useState(false)
+    const [showSectionMenu, setShowSectionMenu] = useState(false)
     const [hasTimer, setHasTimer] = useState(false)
     const autoSubmitted = useRef(false)
     const deadlineRef = useRef<number | null>(null)
@@ -372,7 +373,7 @@ function FormPage() {
                 for (const s of nextSections) {
                     for (let i = s.questionIds.length - 1; i > 0; i--) {
                         const j = Math.floor(Math.random() * (i + 1))
-                        ;[s.questionIds[i], s.questionIds[j]] = [s.questionIds[j], s.questionIds[i]]
+                            ;[s.questionIds[i], s.questionIds[j]] = [s.questionIds[j], s.questionIds[i]]
                     }
                 }
             }
@@ -547,7 +548,7 @@ function FormPage() {
     }
 
     const renderQuestionContent = (q: Question, indexLabel: number, isStandardModeCard = false) => (
-        <div className="bg-base-300 lg:bg-white dark:bg-second border border-second p-1 lg:p-6 lg:shadow-sm rounded-xl">
+        <div className={`${isStandardModeCard ? "bg-white dark:bg-[#252525]" : "bg-base-300 lg:bg-white dark:bg-base-300"} border border-second p-3 sm:p-4 lg:p-6 lg:shadow-sm rounded-xl`}>
             <div className="flex items-center justify-between mb-3">
                 <div className="flex gap-2">
                     <p className="text-sm text-tinted font-semibold">Soal {indexLabel}</p>
@@ -557,7 +558,7 @@ function FormPage() {
                     <div className="flex items-center gap-2">
                         <span
                             className={`inline-flex items-center gap-1 px-3.5 py-1 rounded-full text-xs font-semibold tabular-nums transition-colors ${!hasTimer
-                                ? "bg-white dark:bg-second text-tinted"
+                                ? "bg-white dark:bg-base-300 text-tinted"
                                 : timeLeft <= 60
                                     ? "bg-red-500/10 text-red-600"
                                     : "bg-done/10 text-done"
@@ -637,14 +638,14 @@ function FormPage() {
                         onChange={(e) => setAnswers((prev) => ({ ...prev, [q.id]: e.target.value }))}
                         rows={5}
                         placeholder="Tulis jawabanmu di sini..."
-                        className="textarea w-full bg-white dark:bg-second border-second focus:border-done focus:outline-none transition-colors text-sm resize-y"
+                        className="textarea w-full bg-white dark:bg-base-300 border-second focus:border-done focus:outline-none transition-colors text-sm resize-y"
                     />
                 ) : q.question_type === "dropdown" ? (
                     <div>
                         <select
                             value={Array.isArray(answers[q.id]) ? "" : (answers[q.id] as string) || ""}
                             onChange={(e) => setAnswers((prev) => ({ ...prev, [q.id]: e.target.value }))}
-                            className="select w-full bg-white dark:bg-second border-second focus:border-done focus:outline-none rounded-lg text-sm"
+                            className="select w-full bg-white dark:bg-base-300 border-second focus:border-done focus:outline-none rounded-lg text-sm"
                         >
                             <option value="">-- Pilih salah satu --</option>
                             {q.question_options?.map((option) => (
@@ -685,7 +686,7 @@ function FormPage() {
                                 onClick={() => selectOption(q, option.id)}
                                 className={`w-full text-left px-3.5 py-3 rounded-lg border text-sm transition-colors ${selected
                                     ? "bg-darks border-darks text-white dark:text-second font-medium"
-                                    : "bg-white dark:bg-second border-second text-darks hover:border-darks/50"
+                                    : "bg-white dark:bg-base-300 border-second text-darks hover:border-darks/50"
                                     }`}
                             >
                                 <span className="flex items-center gap-3">
@@ -728,30 +729,48 @@ function FormPage() {
                         </button>
                     </div>
                 ) : isStandard ? (
-                    <div className="flex flex-col items-center px-3.5 pt-6 pb-28 md:pb-6">
+                    <div className="flex min-h-screen flex-col items-center px-3 pt-4 pb-24 sm:px-3.5 sm:pt-6 md:pb-6">
                         <div className="w-full max-w-3xl xl:mt-3" style={{ zoom: pageZoom }}>
-                            <div className="p-2 mb-3 hidden sm:block">
-                                <div className="flex items-start justify-between gap-3">
-                                    <div className="min-w-0">
-                                        <h1 className="text-xl xl:text-4xl font-bold text-darks">{formMeta?.title || "Form"}</h1>
-                                        <p className="text-xs text-tinted mt-1 flex items-center gap-1.5">
-                                            <LayoutList className="h-3.5 w-3.5" /> Bagian {current + 1} dari {sections.length}
-                                            {currentSection && <span className="font-medium text-darks"> · {currentSection.title}</span>}
-                                        </p>
+                            {isStandard && currentSection && <div className="sticky top-0 z-30 -mx-3 lg:-mx-3 mb-3 bg-base-300/95 px-3 py-2 backdrop-blur sm:mx-0 sm:px-2">
+                                <div className="flex items-center justify-between gap-2 px-3 py-2">
+                                    <div className="min-w-0 flex items-center gap-2">
+                                        <h2 className="truncate text-base font-semibold text-darks sm:text-lg">{currentSection?.title || `Bagian ${current + 1}`}</h2>
+                                        <span className="shrink-0 text-xs text-tinted">{current + 1}/{sections.length}</span>
                                     </div>
-                                    <span
-                                        className={`shrink-0 inline-flex items-center gap-1 px-3.5 py-1 rounded-full text-xs font-semibold tabular-nums transition-colors ${!hasTimer
-                                            ? "bg-white dark:bg-second text-tinted"
-                                            : timeLeft <= 60
-                                                ? "bg-red-500/10 text-red-600"
-                                                : "bg-done/10 text-done"
-                                            }`}
-                                    >
-                                        <Clock className="h-3.5 w-3.5" />
-                                        {hasTimer ? formattedTime : "Tanpa Waktu"}
-                                    </span>
+                                    <div className="flex flex-row gap-1">
+                                        <span
+                                            className={`shrink-0 inline-flex items-center gap-1 px-1.5 py-1 rounded-full text-xs font-semibold tabular-nums transition-colors ${!hasTimer
+                                                ? "bg-white dark:bg-base-300 text-tinted"
+                                                : timeLeft <= 60
+                                                    ? "bg-red-500/10 text-red-600"
+                                                    : "bg-done/10 text-done"
+                                                }`}
+                                        >
+                                            <Clock className="h-3.5 w-3.5" />
+                                            {hasTimer ? formattedTime : "Tanpa Waktu"}
+                                        </span>
+                                        <div className="relative">
+                                            <button
+                                                onClick={() => setShowSectionMenu((open) => !open)}
+                                                className="rounded-full border border-second bg-white/70 p-2 text-darks hover:bg-second dark:bg-base-300/70"
+                                                aria-label="Buka menu bagian"
+                                                aria-expanded={showSectionMenu}
+                                            >
+                                                <Menu className="h-4 w-4" />
+                                            </button>
+                                            {showSectionMenu && (
+                                                <div className="absolute right-0 top-full z-40 mt-2 flex items-center gap-1 rounded-xl border border-second bg-white p-1.5 shadow-lg dark:bg-base-300">
+                                                    <button onClick={() => zoomPage(-0.25)} className="rounded-full p-2 text-darks hover:bg-second" aria-label="Zoom out" title="Zoom out"><ZoomOut className="h-4 w-4" /></button>
+                                                    <span className="text-[11px] font-semibold text-tinted tabular-nums min-w-[36px] text-center">
+                                                        {Math.round(pageZoom * 100)}%
+                                                    </span>
+                                                    <button onClick={() => zoomPage(0.25)} className="rounded-full p-2 text-darks hover:bg-second" aria-label="Zoom in" title="Zoom in"><ZoomIn className="h-4 w-4" /></button>
+                                                </div>
+                                            )}
+                                        </div>
+                                    </div>
                                 </div>
-                            </div>
+                            </div>}
 
                             {currentSection && (
                                 <motion.div
@@ -760,9 +779,7 @@ function FormPage() {
                                     animate={{ opacity: 1, y: 0 }}
                                     transition={{ duration: 0.45, ease: easeOutExpo }}
                                 >
-                                    <div className="p-2 sm:p-3 mb-3">
-                                        <h2 className="text-base sm:text-lg font-semibold text-darks">{currentSection.title}</h2>
-                                    </div>
+
                                     <div className="space-y-4">
                                         {visibleQuestions.map((q, qi) => (
                                             <div key={q.id} id={`q-${q.id}`}>
@@ -774,42 +791,19 @@ function FormPage() {
                             )}
 
                             {/* Tombol navigasi section di bawah konten */}
-                            <div className="hidden md:flex items-center justify-between gap-3 sticky bottom-0 z-30 mt-4 py-3 bg-gradient-to-t from-second via-second/90 to-transparent">
+                            <div className="hidden md:flex items-center justify-between gap-3 lg:-mx-3 lg:px-3 sticky bottom-0 z-30 mt-4 py-3 bg-base-300">
                                 <PageIndicator total={total} current={current} onPrev={prev} onNext={next} onListClick={goToList} onRaguToggle={toggleRagu} onRequestSubmit={requestSubmit} submitting={submitting} label="Bagian" hideRagu />
                             </div>
                         </div>
 
-                        <div className="hidden md:flex fixed bottom-4 right-4 z-40 items-center">
-                            <div className="bg-white dark:bg-second p-2 rounded-full border border-second shadow-md flex items-center gap-1.5">
-                                <button
-                                    onClick={() => zoomPage(-0.25)}
-                                    className="p-2 rounded-full border border-second bg-white dark:bg-second text-darks hover:bg-white dark:bg-second"
-                                    aria-label="Zoom out"
-                                    title="Zoom out"
-                                >
-                                    <ZoomOut className="h-4 w-4" />
-                                </button>
-                                <span className="text-xs font-semibold text-tinted tabular-nums w-10 text-center">
-                                    {Math.round(pageZoom * 100)}%
-                                </span>
-                                <button
-                                    onClick={() => zoomPage(0.25)}
-                                    className="p-2 rounded-full border border-second bg-white dark:bg-second text-darks hover:bg-white dark:bg-second"
-                                    aria-label="Zoom in"
-                                    title="Zoom in"
-                                >
-                                    <ZoomIn className="h-4 w-4" />
-                                </button>
-                            </div>
-                        </div>
 
                         {/* Mobile: bar fixed di bawah */}
                         <div className="fixed bottom-0 left-0 right-0 z-40 md:hidden pointer-events-none">
-                            <div className="bg-gradient-to-t from-second via-second/95 to-transparent px-3.5 pt-20 pb-5">
-                                <div className="w-full max-w-3xl mx-auto flex flex-col items-center gap-2 pointer-events-auto mb-2">
-                                    <span
+                            <div className="bg-base-300 px-3 py-2 pb-[max(1.5rem,env(safe-area-inset-bottom))] border-t border-second/70">
+                                <div className="w-full max-w-3xl mx-auto flex items-center justify-between gap-2 pointer-events-auto mt-2">
+                                    {/* <span
                                         className={`inline-flex items-center gap-1 px-3 py-0.5 rounded-full text-[11px] font-semibold tabular-nums ${!hasTimer
-                                            ? "bg-white dark:bg-second/80 text-tinted"
+                                            ? "bg-white dark:bg-base-300/80 text-tinted"
                                             : timeLeft <= 60
                                                 ? "bg-red-500/10 text-red-600"
                                                 : "bg-done/10 text-done"
@@ -817,7 +811,7 @@ function FormPage() {
                                     >
                                         <Clock className="h-3 w-3" />
                                         {hasTimer ? formattedTime : "Tanpa Waktu"}
-                                    </span>
+                                     </span> */}
                                     <PageIndicator total={total} current={current} onPrev={prev} onNext={next} onListClick={goToList} onRaguToggle={toggleRagu} onRequestSubmit={requestSubmit} submitting={submitting} label="Bagian" hideRagu />
                                 </div>
                             </div>
@@ -831,13 +825,35 @@ function FormPage() {
                         </button>
                     </div>
                 ) : (
-                    <div className="flex flex-col items-center px-3.5 pt-6 pb-28 md:pb-6">
+                    <div className="flex min-h-screen flex-col items-center px-3 pt-4 pb-24 sm:px-3.5 sm:pt-6 md:pb-6">
                         <div className="w-full max-w-3xl xl:mt-3" style={{ zoom: pageZoom }}>
-                            <div className="p-2 mb-3 hidden sm:block">
-                                <h1 className="text-xl xl:text-4xl font-bold text-darks">{formMeta?.title || "Form"}</h1>
-                                <p className="text-xs text-tinted mt-1">
+                            <div className="px-1 pb-3 sm:p-2 sm:mb-3 hidden sm:block">
+                                <div className="flex items-center justify-between gap-2">
+                                    <h1 className="min-w-0 truncate text-lg sm:text-xl xl:text-4xl font-bold text-darks">{formMeta?.title || "Form"}</h1>
+                                    <span className="shrink-0 text-xs text-tinted tabular-nums">{current + 1}/{total}</span>
+                                </div>
+                                <p className="hidden sm:block text-xs text-tinted mt-1">
                                     {current + 1} dari {total} soal
                                 </p>
+                            </div>
+                            <div className="relative flex items-center justify-end lg:hidden">
+                                <button
+                                    onClick={() => setShowSectionMenu((open) => !open)}
+                                    className="rounded-full border border-second bg-white/70 p-2 text-darks hover:bg-second dark:bg-base-300/70"
+                                    aria-label="Buka menu bagian"
+                                    aria-expanded={showSectionMenu}
+                                >
+                                    <Menu className="h-4 w-4" />
+                                </button>
+                                {showSectionMenu && (
+                                    <div className="absolute right-0 top-full z-40 mt-2 flex items-center gap-1 rounded-xl border border-second bg-white p-1.5 shadow-lg dark:bg-base-300">
+                                        <button onClick={() => zoomPage(-0.25)} className="rounded-full p-2 text-darks hover:bg-second" aria-label="Zoom out" title="Zoom out"><ZoomOut className="h-4 w-4" /></button>
+                                        <span className="text-[11px] font-semibold text-tinted tabular-nums min-w-[36px] text-center">
+                                            {Math.round(pageZoom * 100)}%
+                                        </span>
+                                        <button onClick={() => zoomPage(0.25)} className="rounded-full p-2 text-darks hover:bg-second" aria-label="Zoom in" title="Zoom in"><ZoomIn className="h-4 w-4" /></button>
+                                    </div>
+                                )}
                             </div>
 
                             {/* key=current agar animasi diulang tiap pindah soal */}
@@ -850,66 +866,17 @@ function FormPage() {
                                 {renderQuestionContent(question, current + 1)}
                             </motion.div>
 
-                            {/* Zoom control mobile di bawah kolom form */}
-                            <div className="flex md:hidden items-center justify-center mt-3">
-                                <div className="bg-white dark:bg-second backdrop-blur-xs px-2 py-1 rounded-full border border-second shadow-xs flex items-center gap-1">
-                                    <button
-                                        onClick={() => zoomPage(-0.25)}
-                                        className="p-1 rounded-full text-darks hover:bg-white dark:bg-second active:scale-95 transition-transform"
-                                        aria-label="Zoom out"
-                                        title="Zoom out"
-                                    >
-                                        <ZoomOut className="h-3.5 w-3.5" />
-                                    </button>
-                                    <span className="text-[11px] font-semibold text-tinted tabular-nums min-w-[36px] text-center">
-                                        {Math.round(pageZoom * 100)}%
-                                    </span>
-                                    <button
-                                        onClick={() => zoomPage(0.25)}
-                                        className="p-1 rounded-full text-darks hover:bg-white dark:bg-second active:scale-95 transition-transform"
-                                        aria-label="Zoom in"
-                                        title="Zoom in"
-                                    >
-                                        <ZoomIn className="h-3.5 w-3.5" />
-                                    </button>
-                                </div>
-                            </div>
-
                             {/* NOTE: LAYOUT DESKTOP (>= md) — PageIndicator & tombol Kirim inline di bawah konten */}
-                            <div className="hidden md:flex items-center justify-between gap-3 sticky bottom-0 z-30 mt-4 py-3 bg-gradient-to-t from-second via-second/90 to-transparent">
+                            <div className="hidden md:flex items-center justify-between gap-3 sticky bottom-0 z-30 mt-4 py-3 bg-base-300">
                                 <PageIndicator total={total} current={current} onPrev={prev} onNext={next} onListClick={goToList} isRagu={question ? !!raguQuestions[question.id] : false} onRaguToggle={toggleRagu} onRequestSubmit={requestSubmit} submitting={submitting} groupRagu />
                             </div>
                         </div>
 
-                        {/* Zoom control desktop di ujung bawah layar */}
-                        <div className="hidden md:flex fixed bottom-4 right-4 z-40 items-center">
-                            <div className="bg-white dark:bg-second p-2 rounded-full border border-second shadow-md flex items-center gap-1.5">
-                                <button
-                                    onClick={() => zoomPage(-0.25)}
-                                    className="p-2 rounded-full border border-second bg-white dark:bg-second text-darks hover:bg-white dark:bg-second"
-                                    aria-label="Zoom out"
-                                    title="Zoom out"
-                                >
-                                    <ZoomOut className="h-4 w-4" />
-                                </button>
-                                <span className="text-xs font-semibold text-tinted tabular-nums w-10 text-center">
-                                    {Math.round(pageZoom * 100)}%
-                                </span>
-                                <button
-                                    onClick={() => zoomPage(0.25)}
-                                    className="p-2 rounded-full border border-second bg-white dark:bg-second text-darks hover:bg-white dark:bg-second"
-                                    aria-label="Zoom in"
-                                    title="Zoom in"
-                                >
-                                    <ZoomIn className="h-4 w-4" />
-                                </button>
-                            </div>
-                        </div>
 
                         {/* NOTE: LAYOUT MOBILE (< md) — bar fixed di bawah dengan gradasi */}
                         <div className="fixed bottom-0 left-0 right-0 z-40 md:hidden pointer-events-none">
-                            <div className="bg-gradient-to-t from-second via-second/95 to-transparent px-3.5 pt-20 pb-5">
-                                <div className="w-full max-w-3xl mx-auto flex items-center justify-between gap-3 pointer-events-auto mb-2">
+                            <div className="bg-base-300 px-3 pt-3 pb-[max(1.5rem,env(safe-area-inset-bottom))] border-t border-second/70">
+                                <div className="w-full max-w-3xl mx-auto flex flex-wrap items-center justify-between gap-2 pointer-events-auto mb-0">
                                     <PageIndicator total={total} current={current} onPrev={prev} onNext={next} onListClick={goToList} isRagu={question ? !!raguQuestions[question.id] : false} onRaguToggle={toggleRagu} onRequestSubmit={requestSubmit} submitting={submitting} />
                                 </div>
                             </div>
@@ -939,7 +906,7 @@ function FormPage() {
                                 <img
                                     src={modalImage}
                                     alt="Zoom Preview"
-                                    className="max-w-full max-h-[85vh] object-contain rounded-lg shadow-2xl bg-white dark:bg-second"
+                                    className="max-w-full max-h-[85vh] object-contain rounded-lg shadow-2xl bg-white dark:bg-base-300"
                                 />
                             </motion.div>
                         </motion.div>
@@ -969,7 +936,7 @@ function FormPage() {
                                 animate={{ opacity: 1, scale: 1, y: 0 }}
                                 exit={{ opacity: 0, scale: 0.96, y: 12 }}
                                 transition={{ duration: 0.25 }}
-                                className="relative bg-white dark:bg-second border border-second rounded-2xl w-full max-w-sm p-5 shadow-xl"
+                                className="relative bg-white dark:bg-base-300 border border-second rounded-2xl w-full max-w-sm p-5 shadow-xl"
                             >
                                 <div className="items-start text-start">
                                     <div className="w-12 h-12 rounded-full bg-done/10 flex items-center justify-center mb-3">
@@ -984,7 +951,7 @@ function FormPage() {
                                     <button
                                         onClick={() => setShowSubmitConfirm(false)}
                                         disabled={submitting}
-                                        className="btn flex-1 rounded-full bg-base text-darks border border-second hover:bg-white dark:bg-second disabled:opacity-60"
+                                        className="btn flex-1 rounded-full bg-base text-darks border border-second hover:bg-white dark:bg-base-300 disabled:opacity-60"
                                     >
                                         Batal
                                     </button>

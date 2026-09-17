@@ -189,7 +189,7 @@ function FormDescriptionPage() {
                         </div>
                     </div>
 
-                    <div className="w-full sm:max-w-3xl bg-base-300 md:bg-white dark:bg-second sm:border sm:border-second p-4 pt-0 sm:p-8 sm:shadow-sm sm:rounded-lg relative mt-3 sm:mt-4">
+                    <div className="w-full sm:max-w-3xl bg-base-300 md:bg-white sm:border sm:border-second p-4 pt-0 sm:p-8 sm:shadow-sm sm:rounded-lg relative mt-3 sm:mt-4">
                         <div className="border-b border-second pb-3 sm:pb-4">
                             <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold text-darks leading-snug sm:leading-tight">
                                 {form.title}

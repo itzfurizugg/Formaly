@@ -147,6 +147,7 @@ function Questions({ embedded = false }: { embedded?: boolean }) {
     const [orderIds, setOrderIds] = useState<string[] | null>(null)
     // Drag dalam satu section (mode standard)
     const [sectionDrag, setSectionDrag] = useState<{ dragId: string; pageId: string } | null>(null)
+    const [sectionPageDrag, setSectionPageDrag] = useState<string | null>(null)
     const [sectionOrder, setSectionOrder] = useState<string[] | null>(null)
     // Modal hapus section
     const [deleteSectionChoice, setDeleteSectionChoice] = useState<DeleteSectionChoice>(null)
@@ -708,13 +709,76 @@ function Questions({ embedded = false }: { embedded?: boolean }) {
         return orderIds.map((qid) => byId.get(qid)).filter((q): q is Question => Boolean(q))
     }, [questions, dragId, orderIds])
 
+    const previewPages = useMemo(() => {
+        if (!sectionPageDrag || !sectionOrder) return pages
+        const byId = new Map(pages.map((p) => [p.id, p]))
+        const ordered = sectionOrder.map((pageId) => byId.get(pageId)).filter((p): p is PageWithQuestions => Boolean(p))
+        return [...ordered, ...pages.filter((p) => !sectionOrder.includes(p.id))]
+    }, [pages, sectionPageDrag, sectionOrder])
+
     // ---- DRAG & DROP MODE STANDARD (dalam satu section) ----
+
+    const persistSectionOrder = async (orderedIds: string[]) => {
+        let failed = false
+        for (let i = 0; i < orderedIds.length; i++) {
+            const { error } = await supabase
+                .from("form_pages")
+                .update({ position: i })
+                .eq("id", orderedIds[i])
+            if (error) failed = true
+        }
+        return !failed
+    }
+
+    const handleSectionDragStart = (e: DragEvent, pageId: string) => {
+        e.dataTransfer.effectAllowed = "move"
+        e.dataTransfer.setData("text/plain", pageId)
+        setSectionPageDrag(pageId)
+        setSectionOrder(realPages.map((p) => p.id))
+    }
+
+    const handleSectionDragOver = (e: DragEvent, pageId: string) => {
+        e.preventDefault()
+        e.dataTransfer.dropEffect = "move"
+        if (!sectionPageDrag || !sectionOrder || sectionPageDrag === pageId) return
+        const from = sectionOrder.indexOf(sectionPageDrag)
+        const targetIndex = sectionOrder.indexOf(pageId)
+        if (from < 0 || targetIndex < 0) return
+        const rect = e.currentTarget.getBoundingClientRect()
+        const target = targetIndex + (e.clientY > rect.top + rect.height / 2 ? 1 : 0)
+        const next = [...sectionOrder]
+        next.splice(from, 1)
+        next.splice(Math.min(target > from ? target - 1 : target, next.length), 0, sectionPageDrag)
+        setSectionOrder(next)
+    }
+
+    const finishSectionDrag = async () => {
+        if (sectionPageDrag && sectionOrder) {
+            const previous = realPages.map((p) => p.id)
+            if (previous.some((pageId, index) => pageId !== sectionOrder[index])) {
+                const byId = new Map(pages.map((p) => [p.id, p]))
+                setPages(sectionOrder.map((pageId) => byId.get(pageId)).filter((p): p is PageWithQuestions => Boolean(p)))
+                const ok = await persistSectionOrder(sectionOrder)
+                if (!ok) {
+                    showAlert("Gagal menyimpan urutan bagian.", "error")
+                    await loadAll()
+                }
+            }
+        }
+        setSectionPageDrag(null)
+        setSectionOrder(null)
+    }
+
+    const handleSectionDrop = (e: DragEvent) => {
+        e.preventDefault()
+        void finishSectionDrag()
+    }
 
     const sectionQuestions = (pageId: string) => {
         return pages.find((p) => p.id === pageId)?.questions ?? []
     }
 
-    const handleSectionDragStart = (e: DragEvent, pageId: string, q: Question) => {
+    const handleQuestionDragStart = (e: DragEvent, pageId: string, q: Question) => {
         e.dataTransfer.effectAllowed = "move"
         e.dataTransfer.setData("text/plain", q.id)
         setSectionDrag({ dragId: q.id, pageId })
@@ -731,7 +795,7 @@ function Questions({ embedded = false }: { embedded?: boolean }) {
         window.setTimeout(() => ghost.remove(), 0)
     }
 
-    const handleSectionDragOver = (e: DragEvent, pageId: string, index: number) => {
+    const handleQuestionDragOver = (e: DragEvent, pageId: string, index: number) => {
         e.preventDefault()
         e.dataTransfer.dropEffect = "move"
         if (!sectionDrag || sectionDrag.pageId !== pageId || !sectionOrder) return
@@ -755,7 +819,7 @@ function Questions({ embedded = false }: { embedded?: boolean }) {
         })
     }
 
-    const finishSectionDrag = (pageId: string) => {
+    const finishQuestionDrag = (pageId: string) => {
         if (sectionDrag && sectionDrag.pageId === pageId && sectionOrder) {
             const current = sectionQuestions(pageId)
             const prevIds = current.map((q) => q.id)
@@ -775,9 +839,9 @@ function Questions({ embedded = false }: { embedded?: boolean }) {
         setSectionOrder(null)
     }
 
-    const handleSectionDrop = (e: DragEvent, pageId: string) => {
+    const handleQuestionDrop = (e: DragEvent, pageId: string) => {
         e.preventDefault()
-        finishSectionDrag(pageId)
+        finishQuestionDrag(pageId)
     }
 
     // ---- OPERASI SECTION ----
@@ -950,8 +1014,8 @@ function Questions({ embedded = false }: { embedded?: boolean }) {
                                     value={questionType}
                                     onChange={(e) => handleTypeChange(e.target.value)}
                                 >
-                                    <option value="single_choice">Pilihan Tunggal</option>
-                                    <option value="multiple_choice">Pilihan Ganda</option>
+                                    <option value="single_choice">Pilihan Ganda</option>
+                                    <option value="multiple_choice">Checkbox</option>
                                     <option value="dropdown">Dropdown / Select</option>
                                     <option value="file_upload">Upload File sebagai Jawaban</option>
                                     <option value="date_time">Tanggal & Jam</option>
@@ -995,7 +1059,7 @@ function Questions({ embedded = false }: { embedded?: boolean }) {
                                 aria-checked={isRequired}
                                 aria-label="Tandai sebagai wajib dijawab"
                                 className={`relative shrink-0 h-6 w-11 rounded-full mt-3 transition-colors ${
-                                    isRequired ? "bg-darks" : "bg-white dark:bg-second"
+                                    isRequired ? "bg-white border border-second" : "bg-white dark:bg-second"
                                 }`}
                             >
                                 <span
@@ -1181,28 +1245,28 @@ function Questions({ embedded = false }: { embedded?: boolean }) {
                 draggable
                 onDragStart={(e) => {
                     if (pageId) {
-                        handleSectionDragStart(e, pageId, q)
+                        handleQuestionDragStart(e, pageId, q)
                     } else {
                         handleDragStart(e, q)
                     }
                 }}
                 onDragOver={(e) => {
                     if (pageId) {
-                        handleSectionDragOver(e, pageId, idx)
+                        handleQuestionDragOver(e, pageId, idx)
                     } else {
                         handleDragOver(e, idx)
                     }
                 }}
                 onDrop={(e) => {
                     if (pageId) {
-                        handleSectionDrop(e, pageId)
+                        handleQuestionDrop(e, pageId)
                     } else {
                         handleDrop(e)
                     }
                 }}
                 onDragEnd={() => {
                     if (pageId) {
-                        finishSectionDrag(pageId)
+                        finishQuestionDrag(pageId)
                     } else {
                         handleDragEnd()
                     }
@@ -1311,9 +1375,14 @@ function Questions({ embedded = false }: { embedded?: boolean }) {
                 initial={{ opacity: 0, y: 12 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.3, ease: easeOutExpo, delay: Math.min(sectionIdx * 0.05, 0.3) }}
+                draggable={!isOrphanPage}
+                onDragStart={(e) => !isOrphanPage && handleSectionDragStart(e as unknown as DragEvent, page.id)}
+                onDragOver={(e) => !isOrphanPage && handleSectionDragOver(e as unknown as DragEvent, page.id)}
+                onDrop={(e) => !isOrphanPage && handleSectionDrop(e)}
+                onDragEnd={() => !isOrphanPage && void finishSectionDrag()}
                 className={`bg-white dark:bg-second border border-second shadow-sm rounded-xl overflow-hidden ${
                     isActive ? "ring-1 ring-done/30" : ""
-                }`}
+                } ${sectionPageDrag === page.id ? "opacity-60" : "cursor-grab"}`}
             >
                 <div
                     className="flex items-start justify-between gap-3 px-4 sm:px-5 py-3 border-b border-second/70 bg-base/40"
@@ -1468,7 +1537,7 @@ function Questions({ embedded = false }: { embedded?: boolean }) {
                             </div>
                         ) : (
                             <div id="section-list" className="space-y-5 pb-8">
-                                {pages.map((p, i) => (
+                                {previewPages.map((p, i) => (
                                     <div key={p.id} id={`section-${p.id}`} className="scroll-mt-24">
                                         {renderSectionCard(p, i)}
                                     </div>
