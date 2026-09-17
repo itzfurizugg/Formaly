@@ -49,7 +49,7 @@ function FormActionsMenu({ formId, deleting, open, onOpenChange, onNavigate, onD
         >
             <button
                 onClick={toggle}
-                className="btn btn-xs lg:btn-sm btn-circle bg-white dark:bg-second text-darks hover:bg-white dark:bg-second flex items-center justify-center"
+                className="btn btn-xs lg:btn-sm btn-circle bg-white dark:bg-base text-darks border border-second dark:border-darks/15 hover:bg-white hover:border-second dark:hover:bg-second dark:hover:border-darks/25 flex items-center justify-center"
                 aria-label="Aksi form"
                 aria-expanded={open}
             >
@@ -243,13 +243,13 @@ function FormList() {
                                             <div className="card-actions justify-end flex-wrap gap-2 items-center mt-auto pt-1">
                                                 <button
                                                     onClick={() => navigate(`/creator/forms/${form.id}/shared`)}
-                                                    className="btn btn-sm rounded-full bg-base text-darks border border-second hover:bg-white dark:bg-second hover:border-second"
+                                                    className="btn btn-sm rounded-full bg-base text-darks border border-second dark:border-darks/15 hover:bg-white hover:border-second dark:hover:bg-second dark:hover:border-darks/25"
                                                 >
                                                     <Share2 className="h-3.5 w-3.5" /> Bagikan
                                                 </button>
                                                 <button
                                                     onClick={() => navigate(`/creator/forms/${form.id}`)}
-                                                    className="btn btn-sm rounded-full bg-base text-darks border border-second hover:bg-white dark:bg-second hover:border-second"
+                                                    className="btn btn-sm rounded-full bg-base text-darks border border-second dark:border-darks/15 hover:bg-white hover:border-second dark:hover:bg-second dark:hover:border-darks/25"
                                                 >
                                                     <Pencil className="h-3.5 w-3.5" /> Edit
                                                 </button>

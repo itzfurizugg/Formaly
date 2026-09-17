@@ -84,7 +84,7 @@ function TokenInputModal({ open, onClose, formId, onStarted }: TokenInputModalPr
                         role="dialog"
                         aria-modal="true"
                     >
-                        <div className="absolute inset-0 bg-darks/50" onClick={() => !starting && onClose()} />
+                        <div className="absolute inset-0 bg-black/50" onClick={() => !starting && onClose()} />
                         <motion.div
                             variants={panelVariants}
                             className="relative bg-white dark:bg-second border border-second rounded-2xl lg:rounded-xl w-full max-w-md p-5 shadow-xl"

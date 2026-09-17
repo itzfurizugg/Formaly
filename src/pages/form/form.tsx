@@ -961,7 +961,7 @@ function FormPage() {
                             aria-modal="true"
                         >
                             <div
-                                className="absolute inset-0 bg-darks/50"
+                                className="absolute inset-0 bg-black/50"
                                 onClick={() => setShowSubmitConfirm(false)}
                             />
                             <motion.div

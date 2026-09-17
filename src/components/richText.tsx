@@ -640,7 +640,7 @@ function LinkModal({
             initial="hidden"
             animate="show"
             exit="exit"
-            className="formaly-modal fixed inset-0 z-[100] flex items-center justify-center bg-darks/45 p-4"
+            className="formaly-modal fixed inset-0 z-[100] flex items-center justify-center bg-black/45 p-4"
             onPointerDown={(e) => {
                 if (e.target === e.currentTarget) onCancel()
             }}
@@ -759,7 +759,7 @@ function FormulaModal({
             initial="hidden"
             animate="show"
             exit="exit"
-            className="formaly-modal fixed inset-0 z-[100] flex items-center justify-center bg-darks/45 p-4"
+            className="formaly-modal fixed inset-0 z-[100] flex items-center justify-center bg-black/45 p-4"
             onPointerDown={(e) => {
                 if (e.target === e.currentTarget) onCancel()
             }}

@@ -3,6 +3,14 @@ import { supabase } from "./supabase"
 export const LAYOUT_QUIZ = "single_question_per_page" as const
 export const LAYOUT_STANDARD = "multiple_questions_per_page" as const
 
+/**
+ * Id sintetis untuk soal yang tidak punya halaman (page_id NULL / menunjuk ke
+ * halaman yang sudah dihapus). Soal seperti ini dibuat oleh alur lama (mis.
+ * Galileo) dan harus tetap terlihat di editor — dikelompokkan ke section
+ * sintetis "Soal lainnya" supaya tidak hilang dari daftar.
+ */
+export const ORPHAN_PAGE_ID = "__orphan_questions__"
+
 export type FormLayoutMode = typeof LAYOUT_QUIZ | typeof LAYOUT_STANDARD
 
 export function isQuizMode(mode: string | null | undefined): boolean {
@@ -71,17 +79,37 @@ export async function fetchPagesWithQuestions(formId: string): Promise<FormPageW
 
     const qs = (questions ?? []) as unknown as Question[]
     const byPage = new Map<string, Question[]>()
+    const pageIds = new Set((pages as FormPage[]).map((p) => p.id))
+    const orphans: Question[] = []
     for (const q of qs) {
-        if (q.page_id) {
+        if (q.page_id && pageIds.has(q.page_id)) {
             if (!byPage.has(q.page_id)) byPage.set(q.page_id, [])
             byPage.get(q.page_id)!.push(q)
+        } else {
+            orphans.push(q)
         }
     }
 
-    return (pages as FormPage[]).map((p) => ({
+    const result = (pages as FormPage[]).map((p) => ({
         ...p,
         questions: byPage.get(p.id) ?? [],
     }))
+
+    // Soal tanpa halaman tetap ditampilkan di section sintetis agar tidak hilang
+    // dari daftar. Operasi section padanya dibatasi di editor (lihat questions.tsx).
+    if (orphans.length > 0) {
+        result.push({
+            id: ORPHAN_PAGE_ID,
+            form_id: formId,
+            title: "Soal lainnya",
+            position: result.length,
+            created_at: "",
+            updated_at: "",
+            questions: orphans,
+        })
+    }
+
+    return result
 }
 
 /** Fetch form layout_mode. Returns null on error. */
@@ -155,8 +183,9 @@ export async function reorderQuestions(questionIds: string[]): Promise<boolean> 
  */
 export async function migrateToQuiz(formId: string): Promise<void> {
     const pages = await fetchPagesWithQuestions(formId)
+    const realPages = pages.filter((p) => p.id !== ORPHAN_PAGE_ID)
     let position = 0
-    for (const page of pages) {
+    for (const page of realPages) {
         for (const q of page.questions) {
             const newPageId = await createPage(formId, `Halaman ${position + 1}`, position)
             if (newPageId) {
@@ -168,8 +197,22 @@ export async function migrateToQuiz(formId: string): Promise<void> {
             position++
         }
     }
+    // Assign soal yatim ke halaman quiz baru juga
+    const orphanPage = pages.find((p) => p.id === ORPHAN_PAGE_ID)
+    if (orphanPage) {
+        for (const q of orphanPage.questions) {
+            const newPageId = await createPage(formId, `Halaman ${position + 1}`, position)
+            if (newPageId) {
+                await supabase
+                    .from("questions")
+                    .update({ page_id: newPageId, order_index: 0 })
+                    .eq("id", q.id)
+            }
+            position++
+        }
+    }
     // Delete old pages that are now empty
-    for (const page of pages) {
+    for (const page of realPages) {
         await deletePage(page.id)
     }
 }
@@ -180,7 +223,6 @@ export async function migrateToQuiz(formId: string): Promise<void> {
  */
 export async function migrateToStandard(formId: string): Promise<void> {
     const pages = await fetchPagesWithQuestions(formId)
-    // Collect all questions in page order, then question order
     const allQuestions: { id: string }[] = []
     for (const page of pages) {
         for (const q of page.questions) {
@@ -190,16 +232,16 @@ export async function migrateToStandard(formId: string): Promise<void> {
     // Create single page
     const newPageId = await createPage(formId, "Bagian 1", 0)
     if (!newPageId) return
-    // Assign all questions
+    // Assign all questions (including orphans)
     for (let i = 0; i < allQuestions.length; i++) {
         await supabase
             .from("questions")
             .update({ page_id: newPageId, order_index: i })
             .eq("id", allQuestions[i].id)
     }
-    // Delete old pages
+    // Delete old real pages only (skip synthetic orphan page id)
     for (const page of pages) {
-        if (page.id !== newPageId) {
+        if (page.id !== newPageId && page.id !== ORPHAN_PAGE_ID) {
             await deletePage(page.id)
         }
     }

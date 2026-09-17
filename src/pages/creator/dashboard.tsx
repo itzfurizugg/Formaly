@@ -180,7 +180,7 @@ function CreatorDashboard() {
     return (
         <div className="flex flex-col items-center px-3.5 sm:px-6 py-5 sm:py-10 lg:py-23">
             <div className="xl:max-w-7xl lg:max-w-5xl w-full">
-                <BackButton />
+                <BackButton to="/" />
 
                 <div className="ml-2">
                     <div className="flex items-center justify-between mb-1">

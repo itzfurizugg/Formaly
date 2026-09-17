@@ -757,7 +757,7 @@ function FormEdit() {
                         role="dialog"
                         aria-modal="true"
                     >
-                        <div className="absolute inset-0 bg-darks/50" onClick={() => !migrating && setModeConfirm(null)} />
+                        <div className="absolute inset-0 bg-black/50" onClick={() => !migrating && setModeConfirm(null)} />
                         <motion.div
                             initial={{ opacity: 0, scale: 0.95, y: 16 }}
                             animate={{ opacity: 1, scale: 1, y: 0 }}
@@ -767,7 +767,7 @@ function FormEdit() {
                         >
                             <div className="items-start text-start">
                                 <h3 className="text-base font-bold text-darks text-xl">
-                                    {modeConfirm === LAYOUT_STANDARD ? "Ubah ke Mode Form Biasa" : "Ubah ke Mode Quiz / Ujian"}
+                                    {modeConfirm === LAYOUT_STANDARD ? "Ubah ke Mode Normal" : "Ubah ke Mode Fokus"}
                                 </h3>
                                 <p className="text-sm text-tinted mt-1">
                                     {modeConfirm === LAYOUT_STANDARD

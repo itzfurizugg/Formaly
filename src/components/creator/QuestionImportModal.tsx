@@ -155,7 +155,7 @@ export default function QuestionImportModal({ formId, startingOrder, fallbackPag
             initial="hidden"
             animate="show"
             exit="exit"
-            className="fixed inset-0 z-50 flex items-center justify-center bg-darks/40 p-4"
+            className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4"
             role="dialog"
             aria-modal="true"
             aria-labelledby="import-title"

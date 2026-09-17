@@ -1,7 +1,7 @@
 import { useEffect, useState, useCallback, useMemo, useRef, type DragEvent } from "react"
 import { useParams } from "react-router-dom"
 import { AnimatePresence, motion } from "motion/react"
-import { Plus, Pencil, Trash2, Save, X, Check, GripVertical, ImageIcon, CheckCircle, ListChecks, LayoutList } from "lucide-react"
+import { Plus, Pencil, Trash2, Save, X, Check, GripVertical, ImageIcon, CheckCircle, ListChecks, LayoutList, TriangleAlert } from "lucide-react"
 import { supabase } from "../../lib/supabase"
 import { useAuth } from "../../lib/auth-context"
 import QuestionImportModal from "../../components/creator/QuestionImportModal"
@@ -35,6 +35,7 @@ import {
     isQuizMode,
     isStandardMode,
     defaultPageTitle,
+    ORPHAN_PAGE_ID,
     type FormPage,
 } from "../../lib/formPages"
 
@@ -125,6 +126,7 @@ function Questions({ embedded = false }: { embedded?: boolean }) {
     })
 
     const [showEditor, setShowEditor] = useState(!!savedDraft)
+    const draftHydratedRef = useRef(!!savedDraft)
     const [editingId, setEditingId] = useState<string | null>(savedDraft?.editingId ?? null)
     const [questionText, setQuestionText] = useState(savedDraft?.questionText ?? "")
     const [questionType, setQuestionType] = useState(savedDraft?.questionType ?? "single_choice")
@@ -148,6 +150,36 @@ function Questions({ embedded = false }: { embedded?: boolean }) {
     const [sectionOrder, setSectionOrder] = useState<string[] | null>(null)
     // Modal hapus section
     const [deleteSectionChoice, setDeleteSectionChoice] = useState<DeleteSectionChoice>(null)
+    // Urutan soal yang belum disimpan (drag & drop) — menunggu konfirmasi "Simpan soal?".
+    const [pendingOrder, setPendingOrder] = useState<{ prevIds: string[]; nextIds: string[] } | null>(null)
+
+    useEffect(() => {
+        if (draftHydratedRef.current) return
+        const key = questionDraftKey(user?.id, id)
+        if (!key) return
+        const draft = pageGet<QuestionDraft>(key)
+        if (!draft) {
+            draftHydratedRef.current = true
+            return
+        }
+        setShowEditor(true)
+        setEditingId(draft.editingId)
+        setQuestionText(draft.questionText)
+        setQuestionType(draft.questionType)
+        setScoreValue(draft.scoreValue)
+        setOrderIndex(draft.orderIndex)
+        setImageQuestion(draft.imageQuestion)
+        setMediaUrl(draft.mediaUrl)
+        setIsRequired(draft.isRequired)
+        setOptions(draft.options)
+        setRemovedOptionIds(draft.removedOptionIds)
+        setDateTimeVariant(draft.dateTimeVariant)
+        setTargetPageId(draft.targetPageId)
+        draftHydratedRef.current = true
+    }, [user?.id, id])
+
+    // Notifikasi hasil simpan urutan soal (drag & drop) di bagian bawah layar.
+    const [orderToast, setOrderToast] = useState<{ message: string; tone: "success" | "error" } | null>(null)
 
     const isStandard = isStandardMode(formLayout)
 
@@ -202,6 +234,13 @@ function Questions({ embedded = false }: { embedded?: boolean }) {
         }
     }, [user?.id, id])
 
+    // Notifikasi simpan urutan soal (drag & drop) hilang otomatis setelah 2.5 detik.
+    useEffect(() => {
+        if (!orderToast) return
+        const timer = window.setTimeout(() => setOrderToast(null), 2500)
+        return () => window.clearTimeout(timer)
+    }, [orderToast])
+
     const loadAll = useCallback(async () => {
         if (!user || !id) return
         if (!cached) setLoading(true)
@@ -222,19 +261,56 @@ function Questions({ embedded = false }: { embedded?: boolean }) {
         }
 
         const pagesWithQuestions = await fetchPagesWithQuestions(id)
-        newPages = pagesWithQuestions.map((p) => ({
-            ...p,
-            questions: p.questions.map((q) => {
-                const { html, config } = extractQuestionConfig(q.question_text)
-                return { ...q, question_text: html, config }
-            }),
-        }))
+
+        // Mode standard: soal yatim (page_id NULL / halaman lama terhapus) di-assign
+        // ke halaman pertama yang ada supaya langsung terlihat tanpa perlu migration manual.
+        const orphanPage = pagesWithQuestions.find((p) => p.id === ORPHAN_PAGE_ID)
+        if (isStandardMode(newLayout) && orphanPage && orphanPage.questions.length > 0) {
+            const firstReal = pagesWithQuestions.find((p) => p.id !== ORPHAN_PAGE_ID)
+            if (firstReal) {
+                const targetId = firstReal.id
+                await Promise.all(
+                    orphanPage.questions.map((q, i) =>
+                        supabase
+                            .from("questions")
+                            .update({ page_id: targetId, order_index: firstReal.questions.length + i })
+                            .eq("id", q.id)
+                    )
+                )
+                // Re-fetch setelah reassign
+                const refreshed = await fetchPagesWithQuestions(id)
+                newPages = refreshed.map((p) => ({
+                    ...p,
+                    questions: p.questions.map((q) => {
+                        const { html, config } = extractQuestionConfig(q.question_text)
+                        return { ...q, question_text: html, config }
+                    }),
+                }))
+            } else {
+                newPages = pagesWithQuestions.map((p) => ({
+                    ...p,
+                    questions: p.questions.map((q) => {
+                        const { html, config } = extractQuestionConfig(q.question_text)
+                        return { ...q, question_text: html, config }
+                    }),
+                }))
+            }
+        } else {
+            newPages = pagesWithQuestions.map((p) => ({
+                ...p,
+                questions: p.questions.map((q) => {
+                    const { html, config } = extractQuestionConfig(q.question_text)
+                    return { ...q, question_text: html, config }
+                }),
+            }))
+        }
 
         setFormLayout(newLayout)
         setPages(newPages)
         setActiveSectionId((prev) => {
-            if (prev && newPages.some((p) => p.id === prev)) return prev
-            return newPages[0]?.id ?? null
+            const firstReal = newPages.find((p) => p.id !== ORPHAN_PAGE_ID)
+            if (prev && newPages.some((p) => p.id === prev && p.id !== ORPHAN_PAGE_ID)) return prev
+            return firstReal?.id ?? null
         })
 
         if (user && id) {
@@ -254,6 +330,9 @@ function Questions({ embedded = false }: { embedded?: boolean }) {
 
     // Daftar soal flat (mode quiz) = gabungan urutan section 1:1.
     const questions = useMemo(() => pages.flatMap((p) => p.questions), [pages])
+    // Halaman asli (exclude section sintetis soal yatim) — dipakai untuk semua
+    // operasi yang menyentuh database (posisi page, target section, dll).
+    const realPages = useMemo(() => pages.filter((p) => p.id !== ORPHAN_PAGE_ID), [pages])
 
     const resetEditor = () => {
         if (mediaUploading) {
@@ -368,7 +447,7 @@ function Questions({ embedded = false }: { embedded?: boolean }) {
         // Untuk mode quiz, soal baru otomatis dibuatkan halaman baru sendiri.
         let newPageId: string | null = null
         if (!editingId && isQuizMode(formLayout)) {
-            const pos = pages.length
+            const pos = realPages.length
             newPageId = await createPage(id, defaultPageTitle(pos, formLayout), pos)
             if (!newPageId) {
                 setSaving(false)
@@ -449,8 +528,8 @@ function Questions({ embedded = false }: { embedded?: boolean }) {
         }
 
         resetEditor()
-        loadAll()
         alertSaveSuccess(editingId ? "Soal berhasil diperbarui." : "Soal berhasil ditambahkan.")
+        loadAll()
     }
 
     const handleDelete = async (q: Question) => {
@@ -478,7 +557,7 @@ function Questions({ embedded = false }: { embedded?: boolean }) {
 
     // ---- DRAG & DROP MODE QUIZ (1 soal per halaman, urutan flat global) ----
 
-    const persistQuizOrder = async (orderedIds: string[]) => {
+    const persistQuizOrder = async (orderedIds: string[]): Promise<boolean> => {
         const pageByQid = new Map<string, FormPage>()
         for (const p of pages) {
             for (const q of p.questions) pageByQid.set(q.id, p)
@@ -487,7 +566,7 @@ function Questions({ embedded = false }: { embedded?: boolean }) {
         let failed = false
         for (let i = 0; i < orderedIds.length; i++) {
             const page = pageByQid.get(orderedIds[i])
-            if (page && page.position !== i) {
+            if (page && page.id !== ORPHAN_PAGE_ID && page.position !== i) {
                 const { error } = await supabase.from("form_pages").update({ position: i }).eq("id", page.id)
                 if (error) failed = true
             }
@@ -497,7 +576,7 @@ function Questions({ embedded = false }: { embedded?: boolean }) {
                 if (error) failed = true
             }
         }
-        if (failed) showAlert("Sebagian urutan soal gagal disimpan ke database.", "error")
+        return !failed
     }
 
     const handleDragStart = (e: DragEvent, question: Question) => {
@@ -542,25 +621,76 @@ function Questions({ embedded = false }: { embedded?: boolean }) {
         })
     }
 
+    const notifyOrderSaved = (failed: boolean) => {
+        setOrderToast({
+            message: failed
+                ? "Sebagian urutan soal gagal disimpan ke database."
+                : "Urutan soal baru berhasil disimpan.",
+            tone: failed ? "error" : "success",
+        })
+    }
+
+    // Susun ulang state halaman mengikuti urutan soal flat tertentu. Keanggotaan
+    // halaman tidak berubah; urutan halaman mengikuti soal pertamanya; halaman
+    // yang tidak tersentuh dipertahankan.
+    const setFlatOrder = (orderedIds: string[]) => (cur: PageWithQuestions[]): PageWithQuestions[] => {
+        const byId = new Map(cur.flatMap((p) => p.questions).map((q) => [q.id, q]))
+        const pageByQid = new Map<string, PageWithQuestions>()
+        for (const p of cur) for (const q of p.questions) pageByQid.set(q.id, p)
+        const curById = new Map(cur.map((p) => [p.id, p]))
+        const orderedByPage = new Map<string, Question[]>()
+        const pageOrder: string[] = []
+        const seen = new Set<string>()
+        for (const id of orderedIds) {
+            const q = byId.get(id)
+            if (!q) continue
+            const pid = pageByQid.get(q.id)?.id ?? ORPHAN_PAGE_ID
+            if (!orderedByPage.has(pid)) orderedByPage.set(pid, [])
+            orderedByPage.get(pid)!.push(q)
+            if (!seen.has(pid)) {
+                seen.add(pid)
+                pageOrder.push(pid)
+            }
+        }
+        const nextPages: PageWithQuestions[] = []
+        for (const pid of pageOrder) {
+            const base = curById.get(pid)
+            if (base) nextPages.push({ ...base, questions: orderedByPage.get(pid) ?? [] })
+        }
+        for (const p of cur) {
+            if (!seen.has(p.id)) nextPages.push(p)
+        }
+        return nextPages
+    }
+
     const finishDrag = () => {
         if (dragId && orderIds) {
             const prevIds = questions.map((q) => q.id)
             if (prevIds.some((sid, i) => sid !== orderIds[i])) {
-                const byId = new Map(questions.map((q) => [q.id, q]))
-                const next = orderIds.map((qid) => byId.get(qid)).filter((q): q is Question => Boolean(q))
-                // Reorder pages state menyesuaikan urutan soal flat
-                const pageByQid = new Map<string, PageWithQuestions>()
-                for (const p of pages) for (const q of p.questions) pageByQid.set(q.id, p)
-                const nextPages = next.map((q) => pageByQid.get(q.id)).filter((p): p is PageWithQuestions => Boolean(p))
-                setPages((cur) => {
-                    const curById = new Map(cur.map((p) => [p.id, p]))
-                    return nextPages.map((p) => ({ ...p, ...curById.get(p.id) }))
-                })
-                persistQuizOrder(next.map((q) => q.id))
+                // Preview urutan baru di state; penyimpanan ke DB menunggu konfirmasi.
+                setPages(setFlatOrder(orderIds))
+                setDragId(null)
+                setOrderIds(null)
+                setPendingOrder({ prevIds, nextIds: orderIds })
+                return
             }
         }
         setDragId(null)
         setOrderIds(null)
+    }
+
+    const confirmOrderSave = async () => {
+        if (!pendingOrder) return
+        const ok = await persistQuizOrder(pendingOrder.nextIds)
+        setPendingOrder(null)
+        notifyOrderSaved(!ok)
+    }
+
+    const cancelOrderSave = () => {
+        if (!pendingOrder) return
+        // Batalkan: kembalikan urutan ke posisi sebelum drag.
+        setPages(setFlatOrder(pendingOrder.prevIds))
+        setPendingOrder(null)
     }
 
     const handleDrop = (e: DragEvent) => {
@@ -654,7 +784,7 @@ function Questions({ embedded = false }: { embedded?: boolean }) {
 
     const handleAddSection = async () => {
         if (!id) return
-        const pos = pages.length
+        const pos = realPages.length
         const newId = await createPage(id, defaultPageTitle(pos, formLayout), pos)
         if (newId) {
             setActiveSectionId(newId)
@@ -665,6 +795,7 @@ function Questions({ embedded = false }: { embedded?: boolean }) {
     }
 
     const handleRenameSection = async (pageId: string, title: string) => {
+        if (pageId === ORPHAN_PAGE_ID) return
         const trimmed = title.trim()
         if (!trimmed) return
         await renamePage(pageId, trimmed)
@@ -673,13 +804,17 @@ function Questions({ embedded = false }: { embedded?: boolean }) {
 
     // Pindahkan satu soal ke section lain (mode standard).
     const handleMoveQuestion = async (q: Question, fromPageId: string, toPageId: string) => {
-        if (toPageId === fromPageId) return
+        if (toPageId === fromPageId || toPageId === ORPHAN_PAGE_ID) return
         const target = sectionQuestions(toPageId)
         const ok = await moveQuestionToPage(q.id, toPageId, target.length)
         if (ok) {
-            // Reindex sumber + muat ulang.
+            // Reindex sumber + tujuan + muat ulang supaya nomor urut global rapi
+            // dan soal tampil di section barunya.
             const source = sectionQuestions(fromPageId).filter((x) => x.id !== q.id)
-            await reorderQuestions(source.map((x) => x.id))
+            await Promise.all([
+                reorderQuestions(source.map((x) => x.id)),
+                reorderQuestions([...target.map((x) => x.id), q.id]),
+            ])
             loadAll()
         } else {
             showAlert("Gagal memindahkan soal ke section lain.", "error")
@@ -744,7 +879,7 @@ function Questions({ embedded = false }: { embedded?: boolean }) {
     const renderEditor = () => (
         <div className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center sm:p-6">
             <motion.div
-                className="absolute inset-0 bg-darks/60"
+                className="absolute inset-0 bg-black/60"
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
@@ -772,15 +907,15 @@ function Questions({ embedded = false }: { embedded?: boolean }) {
                 </div>
 
                 {/* Pilihan section tujuan untuk soal baru di mode standard */}
-                {!editingId && isStandard && pages.length > 0 && (
+                {!editingId && isStandard && realPages.length > 0 && (
                     <div className="mb-5">
                         <label className="block text-sm font-medium text-darks mb-1.5 ml-1">Masukkan ke Section</label>
                         <select
                             className="select w-full bg-white dark:bg-second border-second focus:border-done focus:outline-none rounded-xl"
-                            value={targetPageId ?? activeSectionId ?? pages[0].id}
+                            value={targetPageId ?? activeSectionId ?? realPages[0].id}
                             onChange={(e) => setTargetPageId(e.target.value)}
                         >
-                            {pages.map((p) => (
+                            {realPages.map((p) => (
                                 <option key={p.id} value={p.id}>{p.title}</option>
                             ))}
                         </select>
@@ -1147,7 +1282,7 @@ function Questions({ embedded = false }: { embedded?: boolean }) {
                                 title="Pindah ke section lain"
                             >
                                 <option value="">Pindah ke...</option>
-                                {pages.filter((p) => p.id !== opts.pageId).map((p) => (
+                                {pages.filter((p) => p.id !== opts.pageId && p.id !== ORPHAN_PAGE_ID).map((p) => (
                                     <option key={p.id} value={p.id}>{p.title}</option>
                                 ))}
                             </select>
@@ -1167,6 +1302,9 @@ function Questions({ embedded = false }: { embedded?: boolean }) {
     // Header + daftar soal dalam satu section (mode standard).
     const renderSectionCard = (page: PageWithQuestions, sectionIdx: number) => {
         const isActive = activeSectionId === page.id
+        // Section sintetis soal yatim: hanya tampil + bisa dipindahkan keluar.
+        // Rename, tambah soal, dan hapus section tidak berlaku (tidak ada baris DB).
+        const isOrphanPage = page.id === ORPHAN_PAGE_ID
         return (
             <motion.div
                 key={page.id}
@@ -1184,47 +1322,56 @@ function Questions({ embedded = false }: { embedded?: boolean }) {
                     <div className="flex gap-2.5 items-center min-w-0">
                         <LayoutList className="h-4 w-4 text-done shrink-0 mt-0.5" />
                         <div className="min-w-0">
-                            <input
-                                defaultValue={page.title}
-                                key={page.title}
-                                onKeyDown={(e) => {
-                                    if (e.key === "Enter") {
-                                        handleRenameSection(page.id, e.currentTarget.value)
-                                        ;(e.currentTarget as HTMLInputElement).blur()
-                                    }
-                                }}
-                                onBlur={(e) => handleRenameSection(page.id, e.currentTarget.value)}
-                                onClick={(e) => e.stopPropagation()}
-                                className="bg-transparent border border-transparent hover:border-second focus:border-done focus:bg-white dark:bg-second rounded-md px-1.5 py-0.5 text-sm font-semibold text-darks w-40 sm:w-64 focus:outline-none transition-colors"
-                                title="Klik untuk ganti nama section"
-                            />
+                            {isOrphanPage ? (
+                                <p className="text-sm font-semibold text-darks">
+                                    {page.title}
+                                    <span className="ml-2 badge badge-ghost text-tinted rounded-full text-xs">Soal lama tanpa halaman</span>
+                                </p>
+                            ) : (
+                                <input
+                                    defaultValue={page.title}
+                                    key={page.title}
+                                    onKeyDown={(e) => {
+                                        if (e.key === "Enter") {
+                                            handleRenameSection(page.id, e.currentTarget.value)
+                                            ;(e.currentTarget as HTMLInputElement).blur()
+                                        }
+                                    }}
+                                    onBlur={(e) => handleRenameSection(page.id, e.currentTarget.value)}
+                                    onClick={(e) => e.stopPropagation()}
+                                    className="bg-transparent border border-transparent hover:border-second focus:border-done focus:bg-white dark:bg-second rounded-md px-1.5 py-0.5 text-sm font-semibold text-darks w-40 sm:w-64 focus:outline-none transition-colors"
+                                    title="Klik untuk ganti nama section"
+                                />
+                            )}
                             <p className="text-xs text-tinted mt-0.5">
                                 {page.questions.length} soal
                             </p>
                         </div>
                     </div>
-                    <div className="flex items-center gap-1 shrink-0">
-                        <button
-                            onClick={(e) => {
-                                e.stopPropagation()
-                                startAdd(page.id)
-                            }}
-                            className="btn btn-sm btn-ghost text-done"
-                            title="Tambah soal di section ini"
-                        >
-                            <Plus className="h-4 w-4" /> <span className="hidden sm:inline">Soal</span>
-                        </button>
-                        <button
-                            onClick={(e) => {
-                                e.stopPropagation()
-                                setDeleteSectionChoice({ page, mode: "delete", moveToId: null, deleting: false })
-                            }}
-                            className="btn btn-sm btn-ghost text-wrong"
-                            title="Hapus section"
-                        >
-                            <Trash2 className="h-4 w-4" />
-                        </button>
-                    </div>
+                    {!isOrphanPage && (
+                        <div className="flex items-center gap-1 shrink-0">
+                            <button
+                                onClick={(e) => {
+                                    e.stopPropagation()
+                                    startAdd(page.id)
+                                }}
+                                className="btn btn-sm btn-ghost text-done"
+                                title="Tambah soal di section ini"
+                            >
+                                <Plus className="h-4 w-4" /> <span className="hidden sm:inline">Soal</span>
+                            </button>
+                            <button
+                                onClick={(e) => {
+                                    e.stopPropagation()
+                                    setDeleteSectionChoice({ page, mode: "delete", moveToId: null, deleting: false })
+                                }}
+                                className="btn btn-sm btn-ghost text-wrong"
+                                title="Hapus section"
+                            >
+                                <Trash2 className="h-4 w-4" />
+                            </button>
+                        </div>
+                    )}
                 </div>
 
                 <div className="p-3 sm:p-4">
@@ -1290,10 +1437,10 @@ function Questions({ embedded = false }: { embedded?: boolean }) {
 
                 {isStandard ? (
                     <>
-                        {/* Navigasi antar section */}
-                        {pages.length > 0 && (
+                        {/* Navigasi antar section — orphan page tidak ditampilkan di tab atas */}
+                        {realPages.length > 0 && (
                             <div className="flex gap-2 px-3 mb-4 overflow-x-auto pb-1">
-                                {pages.map((p) => (
+                                {pages.map((p) => p.id === ORPHAN_PAGE_ID ? null : (
                                     <button
                                         key={p.id}
                                         onClick={() => {
@@ -1312,7 +1459,7 @@ function Questions({ embedded = false }: { embedded?: boolean }) {
                             </div>
                         )}
 
-                        {pages.length === 0 ? (
+                        {realPages.length === 0 ? (
                             <div className="text-center py-16">
                                 <p className="text-tinted mb-4">Belum ada section. Buat bagian pertama untuk mulai menambah soal.</p>
                                 <button onClick={handleAddSection} className="btn bg-darks text-base border-none rounded-full">
@@ -1378,7 +1525,7 @@ function Questions({ embedded = false }: { embedded?: boolean }) {
                 {deleteSectionChoice && (
                     <div className="fixed inset-0 z-[100] flex items-center justify-center sm:p-6">
                         <motion.div
-                            className="absolute inset-0 bg-darks/60"
+                            className="absolute inset-0 bg-black/60"
                             initial={{ opacity: 0 }}
                             animate={{ opacity: 1 }}
                             exit={{ opacity: 0 }}
@@ -1416,7 +1563,7 @@ function Questions({ embedded = false }: { embedded?: boolean }) {
                                                 onChange={(e) => setDeleteSectionChoice((prev) => prev ? { ...prev, moveToId: e.target.value || null } : prev)}
                                             >
                                                 <option value="">Pilih section tujuan...</option>
-                                                {pages.filter((p) => p.id !== deleteSectionChoice.page.id).map((p) => (
+                                                {pages.filter((p) => p.id !== deleteSectionChoice.page.id && p.id !== ORPHAN_PAGE_ID).map((p) => (
                                                     <option key={p.id} value={p.id}>{p.title}</option>
                                                 ))}
                                             </select>
@@ -1469,6 +1616,59 @@ function Questions({ embedded = false }: { embedded?: boolean }) {
                 </AnimatePresence>
             </div>
             )}
+
+            {/* Konfirmasi simpan urutan soal (drag & drop) — bagian bawah layar */}
+            <AnimatePresence>
+            {pendingOrder && (
+                <motion.div
+                    initial={{ opacity: 0, y: 24 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: 24 }}
+                    transition={{ duration: 0.25, ease: easeOutExpo }}
+                    className="fixed bottom-6 left-1/2 z-[120] -translate-x-1/2 flex flex-col items-stretch gap-3 rounded-2xl border border-second dark:border-darks/15 bg-white dark:bg-second px-5 py-4 shadow-lg"
+                >
+                    <p className="text-sm font-semibold text-darks whitespace-nowrap">Simpan soal?</p>
+                    <div className="flex items-center gap-2">
+                        <button
+                            onClick={cancelOrderSave}
+                            className="btn btn-sm rounded-full bg-base text-darks border border-second dark:border-darks/15 hover:bg-white dark:hover:bg-base"
+                        >
+                            Tidak
+                        </button>
+                        <button
+                            onClick={confirmOrderSave}
+                            className="btn btn-sm rounded-full bg-darks text-base border-none hover:opacity-90"
+                        >
+                            Ya
+                        </button>
+                    </div>
+                </motion.div>
+            )}
+            </AnimatePresence>
+
+            {/* Notifikasi hasil simpan urutan soal (drag & drop) — bagian bawah layar */}
+            <AnimatePresence>
+            {orderToast && (
+                <motion.div
+                    initial={{ opacity: 0, y: 24 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: 24 }}
+                    transition={{ duration: 0.25, ease: easeOutExpo }}
+                    className={`fixed bottom-6 left-1/2 z-[120] -translate-x-1/2 flex items-center gap-2 rounded-full border px-4 py-2.5 text-sm font-medium shadow-lg whitespace-nowrap ${
+                        orderToast.tone === "success"
+                            ? "border-done/30 bg-white dark:bg-second text-darks"
+                            : "border-wrong/30 bg-white dark:bg-second text-wrong"
+                    }`}
+                >
+                    {orderToast.tone === "success" ? (
+                        <CheckCircle className="h-4 w-4 text-done shrink-0" />
+                    ) : (
+                        <TriangleAlert className="h-4 w-4 text-wrong shrink-0" />
+                    )}
+                    {orderToast.message}
+                </motion.div>
+            )}
+            </AnimatePresence>
         </div>
     )
 }

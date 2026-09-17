@@ -113,7 +113,7 @@ function DeleteDialog({ options, onClose }: { options: ConfirmDeleteOptions; onC
 
     return createElement(
         "div",
-        { className: `fixed inset-0 z-[100] flex items-center justify-center bg-darks/45 p-4 transition-opacity duration-200 ${show && !closing ? "opacity-100" : "opacity-0"}` },
+        { className: `fixed inset-0 z-[100] flex items-center justify-center bg-black/45 p-4 transition-opacity duration-200 ${show && !closing ? "opacity-100" : "opacity-0"}` },
         createElement(
             "div",
             {
@@ -223,7 +223,7 @@ function PromptDialog({ options, onClose }: { options: PromptTextOptions; onClos
 
     return createElement(
         "div",
-        { className: `formaly-dialog fixed inset-0 z-[100] flex items-center justify-center bg-darks/45 p-4 transition-opacity duration-200 ${show && !closing ? "opacity-100" : "opacity-0"}` },
+        { className: `formaly-dialog fixed inset-0 z-[100] flex items-center justify-center bg-black/45 p-4 transition-opacity duration-200 ${show && !closing ? "opacity-100" : "opacity-0"}` },
         createElement(
             "div",
             {

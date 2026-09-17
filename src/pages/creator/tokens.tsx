@@ -227,7 +227,7 @@ function Tokens() {
                                     role="dialog"
                                     aria-modal="true"
                                 >
-                                    <div className="absolute inset-0 bg-darks/50" onClick={() => !saving && setShowCreate(false)} />
+                                    <div className="absolute inset-0 bg-black/50" onClick={() => !saving && setShowCreate(false)} />
                                     <motion.div
                                         variants={modalPanel}
                                         className="relative bg-white dark:bg-second border border-second p-6 shadow-xl rounded-2xl w-full max-w-md space-y-4"

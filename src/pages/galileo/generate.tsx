@@ -8,6 +8,7 @@ import { DEFAULT_MODEL_ID, getModel } from "./models"
 import { requestAI, getRoutedModel, type AIHistoryMessage } from "../../lib/galileoAI"
 import { embedQuestionConfig, extractQuestionConfig } from "../../lib/questionConfig"
 import { richTextToPlain } from "../../lib/richtext"
+import { LAYOUT_QUIZ, LAYOUT_STANDARD, createPage, defaultPageTitle } from "../../lib/formPages"
 
 interface PromptPayload {
     prompt: string
@@ -245,8 +246,49 @@ function parseGenerated(raw: string): GenForm {
     return { title, description, duration_minutes: duration, passing_score: passing, questions }
 }
 
+/**
+ * Tentukan halaman (page_id) untuk soal-soal baru agar tetap terlihat di editor.
+ * Mode quiz: 1 soal = 1 halaman baru ("Halaman N").
+ * Mode standard: semua masuk ke halaman terakhir (buat "Bagian 1" bila belum ada).
+ */
+async function resolveQuestionPages(formId: string, count: number): Promise<(string | null)[]> {
+    const { data: formRow } = await supabase
+        .from("forms")
+        .select("layout_mode")
+        .eq("id", formId)
+        .single()
+    const isStandard = formRow && (formRow as { layout_mode?: string | null }).layout_mode === LAYOUT_STANDARD
+
+    if (isStandard) {
+        const { data: lastPage } = await supabase
+            .from("form_pages")
+            .select("id")
+            .eq("form_id", formId)
+            .order("position", { ascending: false })
+            .limit(1)
+        let pageId: string | null = lastPage && lastPage[0] ? lastPage[0].id : null
+        if (!pageId) pageId = await createPage(formId, defaultPageTitle(0, LAYOUT_STANDARD), 0)
+        return Array(count).fill(pageId)
+    }
+
+    const { data: lastPage } = await supabase
+        .from("form_pages")
+        .select("position")
+        .eq("form_id", formId)
+        .order("position", { ascending: false })
+        .limit(1)
+    let pos = lastPage && lastPage.length > 0 && lastPage[0].position != null ? lastPage[0].position + 1 : 0
+    const ids: (string | null)[] = []
+    for (let i = 0; i < count; i++) {
+        const newId = await createPage(formId, defaultPageTitle(pos, LAYOUT_QUIZ), pos)
+        ids.push(newId)
+        if (newId) pos++
+    }
+    return ids
+}
+
 /** Simpan satu soal (dengan opsi-opsinya) ke dalam form. */
-async function insertQuestion(formId: string, q: GenQuestion, orderIndex: number): Promise<void> {
+async function insertQuestion(formId: string, q: GenQuestion, orderIndex: number, pageId: string | null): Promise<void> {
     const { data: qRow, error: qErr } = await supabase
         .from("questions")
         .insert({
@@ -261,6 +303,7 @@ async function insertQuestion(formId: string, q: GenQuestion, orderIndex: number
             score_value: q.score,
             order_index: orderIndex,
             is_required: q.is_required,
+            page_id: pageId,
         })
         .select("id")
         .single()
@@ -293,8 +336,9 @@ async function saveForm(userId: string, form: GenForm): Promise<string> {
         .single()
     if (formErr) throw new Error(`Gagal membuat form: ${formErr.message}`)
 
+    const pageIds = await resolveQuestionPages(formRow.id, form.questions.length)
     for (let i = 0; i < form.questions.length; i++) {
-        await insertQuestion(formRow.id, form.questions[i], i)
+        await insertQuestion(formRow.id, form.questions[i], i, pageIds[i] ?? null)
     }
 
     return formRow.id
@@ -359,8 +403,9 @@ async function appendQuestionsToForm(userId: string, formId: string, form: GenFo
         ? lastQ[0].order_index + 1
         : 0
 
+    const pageIds = await resolveQuestionPages(formId, form.questions.length)
     for (let i = 0; i < form.questions.length; i++) {
-        await insertQuestion(formId, form.questions[i], startIndex + i)
+        await insertQuestion(formId, form.questions[i], startIndex + i, pageIds[i] ?? null)
     }
 
     // Waktu pengerjaan & nilai minimum ikut diperbarui bila model mengembalikan nilai

@@ -18,19 +18,19 @@ interface ModeOption {
 const OPTIONS: ModeOption[] = [
     {
         key: LAYOUT_QUIZ,
-        title: "Quiz / Ujian",
-        description: "1 soal per halaman. Soal baru otomatis membuat halaman sendiri.",
+        title: "Fokus",
+        description: "1 soal per halaman. Memberikan fokus untuk menyelesaikan per soal",
         badge: "1 soal = 1 halaman",
     },
     {
         key: LAYOUT_STANDARD,
-        title: "Form Biasa",
+        title: "Normal",
         description: "Beberapa soal dalam satu halaman (section). Bebas mengelompokkan soal.",
         badge: "Banyak soal per halaman",
     },
 ]
 
-// Dua kartu pilihan mode form (Quiz/Ujian vs Form Biasa).
+// Dua kartu pilihan mode form (Fokus vs Normal).
 // Mode menentukan constraint soal, bukan cuma tampilan.
 function ModeSelector({ value, onChange, disabled = false }: ModeSelectorProps) {
     return (
