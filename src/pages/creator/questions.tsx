@@ -24,6 +24,7 @@ import { pageGet, pageSet } from "../../lib/pageCache"
 import { easeOutExpo } from "../../lib/motion"
 import BackButton from "../../components/backButton"
 import FormTabs from "../../components/creator/formTabs"
+import QuestionPreviewSidebar from "../../components/creator/questionPreviewSidebar"
 import { Spinner } from "../../components/loading"
 import {
     fetchPagesWithQuestions,
@@ -117,6 +118,7 @@ function Questions({ embedded = false }: { embedded?: boolean }) {
 
     // Section yang sedang aktif (mode standard) — soal baru dimasukkan ke sini.
     const [activeSectionId, setActiveSectionId] = useState<string | null>(null)
+    const [previewSectionId, setPreviewSectionId] = useState<string | null>(null)
 
     // Restore draft editor yang belum tersimpan (mis. media sudah di-upload tapi
     // soal belum di-save lalu pindah tab/keluar halaman).
@@ -945,9 +947,9 @@ function Questions({ embedded = false }: { embedded?: boolean }) {
             <motion.div
                 className="absolute inset-0 bg-black/60"
                 initial={{ opacity: 0 }}
+                onClick={resetEditor}
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
-                onClick={resetEditor}
             />
 
             <motion.div
@@ -1058,14 +1060,12 @@ function Questions({ embedded = false }: { embedded?: boolean }) {
                                 role="switch"
                                 aria-checked={isRequired}
                                 aria-label="Tandai sebagai wajib dijawab"
-                                className={`relative shrink-0 h-6 w-11 rounded-full mt-3 transition-colors ${
-                                    isRequired ? "bg-white border border-second" : "bg-white dark:bg-second"
-                                }`}
+                                className={`relative shrink-0 h-6 w-11 rounded-full mt-3 transition-colors ${isRequired ? "bg-white border border-second" : "bg-white dark:bg-second"
+                                    }`}
                             >
                                 <span
-                                    className={`absolute top-0.5 left-0.5 h-5 w-5 rounded-full bg-white dark:bg-second shadow transition-transform ${
-                                        isRequired ? "translate-x-5" : "translate-x-0"
-                                    }`}
+                                    className={`absolute top-0.5 left-0.5 h-5 w-5 rounded-full bg-white dark:bg-second shadow transition-transform ${isRequired ? "translate-x-5" : "translate-x-0"
+                                        }`}
                                 />
                             </button>
                         </div>
@@ -1128,95 +1128,91 @@ function Questions({ embedded = false }: { embedded?: boolean }) {
                                     </button>
                                 </div>
                             ) : (
-                            <div className="space-y-2">
-                                {options.map((opt, index) => {
-                                    const isSingle = questionType === "single_choice" || questionType === "dropdown"
-                                    const isCorrect = !!opt.is_correct
-                                    return (
-                                    <div
-                                        key={index}
-                                        className={`rounded-xl border transition-colors ${
-                                            isCorrect
-                                                ? "border-done/60 bg-done/5"
-                                                : "border-second bg-white dark:bg-second hover:border-done/40 hover:bg-base/40"
-                                        }`}
-                                    >
-                                        <div className="flex items-center gap-3 p-2.5 pr-1.5">
-                                        <button
-                                            type="button"
-                                            onClick={() => {
-                                                if (isSingle && !isCorrect) {
-                                                    setOptions(
-                                                        options.map((o, i) => (i === index ? { ...o, is_correct: true } : { ...o, is_correct: false }))
-                                                    )
-                                                } else {
-                                                    updateOption(index, { is_correct: !isCorrect })
-                                                }
-                                            }}
-                                            role={isSingle ? "radio" : "checkbox"}
-                                            aria-checked={isCorrect}
-                                            title={isCorrect ? "Jawaban benar" : "Tandai sebagai jawaban benar"}
-                                            aria-label={`Tandai pilihan ${index + 1} sebagai jawaban benar`}
-                                            className={`flex h-5 w-5 shrink-0 items-center justify-center border-2 transition-all ${
-                                                isSingle ? "rounded-full" : "rounded-[5px]"
-                                            } ${
-                                                isCorrect
-                                                    ? "border-done bg-done text-base shadow-sm"
-                                                    : "border-tinted/40 bg-white dark:bg-second text-transparent hover:border-done/70"
-                                            }`}
-                                        >
-                                            <Check className="h-3 w-3" strokeWidth={3.5} />
-                                        </button>
-
-                                        <RichTextEditor
-                                            compact
-                                            className="flex-1 min-w-0"
-                                            value={opt.option_text}
-                                            onChange={(v) => updateOption(index, { option_text: v })}
-                                            placeholder={`Pilihan ${index + 1}`}
-                                        />
-
-                                        <div className="flex shrink-0 items-center gap-0.5">
-                                            <button
-                                                type="button"
-                                                onClick={() => setOptionMediaOpen((prev) => ({ ...prev, [index]: !prev[index] }))}
-                                                aria-pressed={!!opt.media_url}
-                                                title={opt.media_url ? "Media opsi aktif" : "Tambah media pada opsi"}
-                                                className={`rounded-lg p-2 transition-colors ${
-                                                    opt.media_url
-                                                        ? "bg-darks text-base"
-                                                        : "text-tinted hover:bg-base hover:text-darks"
-                                                }`}
+                                <div className="space-y-2">
+                                    {options.map((opt, index) => {
+                                        const isSingle = questionType === "single_choice" || questionType === "dropdown"
+                                        const isCorrect = !!opt.is_correct
+                                        return (
+                                            <div
+                                                key={index}
+                                                className={`rounded-xl border transition-colors ${isCorrect
+                                                    ? "border-done/60 bg-done/5"
+                                                    : "border-second bg-white dark:bg-second hover:border-done/40 hover:bg-base/40"
+                                                    }`}
                                             >
-                                                <ImageIcon className="h-4 w-4" />
-                                            </button>
-                                            <button
-                                                type="button"
-                                                onClick={() => removeOption(index)}
-                                                title="Hapus pilihan"
-                                                className="rounded-lg p-2 text-tinted transition-colors hover:bg-wrong/10 hover:text-wrong"
-                                            >
-                                                <Trash2 className="h-4 w-4" />
-                                            </button>
-                                        </div>
-                                        </div>
+                                                <div className="flex items-center gap-3 p-2.5 pr-1.5">
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => {
+                                                            if (isSingle && !isCorrect) {
+                                                                setOptions(
+                                                                    options.map((o, i) => (i === index ? { ...o, is_correct: true } : { ...o, is_correct: false }))
+                                                                )
+                                                            } else {
+                                                                updateOption(index, { is_correct: !isCorrect })
+                                                            }
+                                                        }}
+                                                        role={isSingle ? "radio" : "checkbox"}
+                                                        aria-checked={isCorrect}
+                                                        title={isCorrect ? "Jawaban benar" : "Tandai sebagai jawaban benar"}
+                                                        aria-label={`Tandai pilihan ${index + 1} sebagai jawaban benar`}
+                                                        className={`flex h-5 w-5 shrink-0 items-center justify-center border-2 transition-all ${isSingle ? "rounded-full" : "rounded-[5px]"
+                                                            } ${isCorrect
+                                                                ? "border-done bg-done text-base shadow-sm"
+                                                                : "border-tinted/40 bg-white dark:bg-second text-transparent hover:border-done/70"
+                                                            }`}
+                                                    >
+                                                        <Check className="h-3 w-3" strokeWidth={3.5} />
+                                                    </button>
 
-                                        {optionMediaOpen[index] && (
-                                            <div className="mx-2.5 pb-2.5 border-t border-second/60 pt-2">
-                                                <MediaUpload
-                                                    compact
-                                                    value={opt.media_url}
-                                                    onChange={(url) => updateOption(index, { media_url: url })}
-                                                    onUploadingChange={setMediaUploading}
-                                                    label={`Media Opsi ${index + 1}`}
-                                                    helpText="Gambar/audio/video yang tampil bersama teks opsi."
-                                                />
+                                                    <RichTextEditor
+                                                        compact
+                                                        className="flex-1 min-w-0"
+                                                        value={opt.option_text}
+                                                        onChange={(v) => updateOption(index, { option_text: v })}
+                                                        placeholder={`Pilihan ${index + 1}`}
+                                                    />
+
+                                                    <div className="flex shrink-0 items-center gap-0.5">
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => setOptionMediaOpen((prev) => ({ ...prev, [index]: !prev[index] }))}
+                                                            aria-pressed={!!opt.media_url}
+                                                            title={opt.media_url ? "Media opsi aktif" : "Tambah media pada opsi"}
+                                                            className={`rounded-lg p-2 transition-colors ${opt.media_url
+                                                                ? "bg-darks text-base"
+                                                                : "text-tinted hover:bg-base hover:text-darks"
+                                                                }`}
+                                                        >
+                                                            <ImageIcon className="h-4 w-4" />
+                                                        </button>
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => removeOption(index)}
+                                                            title="Hapus pilihan"
+                                                            className="rounded-lg p-2 text-tinted transition-colors hover:bg-wrong/10 hover:text-wrong"
+                                                        >
+                                                            <Trash2 className="h-4 w-4" />
+                                                        </button>
+                                                    </div>
+                                                </div>
+
+                                                {optionMediaOpen[index] && (
+                                                    <div className="mx-2.5 pb-2.5 border-t border-second/60 pt-2">
+                                                        <MediaUpload
+                                                            compact
+                                                            value={opt.media_url}
+                                                            onChange={(url) => updateOption(index, { media_url: url })}
+                                                            onUploadingChange={setMediaUploading}
+                                                            label={`Media Opsi ${index + 1}`}
+                                                            helpText="Gambar/audio/video yang tampil bersama teks opsi."
+                                                        />
+                                                    </div>
+                                                )}
                                             </div>
-                                        )}
-                                    </div>
-                                    )
-                                })}
-                            </div>
+                                        )
+                                    })}
+                                </div>
                             )}
                         </div>
                     )}
@@ -1274,8 +1270,7 @@ function Questions({ embedded = false }: { embedded?: boolean }) {
                 className={
                     isDragging
                         ? "bg-done/5 border border-done/60 border-dashed p-5 rounded-xl cursor-grab active:cursor-grabbing transition-colors"
-                        : `border border-second p-5 shadow-sm rounded-xl cursor-grab active:cursor-grabbing transition-colors ${
-                            (dragId || sectionDrag) ? "opacity-60" : "hover:bg-base-200"
+                        : `border border-second p-5 shadow-sm rounded-xl cursor-grab active:cursor-grabbing transition-colors ${(dragId || sectionDrag) ? "opacity-60" : "hover:bg-base-200"
                         }`
                 }
             >
@@ -1283,57 +1278,56 @@ function Questions({ embedded = false }: { embedded?: boolean }) {
                     <div className="flex gap-3 min-w-0">
                         <GripVertical className="h-5 w-5 text-tinted shrink-0 mt-0.5" />
                         <div className="min-w-0">
-                        <div className="flex items-center gap-2 flex-wrap mb-1">
-                            <span className="text-sm font-bold text-darks">Soal {labelIdx + 1}</span>
-                            <span className="badge badge-ghost text-tinted rounded-full text-xs">{typeLabel(q.question_type)}</span>
-                            {q.is_required && <span className="badge badge-ghost text-wrong border-wrong/30 rounded-full text-xs">Wajib</span>}
-                            {Number(q.score_value) > 0 && <span className="badge badge-ghost text-tinted rounded-full text-xs">{q.score_value} poin</span>}
+                            <div className="flex items-center gap-2 flex-wrap mb-1">
+                                <span className="text-sm font-bold text-darks">Soal {labelIdx + 1}</span>
+                                <span className="badge badge-ghost text-tinted rounded-full text-xs">{typeLabel(q.question_type)}</span>
+                                {q.is_required && <span className="badge badge-ghost text-wrong border-wrong/30 rounded-full text-xs">Wajib</span>}
+                                {Number(q.score_value) > 0 && <span className="badge badge-ghost text-tinted rounded-full text-xs">{q.score_value} poin</span>}
+                            </div>
+                            <div className="text-sm text-darks"><RichText html={q.question_text} /></div>
+                            {q.image_question && (
+                                <img src={q.image_question} alt="Soal" className="max-h-40 object-contain mt-2 border border-second rounded-lg" />
+                            )}
+                            {q.media_url && (
+                                <div className="mt-2">
+                                    <QuestionMedia url={q.media_url} className="mt-2 border border-second rounded-lg" />
+                                </div>
+                            )}
+                            {TYPES_WITH_OPTIONS.includes(q.question_type) && q.question_options?.length > 0 && (
+                                <div className="mt-3 space-y-1.5">
+                                    {q.question_options.map((o) => (
+                                        <div key={o.id} className="flex items-center gap-2 text-sm text-tinted">
+                                            <span
+                                                className={`inline-block w-2 h-2 rounded-full ${o.is_correct ? "bg-done" : "bg-tinted/40"
+                                                    }`}
+                                            />
+                                            {o.media_url && (
+                                                <span className="shrink-0">
+                                                    <QuestionMedia url={o.media_url} maxHeight="max-h-14" className="rounded-md border border-second" />
+                                                </span>
+                                            )}
+                                            <RichText as="span" html={o.option_text} />
+                                            {o.is_correct && <span className="text-xs text-done font-medium">(kunci)</span>}
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
+                            {q.question_type === "date_time" && (
+                                <p className="mt-3 text-xs text-tinted bg-base border border-second rounded-lg px-3 py-1.5 w-fit">
+                                    Jawaban:{" "}
+                                    {q.config?.dateTimeVariant === "date_only"
+                                        ? "Tanggal saja"
+                                        : q.config?.dateTimeVariant === "time_only"
+                                            ? "Jam saja"
+                                            : "Tanggal & Jam"}
+                                </p>
+                            )}
+                            {q.question_type === "file_upload" && (
+                                <p className="mt-3 text-xs text-tinted bg-base border border-second rounded-lg px-3 py-1.5 w-fit">
+                                    Jawaban berupa unggahan file (maks {FILE_UPLOAD_DEFAULTS.maxMB} MB)
+                                </p>
+                            )}
                         </div>
-                        <div className="text-sm text-darks"><RichText html={q.question_text} /></div>
-                        {q.image_question && (
-                            <img src={q.image_question} alt="Soal" className="max-h-40 object-contain mt-2 border border-second rounded-lg" />
-                        )}
-                        {q.media_url && (
-                            <div className="mt-2">
-                                <QuestionMedia url={q.media_url} className="mt-2 border border-second rounded-lg" />
-                            </div>
-                        )}
-                        {TYPES_WITH_OPTIONS.includes(q.question_type) && q.question_options?.length > 0 && (
-                            <div className="mt-3 space-y-1.5">
-                                {q.question_options.map((o) => (
-                                    <div key={o.id} className="flex items-center gap-2 text-sm text-tinted">
-                                        <span
-                                            className={`inline-block w-2 h-2 rounded-full ${
-                                                o.is_correct ? "bg-done" : "bg-tinted/40"
-                                            }`}
-                                        />
-                                        {o.media_url && (
-                                            <span className="shrink-0">
-                                                <QuestionMedia url={o.media_url} maxHeight="max-h-14" className="rounded-md border border-second" />
-                                            </span>
-                                        )}
-                                        <RichText as="span" html={o.option_text} />
-                                        {o.is_correct && <span className="text-xs text-done font-medium">(kunci)</span>}
-                                    </div>
-                                ))}
-                            </div>
-                        )}
-                        {q.question_type === "date_time" && (
-                            <p className="mt-3 text-xs text-tinted bg-base border border-second rounded-lg px-3 py-1.5 w-fit">
-                                Jawaban:{" "}
-                                {q.config?.dateTimeVariant === "date_only"
-                                    ? "Tanggal saja"
-                                    : q.config?.dateTimeVariant === "time_only"
-                                        ? "Jam saja"
-                                        : "Tanggal & Jam"}
-                            </p>
-                        )}
-                        {q.question_type === "file_upload" && (
-                            <p className="mt-3 text-xs text-tinted bg-base border border-second rounded-lg px-3 py-1.5 w-fit">
-                                Jawaban berupa unggahan file (maks {FILE_UPLOAD_DEFAULTS.maxMB} MB)
-                            </p>
-                        )}
-                    </div>
                     </div>
                     <div className="flex gap-1 shrink-0 flex-col sm:flex-row sm:items-center">
                         {isStandard && opts?.pageId && (
@@ -1375,26 +1369,45 @@ function Questions({ embedded = false }: { embedded?: boolean }) {
                 initial={{ opacity: 0, y: 12 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.3, ease: easeOutExpo, delay: Math.min(sectionIdx * 0.05, 0.3) }}
-                draggable={!isOrphanPage}
-                onDragStart={(e) => !isOrphanPage && handleSectionDragStart(e as unknown as DragEvent, page.id)}
                 onDragOver={(e) => !isOrphanPage && handleSectionDragOver(e as unknown as DragEvent, page.id)}
                 onDrop={(e) => !isOrphanPage && handleSectionDrop(e)}
-                onDragEnd={() => !isOrphanPage && void finishSectionDrag()}
-                className={`bg-white dark:bg-second border border-second shadow-sm rounded-xl overflow-hidden ${
-                    isActive ? "ring-1 ring-done/30" : ""
-                } ${sectionPageDrag === page.id ? "opacity-60" : "cursor-grab"}`}
+                className={`bg-white dark:bg-second border shadow-sm rounded-2xl overflow-hidden transition-colors ${isActive ? "border-done/50 ring-1 ring-done/20" : "border-second"
+                    } ${sectionPageDrag === page.id ? "opacity-60" : ""}`}
             >
                 <div
-                    className="flex items-start justify-between gap-3 px-4 sm:px-5 py-3 border-b border-second/70 bg-base/40"
-                    onClick={() => setActiveSectionId(page.id)}
+                    className="flex items-start justify-between gap-3 px-4 sm:px-5 py-3 border-b border-second/70 bg-base/40 cursor-pointer"
+                    onClick={() => {
+                        setActiveSectionId(page.id)
+                        setPreviewSectionId(page.id)
+                    }}
+                    role="button"
+                    tabIndex={0}
+                    onKeyDown={(e) => {
+                        if (e.key === "Enter" || e.key === " ") setPreviewSectionId(page.id)
+                    }}
                 >
                     <div className="flex gap-2.5 items-center min-w-0">
-                        <LayoutList className="h-4 w-4 text-done shrink-0 mt-0.5" />
+                        {!isOrphanPage && (
+                            <button
+                                draggable
+                                onDragStart={(e) => handleSectionDragStart(e, page.id)}
+                                onDragEnd={() => void finishSectionDrag()}
+                                aria-label="Pindahkan section"
+                                title="Geser untuk memindahkan section"
+                                className="shrink-0 cursor-grab rounded-full border border-second bg-white px-2 py-1 text-tinted active:cursor-grabbing dark:bg-second"
+                            >
+                                <GripVertical className="h-3.5 w-3.5" />
+                            </button>
+                        )}
+                        <span className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-xs font-bold tabular-nums mt-0.5 transition-colors ${isActive ? "bg-done text-base" : "bg-base-200 text-tinted"
+                            }`}>
+                            {sectionIdx + 1}
+                        </span>
                         <div className="min-w-0">
                             {isOrphanPage ? (
                                 <p className="text-sm font-semibold text-darks">
                                     {page.title}
-                                    <span className="ml-2 badge badge-ghost text-tinted rounded-full text-xs">Soal lama tanpa halaman</span>
+
                                 </p>
                             ) : (
                                 <input
@@ -1403,7 +1416,7 @@ function Questions({ embedded = false }: { embedded?: boolean }) {
                                     onKeyDown={(e) => {
                                         if (e.key === "Enter") {
                                             handleRenameSection(page.id, e.currentTarget.value)
-                                            ;(e.currentTarget as HTMLInputElement).blur()
+                                                ; (e.currentTarget as HTMLInputElement).blur()
                                         }
                                     }}
                                     onBlur={(e) => handleRenameSection(page.id, e.currentTarget.value)}
@@ -1472,271 +1485,337 @@ function Questions({ embedded = false }: { embedded?: boolean }) {
     return (
         <div className={embedded ? "w-full min-w-0 pb-8" : "flex flex-col items-center px-3.5 sm:px-6 py-5 sm:py-10"}>
             {!loading && (
-            <div className={embedded ? "" : "w-full xl:max-w-7xl lg:max-w-5xl"}>
-                {!embedded && (
-                    <>
-                        <BackButton to="/creator" />
+                <div className={embedded ? "" : "w-full xl:max-w-7xl lg:max-w-5xl"}>
+                    {!embedded && (
+                        <>
+                            <BackButton to="/creator" />
 
-                        <FormTabs id={id} active="questions" />
-                    </>
-                )}
-
-                <div className={`flex justify-between px-3 gap-2 my-auto ${embedded ? "mb-3" : "mb-4"}`}>
-                    <h1 className="text text-darks text-4xl font-default font-bold">Soal</h1>
-                    {!showEditor && (
-                        <div className="flex items-center gap-2">
-                            {isStandard && (
-                                <button
-                                    onClick={handleAddSection}
-                                    className="btn bg-base border border-second text-darks rounded-full h-9 min-h-0"
-                                    title="Tambah section baru"
-                                >
-                                    <LayoutList className="h-4 w-4" /> <span className="hidden sm:inline">Tambah Bagian</span>
-                                    <span className="sm:hidden">Bagian</span>
-                                </button>
-                            )}
-                            <CreateButton
-                                onCreate={() => startAdd(isStandard ? (activeSectionId ?? undefined) : undefined)}
-                                onImport={() => setShowImport(true)}
-                                onDownload={downloadTemplate}
-                            />
-                        </div>
+                            <FormTabs id={id} active="questions" />
+                        </>
                     )}
-                </div>
 
-                {isStandard ? (
-                    <>
-                        {/* Navigasi antar section — orphan page tidak ditampilkan di tab atas */}
-                        {realPages.length > 0 && (
-                            <div className="flex gap-2 px-3 mb-4 overflow-x-auto pb-1">
-                                {pages.map((p) => p.id === ORPHAN_PAGE_ID ? null : (
+                    <div className={`flex justify-between px-3 gap-2 my-auto ${embedded ? "mb-3" : "mb-4"}`}>
+                        <h1 className="text text-darks text-4xl font-default font-bold">Soal</h1>
+                        {!showEditor && (
+                            <div className="flex items-center gap-2">
+                                {isStandard && (
                                     <button
-                                        key={p.id}
-                                        onClick={() => {
-                                            setActiveSectionId(p.id)
-                                            document.getElementById(`section-${p.id}`)?.scrollIntoView({ behavior: "smooth", block: "start" })
-                                        }}
-                                        className={`btn btn-sm rounded-full shrink-0 ${
-                                            activeSectionId === p.id
+                                        onClick={handleAddSection}
+                                        className="btn bg-base border border-second text-darks rounded-full h-9 min-h-0"
+                                        title="Tambah section baru"
+                                    >
+                                        <LayoutList className="h-4 w-4" /> <span className="hidden sm:inline">Tambah Bagian</span>
+                                        <span className="sm:hidden">Bagian</span>
+                                    </button>
+                                )}
+                                <CreateButton
+                                    onCreate={() => startAdd(isStandard ? (activeSectionId ?? undefined) : undefined)}
+                                    onImport={() => setShowImport(true)}
+                                    onDownload={downloadTemplate}
+                                />
+                            </div>
+                        )}
+                    </div>
+
+                    {isStandard ? (
+                        <>
+                            {/* Navigasi antar section — mobile: chip horizontal (sidebar navigator dipakai di desktop). Orphan page tidak ditampilkan. */}
+                            {realPages.length > 0 && (
+                                <div className="lg:hidden flex gap-2 px-3 mb-4 overflow-x-auto pb-1">
+                                    {realPages.map((p, i) => (
+                                        <button
+                                            key={p.id}
+                                            draggable
+                                            onDragStart={(e) => handleSectionDragStart(e, p.id)}
+                                            onDragOver={(e) => handleSectionDragOver(e, p.id)}
+                                            onDrop={(e) => handleSectionDrop(e)}
+                                            onDragEnd={() => void finishSectionDrag()}
+                                            onClick={() => {
+                                                setActiveSectionId(p.id)
+                                                document.getElementById(`section-${p.id}`)?.scrollIntoView({ behavior: "smooth", block: "start" })
+                                            }}
+                                            className={`btn btn-sm rounded-full shrink-0 gap-1.5 cursor-grab active:cursor-grabbing ${sectionPageDrag === p.id ? "opacity-60" : ""} ${activeSectionId === p.id
                                                 ? "bg-darks text-base border-none"
                                                 : "bg-white dark:bg-second text-darks border border-second"
-                                        }`}
-                                    >
-                                        {p.title}
-                                    </button>
-                                ))}
-                            </div>
-                        )}
-
-                        {realPages.length === 0 ? (
-                            <div className="text-center py-16">
-                                <p className="text-tinted mb-4">Belum ada section. Buat bagian pertama untuk mulai menambah soal.</p>
-                                <button onClick={handleAddSection} className="btn bg-darks text-base border-none rounded-full">
-                                    <LayoutList className="h-4 w-4" /> Tambah Bagian
-                                </button>
-                            </div>
-                        ) : (
-                            <div id="section-list" className="space-y-5 pb-8">
-                                {previewPages.map((p, i) => (
-                                    <div key={p.id} id={`section-${p.id}`} className="scroll-mt-24">
-                                        {renderSectionCard(p, i)}
-                                    </div>
-                                ))}
-                            </div>
-                        )}
-                    </>
-                ) : questions.length === 0 && !showEditor ? (
-                    <div className="text-center py-16">
-                        <p className="text-tinted mb-4">Belum ada soal.</p>
-                    </div>
-                ) : previewQuestions.length > 0 && (
-                    <div className="space-y-3 pb-8">
-                        {previewQuestions.map((q, idx) => (
-                            <AnimatePresence key={q.id} initial={false}>
-                            <motion.div
-                                layout={dragId === q.id ? false : "position"}
-                                initial={{ opacity: 0, y: 12 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                exit={{ opacity: 0, scale: 0.98 }}
-                                transition={{
-                                    layout: { type: "spring", stiffness: 420, damping: 40 },
-                                    opacity: { duration: 0.25, ease: easeOutExpo, delay: dragId ? 0 : Math.min(idx * 0.05, 0.3) },
-                                    y: { duration: 0.3, ease: easeOutExpo, delay: dragId ? 0 : Math.min(idx * 0.05, 0.3) },
-                                }}
-                            >
-                                <div className={dragId === q.id ? "bg-done/5 border border-done/60 border-dashed rounded-xl" : "bg-white dark:bg-second border border-second rounded-xl"}>
-                                    {renderQuestionCard(q, idx)}
+                                                }`}
+                                        >
+                                            <span className={`flex h-4 w-4 items-center justify-center rounded-full text-[10px] font-bold tabular-nums ${activeSectionId === p.id ? "bg-base/20" : "bg-base-200 text-tinted"
+                                                }`}>{i + 1}</span>
+                                            {p.title}
+                                        </button>
+                                    ))}
                                 </div>
-                            </motion.div>
-                            </AnimatePresence>
-                        ))}
-                    </div>
-                )}
-                <AnimatePresence>
-                {showImport && id && (
-                    <QuestionImportModal
-                        formId={id}
-                        startingOrder={questions.length}
-                        fallbackPageId={isStandard ? (activeSectionId ?? undefined) : undefined}
-                        oneQuestionPerPage={isQuizMode(formLayout)}
-                        onClose={() => setShowImport(false)}
-                        onImported={(summary) => {
-                            setShowImport(false)
-                            showAlert(summary, "success")
-                            loadAll()
-                        }}
-                    />
-                )}
-                </AnimatePresence>
+                            )}
 
-                {/* Modal Hapus Section */}
-                <AnimatePresence>
-                {deleteSectionChoice && (
-                    <div className="fixed inset-0 z-[100] flex items-center justify-center sm:p-6">
-                        <motion.div
-                            className="absolute inset-0 bg-black/60"
-                            initial={{ opacity: 0 }}
-                            animate={{ opacity: 1 }}
-                            exit={{ opacity: 0 }}
-                            onClick={() => !deleteSectionChoice.deleting && setDeleteSectionChoice(null)}
-                        />
-                        <motion.div
-                            initial={{ opacity: 0, y: 24, scale: 0.98 }}
-                            animate={{ opacity: 1, y: 0, scale: 1 }}
-                            exit={{ opacity: 0, y: 24, scale: 0.98 }}
-                            transition={{ duration: 0.25, ease: easeOutExpo }}
-                            className="relative w-full sm:max-w-md bg-white dark:bg-second border border-second shadow-2xl rounded-2xl p-5"
-                            onClick={(e) => e.stopPropagation()}
-                        >
-                            <h2 className="font-semibold text-darks text-lg">Hapus Section</h2>
-                            <p className="text-sm text-tinted mt-1">
-                                "{deleteSectionChoice.page.title}" berisi {deleteSectionChoice.page.questions.length} soal. Pilih cara menghapus:
-                            </p>
-
-                            <div className="mt-4 space-y-2">
-                                {deleteSectionChoice.page.questions.length > 0 && (
-                                    <label className={`flex items-start gap-3 rounded-xl border p-3 cursor-pointer transition-colors ${deleteSectionChoice.mode === "move" ? "border-done bg-done/5" : "border-second hover:border-done/40"}`}>
-                                        <input
-                                            type="radio"
-                                            name="deleteSectionChoice"
-                                            className="radio radio-sm mt-0.5"
-                                            checked={deleteSectionChoice.mode === "move"}
-                                            onChange={() => setDeleteSectionChoice((prev) => prev ? { ...prev, mode: "move" } : prev)}
-                                        />
-                                        <div className="min-w-0 flex-1">
-                                            <p className="text-sm font-medium text-darks">Pindahkan soal ke section lain</p>
-                                            <select
-                                                className="select select-sm select-bordered w-full mt-1.5 bg-white dark:bg-second border-second"
-                                                value={deleteSectionChoice.moveToId ?? ""}
-                                                disabled={deleteSectionChoice.mode !== "move"}
-                                                onChange={(e) => setDeleteSectionChoice((prev) => prev ? { ...prev, moveToId: e.target.value || null } : prev)}
-                                            >
-                                                <option value="">Pilih section tujuan...</option>
-                                                {pages.filter((p) => p.id !== deleteSectionChoice.page.id && p.id !== ORPHAN_PAGE_ID).map((p) => (
-                                                    <option key={p.id} value={p.id}>{p.title}</option>
+                            {realPages.length === 0 ? (
+                                <div className="text-center py-16">
+                                    <p className="text-tinted mb-4">Belum ada section. Buat bagian pertama untuk mulai menambah soal.</p>
+                                    <button onClick={handleAddSection} className="btn bg-darks text-base border-none rounded-full">
+                                        <LayoutList className="h-4 w-4" /> Tambah Bagian
+                                    </button>
+                                </div>
+                            ) : (
+                                <div className="lg:grid lg:grid-cols-[220px_1fr] lg:gap-6 lg:items-start">
+                                    {/* Navigator sidebar — desktop saja, sticky mengikuti scroll */}
+                                    <div className="hidden lg:block lg:sticky lg:top-5">
+                                        <div className="rounded-xl border border-second bg-white dark:bg-second shadow-sm py-4 px-2">
+                                            <p className="px-2 pb-2 text-xs font-semibold uppercase tracking-wide text-tinted">Bagian</p>
+                                            <div className="space-y-1">
+                                                {realPages.map((p, i) => (
+                                                    <button
+                                                        key={p.id}
+                                                        draggable
+                                                        onDragStart={(e) => handleSectionDragStart(e, p.id)}
+                                                        onDragOver={(e) => handleSectionDragOver(e, p.id)}
+                                                        onDrop={(e) => handleSectionDrop(e)}
+                                                        onDragEnd={() => void finishSectionDrag()}
+                                                        onClick={() => {
+                                                            setActiveSectionId(p.id)
+                                                            document.getElementById(`section-${p.id}`)?.scrollIntoView({ behavior: "smooth", block: "start" })
+                                                        }}
+                                                        className={`w-full flex items-center gap-2 rounded-sm px-2.5 py-2 text-left text-sm transition-colors cursor-grab active:cursor-grabbing ${activeSectionId === p.id
+                                                            ? "bg-darks text-base font-semibold"
+                                                            : "text-darks hover:bg-base"
+                                                            } ${sectionPageDrag === p.id ? "opacity-60" : ""}`}
+                                                    >
+                                                        <span className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-[11px] font-bold tabular-nums ${activeSectionId === p.id ? "bg-base/20 text-base" : "bg-base-200 text-tinted"
+                                                            }`}>{i + 1}</span>
+                                                        <span className="min-w-0 flex-1 truncate">{p.title}</span>
+                                                        <span className={`shrink-0 text-[11px] tabular-nums ${activeSectionId === p.id ? "text-base/80" : "text-tinted/80"}`}>
+                                                            {p.questions.length}
+                                                        </span>
+                                                    </button>
                                                 ))}
-                                            </select>
+                                            </div>
+                                            <button
+                                                onClick={handleAddSection}
+                                                className="mt-2 w-full flex items-center justify-center gap-1.5 rounded-xl border border-dashed border-second px-2.5 py-2 text-xs font-medium text-tinted hover:border-done/50 hover:text-done transition-colors"
+                                            >
+                                                <Plus className="h-3.5 w-3.5" /> Tambah Bagian
+                                            </button>
                                         </div>
-                                    </label>
-                                )}
-                                <button
-                                    type="button"
-                                    onClick={() => setDeleteSectionChoice((prev) => prev ? { ...prev, mode: "delete", moveToId: null } : prev)}
-                                    className={`flex items-center gap-3 rounded-xl border p-3 w-full text-left transition-colors ${deleteSectionChoice.mode === "delete" ? "border-done bg-done/5" : "border-second hover:border-done/40"}`}
-                                >
-                                    <input
-                                        type="radio"
-                                        name="deleteSectionChoice"
-                                        className="radio radio-sm"
-                                        checked={deleteSectionChoice.mode === "delete"}
-                                        onChange={() => setDeleteSectionChoice((prev) => prev ? { ...prev, mode: "delete", moveToId: null } : prev)}
-                                    />
-                                    <div>
-                                        <p className="text-sm font-medium text-darks">Hapus soal ikut terhapus</p>
-                                        <p className="text-xs text-tinted">Section dan {deleteSectionChoice.page.questions.length} soal di dalamnya akan dihapus permanen.</p>
                                     </div>
-                                </button>
-                            </div>
 
-                            <div className="mt-5 flex justify-end gap-3">
-                                <button
-                                    onClick={() => setDeleteSectionChoice(null)}
-                                    disabled={deleteSectionChoice.deleting}
-                                    className="btn rounded-xl border border-second bg-base text-darks hover:bg-white dark:bg-second disabled:opacity-60"
-                                >
-                                    Batal
-                                </button>
-                                <button
-                                    onClick={handleDeleteSection}
-                                    disabled={deleteSectionChoice.deleting}
-                                    className="btn rounded-xl border border-wrong bg-wrong text-base hover:bg-wrong/90 disabled:opacity-60"
-                                >
-                                    {deleteSectionChoice.deleting ? <Spinner size={16} /> : <Trash2 className="h-4 w-4" />}
-                                    Hapus Section
-                                </button>
-                            </div>
-                        </motion.div>
-                    </div>
-                )}
-                </AnimatePresence>
+                                    {/* Konten section */}
+                                    <div id="section-list" className="space-y-5 pb-8 min-w-0">
+                                        {previewPages.map((p, i) => (
+                                            <div key={p.id} id={`section-${p.id}`} className="scroll-mt-24">
+                                                {renderSectionCard(p, i)}
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+                            )}
+                        </>
+                    ) : questions.length === 0 && !showEditor ? (
+                        <div className="text-center py-16">
+                            <p className="text-tinted mb-4">Belum ada soal.</p>
+                        </div>
+                    ) : previewQuestions.length > 0 && (
+                        <div className="space-y-3 pb-8">
+                            {previewQuestions.map((q, idx) => (
+                                <AnimatePresence key={q.id} initial={false}>
+                                    <motion.div
+                                        layout={dragId === q.id ? false : "position"}
+                                        initial={{ opacity: 0, y: 12 }}
+                                        animate={{ opacity: 1, y: 0 }}
+                                        exit={{ opacity: 0, scale: 0.98 }}
+                                        transition={{
+                                            layout: { type: "spring", stiffness: 420, damping: 40 },
+                                            opacity: { duration: 0.25, ease: easeOutExpo, delay: dragId ? 0 : Math.min(idx * 0.05, 0.3) },
+                                            y: { duration: 0.3, ease: easeOutExpo, delay: dragId ? 0 : Math.min(idx * 0.05, 0.3) },
+                                        }}
+                                    >
+                                        <div className={dragId === q.id ? "bg-done/5 border border-done/60 border-dashed rounded-xl" : "bg-white dark:bg-second border border-second rounded-xl"}>
+                                            {renderQuestionCard(q, idx)}
+                                        </div>
+                                    </motion.div>
+                                </AnimatePresence>
+                            ))}
+                        </div>
+                    )}
+                    <AnimatePresence>
+                        {previewSectionId && (() => {
+                            const previewPage = pages.find((p) => p.id === previewSectionId)
+                            if (!previewPage) return null
+                            return (
+                                <QuestionPreviewSidebar
+                                    title={previewPage.title}
+                                    questions={previewPage.questions}
+                                    onClose={() => setPreviewSectionId(null)}
+                                    onSelect={(q) => {
+                                        setPreviewSectionId(null)
+                                        startEdit(q as Question)
+                                    }}
+                                />
+                            )
+                        })()}
+                    </AnimatePresence>
 
-                <AnimatePresence>
-                {showEditor && renderEditor()}
-                </AnimatePresence>
-            </div>
+                    <AnimatePresence>
+                        {showImport && id && (
+                            <QuestionImportModal
+                                formId={id}
+                                startingOrder={questions.length}
+                                fallbackPageId={isStandard ? (activeSectionId ?? undefined) : undefined}
+                                oneQuestionPerPage={isQuizMode(formLayout)}
+                                onClose={() => setShowImport(false)}
+                                onImported={(summary) => {
+                                    setShowImport(false)
+                                    showAlert(summary, "success")
+                                    loadAll()
+                                }}
+                            />
+                        )}
+                    </AnimatePresence>
+
+                    {/* Modal Hapus Section */}
+                    <AnimatePresence>
+                        {deleteSectionChoice && (
+                            <div className="fixed inset-0 z-[100] flex items-center justify-center sm:p-6">
+                                <motion.div
+                                    className="absolute inset-0 bg-black/60"
+                                    initial={{ opacity: 0 }}
+                                    animate={{ opacity: 1 }}
+                                    exit={{ opacity: 0 }}
+                                    onClick={() => !deleteSectionChoice.deleting && setDeleteSectionChoice(null)}
+                                />
+                                <motion.div
+                                    initial={{ opacity: 0, y: 24, scale: 0.98 }}
+                                    animate={{ opacity: 1, y: 0, scale: 1 }}
+                                    exit={{ opacity: 0, y: 24, scale: 0.98 }}
+                                    transition={{ duration: 0.25, ease: easeOutExpo }}
+                                    className="relative w-full sm:max-w-md bg-white dark:bg-second border border-second shadow-2xl rounded-2xl p-5"
+                                    onClick={(e) => e.stopPropagation()}
+                                >
+                                    <h2 className="font-semibold text-darks text-lg">Hapus Section</h2>
+                                    <p className="text-sm text-tinted mt-1">
+                                        "{deleteSectionChoice.page.title}" berisi {deleteSectionChoice.page.questions.length} soal. Pilih cara menghapus:
+                                    </p>
+
+                                    <div className="mt-4 space-y-2">
+                                        {deleteSectionChoice.page.questions.length > 0 && (
+                                            <label className={`flex items-start gap-3 rounded-xl border p-3 cursor-pointer transition-colors ${deleteSectionChoice.mode === "move" ? "border-done bg-done/5" : "border-second hover:border-done/40"}`}>
+                                                <input
+                                                    type="radio"
+                                                    name="deleteSectionChoice"
+                                                    className="radio radio-sm mt-0.5"
+                                                    checked={deleteSectionChoice.mode === "move"}
+                                                    onChange={() => setDeleteSectionChoice((prev) => prev ? { ...prev, mode: "move" } : prev)}
+                                                />
+                                                <div className="min-w-0 flex-1">
+                                                    <p className="text-sm font-medium text-darks">Pindahkan soal ke section lain</p>
+                                                    <select
+                                                        className="select select-sm select-bordered w-full mt-1.5 bg-white dark:bg-second border-second"
+                                                        value={deleteSectionChoice.moveToId ?? ""}
+                                                        disabled={deleteSectionChoice.mode !== "move"}
+                                                        onChange={(e) => setDeleteSectionChoice((prev) => prev ? { ...prev, moveToId: e.target.value || null } : prev)}
+                                                    >
+                                                        <option value="">Pilih section tujuan...</option>
+                                                        {pages.filter((p) => p.id !== deleteSectionChoice.page.id && p.id !== ORPHAN_PAGE_ID).map((p) => (
+                                                            <option key={p.id} value={p.id}>{p.title}</option>
+                                                        ))}
+                                                    </select>
+                                                </div>
+                                            </label>
+                                        )}
+                                        <button
+                                            type="button"
+                                            onClick={() => setDeleteSectionChoice((prev) => prev ? { ...prev, mode: "delete", moveToId: null } : prev)}
+                                            className={`flex items-center gap-3 rounded-xl border p-3 w-full text-left transition-colors ${deleteSectionChoice.mode === "delete" ? "border-done bg-done/5" : "border-second hover:border-done/40"}`}
+                                        >
+                                            <input
+                                                type="radio"
+                                                name="deleteSectionChoice"
+                                                className="radio radio-sm"
+                                                checked={deleteSectionChoice.mode === "delete"}
+                                                onChange={() => setDeleteSectionChoice((prev) => prev ? { ...prev, mode: "delete", moveToId: null } : prev)}
+                                            />
+                                            <div>
+                                                <p className="text-sm font-medium text-darks">Hapus soal ikut terhapus</p>
+                                                <p className="text-xs text-tinted">Section dan {deleteSectionChoice.page.questions.length} soal di dalamnya akan dihapus permanen.</p>
+                                            </div>
+                                        </button>
+                                    </div>
+
+                                    <div className="mt-5 flex justify-end gap-3">
+                                        <button
+                                            onClick={() => setDeleteSectionChoice(null)}
+                                            disabled={deleteSectionChoice.deleting}
+                                            className="btn rounded-xl border border-second bg-base text-darks hover:bg-white dark:bg-second disabled:opacity-60"
+                                        >
+                                            Batal
+                                        </button>
+                                        <button
+                                            onClick={handleDeleteSection}
+                                            disabled={deleteSectionChoice.deleting}
+                                            className="btn rounded-xl border border-wrong bg-wrong text-base hover:bg-wrong/90 disabled:opacity-60"
+                                        >
+                                            {deleteSectionChoice.deleting ? <Spinner size={16} /> : <Trash2 className="h-4 w-4" />}
+                                            Hapus Section
+                                        </button>
+                                    </div>
+                                </motion.div>
+                            </div>
+                        )}
+                    </AnimatePresence>
+
+                    <AnimatePresence>
+                        {showEditor && renderEditor()}
+                    </AnimatePresence>
+                </div>
             )}
 
             {/* Konfirmasi simpan urutan soal (drag & drop) — bagian bawah layar */}
             <AnimatePresence>
-            {pendingOrder && (
-                <motion.div
-                    initial={{ opacity: 0, y: 24 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: 24 }}
-                    transition={{ duration: 0.25, ease: easeOutExpo }}
-                    className="fixed bottom-6 left-1/2 z-[120] -translate-x-1/2 flex flex-col items-stretch gap-3 rounded-2xl border border-second dark:border-darks/15 bg-white dark:bg-second px-5 py-4 shadow-lg"
-                >
-                    <p className="text-sm font-semibold text-darks whitespace-nowrap">Simpan soal?</p>
-                    <div className="flex items-center gap-2">
-                        <button
-                            onClick={cancelOrderSave}
-                            className="btn btn-sm rounded-full bg-base text-darks border border-second dark:border-darks/15 hover:bg-white dark:hover:bg-base"
-                        >
-                            Tidak
-                        </button>
-                        <button
-                            onClick={confirmOrderSave}
-                            className="btn btn-sm rounded-full bg-darks text-base border-none hover:opacity-90"
-                        >
-                            Ya
-                        </button>
-                    </div>
-                </motion.div>
-            )}
+                {pendingOrder && (
+                    <motion.div
+                        initial={{ opacity: 0, y: 24 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: 24 }}
+                        transition={{ duration: 0.25, ease: easeOutExpo }}
+                        className="fixed justify-between bottom-8 left-1/2 z-[120] -translate-x-1/2 flex items-center gap-4 rounded-full border border-second dark:border-darks/15 bg-white dark:bg-second px-5 py-4 shadow-2xl w-full max-w-xl"
+                    >
+                        <p className="text-sm font-semibold text-darks dark:text-white whitespace-nowrap">Simpan soal?</p>
+                        <div className="flex items-center gap-2">
+                            <button
+                                onClick={cancelOrderSave}
+                                className="btn btn-sm rounded-full bg-base text-darks border border-second dark:border-darks/15 hover:bg-white dark:hover:bg-base"
+                            >
+                                Tidak
+                            </button>
+                            <button
+                                onClick={confirmOrderSave}
+                                className="btn btn-sm rounded-full bg-darks text-base border-none hover:opacity-90"
+                            >
+                                Ya
+                            </button>
+                        </div>
+                    </motion.div>
+                )}
             </AnimatePresence>
 
             {/* Notifikasi hasil simpan urutan soal (drag & drop) — bagian bawah layar */}
             <AnimatePresence>
-            {orderToast && (
-                <motion.div
-                    initial={{ opacity: 0, y: 24 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: 24 }}
-                    transition={{ duration: 0.25, ease: easeOutExpo }}
-                    className={`fixed bottom-6 left-1/2 z-[120] -translate-x-1/2 flex items-center gap-2 rounded-full border px-4 py-2.5 text-sm font-medium shadow-lg whitespace-nowrap ${
-                        orderToast.tone === "success"
+                {orderToast && (
+                    <motion.div
+                        initial={{ opacity: 0, y: 24 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: 24 }}
+                        transition={{ duration: 0.25, ease: easeOutExpo }}
+                        className={`fixed bottom-6 left-1/2 z-[120] -translate-x-1/2 flex items-center gap-2 rounded-full border px-4 py-2.5 text-sm font-medium shadow-lg whitespace-nowrap ${orderToast.tone === "success"
                             ? "border-done/30 bg-white dark:bg-second text-darks"
                             : "border-wrong/30 bg-white dark:bg-second text-wrong"
-                    }`}
-                >
-                    {orderToast.tone === "success" ? (
-                        <CheckCircle className="h-4 w-4 text-done shrink-0" />
-                    ) : (
-                        <TriangleAlert className="h-4 w-4 text-wrong shrink-0" />
-                    )}
-                    {orderToast.message}
-                </motion.div>
-            )}
+                            }`}
+                    >
+                        {orderToast.tone === "success" ? (
+                            <CheckCircle className="h-4 w-4 text-done shrink-0" />
+                        ) : (
+                            <TriangleAlert className="h-4 w-4 text-wrong shrink-0" />
+                        )}
+                        {orderToast.message}
+                    </motion.div>
+                )}
             </AnimatePresence>
         </div>
     )

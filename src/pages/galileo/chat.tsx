@@ -279,7 +279,6 @@ function ChatPage() {
         <div className="flex flex-col items-center justify-center min-h-[calc(100vh-2rem)] sm:min-h-screen px-3.5 sm:px-6 py-5 sm:py-10">
             <BackButton to="/creator" />
             <div className="w-full max-w-2xl flex flex-col my-auto">
-
                 <motion.div variants={fadeSlide} initial="hidden" animate="show" className="w-full">
                     <motion.div
                         layout
