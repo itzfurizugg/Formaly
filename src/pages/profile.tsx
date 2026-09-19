@@ -226,7 +226,7 @@ function Profile() {
                             <div className="flex flex-wrap items-center gap-2 mt-1">
                                 <h2 className="text-xl font-bold text-darks truncate">{profile?.name || "User"}</h2>
                                 <span
-                                    className={`inline-flex items-center gap-1 text-xs font-semibold px-3.5 py-1 rounded-full ${ROLE_STYLE[role] || ROLE_STYLE.user
+                                    className={`inline-flex items-center gap-1 text-xs font-semibold px-2 py-1 rounded-full ${ROLE_STYLE[role] || ROLE_STYLE.user
                                         }`}
                                 >
                                     {/* <ShieldCheck className="h-3 w-3" /> */}

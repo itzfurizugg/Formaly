@@ -1,6 +1,6 @@
 import { useEffect, useState, useCallback, type FormEvent } from "react"
 import { useNavigate, useParams } from "react-router-dom"
-import { motion } from "motion/react"
+import { AnimatePresence, motion } from "motion/react"
 import {
     BookOpenText,
     Eye,
@@ -112,6 +112,8 @@ interface FormEditCache {
     layoutMode: string
 }
 
+type FormEditValues = Pick<FormEditCache, "title" | "description" | "duration" | "passingScore" | "status" | "headerImage" | "headerColor" | "headerMedia" | "settings" | "layoutMode">
+
 function FormEdit() {
     const { id } = useParams()
     const navigate = useNavigate()
@@ -147,6 +149,31 @@ function FormEdit() {
     const [savedLayoutMode, setSavedLayoutMode] = useState<string | null>(
         cached?.layoutMode ?? null
     )
+    const [savedValues, setSavedValues] = useState<FormEditValues | null>(() => cached ? {
+        title: cached.title,
+        description: cached.description,
+        duration: cached.duration,
+        passingScore: cached.passingScore,
+        status: cached.status,
+        headerImage: cached.headerImage,
+        headerColor: cached.headerColor,
+        headerMedia: cached.headerMedia,
+        settings: cached.settings,
+        layoutMode: cached.layoutMode,
+    } : null)
+    const currentValues: FormEditValues = {
+        title,
+        description,
+        duration,
+        passingScore,
+        status,
+        headerImage,
+        headerColor,
+        headerMedia: headerMedia || "",
+        settings,
+        layoutMode,
+    }
+    const hasChanges = savedValues !== null && JSON.stringify(currentValues) !== JSON.stringify(savedValues)
     // Konfirmasi migrasi saat mode diubah dan form sudah punya soal.
     const [modeConfirm, setModeConfirm] = useState<FormLayoutMode | null>(null)
     const [migrating, setMigrating] = useState(false)
@@ -194,6 +221,18 @@ function FormEdit() {
         const nextLayout: string = data.layout_mode ?? LAYOUT_QUIZ
         setLayoutMode(isQuizMode(nextLayout) ? LAYOUT_QUIZ : LAYOUT_STANDARD)
         setSavedLayoutMode(nextLayout)
+        setSavedValues({
+            title: data.title,
+            description: data.description || "",
+            duration: data.duration || 0,
+            passingScore: data.passing_score || 0,
+            status: String(data.status),
+            headerImage: nextHeaderImage,
+            headerColor: nextHeaderColor,
+            headerMedia: nextHeaderMedia,
+            settings: nextSettings,
+            layoutMode: isQuizMode(nextLayout) ? LAYOUT_QUIZ : LAYOUT_STANDARD,
+        })
 
         if (cacheKey) {
             pageSet<FormEditCache>(cacheKey, {
@@ -378,6 +417,7 @@ function FormEdit() {
             if (!data) throw new Error("Perubahan tidak tersimpan. Pastikan kamu pemilik form ini.")
 
             setSavedLayoutMode(layoutMode)
+            setSavedValues(currentValues)
             syncBannerCaches()
             saveCache()
             alertSaveSuccess()
@@ -428,6 +468,12 @@ function FormEdit() {
                 .select("id")
                 .maybeSingle()
             if (error) throw new Error(error.message)
+            const savedAfterModeChange: FormEditValues = {
+                ...currentValues,
+                layoutMode: targetMode,
+                headerMedia: headerMedia || "",
+            }
+            setSavedValues(savedAfterModeChange)
             syncBannerCaches()
             saveCache()
             alertSaveSuccess("Mode form berhasil diubah.")
@@ -730,16 +776,35 @@ function FormEdit() {
 
                     {/* Tombol simpan mobile: fixed di bawah, pola "Mulai Mengerjakan" */}
                     <div className="fixed bottom-0 left-0 right-0 z-40 pointer-events-none sm:hidden">
-                        <div className="px-4 pb-6 pt-30 bg-gradient-to-t from-base-300 from-20% to-transparent">
-                            <button
-                                type="button"
-                                onClick={() => handleSaveAll()}
-                                disabled={saving || uploadingBanner || migrating}
-                                className="w-fit px-5 h-14 bg-darks mx-auto text-lg text-white dark:text-second font-bold rounded-full flex items-center justify-center gap-2 pointer-events-auto shadow-lg hover:opacity-90 transition-opacity disabled:opacity-60"
-                            >
-                                {saving || migrating ? <Spinner size={16} /> : uploadingBanner ? <Spinner size={16} /> : <Save className="h-4 w-4" />}
-                                {saving ? "Menyimpan..." : migrating ? "Mengubah mode..." : uploadingBanner ? "Mengupload banner..." : "Simpan Perubahan"}
-                            </button>
+                        <AnimatePresence>
+                            {hasChanges && (
+                                <motion.div
+                                    initial={{ opacity: 0 }}
+                                    animate={{ opacity: 1 }}
+                                    exit={{ opacity: 0 }}
+                                    transition={{ duration: 0.25 }}
+                                    className="absolute inset-x-0 bottom-0 h-36 bg-gradient-to-t from-base-300 from-20% to-transparent"
+                                />
+                            )}
+                        </AnimatePresence>
+                        <div className="relative px-4 pb-6 pt-30">
+                            <AnimatePresence>
+                                {hasChanges && (
+                                    <motion.button
+                                        type="button"
+                                        initial={{ y: 120, opacity: 0 }}
+                                        animate={{ y: 0, opacity: 1 }}
+                                        exit={{ y: 120, opacity: 0 }}
+                                        transition={{ type: "spring", stiffness: 260, damping: 24 }}
+                                        onClick={() => handleSaveAll()}
+                                        disabled={saving || uploadingBanner || migrating}
+                                        className="w-fit px-5 h-14 bg-darks mx-auto text-lg text-white dark:text-second font-bold rounded-full flex items-center justify-center gap-2 pointer-events-auto shadow-lg hover:opacity-90 transition-opacity disabled:opacity-60"
+                                    >
+                                        {saving || migrating ? <Spinner size={16} /> : uploadingBanner ? <Spinner size={16} /> : <Save className="h-4 w-4" />}
+                                        {saving ? "Menyimpan..." : migrating ? "Mengubah mode..." : uploadingBanner ? "Mengupload banner..." : "Simpan Perubahan"}
+                                    </motion.button>
+                                )}
+                            </AnimatePresence>
                         </div>
                     </div>
                 </motion.div>

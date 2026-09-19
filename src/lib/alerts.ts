@@ -19,7 +19,7 @@ export function AlertToaster() {
         toastOptions: {
             duration: 3500,
             classNames: {
-                toast: toastClasses.base,
+                // toast: `${toastClasses.base} !mt-15 sm:mt-0`,
                 title: "!font-sans !text-sm !text-darks",
                 description: "!font-sans !text-sm !text-tinted",
                 closeButton: "!rounded-xl !border-second !text-tinted hover:!text-darks",

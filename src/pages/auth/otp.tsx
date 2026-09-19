@@ -30,7 +30,7 @@ function Otp() {
     const location = useLocation()
     const navigate = useNavigate()
     const { verifyOtp, resendOtp, sendOtp, logout } = useAuth()
-    
+
     const stateData = location.state as { email?: string; type?: EmailOtpType; next?: string } | null
     const nextPath = safeNext(stateData?.next)
     const nextQuery = nextPath !== "/" ? `?next=${encodeURIComponent(nextPath)}` : ""
@@ -142,20 +142,34 @@ function Otp() {
 
     return (
         <div className="min-h-screen flex bg-base overflow-x-hidden">
-            <div className="hidden lg:flex flex-1 flex-col justify-center px-3.5 bg-gradient-to-br from-darks/5 via-base to-darks/5">
-                <div className="max-w-lg ml-20">
-                    <img src={logo} alt="Formaly" className="h-10 w-auto mb-8" />
-                    <h1 className="text-4xl font-bold text-darks leading-tight">
-                        Buat lebih mudah.
-                    </h1>
-                    <p className="text-2xl text-tinted">
-                        Kerjakan dengan gampang.
-                    </p>
-                    <p className="text-base text-tinted mt-6 leading-relaxed max-w-md">
-                        Kelola formulir dan data dengan cepat, mudah, dan efisien.
-                        Platform all-in-one untuk kebutuhan form kamu.
-                    </p>
+            <div className="hidden lg:flex flex-1 flex-col relative overflow-hidden bg-darks text-white dark:text-second">
+                {/* Dekorasi lembut: blob gradasi di pojok panel */}
+                {/* <span className="pointer-events-none absolute -top-32 -right-24 h-96 w-96 rounded-full bg-white dark:bg-second blur-2xl" />
+                <span className="pointer-events-none absolute -bottom-40 -left-24 h-96 w-96 rounded-full bg-done/10 blur-2xl" /> */}
+
+                <div className="flex flex-col h-full px-3.5 relative z-10 py-16">
+                    <div className="max-w-lg ml-10">
+                        <div className="flex items-center gap-3 mb-10">
+                            <img src={logo} alt="Formaly" className="h-9 w-auto brightness-0 invert" />
+                        </div>
+
+                        <h1 className="text-4xl xl:text-5xl font-bold leading-tight">
+                            Buat lebih mudah.
+                            <span className="block text-white dark:text-second mt-2">Kerjakan dengan gampang.</span>
+                        </h1>
+
+                        <p className="text-white dark:text-second text-lg mt-6 max-w-md leading-relaxed">
+                            Kelola formulir dan data dengan cepat, mudah, dan efisien.
+                            Platform all-in-one untuk kebutuhan form kamu.
+                        </p>
+                    </div>
                 </div>
+
+                {/* <img
+                    src={vye}
+                    alt="Ilustrasi"
+                    className="pointer-events-none absolute right-0 bottom-0 z-0 w-1/2 lg:w-3/5 xl:w-3/4 max-w-none object-contain object-right-bottom"
+                /> */}
             </div>
 
             <div className="flex-1 flex items-center justify-center px-3.5 py-12">
@@ -196,34 +210,34 @@ function Otp() {
                         )}
 
                         <AnimatePresence>
-                        {error && (
-                            <motion.div
-                                key="otp-error"
-                                variants={alertPop}
-                                initial="hidden"
-                                animate="show"
-                                exit="exit"
-                                role="alert"
-                                className="text-sm text-wrong bg-wrong/5 border border-wrong/20 rounded-xl lg:rounded-lg px-3.5 py-3 mb-4"
-                            >
-                                {error}
-                            </motion.div>
-                        )}
+                            {error && (
+                                <motion.div
+                                    key="otp-error"
+                                    variants={alertPop}
+                                    initial="hidden"
+                                    animate="show"
+                                    exit="exit"
+                                    role="alert"
+                                    className="text-sm text-wrong bg-wrong/5 border border-wrong/20 rounded-xl lg:rounded-lg px-3.5 py-3 mb-4"
+                                >
+                                    {error}
+                                </motion.div>
+                            )}
 
-                        {resendSuccess && (
-                            <motion.div
-                                key="otp-resend"
-                                variants={alertPop}
-                                initial="hidden"
-                                animate="show"
-                                exit="exit"
-                                role="alert"
-                                className="flex items-center gap-2 text-sm text-done bg-done/10 border border-done/20 rounded-xl lg:rounded-lg px-3.5 py-3 mb-4"
-                            >
-                                <CheckCircle2 className="h-4 w-4 shrink-0" />
-                                <span>{resendSuccess}</span>
-                            </motion.div>
-                        )}
+                            {resendSuccess && (
+                                <motion.div
+                                    key="otp-resend"
+                                    variants={alertPop}
+                                    initial="hidden"
+                                    animate="show"
+                                    exit="exit"
+                                    role="alert"
+                                    className="flex items-center gap-2 text-sm text-done bg-done/10 border border-done/20 rounded-xl lg:rounded-lg px-3.5 py-3 mb-4"
+                                >
+                                    <CheckCircle2 className="h-4 w-4 shrink-0" />
+                                    <span>{resendSuccess}</span>
+                                </motion.div>
+                            )}
                         </AnimatePresence>
 
                         <form onSubmit={handleSubmit}>

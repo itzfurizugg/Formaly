@@ -41,8 +41,8 @@ function Login() {
         <div className="min-h-screen flex bg-base">
             <div className="hidden lg:flex flex-1 flex-col relative overflow-hidden bg-darks text-white dark:text-second">
                 {/* Dekorasi lembut: blob gradasi di pojok panel */}
-                <span className="pointer-events-none absolute -top-32 -right-24 h-96 w-96 rounded-full bg-white dark:bg-second blur-2xl" />
-                <span className="pointer-events-none absolute -bottom-40 -left-24 h-96 w-96 rounded-full bg-done/10 blur-2xl" />
+                {/* <span className="pointer-events-none absolute -top-32 -right-24 h-96 w-96 rounded-full bg-white dark:bg-second blur-2xl" />
+                <span className="pointer-events-none absolute -bottom-40 -left-24 h-96 w-96 rounded-full bg-done/10 blur-2xl" /> */}
 
                 <div className="flex flex-col h-full px-3.5 relative z-10 py-16">
                     <div className="max-w-lg ml-10">

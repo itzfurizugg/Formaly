@@ -1774,7 +1774,7 @@ function Questions({ embedded = false }: { embedded?: boolean }) {
                         animate={{ opacity: 1, y: 0 }}
                         exit={{ opacity: 0, y: 24 }}
                         transition={{ duration: 0.25, ease: easeOutExpo }}
-                        className="fixed justify-between bottom-8 left-1/2 z-[120] -translate-x-1/2 flex items-center gap-4 rounded-full border border-second dark:border-darks/15 bg-white dark:bg-second px-5 py-4 shadow-2xl w-full max-w-xl"
+                        className="fixed justify-between bottom-8 left-1/2 z-[120] -translate-x-1/2 flex items-center gap-4 rounded-full border-2 border-darks/30 dark:border-darks/15 bg-white dark:bg-second px-5 py-4 shadow-2xl w-full max-w-xl"
                     >
                         <p className="text-sm font-semibold text-darks dark:text-white whitespace-nowrap">Simpan soal?</p>
                         <div className="flex items-center gap-2">

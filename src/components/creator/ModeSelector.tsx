@@ -20,13 +20,13 @@ const OPTIONS: ModeOption[] = [
         key: LAYOUT_QUIZ,
         title: "Fokus",
         description: "1 soal per halaman. Memberikan fokus untuk menyelesaikan per soal",
-        badge: "1 soal = 1 halaman",
+        badge: "Cocok untuk Ujian",
     },
     {
         key: LAYOUT_STANDARD,
         title: "Normal",
         description: "Beberapa soal dalam satu halaman (section). Bebas mengelompokkan soal.",
-        badge: "Banyak soal per halaman",
+        badge: "Cocok untuk Survey",
     },
 ]
 
@@ -34,7 +34,7 @@ const OPTIONS: ModeOption[] = [
 // Mode menentukan constraint soal, bukan cuma tampilan.
 function ModeSelector({ value, onChange, disabled = false }: ModeSelectorProps) {
     return (
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+        <div className="flex flex-col gap-3">
             {OPTIONS.map((opt) => {
                 const selected = value === opt.key
                 return (

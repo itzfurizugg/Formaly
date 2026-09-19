@@ -25,7 +25,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           .from("users")
           .select("name, email, role, created_at")
           .eq("id", u.id)
-          .single()
+          .maybeSingle()
         if (data) setProfile(data)
         else setProfile({ name: (u.user_metadata?.name as string) || "User", email: u.email || "" })
       } catch {
