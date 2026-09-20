@@ -61,19 +61,11 @@ function ForgotPassword() {
                 /> */}
             </div>
 
-            <div className="lg:hidden flex-1 min-h-[50vh] w-full rounded-none bg-darks px-5 sm:px-10 py-8 flex flex-col justify-center text-white dark:text-second">
-                <img src={logo} alt="Formaly" className="h-8 w-auto brightness-0 invert mb-6 self-start" />
-                <h1 className="text-3xl font-bold leading-tight">
-                    Buat lebih mudah.
-                    <span className="block mt-1">Kerjakan dengan gampang.</span>
-                </h1>
-                <p className="text-sm text-white/75 dark:text-second/75 mt-3 max-w-md leading-relaxed">
-                    Kelola formulir dan data dengan cepat, mudah, dan efisien.
-                    Platform all-in-one untuk kebutuhan form kamu.
-                </p>
+            <div className="lg:hidden w-full rounded-none bg-darks px-5 sm:px-10 py-4 flex flex-col justify-center text-white dark:text-second">
+                <img src={logo} alt="Formaly" className="h-6 w-auto brightness-0 invert self-start" />
             </div>
 
-            <div className="flex-1 flex flex-col items-center justify-center px-4 py-6 sm:px-6 lg:px-0 lg:py-0 lg:min-h-screen lg:flex-row">
+            <div className="flex-1 flex flex-col items-center justify-start px-4 py-3 sm:px-6 lg:px-0 lg:py-0 lg:min-h-screen lg:justify-center lg:flex-row">
                 <div className="w-full max-w-xl lg:px-3.5">
                     <motion.div
                         variants={fadeSlide}
@@ -81,7 +73,7 @@ function ForgotPassword() {
                         animate="show"
                         className="bg-base lg:bg-white dark:bg-second rounded-2xl border border-transparent lg:border-second p-1 lg:p-8 shadow-none lg:shadow-sm w-full"
                     >
-                        <BackButton to="/login" />
+                        <BackButton to="/login" className="-ml-2"/>
 
                         <div className="flex items-center gap-2 mb-1">
                             <h2 className="text-3xl font-bold text-darks">Lupa Password</h2>
@@ -147,7 +139,7 @@ function ForgotPassword() {
                                                 type="email"
                                                 required
                                                 autoComplete="email"
-                                                className="input w-full bg-base border-second focus:border-done focus:outline-none transition-colors"
+                                                className="input w-full bg-second border-darks/10 focus:border-done focus:outline-none transition-colors"
                                                 placeholder="nama@email.com"
                                                 value={email}
                                                 onChange={(e) => setEmail(e.target.value)}
