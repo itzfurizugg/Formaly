@@ -204,23 +204,24 @@ function Home() {
                     transition={{ duration: 0.5, ease: easeOutExpo }}
                     className="w-full text-center flex flex-col items-center"
                 >
-
                     {/* Interactive Showcase Card */}
-                    <div className="relative w-full max-w-4xl mx-auto rounded-xl bg-base-300 p-5 sm:p-4 mb-4 overflow-hidden flex flex-col sm:flex-row items-center justify-between gap-6 sm:gap-8 order-1 sm:order-2">
+                    <div className="relative w-full max-w-4xl mx-auto rounded-xl bg-base-300 p-5 sm:p-4 mb-4 overflow-hidden flex flex-col sm:flex-row items-center justify-between gap-6 sm:gap-8">
 
                         {/* Form Decoy */}
                         <motion.div
                             initial={{ scale: 0.95, rotate: -2 }}
                             animate={{ scale: 1, rotate: 0 }}
                             transition={{ duration: 0.3 }}
-                            className="relative z-10 w-full max-w-[260px] sm:w-56 rounded-2xl bg-white dark:bg-second border border-second/60 p-3 sm:p-3.5 shadow-xl shadow-darks/10 text-left shrink-0 sm:ml-6 sm:scale-115 lg:scale-120 lg:ml-30"
+                            className="relative z-10 w-full max-w-[280px] sm:w-64 rounded-3xl bg-white dark:bg-second border border-white/80 dark:border-second/60 p-4 sm:p-5 shadow-2xl shadow-darks/15 text-left shrink-0 sm:ml-6 sm:scale-110 lg:scale-115 lg:ml-24"
                         >
-                            <div className="flex items-center gap-2.5 mb-3">
-                                <div className="w-7 h-7 rounded-lg bg-done/10 text-done flex items-center justify-center font-bold text-xs shrink-0">
-                                    F
-                                </div>
+                            <div className="absolute -right-8 -top-8 w-24 h-24 rounded-full bg-done/10 blur-2xl" />
+                            <div className="relative flex items-center justify-between gap-3 mb-5">
+                                <div className="flex items-center gap-3 min-w-0">
+                                    <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-done to-done/70 text-white flex items-center justify-center font-black text-sm shrink-0 shadow-lg shadow-done/25">
+                                        F
+                                    </div>
 
-                                <div className="min-w-0">
+                                    <div className="min-w-0">
                                     <AnimatePresence mode="wait">
                                         <motion.p
                                             key={formIndex}
@@ -234,13 +235,19 @@ function Home() {
                                         </motion.p>
                                     </AnimatePresence>
 
-                                    <p className="text-[10px] text-tinted mt-0.5">
+                                    <p className="text-[10px] text-tinted mt-1">
                                         {formItems[formIndex].author}
                                     </p>
                                 </div>
+                                </div>
+                                <div className="flex gap-1.5 shrink-0">
+                                    <span className="w-1.5 h-1.5 rounded-full bg-wrong/60" />
+                                    <span className="w-1.5 h-1.5 rounded-full bg-yellow-400/70" />
+                                    <span className="w-1.5 h-1.5 rounded-full bg-done/60" />
+                                </div>
                             </div>
 
-                            <div className="space-y-2">
+                            <div className="relative space-y-4">
                                 <AnimatePresence mode="wait">
                                     <motion.div
                                         key={formIndex}
@@ -248,7 +255,7 @@ function Home() {
                                         animate={{ opacity: 1 }}
                                         exit={{ opacity: 0 }}
                                         transition={{ duration: 0.3 }}
-                                        className="text-sm font-medium text-darks leading-snug"
+                                        className="text-base font-bold text-darks leading-snug"
                                     >
                                         {formItems[formIndex].question}
                                     </motion.div>
@@ -262,14 +269,14 @@ function Home() {
                                             animate={{ opacity: 1, scale: 1 }}
                                             exit={{ opacity: 0, scale: 0.95 }}
                                             transition={{ duration: 0.2 }}
-                                            className="px-2.5 py-1.5 rounded-lg bg-done text-white dark:text-second text-xs font-medium flex items-center justify-between shadow-sm shadow-done/30"
+                                            className="px-3 py-2 rounded-xl bg-done text-white dark:text-second text-xs font-semibold flex items-center justify-between shadow-md shadow-done/30"
                                         >
                                             <span>{formItems[formIndex].options[0]}</span>
                                             <span className="w-1.5 h-1.5 rounded-full bg-white dark:bg-second shrink-0" />
                                         </motion.div>
                                     </AnimatePresence>
 
-                                    <div className="px-2.5 py-1.5 rounded-lg border border-second bg-base text-darks text-xs font-medium">
+                                    <div className="px-3 py-2 rounded-xl border border-second/70 bg-base/70 text-tinted text-xs font-medium">
                                         {formItems[formIndex].options[1]}
                                     </div>
                                 </div>
@@ -282,7 +289,7 @@ function Home() {
                         </div>
                     </div>
 
-                    <div className="text-center order-2 sm:order-1 w-full">
+                    <div className="text-center w-full">
                         <h1 className="text-4xl sm:text-6xl font-black tracking-tight text-darks mb-2 leading-[1.1]">
                             Mulai Mengerjakan!
                         </h1>

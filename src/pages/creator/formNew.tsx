@@ -59,8 +59,8 @@ function FormNew() {
         navigate(`/creator/forms/${data.id}`)
     }
 
-    const inputCls = "input w-full rounded-xl bg-base-200 text-lg lg:text-2xl h-auto p-2 pl-4 border-second focus:border-done focus:outline-none transition-colors"
-    const titleForm = "input w-full rounded-xl bg-base-200 text-xl sm:text-3xl h-15 sm:h-20 p-2.5 sm:pl-4 lg:p-6 border-second focus:border-done focus:outline-none transition-colors"
+    const inputCls = "input w-full rounded-xl bg-base-200 text-lg lg:text-2xl h-auto p-2 pl-4 border-second focus:border-done focus:outline-none transition-colors scroll-mt-52 sm:scroll-mt-44"
+    const titleForm = "input w-full rounded-xl bg-base-200 text-xl sm:text-3xl h-15 sm:h-20 p-2.5 sm:pl-4 lg:p-6 border-second focus:border-done focus:outline-none transition-colors scroll-mt-52 sm:scroll-mt-44"
 
     return (
         <motion.div
@@ -73,18 +73,20 @@ function FormNew() {
                 <BackButton to="/creator/forms" showOnDesktop />
 
                 <form onSubmit={handleSubmit} className="space-y-4">
-                    <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                        <div>
-                            <h1 className="text-2xl sm:text-4xl font-bold text-darks">Buat Form Baru</h1>
-                            <p className="text-sm text-tinted">Lengkapi informasi dasar form.</p>
+                    <div className="sticky top-16 sm:top-15 lg:top-0 z-30 -mx-3.5 box-border min-h-[108px] bg-base-300 px-3.5 py-3 sm:-mx-6 sm:px-6 sm:py-4 sm:min-h-[96px] lg:min-h-[72px]">
+                        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                            <div>
+                                <h1 className="text-2xl sm:text-4xl font-bold text-darks">Buat Form Baru</h1>
+                                <p className="text-sm text-tinted">Lengkapi informasi dasar form.</p>
+                            </div>
+                            <button type="submit" disabled={loading || uploadingBanner} className="btn bg-darks text-base justify-center h-11 rounded-xl border-none w-full sm:w-auto sm:px-6 hover:opacity-90 transition-opacity disabled:opacity-60">
+                                {loading ? <Spinner size={16} /> : "Simpan & Lanjut"}
+                            </button>
                         </div>
-                        <button type="submit" disabled={loading || uploadingBanner} className="btn bg-darks text-base justify-center h-11 rounded-xl border-none w-full sm:w-auto sm:px-6 hover:opacity-90 transition-opacity disabled:opacity-60">
-                            {loading ? <Spinner size={16} /> : "Simpan & Lanjut"}
-                        </button>
                     </div>
 
                     <div className="grid grid-cols-1 lg:grid-cols-12 items-start gap-6">
-                        <div className="lg:col-span-7 self-start space-y-4 lg:sticky lg:top-20 bg-white dark:bg-second border border-second p-3 lg:p-4 shadow-sm rounded-xl">
+                        <div className="lg:col-span-7 self-start space-y-4 lg:sticky lg:top-24 bg-white dark:bg-second border border-second p-3 lg:p-4 shadow-sm rounded-xl">
                             <div className="overflow-hidden rounded-lg border border-second">
                                 <FormHeader formId="new-form" title={title || "Judul Form"} headerColor={headerColor} headerMedia={headerMedia} />
                             </div>

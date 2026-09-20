@@ -30,7 +30,7 @@ function Navbar() {
 
     return (
         <div
-            className="navbar bg-base-300 px-4 lg:px-4 flex-col items-stretch !py-0 rounded-b-2xl lg:rounded-b-none"
+            className="navbar bg-transparent px-4 lg:px-4 flex-col items-stretch !py-0 rounded-b-2xl lg:rounded-b-none"
         >
             <div className="flex items-center justify-between w-full py-2 gap-2 relative min-h-[44px]">
                 <div className="flex-1 relative min-h-[44px] flex items-center">
