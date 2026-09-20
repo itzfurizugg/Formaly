@@ -3,6 +3,7 @@ import { Users, Layers, Heart, Sparkles } from "lucide-react"
 import logo from "../assets/logo.svg"
 import { easeOutExpo } from "../lib/motion"
 import BackButton from "../components/backButton"
+import char from "../assets/ash.png"
 
 interface Member {
     name: string
@@ -10,10 +11,12 @@ interface Member {
 }
 
 const TEAM: Member[] = [
-    { name: "Nama Anggota", role: "Project Manager" },
-    { name: "Nama Anggota", role: "UI/UX Designer" },
-    { name: "Nama Anggota", role: "Frontend Developer" },
-    { name: "Nama Anggota", role: "Backend Developer" },
+    { name: "Rizki Syahrul", role: "Project Manager" },
+    { name: "Muhammad Dzaki Rafif", role: "Web Developer" },
+    { name: "Ladya Shafa", role: "Illustrator" },
+    { name: "Chintia Claudia", role: "UI/UX Designer" },
+    { name: "Aurellia Tri", role: "UI/UX Designer" },
+    { name: "Hmmmmmmm", role: "Developer" },
 ]
 
 const AVATAR_STYLE = ["bg-done", "bg-pass", "bg-darks", "bg-wrong"]
@@ -47,24 +50,30 @@ function CreditPage() {
     return (
         <div className="flex flex-col items-center px-3.5 py-6">
             <div className="max-w-4xl w-full">
-                <BackButton to="/profile" />
+                <BackButton to="/profile" showOnDesktop />
 
                 {/* Hero */}
                 <motion.div
                     initial={{ opacity: 0, y: 16 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.45, ease: easeOutExpo }}
-                    className="bg-white dark:bg-second border border-second rounded-2xl lg:rounded-xl mb-3 px-3.5 py-10 flex flex-col items-center text-center"
+                    className="flex flex-row justify-between bg-white dark:bg-second border border-second rounded-2xl lg:rounded-xl mb-3 px-3.5 py-10 flex flex-col items-start px-10 text-start"
                 >
-                    <img src={logo} alt="Formaly" className="h-10 w-auto mb-5" />
-                    <h1 className="text-3xl md:text-4xl font-display font-bold uppercase text-darks">
-                        Tentang Formaly
-                    </h1>
-                    <p className="text-sm md:text-base text-tinted mt-3 max-w-lg leading-relaxed">
-                        Platform formulir dan kuesioner yang membantu kamu membuat,
-                        membagikan, dan menganalisis formulir dengan mudah —
-                        dari kuis singkat sampai survei besar.
-                    </p>
+                    <div className="flex-col">
+                        <img src={logo} alt="Formaly" className="h-10 w-auto mb-5" />
+                        <h1 className="text-3xl md:text-4xl font-display font-bold uppercase text-darks">
+                            Tentang Formaly
+                        </h1>
+                        <p className="text-sm md:text-darks text-tinted mt-3 max-w-lg leading-relaxed">
+                            Platform formulir dan kuesioner yang membantu kamu membuat,
+                            membagikan, dan menganalisis formulir dengan mudah —
+                            dari kuis singkat sampai survei besar.
+                        </p>
+                    </div>
+
+                    <div className="flex items-end">
+                        <img src={char} className="h-60 w-auto" />
+                    </div>
                 </motion.div>
 
                 {/* Tim */}
@@ -75,9 +84,6 @@ function CreditPage() {
                     className="bg-white dark:bg-second border border-second rounded-2xl lg:rounded-xl mb-3 p-5"
                 >
                     <div className="flex items-center gap-2.5 mb-4">
-                        <div className="w-9 h-9 shrink-0 rounded-full bg-base flex items-center justify-center">
-                            <Users className="h-4 w-4 text-darks" />
-                        </div>
                         <div>
                             <h2 className="text-base font-bold text-darks">Tim di Balik Formaly</h2>
                             <p className="text-xs text-tinted">Kenalan dengan orang-orang di baliknya.</p>
@@ -112,9 +118,6 @@ function CreditPage() {
                     className="bg-white dark:bg-second border border-second rounded-2xl lg:rounded-xl mb-3 p-5"
                 >
                     <div className="flex items-center gap-2.5 mb-4">
-                        <div className="w-9 h-9 shrink-0 rounded-full bg-base flex items-center justify-center">
-                            <Layers className="h-4 w-4 text-darks" />
-                        </div>
                         <div>
                             <h2 className="text-base font-bold text-darks">Teknologi yang Digunakan</h2>
                             <p className="text-xs text-tinted">Dibangun di atas tools open-source terbaik.</p>
@@ -126,7 +129,6 @@ function CreditPage() {
                                 key={tech}
                                 className="inline-flex items-center gap-1.5 text-xs font-semibold bg-base border border-second text-darks px-3.5 py-1.5 rounded-full"
                             >
-                                <Sparkles className="h-3 w-3 text-done" />
                                 {tech}
                             </span>
                         ))}
@@ -142,6 +144,14 @@ function CreditPage() {
                 >
                     Dibuat dengan <Heart className="h-3 w-3 text-wrong fill-wrong" /> oleh Tim Formaly ©{" "}
                     {new Date().getFullYear()}
+                </motion.p>
+                <motion.p
+                    initial={{ opacity: 0, y: 8 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.35, ease: easeOutExpo, delay: 0.3 }}
+                    className="text-center text-xs text-tinted mt-1 flex items-center justify-center gap-1"
+                >
+                    Formaly mendukung dan terafiliasi dengan Israel Defense Force 🇮🇱
                 </motion.p>
             </div>
         </div>

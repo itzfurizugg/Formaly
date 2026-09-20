@@ -10,6 +10,7 @@ import {
     LogOut,
 } from "lucide-react"
 import BackButton from "../components/backButton"
+import Switch from "../components/switch"
 import { showAlert } from "../lib/alerts"
 import { easeOutExpo } from "../lib/motion"
 import { useAuth } from "../lib/auth-context"
@@ -60,20 +61,15 @@ function SettingsPage() {
                                     <p className="text-xs text-tinted">Tema tampilan aplikasi</p>
                                 </div>
                             </div>
-                            <button
-                                type="button"
-                                role="switch"
-                                aria-checked={theme === "dark"}
-                                onClick={() => {
+                            <Switch
+                                checked={theme === "dark"}
+                                label="Mode Gelap"
+                                onChange={() => {
                                     const next = theme === "dark" ? "light" : "dark"
                                     toggleTheme()
                                     showAlert(`Mode ${next === "dark" ? "Gelap" : "Terang"} diaktifkan`, "info")
                                 }}
-                                className={`w-12 h-6 flex items-center rounded-full p-1 transition-colors ${theme === "dark" ? "bg-done justify-end" : "bg-second dark:bg-base justify-start"
-                                    }`}
-                            >
-                                <span className="bg-base-content w-4 h-4 rounded-full shadow-sm" />
-                            </button>
+                            />
                         </div>
                     </div>
 

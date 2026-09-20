@@ -23,6 +23,7 @@ import { collectQuestionMediaUrls } from "../../lib/mediaCleanup"
 import { pageGet, pageSet } from "../../lib/pageCache"
 import { easeOutExpo } from "../../lib/motion"
 import BackButton from "../../components/backButton"
+import Switch from "../../components/switch"
 import FormTabs from "../../components/creator/formTabs"
 import QuestionPreviewSidebar from "../../components/creator/questionPreviewSidebar"
 import { Spinner } from "../../components/loading"
@@ -1054,20 +1055,12 @@ function Questions({ embedded = false }: { embedded?: boolean }) {
                                 <span className="text-sm font-medium text-darks">Wajib dijawab</span>
                                 <p className="text-xs text-tinted mt-0.5">Responden harus mengisi soal ini sebelum lanjut.</p>
                             </div>
-                            <button
-                                type="button"
-                                onClick={() => setIsRequired(!isRequired)}
-                                role="switch"
-                                aria-checked={isRequired}
-                                aria-label="Tandai sebagai wajib dijawab"
-                                className={`relative shrink-0 h-6 w-11 rounded-full mt-3 transition-colors ${isRequired ? "bg-white border border-second" : "bg-white dark:bg-second"
-                                    }`}
-                            >
-                                <span
-                                    className={`absolute top-0.5 left-0.5 h-5 w-5 rounded-full bg-white dark:bg-second shadow transition-transform ${isRequired ? "translate-x-5" : "translate-x-0"
-                                        }`}
-                                />
-                            </button>
+                            <Switch
+                                checked={isRequired}
+                                label="Tandai sebagai wajib dijawab"
+                                onChange={() => setIsRequired(!isRequired)}
+                                className="mt-3"
+                            />
                         </div>
                     </div>
 

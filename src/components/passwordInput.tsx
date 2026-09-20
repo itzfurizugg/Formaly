@@ -17,7 +17,7 @@ function PasswordInput({ value, onChange, className = "", ...rest }: PasswordInp
                 value={value}
                 onChange={(e) => onChange(e.target.value)}
                 {...rest}
-                className={`input w-full bg-second border-darks/10 focus:border-done focus:outline-none transition-colors font-sans text-sm pr-11 placeholder:[-webkit-text-fill-color:color-mix(in_oklab,var(--color-base-content)_50%,transparent)] ${
+                className={`input w-full bg-second border-darks/10 dark:bg-base dark:border-darks/30 focus:border-done focus:outline-none transition-colors font-sans text-sm pr-11 placeholder:[-webkit-text-fill-color:color-mix(in_oklab,var(--color-base-content)_50%,transparent)] ${
                     visible
                         ? "text-darks"
                         : "text-transparent [-webkit-text-fill-color:transparent] caret-darks select-none selection:bg-transparent [&::selection]:text-transparent [&::selection]:[-webkit-text-fill-color:transparent]"

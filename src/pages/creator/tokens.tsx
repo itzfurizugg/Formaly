@@ -8,6 +8,7 @@ import { confirmDelete, showAlert } from "../../lib/alerts"
 import { easeOutExpo, modalBackdrop, modalPanel } from "../../lib/motion"
 import ModalPortal from "../../components/modalPortal"
 import BackButton from "../../components/backButton"
+import Switch from "../../components/switch"
 import FormTabs from "../../components/creator/formTabs"
 import Loading, { Spinner } from "../../components/loading"
 
@@ -205,13 +206,11 @@ function Tokens() {
                                     Kalau aktif, halaman deskripsi form akan meminta token sebelum tombol "Mulai Mengerjakan" bisa dipakai.
                                 </p>
                             </div>
-                            <input
-                                type="checkbox"
+                            <Switch
                                 checked={requiresToken}
                                 onChange={handleToggleRequires}
                                 disabled={togglingRequires}
-                                className="toggle shrink-0 border-second checked:bg-darks checked:border-darks"
-                                aria-label="Wajibkan token untuk mengerjakan"
+                                label="Wajibkan token untuk mengerjakan"
                             />
                         </div>
 

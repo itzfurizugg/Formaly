@@ -97,7 +97,11 @@ function ResetPassword() {
 
     return (
         <div className="min-h-screen flex flex-col lg:flex-row bg-base">
-            <div className="hidden lg:flex flex-1 flex-col relative overflow-hidden bg-darks text-white dark:text-second">
+            <div className="hidden lg:flex flex-1 flex-col relative overflow-hidden bg-darks dark:bg-second text-white">
+                {/* Dekorasi lembut: blob gradasi di pojok panel */}
+                {/* <span className="pointer-events-none absolute -top-32 -right-24 h-96 w-96 rounded-full bg-white dark:bg-second blur-2xl" />
+                <span className="pointer-events-none absolute -bottom-40 -left-24 h-96 w-96 rounded-full bg-done/10 blur-2xl" /> */}
+
                 <div className="flex flex-col h-full px-3.5 relative z-10 py-16">
                     <div className="max-w-lg ml-10">
                         <div className="flex items-start gap-3 mb-10">
@@ -106,10 +110,10 @@ function ResetPassword() {
 
                         <h1 className="text-4xl xl:text-5xl font-bold leading-tight">
                             Buat lebih mudah.
-                            <span className="block text-white dark:text-second mt-2">Kerjakan dengan gampang.</span>
+                            <span className="block text-white mt-2">Kerjakan dengan gampang.</span>
                         </h1>
 
-                        <p className="text-white dark:text-second text-lg mt-6 max-w-md leading-relaxed">
+                        <p className="text-white text-lg mt-6 max-w-md leading-relaxed">
                             Kelola formulir dan data dengan cepat, mudah, dan efisien.
                             Platform all-in-one untuk kebutuhan form kamu.
                         </p>

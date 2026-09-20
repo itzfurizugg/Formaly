@@ -49,7 +49,7 @@ function Register() {
 
     return (
         <div className="min-h-screen flex flex-col lg:flex-row bg-base">
-            <div className="hidden lg:flex flex-1 flex-col relative overflow-hidden bg-darks text-white dark:text-second">
+            <div className="hidden lg:flex flex-1 flex-col relative overflow-hidden bg-darks dark:bg-second text-white">
                 {/* Dekorasi lembut: blob gradasi di pojok panel */}
                 {/* <span className="pointer-events-none absolute -top-32 -right-24 h-96 w-96 rounded-full bg-white dark:bg-second blur-2xl" />
                 <span className="pointer-events-none absolute -bottom-40 -left-24 h-96 w-96 rounded-full bg-done/10 blur-2xl" /> */}
@@ -62,10 +62,10 @@ function Register() {
 
                         <h1 className="text-4xl xl:text-5xl font-bold leading-tight">
                             Buat lebih mudah.
-                            <span className="block text-white dark:text-second mt-2">Kerjakan dengan gampang.</span>
+                            <span className="block text-white mt-2">Kerjakan dengan gampang.</span>
                         </h1>
 
-                        <p className="text-white dark:text-second text-lg mt-6 max-w-md leading-relaxed">
+                        <p className="text-white text-lg mt-6 max-w-md leading-relaxed">
                             Kelola formulir dan data dengan cepat, mudah, dan efisien.
                             Platform all-in-one untuk kebutuhan form kamu.
                         </p>
@@ -91,7 +91,7 @@ function Register() {
                 </p>
             </div>
 
-            <div className="flex-1 flex flex-col items-center justify-end px-4 py-6 sm:px-6 lg:px-0 lg:py-0 lg:min-h-screen lg:flex-row">
+            <div className="flex-1 flex flex-col items-center justify-end lg:justify-center px-4 py-6 sm:px-6 lg:px-0 lg:py-0 lg:min-h-screen lg:flex-row">
                 <div className="w-full max-w-xl lg:px-3.5">
                     <motion.div
                         variants={fadeSlide}
@@ -130,7 +130,7 @@ function Register() {
                                     type="text"
                                     required
                                     autoComplete="name"
-                                    className="input w-full bg-second border-darks/10 focus:border-done focus:outline-none transition-colors"
+                                    className="input w-full bg-second border-darks/10 dark:bg-base dark:border-darks/30 focus:border-done focus:outline-none transition-colors"
                                     placeholder="John Smith"
                                     value={name}
                                     onChange={(e) => setName(e.target.value)}
@@ -145,7 +145,7 @@ function Register() {
                                     type="email"
                                     required
                                     autoComplete="email"
-                                    className="input w-full bg-second border-darks/10 focus:border-done focus:outline-none transition-colors"
+                                    className="input w-full bg-second border-darks/10 dark:bg-base dark:border-darks/30 focus:border-done focus:outline-none transition-colors"
                                     placeholder="nama@email.com"
                                     value={email}
                                     onChange={(e) => setEmail(e.target.value)}
@@ -193,7 +193,7 @@ function Register() {
                             </button>
                         </form>
 
-                        <Link to={`/login${nextQuery}`} className="btn bg-base text-darks border border-second hover:bg-white dark:bg-second transition-colors w-full mt-2 rounded-full lg:rounded-xl">
+                        <Link to={`/login${nextQuery}`} className="btn bg-base text-darks border border-second hover:bg-darks/20 dark:bg-second transition-colors w-full mt-2 rounded-full lg:rounded-xl">
                             Sudah punya akun? Masuk
                         </Link>
                     </motion.div>

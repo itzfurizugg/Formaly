@@ -23,6 +23,7 @@ import { collectFormMediaUrls } from "../../lib/mediaCleanup"
 import MediaUpload from "../../components/MediaUpload"
 import RichTextEditor from "../../components/richText"
 import BackButton from "../../components/backButton"
+import Switch from "../../components/switch"
 import FormTabs from "../../components/creator/formTabs"
 import FormHeader from "../../components/creator/formHeader"
 import TagInput from "../../components/creator/TagInput"
@@ -651,18 +652,12 @@ function FormEdit() {
                                                             {row.hint && <p className="text-xs text-tinted/70 mt-1.5 italic hidden sm:block">{row.hint}</p>}
                                                         </div>
                                                     </div>
-                                                    <button
-                                                        type="button"
-                                                        role="switch"
-                                                        aria-checked={settings[row.key]}
-                                                        aria-label={row.title}
-                                                        onClick={() => setSettings((prev) => ({ ...prev, [row.key]: !prev[row.key] }))}
-                                                        className={`w-12 h-6 mt-1 shrink-0 flex items-center rounded-full p-1 transition-colors ${
-                                                            settings[row.key] ? "bg-done justify-end" : "bg-second dark:bg-base justify-start"
-                                                        }`}
-                                                    >
-                                                        <span className="bg-base-content w-4 h-4 rounded-full shadow-sm" />
-                                                    </button>
+                                                    <Switch
+                                                        checked={settings[row.key]}
+                                                        label={row.title}
+                                                        onChange={() => setSettings((prev) => ({ ...prev, [row.key]: !prev[row.key] }))}
+                                                        className="mt-1"
+                                                    />
                                                 </div>
                                             ))}
                                         </div>

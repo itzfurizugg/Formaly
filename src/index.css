@@ -118,9 +118,9 @@ body::-webkit-scrollbar {
 
 /* ---- Quill editor (hasil "format" yang rapi & konsisten) ---- */
 .rich-editor {
-  border: 1px solid var(--color-second);
+  border: 1px solid color-mix(in srgb, var(--color-darks) 50%, transparent);
   border-radius: 0.75rem;
-  background: #fff;
+  background: var(--color-base-100);
   box-shadow: 0 1px 2px rgb(0 0 0 / 0.04);
   /* Tidak pakai overflow:hidden: akan memotong dropdown heading (.ql-picker-options)
      saat expand. Sudut tetap rapi lewat border-radius di toolbar & container. */
@@ -175,26 +175,46 @@ body::-webkit-scrollbar {
 
 .rich-editor .ql-toolbar.ql-snow button:hover {
   background: var(--color-second);
-  color: var(--color-done);
-}
-
-.rich-editor .ql-toolbar.ql-snow button.ql-active {
-  background: var(--color-done);
-  color: #fff;
-}
-
-.rich-editor .ql-toolbar.ql-snow button.ql-active .ql-stroke {
-  stroke: #fff;
+  color: var(--color-darks);
 }
 
 .rich-editor .ql-toolbar.ql-snow button:hover .ql-stroke,
-.rich-editor .ql-toolbar.ql-snow button.ql-active .ql-stroke,
-.rich-editor .ql-toolbar.ql-snow .ql-picker-label:hover .ql-stroke {
-  stroke: var(--color-done);
+.rich-editor .ql-toolbar.ql-snow .ql-picker-label:hover .ql-stroke,
+.rich-editor .ql-toolbar.ql-snow .ql-picker-item:hover .ql-stroke {
+  stroke: var(--color-darks);
+}
+
+.rich-editor .ql-toolbar.ql-snow button:hover .ql-fill,
+.rich-editor .ql-toolbar.ql-snow .ql-picker-label:hover .ql-fill,
+.rich-editor .ql-toolbar.ql-snow .ql-picker-item:hover .ql-fill {
+  fill: var(--color-darks);
+}
+
+.rich-editor .ql-toolbar.ql-snow button.ql-active {
+  background: color-mix(in srgb, var(--color-done) 14%, transparent);
+  color: var(--color-darks);
+}
+
+.rich-editor .ql-toolbar.ql-snow button.ql-active .ql-stroke {
+  stroke: var(--color-darks);
 }
 
 .rich-editor .ql-toolbar.ql-snow button.ql-active .ql-fill {
-  fill: #fff;
+  fill: var(--color-darks);
+}
+
+/* ikon SVG Quill mewarisi warna tombol agar terlihat di mode gelap */
+.rich-editor .ql-toolbar.ql-snow .ql-stroke {
+  stroke: currentColor;
+}
+
+.rich-editor .ql-toolbar.ql-snow .ql-fill {
+  fill: currentColor;
+}
+
+.rich-editor .ql-toolbar.ql-snow .ql-picker-label .ql-stroke,
+.rich-editor .ql-toolbar.ql-snow .ql-picker-item .ql-stroke {
+  stroke: currentColor;
 }
 
 .rich-editor .ql-toolbar.ql-snow .ql-picker {
@@ -207,15 +227,41 @@ body::-webkit-scrollbar {
   height: 26px;
 }
 
+/* dropdown Quill (heading/size/font) ikut tema terang/gelap */
+.rich-editor .ql-toolbar.ql-snow .ql-picker-options {
+  background: var(--color-base-100);
+  border: 1px solid var(--color-second);
+  border-radius: 0.5rem;
+  box-shadow: 0 8px 24px rgb(0 0 0 / 0.12);
+  padding: 0.25rem;
+}
+
+.rich-editor .ql-toolbar.ql-snow .ql-picker-item {
+  color: var(--color-darks);
+  border-radius: 0.375rem;
+}
+
+.rich-editor .ql-toolbar.ql-snow .ql-picker-item:hover,
+.rich-editor .ql-toolbar.ql-snow .ql-picker-item.ql-selected {
+  background: color-mix(in srgb, var(--color-done) 12%, transparent);
+  color: var(--color-darks);
+}
+
 /* tombol formula custom konsisten ukurannya dgn tombol lain di toolbar */
 .rich-editor .ql-toolbar.ql-snow .formaly-tex-trigger {
   width: 28px;
   height: 26px;
 }
 
+.rich-editor .ql-toolbar.ql-snow .formaly-tex-trigger:hover,
+.rich-editor .ql-toolbar.ql-snow .formaly-tex-trigger:focus-visible {
+  background: var(--color-second);
+  color: var(--color-darks);
+}
+
 .rich-editor .ql-container.ql-snow {
   border: none;
-  background: #fff;
+  background: var(--color-base-100);
   border-radius: 0 0 0.75rem 0.75rem;
   font-family: var(--font-sans);
   font-size: 1rem;
@@ -296,11 +342,7 @@ body::-webkit-scrollbar {
   transition: background 0.15s ease, color 0.15s ease;
 }
 
-.rich-editor .ql-toolbar.ql-snow .formaly-tex-trigger:hover,
-.rich-editor .ql-toolbar.ql-snow .formaly-tex-trigger:focus-visible {
-  background: var(--color-second);
-  color: var(--color-done);
-}
+
 
 .rich-editor .ql-toolbar.ql-snow .formaly-tex-trigger svg {
   display: block;
@@ -331,8 +373,8 @@ body::-webkit-scrollbar {
 }
 
 .rich-editor .ql-editor .ql-formula:hover {
-  background: rgb(0 125 204 / 0.08);
-  box-shadow: 0 0 0 2px rgb(0 125 204 / 0.15);
+  background: color-mix(in srgb, var(--color-done) 8%, transparent);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--color-done) 15%, transparent);
 }
 
 /* ---- Preview (editor non-aktif) ---- */
@@ -348,6 +390,13 @@ body::-webkit-scrollbar {
 .rich-content {
   line-height: 1.6;
   word-break: break-word;
+  color: var(--color-base-content);
+}
+
+/* Rumus KaTeX mewarisi warna teks tema (terang/gelap) */
+.rich-content .katex,
+.rich-editor .ql-editor .katex {
+  color: inherit;
 }
 
 .rich-content p {
@@ -433,7 +482,7 @@ body::-webkit-scrollbar {
   text-decoration: line-through;
 }
 
-/* kode blok — meniru warna gelap ql-code-block-container editor */
+/* kode blok — tetap gelap di kedua tema agar konsisten dengan editor */
 .rich-content pre {
   background: #23241f;
   color: #f8f8f2;
@@ -448,7 +497,8 @@ body::-webkit-scrollbar {
 }
 
 .rich-content code {
-  background: #f0f0f0;
+  background: var(--color-second);
+  color: var(--color-base-content);
   border-radius: 3px;
   padding: 0.1em 0.35em;
   font-family: "DM Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
@@ -457,6 +507,28 @@ body::-webkit-scrollbar {
 
 .rich-content .katex {
   font-size: 1.05em;
+}
+
+/* ---- Rich text di mode gelap ---- */
+[data-theme="dark"] .rich-editor,
+.dark .rich-editor {
+  background: var(--fml-second);
+}
+
+[data-theme="dark"] .rich-editor .ql-container.ql-snow,
+.dark .rich-editor .ql-container.ql-snow {
+  background: var(--fml-second);
+}
+
+[data-theme="dark"] .rich-editor .ql-toolbar.ql-snow,
+.dark .rich-editor .ql-toolbar.ql-snow {
+  background: var(--fml-base);
+}
+
+[data-theme="dark"] .rich-content blockquote,
+.dark .rich-content blockquote {
+  border-inline-start-color: color-mix(in srgb, var(--color-done) 45%, transparent);
+  color: var(--color-tinted);
 }
 
 .rich-content iframe.ql-video {
