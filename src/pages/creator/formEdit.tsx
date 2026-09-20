@@ -514,8 +514,8 @@ function FormEdit() {
         })
     }
 
-    const inputCls = "input w-full bg-white dark:bg-second text-xl lg:text-3xl h-auto p-2 border-second focus:border-done focus:outline-none transition-colors"
-    const inputWithVal = "input w-full bg-base text-sm lg:text-xl border-second focus:border-done focus:outline-none transition-colors"
+    const inputCls = "input w-full bg-base dark:bg-base text-xl lg:text-3xl h-auto p-2 border-second dark:border-darks/20 focus:border-done focus:outline-none transition-colors"
+    const inputWithVal = "input w-full bg-base dark:bg-base text-sm lg:text-xl border-second dark:border-darks/20 focus:border-done focus:outline-none transition-colors"
 
     return (
         <>
@@ -604,7 +604,7 @@ function FormEdit() {
 
                                         <div>
                                             <label className="block text-sm font-medium text-darks mb-1.5">Status</label>
-                                            <select className="select select-bordered w-full bg-base border-second focus:border-done focus:outline-none" value={status} onChange={(e) => setStatus(e.target.value)}>
+                                            <select className="select select-bordered w-full bg-base dark:bg-base dark:border-darks/30 border-second focus:border-done focus:outline-none" value={status} onChange={(e) => setStatus(e.target.value)}>
                                                 <option value="draft">Draft</option>
                                                 <option value="published">Public</option>
                                             </select>

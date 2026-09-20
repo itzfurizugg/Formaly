@@ -87,7 +87,7 @@ function Shared() {
                                 <input
                                     type="text"
                                     readOnly
-                                    className="input w-full bg-base border-second focus:border-done focus:outline-none text-sm"
+                                    className="input w-full bg-base dark:bg-base dark:border-darks/30 border-second focus:border-done focus:outline-none text-sm"
                                     value={shareUrl}
                                     onFocus={(e) => e.currentTarget.select()}
                                 />

@@ -556,8 +556,8 @@ function RichTextEditor({ value, onChange, placeholder, className = "", compact 
                             setActive(true)
                         }
                     }}
-                    className={`rich-preview min-h-[44px] cursor-text border rounded-lg px-3 py-2 text-darks shadow-sm transition-all hover:border-done/50 ${
-                        value && sanitizeRichText(value).trim() ? "bg-white dark:bg-second border-second" : "bg-base border-second text-tinted hover:shadow-md"
+                    className={`rich-preview min-h-[44px] cursor-text border rounded-sm px-3 py-2 shadow-sm transition-all hover:border-done/50 bg-base-200 dark:bg-base border-second ${
+                        value && sanitizeRichText(value).trim() ? "text-darks" : "text-tinted"
                     }`}
                 >
                     {value && sanitizeRichText(value).trim() ? (
@@ -677,7 +677,7 @@ function LinkModal({
                     onChange={(e) => onUrlChange(e.target.value)}
                     placeholder="https://..."
                     onKeyDown={(e) => e.key === "Enter" && onConfirm()}
-                    className="input w-full rounded-xl border border-second bg-base text-darks focus:border-done focus:outline-none"
+                    className="input w-full rounded-xl border border-second bg-base dark:bg-base dark:border-darks/30 text-darks focus:border-done focus:outline-none"
                 />
 
                 {!text && (
@@ -689,7 +689,7 @@ function LinkModal({
                             onChange={(e) => onTextChange(e.target.value)}
                             placeholder="Teks yang ditampilkan"
                             onKeyDown={(e) => e.key === "Enter" && onConfirm()}
-                            className="input w-full rounded-xl border border-second bg-base text-darks focus:border-done focus:outline-none"
+                            className="input w-full rounded-xl border border-second bg-base dark:bg-base dark:border-darks/30 text-darks focus:border-done focus:outline-none"
                         />
                     </>
                 )}
@@ -810,7 +810,7 @@ function FormulaModal({
                             }}
                             rows={3}
                             placeholder={`contoh: ${LATEX_TEMPLATES[0].tex}`}
-                            className="textarea w-full rounded-xl border border-second bg-base text-darks font-mono text-sm focus:border-done focus:ring-1 focus:ring-done/40 focus:outline-none resize-y p-3 transition-all"
+                            className="textarea w-full rounded-xl border border-second bg-base dark:bg-base dark:border-darks/30 text-darks font-mono text-sm focus:border-done focus:ring-1 focus:ring-done/40 focus:outline-none resize-y p-3 transition-all"
                         />
                     </div>
 

@@ -28,8 +28,8 @@ function ImageUrlInput({ value, onChange, label = "URL Gambar", placeholder = "h
                     inputMode="url"
                     autoComplete="off"
                     spellCheck={false}
-                    className={`input w-full bg-base border pr-9 focus:outline-none transition-colors ${
-                        url && !validFormat ? "border-wrong focus:border-wrong" : "border-second focus:border-done"
+                    className={`input w-full bg-base dark:bg-base border pr-9 focus:outline-none transition-colors ${
+                        url && !validFormat ? "border-wrong focus:border-wrong" : "border-second dark:border-darks/30 focus:border-done"
                     }`}
                     value={value}
                     onChange={(e) => {

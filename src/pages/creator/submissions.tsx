@@ -844,7 +844,7 @@ function Submissions() {
                                             value={searchQuery}
                                             onChange={(e) => setSearchQuery(e.target.value)}
                                             placeholder="Mulai Mencari"
-                                            className="input input-sm w-full pl-4 bg-white dark:bg-second border-second rounded-lg text-sm h-10 focus:outline-none focus:border-darks/40 transition-colors"
+                                            className="input input-sm w-full pl-4 bg-white dark:bg-base dark:border-darks/30 border-second rounded-lg text-sm h-10 focus:outline-none focus:border-done transition-colors"
                                         />
                                     </div>
                                     {/* 
@@ -907,7 +907,7 @@ function Submissions() {
                                                             <select
                                                                 value={statusFilter}
                                                                 onChange={(e) => setStatusFilter(e.target.value)}
-                                                                className="select select-sm w-full bg-base border-second rounded-lg text-xs focus:outline-none focus:border-darks/40 transition-colors"
+                                                                className="select select-sm w-full bg-base dark:bg-base dark:border-darks/30 border-second rounded-lg text-xs focus:outline-none focus:border-done transition-colors"
                                                             >
                                                                 <option value="all">Semua Status</option>
                                                                 <option value="SUBMITTED">Selesai</option>
@@ -921,7 +921,7 @@ function Submissions() {
                                                             <select
                                                                 value={resultFilter}
                                                                 onChange={(e) => setResultFilter(e.target.value)}
-                                                                className="select select-sm w-full bg-base border-second rounded-lg text-xs focus:outline-none focus:border-darks/40 transition-colors"
+                                                                className="select select-sm w-full bg-base dark:bg-base dark:border-darks/30 border-second rounded-lg text-xs focus:outline-none focus:border-done transition-colors"
                                                             >
                                                                 <option value="all">Semua Hasil</option>
                                                                 <option value="passed">Lolos (nilai ≥ {passingScore})</option>
@@ -938,7 +938,7 @@ function Submissions() {
                                                                     setSelectedQuestionId(e.target.value)
                                                                     setSelectedOptionId("")
                                                                 }}
-                                                                className="select select-sm w-full bg-base border-second rounded-lg text-xs focus:outline-none focus:border-darks/40 transition-colors"
+                                                                className="select select-sm w-full bg-base dark:bg-base dark:border-darks/30 border-second rounded-lg text-xs focus:outline-none focus:border-done transition-colors"
                                                             >
                                                                 <option value="">-- Pilih pertanyaan --</option>
                                                                 {questions

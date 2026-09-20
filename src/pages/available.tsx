@@ -92,7 +92,7 @@ function Available() {
                         <input
                             type="text"
                             placeholder="Cari formulir..."
-                            className="input w-full pl-10 bg-base border-second focus:border-done focus:outline-none transition-colors"
+                            className="input w-full pl-10 bg-base dark:bg-base dark:border-darks/30 border-second focus:border-done focus:outline-none transition-colors"
                             value={search}
                             onChange={(e) => setSearch(e.target.value)}
                         />

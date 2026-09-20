@@ -978,7 +978,7 @@ function Questions({ embedded = false }: { embedded?: boolean }) {
                     <div className="mb-5">
                         <label className="block text-sm font-medium text-darks mb-1.5 ml-1">Masukkan ke Section</label>
                         <select
-                            className="select w-full bg-white dark:bg-second border-second focus:border-done focus:outline-none rounded-xl"
+                            className="select w-full bg-white dark:bg-base dark:border-darks/30 border-second focus:border-done focus:outline-none rounded-xl"
                             value={targetPageId ?? activeSectionId ?? realPages[0].id}
                             onChange={(e) => setTargetPageId(e.target.value)}
                         >
@@ -1013,7 +1013,7 @@ function Questions({ embedded = false }: { embedded?: boolean }) {
                             <div className="sm:col-span-2">
                                 <label className="block text-sm font-medium text-darks mb-1.5 ml-1">Tipe</label>
                                 <select
-                                    className="select w-full bg-white dark:bg-second border-second focus:border-done focus:outline-none rounded-xl"
+                                    className="select w-full bg-white dark:bg-base dark:border-darks/30 border-second focus:border-done focus:outline-none rounded-xl"
                                     value={questionType}
                                     onChange={(e) => handleTypeChange(e.target.value)}
                                 >
@@ -1032,7 +1032,7 @@ function Questions({ embedded = false }: { embedded?: boolean }) {
                                     min={0}
                                     max={100}
                                     step={1}
-                                    className="input w-full bg-white dark:bg-second border-second focus:border-done focus:outline-none"
+                                    className="input w-full bg-white dark:bg-base dark:border-darks/30 border-second focus:border-done focus:outline-none"
                                     value={scoreValue}
                                     onChange={(e) => setScoreValue(Number(e.target.value))}
                                     placeholder="0"
@@ -1043,7 +1043,7 @@ function Questions({ embedded = false }: { embedded?: boolean }) {
                                 <input
                                     type="number"
                                     min={0}
-                                    className="input w-full bg-white dark:bg-second border-second focus:border-done focus:outline-none"
+                                    className="input w-full bg-white dark:bg-base dark:border-darks/30 border-second focus:border-done focus:outline-none"
                                     value={orderIndex}
                                     onChange={(e) => setOrderIndex(Number(e.target.value))}
                                 />
@@ -1068,7 +1068,7 @@ function Questions({ embedded = false }: { embedded?: boolean }) {
                         <div>
                             <label className="block text-sm font-medium text-darks mb-1.5 ml-1">Jenis Jawaban</label>
                             <select
-                                className="select w-full bg-base border-second focus:border-done focus:outline-none rounded-xl"
+                                className="select w-full bg-base dark:bg-base dark:border-darks/30 border-second focus:border-done focus:outline-none rounded-xl"
                                 value={dateTimeVariant}
                                 onChange={(e) => setDateTimeVariant(e.target.value as DateTimeVariant)}
                             >
@@ -1329,7 +1329,7 @@ function Questions({ embedded = false }: { embedded?: boolean }) {
                                 onChange={(e) => {
                                     if (e.target.value) handleMoveQuestion(q, opts.pageId!, e.target.value)
                                 }}
-                                className="select select-xs select-bordered bg-white dark:bg-second border-second text-tinted h-8 min-h-0 max-w-[8.5rem] w-full"
+                                className="select select-xs select-bordered bg-white dark:bg-base dark:border-darks/30 border-second text-tinted h-8 min-h-0 max-w-[8.5rem] w-full"
                                 title="Pindah ke section lain"
                             >
                                 <option value="">Pindah ke...</option>
@@ -1699,7 +1699,7 @@ function Questions({ embedded = false }: { embedded?: boolean }) {
                                                 <div className="min-w-0 flex-1">
                                                     <p className="text-sm font-medium text-darks">Pindahkan soal ke section lain</p>
                                                     <select
-                                                        className="select select-sm select-bordered w-full mt-1.5 bg-white dark:bg-second border-second"
+                                                        className="select select-sm select-bordered w-full mt-1.5 bg-white dark:bg-base dark:border-darks/30 border-second"
                                                         value={deleteSectionChoice.moveToId ?? ""}
                                                         disabled={deleteSectionChoice.mode !== "move"}
                                                         onChange={(e) => setDeleteSectionChoice((prev) => prev ? { ...prev, moveToId: e.target.value || null } : prev)}

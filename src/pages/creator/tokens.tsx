@@ -243,7 +243,7 @@ function Tokens() {
                                             <div className="flex gap-2">
                                                 <input
                                                     type="text"
-                                                    className="input flex-1 bg-base border-second focus:border-done focus:outline-none uppercase font-mono font-bold"
+                                                    className="input flex-1 bg-base dark:bg-base dark:border-darks/30 border-second focus:border-done focus:outline-none uppercase font-mono font-bold"
                                                     value={tokenCode}
                                                     onChange={(e) => setTokenCode(e.target.value.toUpperCase())}
                                                     placeholder="8 karakter"
@@ -265,7 +265,7 @@ function Tokens() {
                                                 <input
                                                     type="number"
                                                     min={1}
-                                                    className="input w-full bg-base border-second focus:border-done focus:outline-none text-xs"
+                                                    className="input w-full bg-base dark:bg-base dark:border-darks/30 border-second focus:border-done focus:outline-none text-xs"
                                                     value={maxUsage}
                                                     onChange={(e) => setMaxUsage(Number(e.target.value))}
                                                     />
@@ -274,7 +274,7 @@ function Tokens() {
                                                 <label className="block text-xs font-medium text-darks mb-1.5">Kedaluwarsa (opsional)</label>
                                                 <input
                                                     type="datetime-local"
-                                                    className="input w-full bg-base border-second focus:border-done focus:outline-none text-xs"
+                                                    className="input w-full bg-base dark:bg-base dark:border-darks/30 border-second focus:border-done focus:outline-none text-xs"
                                                     value={expiresAt}
                                                     onChange={(e) => setExpiresAt(e.target.value)}
                                                 />

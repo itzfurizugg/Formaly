@@ -139,7 +139,7 @@ export default function TagInput({ formId, onChange }: TagInputProps) {
             <div className="flex gap-2">
                 <input
                     type="text"
-                    className="input flex-1 bg-base border-second focus:border-done focus:outline-none transition-colors"
+                    className="input flex-1 bg-base dark:bg-base dark:border-darks/30 border-second focus:border-done focus:outline-none transition-colors"
                     placeholder="Form akan bisa ditemukan di beranda dengan memasukkan tag ini."
                     value={tagInput}
                     onChange={(e) => setTagInput(e.target.value)}

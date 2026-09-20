@@ -59,8 +59,8 @@ function FormNew() {
         navigate(`/creator/forms/${data.id}`)
     }
 
-    const inputCls = "input w-full rounded-xl bg-base-200 text-lg lg:text-2xl h-auto p-2 pl-4 border-second focus:border-done focus:outline-none transition-colors scroll-mt-52 sm:scroll-mt-44"
-    const titleForm = "input w-full rounded-xl bg-base-200 text-xl sm:text-3xl h-15 sm:h-20 p-2.5 sm:pl-4 lg:p-6 border-second focus:border-done focus:outline-none transition-colors scroll-mt-52 sm:scroll-mt-44"
+    const inputCls = "input w-full rounded-xl bg-base-200 dark:bg-base text-lg lg:text-2xl h-auto p-2 pl-4 border-second dark:border-darks/30 focus:border-done focus:outline-none transition-colors scroll-mt-52 sm:scroll-mt-44"
+    const titleForm = "input w-full rounded-xl bg-base-200 dark:bg-base text-xl sm:text-3xl h-15 sm:h-20 p-2.5 sm:pl-4 lg:p-6 border-second dark:border-darks/30 focus:border-done focus:outline-none transition-colors scroll-mt-52 sm:scroll-mt-44"
 
     return (
         <motion.div

@@ -74,7 +74,7 @@ function FormList() {
 
     return (
         <div className="flex flex-col items-center px-3.5 py-6 pb-28 min-h-screen bg-base-300 lg:justify-center lg:pb-6">
-            <div className="w-full max-w-2xl lg:bg-base-200 lg:rounded-md lg:p-6 lg:shadow-sm">
+            <div className="w-full max-w-2xl lg:bg-base-200 lg:dark:bg-second lg:rounded-xl lg:p-6 lg:shadow-sm">
                 <div className="mb-5 lg:p-0 lg:mt-0">
                     <h1 className="text-2xl lg:text-4xl font-bold text-darks">{isStandard ? "Daftar Bagian" : "Daftar Soal"}</h1>
                     <p className="hidden sm:block text-xs lg:text-sm text-tinted mt-1">

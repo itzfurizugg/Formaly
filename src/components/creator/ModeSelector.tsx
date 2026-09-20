@@ -45,9 +45,9 @@ function ModeSelector({ value, onChange, disabled = false }: ModeSelectorProps) 
                         role="radio"
                         aria-checked={selected}
                         onClick={() => onChange(opt.key)}
-                        className={`relative text-left rounded-xl p-4 transition-all duration-200 focus:outline-none ring-offset-2 ring-offset-base ${
+                        className={`relative text-left active:scale-[0.98] rounded-xl p-4 transition-all duration-200 focus:outline-none ring-offset-2 ring-offset-base ${
                             selected
-                                ? "border-2 border-done bg-done/5"
+                                ? "border-2 border-done bg-done/10 dark:bg-done/10"
                                 : "border-2 border-second bg-white dark:bg-second hover:shadow-sm"
                         } ${disabled ? "opacity-100 cursor-default" : "cursor-pointer"}`}
                     >
@@ -56,8 +56,8 @@ function ModeSelector({ value, onChange, disabled = false }: ModeSelectorProps) 
                                 <p className={`text-sm font-semibold ${selected ? "text-done" : "text-darks"}`}>
                                     {opt.title}
                                 </p>
-                                <p className="text-xs text-tinted mt-1 leading-relaxed">{opt.description}</p>
-                                <span className="inline-flex mt-2.5 items-center gap-1.5 rounded-full bg-base border border-second px-2.5 py-0.5 text-[11px] text-tinted">
+                                <p className="text-xs text-darks/80 mt-1 leading-relaxed">{opt.description}</p>
+                                <span className="inline-flex mt-2.5 items-center gap-1.5 rounded-full bg-base border border-second px-2.5 py-0.5 text-[11px] text-darks/80">
                                     {opt.badge}
                                 </span>
                             </div>

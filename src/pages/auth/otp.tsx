@@ -202,7 +202,7 @@ function Otp() {
                                     type="email"
                                     required
                                     placeholder="nama@email.com"
-                                    className="input w-full bg-second border-darks/10 focus:border-done focus:outline-none transition-colors text-sm"
+                                    className="input w-full bg-second border-darks/10 dark:bg-base dark:border-darks/30 focus:border-done focus:outline-none transition-colors text-sm"
                                     value={email}
                                     onChange={(e) => setEmail(e.target.value)}
                                 />
@@ -253,7 +253,7 @@ function Otp() {
                                         inputMode="numeric"
                                         maxLength={1}
                                         required
-                                        className="input flex-1 min-w-0 h-12 w-full text-center text-lg font-semibold bg-second border-darks/10 focus:border-done focus:outline-none transition-colors"
+                                        className="input flex-1 min-w-0 h-12 w-full text-center text-lg font-semibold bg-second border-darks/10 dark:bg-base dark:border-darks/30 focus:border-done focus:outline-none transition-colors"
                                         value={digit}
                                         onChange={(e) => handleChange(i, e.target.value)}
                                         onKeyDown={(e) => handleKeyDown(i, e)}

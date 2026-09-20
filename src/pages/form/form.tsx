@@ -638,14 +638,14 @@ function FormPage() {
                         onChange={(e) => setAnswers((prev) => ({ ...prev, [q.id]: e.target.value }))}
                         rows={5}
                         placeholder="Tulis jawabanmu di sini..."
-                        className="textarea w-full bg-white dark:bg-base-300 border-second focus:border-done focus:outline-none transition-colors text-sm resize-y"
+                        className="textarea w-full bg-white dark:bg-base dark:border-darks/30 border-second focus:border-done focus:outline-none transition-colors text-sm resize-y"
                     />
                 ) : q.question_type === "dropdown" ? (
                     <div>
                         <select
                             value={Array.isArray(answers[q.id]) ? "" : (answers[q.id] as string) || ""}
                             onChange={(e) => setAnswers((prev) => ({ ...prev, [q.id]: e.target.value }))}
-                            className="select w-full bg-white dark:bg-base-300 border-second focus:border-done focus:outline-none rounded-lg text-sm"
+                            className="select w-full bg-white dark:bg-base dark:border-darks/30 border-second focus:border-done focus:outline-none rounded-lg text-sm"
                         >
                             <option value="">-- Pilih salah satu --</option>
                             {q.question_options?.map((option) => (

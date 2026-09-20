@@ -178,7 +178,7 @@ function FormDescriptionPage() {
     return (
         <>
             {!loading && form && (
-                <motion.div variants={fadeSlide} initial="hidden" animate="show" className="flex flex-col items-center min-h-screen sm:min-h-[80vh] sm:justify-center pt-6 pb-28 sm:px-4 sm:py-10 bg-base-300 sm:bg-transparent">
+                <motion.div variants={fadeSlide} initial="hidden" animate="show" className="flex flex-col items-center min-h-screen sm:min-h-[80vh] sm:justify-center pt-6 pb-28 sm:px-4 sm:py-10 bg-base-300 dark:bg-second lg:dark:bg-base sm:bg-transparent">
                     {locationState?.form && (
                         <BackButton to="/" className="ml-3.5 sm:ml-0" />
                     )}
@@ -189,7 +189,7 @@ function FormDescriptionPage() {
                         </div>
                     </div>
 
-                    <div className="w-full sm:max-w-3xl bg-base-300 md:bg-white sm:border sm:border-second p-4 pt-0 sm:p-8 sm:shadow-sm sm:rounded-lg relative mt-3 sm:mt-4">
+                    <div className="w-full sm:max-w-3xl bg-base-300 md:bg-white dark:bg-second sm:border sm:border-second p-4 pt-0 sm:p-8 sm:shadow-sm sm:rounded-lg relative mt-3 sm:mt-4">
                         <div className="border-b border-second pb-3 sm:pb-4">
                             <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold text-darks leading-snug sm:leading-tight">
                                 {form.title}

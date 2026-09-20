@@ -379,7 +379,7 @@ function Profile() {
                                 required
                                 value={name}
                                 onChange={(e) => setName(e.target.value)}
-                                className="input w-full pl-3 bg-base border border-second focus:border-done focus:outline-none transition-colors"
+                                className="input w-full pl-3 bg-base dark:bg-base dark:border-darks/30 border border-second focus:border-done focus:outline-none transition-colors"
                                 placeholder="Nama kamu"
                             />
                         </div>
@@ -396,7 +396,7 @@ function Profile() {
                                 required
                                 value={email}
                                 onChange={(e) => setEmail(e.target.value)}
-                                className="input w-full pl-3 bg-base border border-second focus:border-done focus:outline-none transition-colors"
+                                className="input w-full pl-3 bg-base dark:bg-base dark:border-darks/30 border border-second focus:border-done focus:outline-none transition-colors"
                                 placeholder="nama@email.com"
                             />
                         </div>
@@ -438,7 +438,7 @@ function Profile() {
                                 required
                                 value={newPassword}
                                 onChange={(e) => setNewPassword(e.target.value)}
-                                className="input w-full pl-3 pr-3 bg-base border border-second focus:border-done focus:outline-none transition-colors"
+                                className="input w-full pl-3 pr-3 bg-base dark:bg-base dark:border-darks/30 border border-second focus:border-done focus:outline-none transition-colors"
                                 placeholder="Minimal 6 karakter"
                             />
                             <button
@@ -463,7 +463,7 @@ function Profile() {
                                 required
                                 value={confirmPassword}
                                 onChange={(e) => setConfirmPassword(e.target.value)}
-                                className="input w-full pl-3 bg-base border border-second focus:border-done focus:outline-none transition-colors"
+                                className="input w-full pl-3 bg-base dark:bg-base dark:border-darks/30 border border-second focus:border-done focus:outline-none transition-colors"
                                 placeholder="Ulangi kata sandi baru"
                             />
                         </div>

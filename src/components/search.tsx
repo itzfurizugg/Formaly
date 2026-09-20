@@ -59,9 +59,9 @@ function Search({ onSearch, loading = false, autoFocus = false }: SearchProps) {
     return (
         <div className="w-full">
             <div
-                className={`flex items-center w-full rounded-full border bg-white dark:bg-second transition-all duration-200 ${focused
+                className={`flex items-center w-full rounded-full border bg-white dark:bg-base dark:border-darks/30 transition-all duration-200 ${focused
                         ? "shadow-lg shadow-darks/10"
-                        : "border-second dark:border-darks/15 shadow-md shadow-darks/5 hover:border-tinted/50"
+                        : "border-second shadow-md shadow-darks/5 hover:border-tinted/50"
                     }`}
             >
                 <div className="flex-1 relative flex items-center min-w-0">

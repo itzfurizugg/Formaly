@@ -122,7 +122,7 @@ function TokenInputModal({ open, onClose, formId, onStarted }: TokenInputModalPr
                                             autoFocus
                                             value={code}
                                             onChange={(e) => setCode(e.target.value.toUpperCase())}
-                                            className="input w-full pl-3 pr-3 bg-base border border-second focus:border-done focus:outline-none transition-colors tracking-widest uppercase"
+                                            className="input w-full pl-3 pr-3 bg-base dark:bg-base dark:border-darks/30 border border-second focus:border-done focus:outline-none transition-colors tracking-widest uppercase"
                                             placeholder="Masukkan token"
                                             autoComplete="off"
                                         />

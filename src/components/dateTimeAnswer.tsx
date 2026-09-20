@@ -33,7 +33,7 @@ export default function DateTimeAnswer({ variant, value, onChange }: DateTimeAns
                     type="date"
                     value={date}
                     onChange={(e) => emit(e.target.value, time)}
-                    className="input bg-white dark:bg-second border-second focus:border-done focus:outline-none rounded-lg text-sm"
+                    className="input bg-white dark:bg-base dark:border-darks/30 border-second focus:border-done focus:outline-none rounded-lg text-sm"
                 />
             )}
             {(variant === "time_only" || variant === "date_and_time") && (
@@ -41,7 +41,7 @@ export default function DateTimeAnswer({ variant, value, onChange }: DateTimeAns
                     type="time"
                     value={time}
                     onChange={(e) => emit(date, e.target.value)}
-                    className="input bg-white dark:bg-second border-second focus:border-done focus:outline-none rounded-lg text-sm"
+                    className="input bg-white dark:bg-base dark:border-darks/30 border-second focus:border-done focus:outline-none rounded-lg text-sm"
                 />
             )}
         </div>
