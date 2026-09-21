@@ -8,6 +8,7 @@ import { safeNext } from "../../lib/redirect"
 import PasswordInput from "../../components/passwordInput"
 import { alertPop, fadeSlide } from "../../lib/motion"
 import { Spinner } from "../../components/loading"
+import ash from "../../assets/ash.png"
 
 function Register() {
     const navigate = useNavigate()
@@ -72,14 +73,14 @@ function Register() {
                     </div>
                 </div>
 
-                {/* <img
+                <img
                     src={ash}
                     alt="Ilustrasi"
                     className="pointer-events-none absolute right-0 bottom-0 z-0 w-1/2 lg:w-3/5 xl:w-3/4 max-w-none object-contain object-right-bottom"
-                /> */}
+                />
             </div>
 
-            <div className="lg:hidden w-full rounded-none bg-darks px-5 sm:px-10 py-8 flex flex-col justify-center text-white dark:text-second">
+            <div className="lg:hidden w-full flex-1 rounded-none bg-darks px-5 sm:px-10 py-8 flex flex-col justify-end text-white dark:text-second">
                 <img src={logo} alt="Formaly" className="h-6 w-auto brightness-0 invert mb-6 self-start" />
                 <h1 className="text-xl font-bold leading-tight">
                     Buat lebih mudah.
@@ -89,9 +90,11 @@ function Register() {
                     Kelola formulir dan data dengan cepat, mudah, dan efisien.
                     Platform all-in-one untuk kebutuhan form kamu.
                 </p>
+
+                {/* <img src={char} className="" /> */}
             </div>
 
-            <div className="flex-1 flex flex-col items-center justify-end lg:justify-center px-4 py-6 sm:px-6 lg:px-0 lg:py-0 lg:min-h-screen lg:flex-row">
+            <div className="flex flex-col items-center justify-start px-4 py-6 sm:px-6 lg:px-0 lg:py-0 lg:min-h-screen lg:flex-1 lg:justify-center lg:flex-row">
                 <div className="w-full max-w-xl lg:px-3.5">
                     <motion.div
                         variants={fadeSlide}

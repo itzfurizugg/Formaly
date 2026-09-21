@@ -1380,7 +1380,7 @@ function Questions({ embedded = false }: { embedded?: boolean }) {
                     }}
                 >
                     <div className="flex gap-2.5 items-center min-w-0">
-                        {!isOrphanPage && (
+                        {/* {!isOrphanPage && (
                             <button
                                 draggable
                                 onDragStart={(e) => handleSectionDragStart(e, page.id)}
@@ -1391,11 +1391,7 @@ function Questions({ embedded = false }: { embedded?: boolean }) {
                             >
                                 <GripVertical className="h-3.5 w-3.5" />
                             </button>
-                        )}
-                        <span className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-xs font-bold tabular-nums mt-0.5 transition-colors ${isActive ? "bg-done text-base" : "bg-base-200 text-tinted"
-                            }`}>
-                            {sectionIdx + 1}
-                        </span>
+                        )} */}
                         <div className="min-w-0">
                             {isOrphanPage ? (
                                 <p className="text-sm font-semibold text-darks">
@@ -1418,7 +1414,7 @@ function Questions({ embedded = false }: { embedded?: boolean }) {
                                     title="Klik untuk ganti nama section"
                                 />
                             )}
-                            <p className="text-xs text-tinted mt-0.5">
+                            <p className="text-xs text-tinted ml-1.5">
                                 {page.questions.length} soal
                             </p>
                         </div>
