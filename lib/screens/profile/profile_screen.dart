@@ -17,6 +17,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   bool _isLoading = true;
   bool _isLoggingOut = false;
+  bool _isUpdatingAccount = false;
   String? _errorMessage;
 
   String _name = '';
@@ -114,6 +115,567 @@ class _ProfileScreenState extends State<ProfileScreen> {
     }
   }
 
+  // Mengubah username user.
+  Future<void> _editUsername() async {
+    if (_isUpdatingAccount) return;
+
+    final TextEditingController controller =
+        TextEditingController(
+      text: _name,
+    );
+
+    final String? result = await showDialog<String>(
+      context: context,
+      builder: (dialogContext) {
+        final colors =
+            Theme.of(dialogContext).colorScheme;
+
+        return AlertDialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20),
+          ),
+          title: Text(
+            'Ubah Username',
+            style: GoogleFonts.poppins(
+              fontWeight: FontWeight.bold,
+              color: colors.onSurface,
+            ),
+          ),
+          content: TextField(
+            controller: controller,
+            autofocus: true,
+            textCapitalization:
+                TextCapitalization.words,
+            decoration: InputDecoration(
+              labelText: 'Username',
+              hintText: 'Masukkan username',
+              border: OutlineInputBorder(
+                borderRadius:
+                    BorderRadius.circular(12),
+              ),
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.pop(dialogContext);
+              },
+              child: Text(
+                'Batal',
+                style: GoogleFonts.poppins(
+                  color: colors.primary,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                Navigator.pop(
+                  dialogContext,
+                  controller.text.trim(),
+                );
+              },
+              child: Text(
+                'Simpan',
+                style: GoogleFonts.poppins(
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
+          ],
+        );
+      },
+    );
+
+    controller.dispose();
+
+    if (result == null || !mounted) {
+      return;
+    }
+
+    final String newName = result.trim();
+
+    if (newName.isEmpty) {
+      _showMessage(
+        'Username wajib diisi.',
+        isError: true,
+      );
+      return;
+    }
+
+    if (newName.length < 2) {
+      _showMessage(
+        'Username minimal 2 karakter.',
+        isError: true,
+      );
+      return;
+    }
+
+    final user = _supabase.auth.currentUser;
+
+    if (user == null) {
+      _showMessage(
+        'User belum login.',
+        isError: true,
+      );
+      return;
+    }
+
+    if (newName == _name.trim()) {
+      _showMessage(
+        'Username masih sama.',
+      );
+      return;
+    }
+
+    setState(() {
+      _isUpdatingAccount = true;
+    });
+
+    try {
+      // Update nama di tabel users.
+      await _supabase
+          .from('users')
+          .update({
+        'name': newName,
+      })
+          .eq(
+        'id',
+        user.id,
+      );
+
+      // Update nama di tabel profiles.
+      await _supabase
+          .from('profiles')
+          .update({
+        'name': newName,
+      })
+          .eq(
+        'id',
+        user.id,
+      );
+
+      // Update metadata user di Supabase Auth.
+      await _supabase.auth.updateUser(
+        UserAttributes(
+          data: {
+            'name': newName,
+          },
+        ),
+      );
+
+      if (!mounted) return;
+
+      setState(() {
+        _name = newName;
+      });
+
+      _showMessage(
+        'Username berhasil diperbarui.',
+      );
+    } on AuthException catch (e) {
+      if (!mounted) return;
+
+      _showMessage(
+        _cleanError(e),
+        isError: true,
+      );
+    } on PostgrestException catch (e) {
+      if (!mounted) return;
+
+      _showMessage(
+        'Gagal memperbarui username: ${e.message}',
+        isError: true,
+      );
+    } catch (e) {
+      if (!mounted) return;
+
+      _showMessage(
+        'Gagal memperbarui username: ${_cleanError(e)}',
+        isError: true,
+      );
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isUpdatingAccount = false;
+        });
+      }
+    }
+  }
+
+  // Mengubah email user.
+  Future<void> _editEmail() async {
+    if (_isUpdatingAccount) return;
+
+    final TextEditingController controller =
+        TextEditingController(
+      text: _email == '-' ? '' : _email,
+    );
+
+    final String? result = await showDialog<String>(
+      context: context,
+      builder: (dialogContext) {
+        final colors =
+            Theme.of(dialogContext).colorScheme;
+
+        return AlertDialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20),
+          ),
+          title: Text(
+            'Ubah Email',
+            style: GoogleFonts.poppins(
+              fontWeight: FontWeight.bold,
+              color: colors.onSurface,
+            ),
+          ),
+          content: TextField(
+            controller: controller,
+            autofocus: true,
+            keyboardType:
+                TextInputType.emailAddress,
+            autocorrect: false,
+            enableSuggestions: false,
+            textCapitalization:
+                TextCapitalization.none,
+            decoration: InputDecoration(
+              labelText: 'Email',
+              hintText: 'nama@email.com',
+              border: OutlineInputBorder(
+                borderRadius:
+                    BorderRadius.circular(12),
+              ),
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.pop(dialogContext);
+              },
+              child: Text(
+                'Batal',
+                style: GoogleFonts.poppins(
+                  color: colors.primary,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                Navigator.pop(
+                  dialogContext,
+                  controller.text.trim().toLowerCase(),
+                );
+              },
+              child: Text(
+                'Simpan',
+                style: GoogleFonts.poppins(
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
+          ],
+        );
+      },
+    );
+
+    controller.dispose();
+
+    if (result == null || !mounted) {
+      return;
+    }
+
+    final String newEmail =
+        result.trim().toLowerCase();
+
+    if (newEmail.isEmpty) {
+      _showMessage(
+        'Email wajib diisi.',
+        isError: true,
+      );
+      return;
+    }
+
+    final RegExp emailRegex = RegExp(
+      r'^[^@\s]+@[^@\s]+\.[^@\s]+$',
+    );
+
+    if (!emailRegex.hasMatch(newEmail)) {
+      _showMessage(
+        'Masukkan alamat email yang valid.',
+        isError: true,
+      );
+      return;
+    }
+
+    final user = _supabase.auth.currentUser;
+
+    if (user == null) {
+      _showMessage(
+        'User belum login.',
+        isError: true,
+      );
+      return;
+    }
+
+    if (newEmail ==
+        _email.trim().toLowerCase()) {
+      _showMessage(
+        'Email masih sama.',
+      );
+      return;
+    }
+
+    setState(() {
+      _isUpdatingAccount = true;
+    });
+
+    try {
+      // Update email pada Supabase Auth.
+      await _supabase.auth.updateUser(
+        UserAttributes(
+          email: newEmail,
+        ),
+      );
+
+      // Menyamakan email pada tabel users.
+      await _supabase
+          .from('users')
+          .update({
+        'email': newEmail,
+      })
+          .eq(
+        'id',
+        user.id,
+      );
+
+      if (!mounted) return;
+
+      setState(() {
+        _email = newEmail;
+      });
+
+      _showMessage(
+        'Email berhasil diperbarui.',
+      );
+    } on AuthException catch (e) {
+      if (!mounted) return;
+
+      _showMessage(
+        _cleanError(e),
+        isError: true,
+      );
+    } on PostgrestException catch (e) {
+      if (!mounted) return;
+
+      _showMessage(
+        'Gagal memperbarui email pada data profil: ${e.message}',
+        isError: true,
+      );
+    } catch (e) {
+      if (!mounted) return;
+
+      _showMessage(
+        'Gagal memperbarui email: ${_cleanError(e)}',
+        isError: true,
+      );
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isUpdatingAccount = false;
+        });
+      }
+    }
+  }
+
+  // Mengubah password user.
+  Future<void> _editPassword() async {
+    if (_isUpdatingAccount) return;
+
+    final TextEditingController passwordController =
+        TextEditingController();
+
+    final TextEditingController confirmController =
+        TextEditingController();
+
+    final List<String>? result =
+        await showDialog<List<String>>(
+      context: context,
+      builder: (dialogContext) {
+        final colors =
+            Theme.of(dialogContext).colorScheme;
+
+        return AlertDialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20),
+          ),
+          title: Text(
+            'Ubah Password',
+            style: GoogleFonts.poppins(
+              fontWeight: FontWeight.bold,
+              color: colors.onSurface,
+            ),
+          ),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextField(
+                controller: passwordController,
+                autofocus: true,
+                obscureText: true,
+                decoration: InputDecoration(
+                  labelText: 'Password Baru',
+                  hintText:
+                      'Masukkan password baru',
+                  border: OutlineInputBorder(
+                    borderRadius:
+                        BorderRadius.circular(12),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 14),
+              TextField(
+                controller: confirmController,
+                obscureText: true,
+                decoration: InputDecoration(
+                  labelText:
+                      'Konfirmasi Password',
+                  hintText:
+                      'Ulangi password baru',
+                  border: OutlineInputBorder(
+                    borderRadius:
+                        BorderRadius.circular(12),
+                  ),
+                ),
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.pop(dialogContext);
+              },
+              child: Text(
+                'Batal',
+                style: GoogleFonts.poppins(
+                  color: colors.primary,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                Navigator.pop(
+                  dialogContext,
+                  [
+                    passwordController.text,
+                    confirmController.text,
+                  ],
+                );
+              },
+              child: Text(
+                'Simpan',
+                style: GoogleFonts.poppins(
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
+          ],
+        );
+      },
+    );
+
+    passwordController.dispose();
+    confirmController.dispose();
+
+    if (result == null || !mounted) {
+      return;
+    }
+
+    final String newPassword = result[0];
+    final String confirmPassword = result[1];
+
+    if (newPassword.isEmpty) {
+      _showMessage(
+        'Password baru wajib diisi.',
+        isError: true,
+      );
+      return;
+    }
+
+    if (newPassword.length < 6) {
+      _showMessage(
+        'Password minimal 6 karakter.',
+        isError: true,
+      );
+      return;
+    }
+
+    if (confirmPassword.isEmpty) {
+      _showMessage(
+        'Konfirmasi password wajib diisi.',
+        isError: true,
+      );
+      return;
+    }
+
+    if (newPassword != confirmPassword) {
+      _showMessage(
+        'Konfirmasi password tidak sama.',
+        isError: true,
+      );
+      return;
+    }
+
+    final user = _supabase.auth.currentUser;
+
+    if (user == null) {
+      _showMessage(
+        'User belum login.',
+        isError: true,
+      );
+      return;
+    }
+
+    setState(() {
+      _isUpdatingAccount = true;
+    });
+
+    try {
+      await _supabase.auth.updateUser(
+        UserAttributes(
+          password: newPassword,
+        ),
+      );
+
+      if (!mounted) return;
+
+      _showMessage(
+        'Password berhasil diperbarui.',
+      );
+    } on AuthException catch (e) {
+      if (!mounted) return;
+
+      _showMessage(
+        _cleanError(e),
+        isError: true,
+      );
+    } catch (e) {
+      if (!mounted) return;
+
+      _showMessage(
+        'Gagal memperbarui password: ${_cleanError(e)}',
+        isError: true,
+      );
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isUpdatingAccount = false;
+        });
+      }
+    }
+  }
+
   // Logout dari akun setelah konfirmasi.
   Future<void> _logout() async {
     if (_isLoggingOut) return;
@@ -121,7 +683,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
     final bool? shouldLogout = await showDialog<bool>(
       context: context,
       builder: (dialogContext) {
-        final colors = Theme.of(dialogContext).colorScheme;
+        final colors =
+            Theme.of(dialogContext).colorScheme;
 
         return AlertDialog(
           shape: RoundedRectangleBorder(
@@ -161,7 +724,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 foregroundColor: colors.onError,
                 elevation: 0,
                 shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius:
+                      BorderRadius.circular(12),
                 ),
               ),
               child: Text(
@@ -291,11 +855,15 @@ class _ProfileScreenState extends State<ProfileScreen> {
       final word = words.first;
 
       return word
-          .substring(0, word.length >= 2 ? 2 : 1)
+          .substring(
+            0,
+            word.length >= 2 ? 2 : 1,
+          )
           .toUpperCase();
     }
 
-    return '${words.first[0]}${words.last[0]}'.toUpperCase();
+    return '${words.first[0]}${words.last[0]}'
+        .toUpperCase();
   }
 
   bool get _isCreator =>
@@ -323,7 +891,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
           ),
           behavior: SnackBarBehavior.floating,
           backgroundColor:
-              isError ? colors.error : colors.inverseSurface,
+              isError
+                  ? colors.error
+                  : colors.inverseSurface,
         ),
       );
   }
@@ -332,7 +902,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
   Widget build(BuildContext context) {
     return SafeArea(
       child: RefreshIndicator(
-        color: Theme.of(context).colorScheme.primary,
+        color:
+            Theme.of(context).colorScheme.primary,
         onRefresh: _loadProfile,
         child: _isLoading
             ? _buildLoading()
@@ -348,7 +919,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
     final colors = Theme.of(context).colorScheme;
 
     return ListView(
-      physics: const AlwaysScrollableScrollPhysics(),
+      physics:
+          const AlwaysScrollableScrollPhysics(),
       children: [
         const SizedBox(height: 240),
         Center(
@@ -365,7 +937,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
     final colors = Theme.of(context).colorScheme;
 
     return ListView(
-      physics: const AlwaysScrollableScrollPhysics(),
+      physics:
+          const AlwaysScrollableScrollPhysics(),
       padding: const EdgeInsets.all(22),
       children: [
         const SizedBox(height: 90),
@@ -396,7 +969,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
         ),
         const SizedBox(height: 10),
         Text(
-          _errorMessage ?? 'Terjadi kesalahan.',
+          _errorMessage ??
+              'Terjadi kesalahan.',
           textAlign: TextAlign.center,
           style: GoogleFonts.poppins(
             fontSize: 14,
@@ -408,7 +982,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
         Center(
           child: ElevatedButton.icon(
             onPressed: _loadProfile,
-            icon: const Icon(Icons.refresh_rounded),
+            icon: const Icon(
+              Icons.refresh_rounded,
+            ),
             label: Text(
               'Coba Lagi',
               style: GoogleFonts.poppins(
@@ -420,7 +996,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
               foregroundColor: colors.onPrimary,
               elevation: 0,
               shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(14),
+                borderRadius:
+                    BorderRadius.circular(14),
               ),
             ),
           ),
@@ -434,15 +1011,20 @@ class _ProfileScreenState extends State<ProfileScreen> {
     final colors = Theme.of(context).colorScheme;
 
     final displayName =
-        _name.trim().isEmpty ? 'Pengguna' : _name.trim();
+        _name.trim().isEmpty
+            ? 'Pengguna'
+            : _name.trim();
 
     final displayEmail =
-        _email.trim().isEmpty ? '-' : _email.trim();
+        _email.trim().isEmpty
+            ? '-'
+            : _email.trim();
 
     final role = _formatRole(_role);
 
     return ListView(
-      physics: const AlwaysScrollableScrollPhysics(),
+      physics:
+          const AlwaysScrollableScrollPhysics(),
       padding: const EdgeInsets.fromLTRB(
         20,
         12,
@@ -486,19 +1068,22 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
         // Informasi akun user.
         Container(
-          padding: const EdgeInsets.symmetric(
+          padding:
+              const EdgeInsets.symmetric(
             horizontal: 18,
             vertical: 8,
           ),
           decoration: BoxDecoration(
             color: colors.surface,
-            borderRadius: BorderRadius.circular(20),
+            borderRadius:
+                BorderRadius.circular(20),
             border: Border.all(
               color: colors.outlineVariant,
             ),
             boxShadow: [
               BoxShadow(
-                color: colors.primary.withAlpha(18),
+                color: colors.primary
+                    .withAlpha(18),
                 blurRadius: 12,
                 offset: const Offset(0, 4),
               ),
@@ -508,18 +1093,28 @@ class _ProfileScreenState extends State<ProfileScreen> {
             children: [
               _buildInfoTile(
                 Icons.badge_outlined,
-                'Nama',
+                'Username',
                 displayName,
+                onEdit: _editUsername,
               ),
               _buildDivider(),
               _buildInfoTile(
                 Icons.email_outlined,
                 'Email',
                 displayEmail,
+                onEdit: _editEmail,
               ),
               _buildDivider(),
               _buildInfoTile(
-                Icons.admin_panel_settings_outlined,
+                Icons.lock_outline_rounded,
+                'Password',
+                '••••••••',
+                onEdit: _editPassword,
+              ),
+              _buildDivider(),
+              _buildInfoTile(
+                Icons
+                    .admin_panel_settings_outlined,
                 'Role',
                 role,
               ),
@@ -542,7 +1137,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
             color: _isCreator
                 ? colors.primaryContainer
                 : colors.secondaryContainer,
-            borderRadius: BorderRadius.circular(18),
+            borderRadius:
+                BorderRadius.circular(18),
             border: Border.all(
               color: _isCreator
                   ? colors.primary.withAlpha(70)
@@ -558,12 +1154,15 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   color: _isCreator
                       ? colors.primary.withAlpha(32)
                       : colors.secondary.withAlpha(32),
-                  borderRadius: BorderRadius.circular(13),
+                  borderRadius:
+                      BorderRadius.circular(13),
                 ),
                 child: Icon(
                   _isCreator
-                      ? Icons.workspace_premium_outlined
-                      : Icons.verified_user_outlined,
+                      ? Icons
+                          .workspace_premium_outlined
+                      : Icons
+                          .verified_user_outlined,
                   color: _isCreator
                       ? colors.primary
                       : colors.secondary,
@@ -595,17 +1194,21 @@ class _ProfileScreenState extends State<ProfileScreen> {
         SizedBox(
           height: 54,
           child: OutlinedButton.icon(
-            onPressed: _isLoggingOut ? null : _logout,
+            onPressed:
+                _isLoggingOut ? null : _logout,
             icon: _isLoggingOut
                 ? SizedBox(
                     width: 20,
                     height: 20,
-                    child: CircularProgressIndicator(
+                    child:
+                        CircularProgressIndicator(
                       strokeWidth: 2.2,
                       color: colors.error,
                     ),
                   )
-                : const Icon(Icons.logout_rounded),
+                : const Icon(
+                    Icons.logout_rounded,
+                  ),
             label: Text(
               _isLoggingOut
                   ? 'Keluar...'
@@ -617,11 +1220,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
             style: OutlinedButton.styleFrom(
               foregroundColor: colors.error,
               side: BorderSide(
-                color: colors.error.withAlpha(90),
+                color:
+                    colors.error.withAlpha(90),
               ),
-              backgroundColor: colors.errorContainer,
+              backgroundColor:
+                  colors.errorContainer,
               shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(16),
+                borderRadius:
+                    BorderRadius.circular(16),
               ),
             ),
           ),
@@ -648,11 +1254,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
     return AnimatedBuilder(
       animation: ThemeController.instance,
       builder: (context, _) {
-        final colors = Theme.of(context).colorScheme;
+        final colors =
+            Theme.of(context).colorScheme;
         final current =
             ThemeController.instance.themeMode;
 
-        final bool isDark = current == ThemeMode.dark;
+        final bool isDark =
+            current == ThemeMode.dark;
 
         return Container(
           padding: const EdgeInsets.all(16),
@@ -660,7 +1268,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
             color: isDark
                 ? colors.surface
                 : colors.primaryContainer,
-            borderRadius: BorderRadius.circular(20),
+            borderRadius:
+                BorderRadius.circular(20),
             border: Border.all(
               color: colors.primary.withAlpha(70),
             ),
@@ -677,7 +1286,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     decoration: BoxDecoration(
                       color: isDark
                           ? colors.primaryContainer
-                          : colors.primary.withAlpha(35),
+                          : colors.primary
+                              .withAlpha(35),
                       borderRadius:
                           BorderRadius.circular(13),
                     ),
@@ -686,7 +1296,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           ? Icons.dark_mode_outlined
                           : Icons.light_mode_outlined,
                       color: isDark
-                          ? colors.onPrimaryContainer
+                          ? colors
+                              .onPrimaryContainer
                           : colors.primary,
                     ),
                   ),
@@ -698,12 +1309,15 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       children: [
                         Text(
                           'Mode Tampilan',
-                          style: GoogleFonts.poppins(
+                          style:
+                              GoogleFonts.poppins(
                             fontSize: 15,
-                            fontWeight: FontWeight.bold,
+                            fontWeight:
+                                FontWeight.bold,
                             color: isDark
                                 ? colors.onSurface
-                                : colors.onPrimaryContainer,
+                                : colors
+                                    .onPrimaryContainer,
                           ),
                         ),
                         const SizedBox(height: 2),
@@ -711,11 +1325,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           current == ThemeMode.dark
                               ? 'Dark Mode sedang digunakan'
                               : 'Light Mode sedang digunakan',
-                          style: GoogleFonts.poppins(
+                          style:
+                              GoogleFonts.poppins(
                             fontSize: 12,
                             color: isDark
-                                ? colors.onSurfaceVariant
-                                : colors.onPrimaryContainer
+                                ? colors
+                                    .onSurfaceVariant
+                                : colors
+                                    .onPrimaryContainer
                                     .withAlpha(190),
                           ),
                         ),
@@ -729,21 +1346,28 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
               SizedBox(
                 width: double.infinity,
-                child: SegmentedButton<ThemeMode>(
+                child:
+                    SegmentedButton<ThemeMode>(
                   segments: const [
                     ButtonSegment<ThemeMode>(
-                      value: ThemeMode.light,
+                      value:
+                          ThemeMode.light,
                       icon: Icon(
-                        Icons.light_mode_outlined,
+                        Icons
+                            .light_mode_outlined,
                       ),
-                      label: Text('Light'),
+                      label:
+                          Text('Light'),
                     ),
                     ButtonSegment<ThemeMode>(
-                      value: ThemeMode.dark,
+                      value:
+                          ThemeMode.dark,
                       icon: Icon(
-                        Icons.dark_mode_outlined,
+                        Icons
+                            .dark_mode_outlined,
                       ),
-                      label: Text('Dark'),
+                      label:
+                          Text('Dark'),
                     ),
                   ],
                   selected: {
@@ -751,9 +1375,15 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         ? ThemeMode.dark
                         : ThemeMode.light,
                   },
-                  onSelectionChanged: (selection) {
-                    if (selection.isEmpty) return;
-                    _changeTheme(selection.first);
+                  onSelectionChanged:
+                      (selection) {
+                    if (selection.isEmpty) {
+                      return;
+                    }
+
+                    _changeTheme(
+                      selection.first,
+                    );
                   },
                 ),
               ),
@@ -788,7 +1418,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
             colors.surface,
           ],
         ),
-        borderRadius: BorderRadius.circular(24),
+        borderRadius:
+            BorderRadius.circular(24),
         border: Border.all(
           color: colors.primary.withAlpha(75),
         ),
@@ -820,9 +1451,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   shape: BoxShape.circle,
                   boxShadow: [
                     BoxShadow(
-                      color: colors.primary.withAlpha(55),
+                      color: colors.primary
+                          .withAlpha(55),
                       blurRadius: 14,
-                      offset: const Offset(0, 6),
+                      offset:
+                          const Offset(0, 6),
                     ),
                   ],
                 ),
@@ -831,7 +1464,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     _initials(name),
                     style: GoogleFonts.poppins(
                       fontSize: 28,
-                      fontWeight: FontWeight.bold,
+                      fontWeight:
+                          FontWeight.bold,
                       color: colors.onPrimary,
                     ),
                   ),
@@ -847,13 +1481,15 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     color: colors.surface,
                     shape: BoxShape.circle,
                     border: Border.all(
-                      color: colors.primary.withAlpha(80),
+                      color:
+                          colors.primary.withAlpha(80),
                     ),
                   ),
                   child: Icon(
                     _isCreator
                         ? Icons.verified_rounded
-                        : Icons.check_circle_rounded,
+                        : Icons
+                            .check_circle_rounded,
                     size: 19,
                     color: _isCreator
                         ? colors.primary
@@ -870,7 +1506,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
             name,
             textAlign: TextAlign.center,
             maxLines: 2,
-            overflow: TextOverflow.ellipsis,
+            overflow:
+                TextOverflow.ellipsis,
             style: GoogleFonts.poppins(
               fontSize: 24,
               fontWeight: FontWeight.bold,
@@ -884,7 +1521,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
             email,
             textAlign: TextAlign.center,
             maxLines: 2,
-            overflow: TextOverflow.ellipsis,
+            overflow:
+                TextOverflow.ellipsis,
             style: GoogleFonts.poppins(
               fontSize: 13,
               color: colors.onSurfaceVariant,
@@ -894,7 +1532,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
           const SizedBox(height: 12),
 
           Container(
-            padding: const EdgeInsets.symmetric(
+            padding:
+                const EdgeInsets.symmetric(
               horizontal: 12,
               vertical: 7,
             ),
@@ -902,29 +1541,39 @@ class _ProfileScreenState extends State<ProfileScreen> {
               color: _isCreator
                   ? colors.primaryContainer
                   : colors.secondaryContainer,
-              borderRadius: BorderRadius.circular(20),
+              borderRadius:
+                  BorderRadius.circular(20),
             ),
             child: Row(
-              mainAxisSize: MainAxisSize.min,
+              mainAxisSize:
+                  MainAxisSize.min,
               children: [
                 Icon(
                   _isCreator
-                      ? Icons.workspace_premium_outlined
-                      : Icons.person_outline_rounded,
+                      ? Icons
+                          .workspace_premium_outlined
+                      : Icons
+                          .person_outline_rounded,
                   size: 17,
                   color: _isCreator
-                      ? colors.onPrimaryContainer
-                      : colors.onSecondaryContainer,
+                      ? colors
+                          .onPrimaryContainer
+                      : colors
+                          .onSecondaryContainer,
                 ),
                 const SizedBox(width: 7),
                 Text(
                   role,
-                  style: GoogleFonts.poppins(
+                  style:
+                      GoogleFonts.poppins(
                     fontSize: 12.5,
-                    fontWeight: FontWeight.w600,
+                    fontWeight:
+                        FontWeight.w600,
                     color: _isCreator
-                        ? colors.onPrimaryContainer
-                        : colors.onSecondaryContainer,
+                        ? colors
+                            .onPrimaryContainer
+                        : colors
+                            .onSecondaryContainer,
                   ),
                 ),
               ],
@@ -939,18 +1588,22 @@ class _ProfileScreenState extends State<ProfileScreen> {
   Widget _buildInfoTile(
     IconData icon,
     String title,
-    String value,
-  ) {
+    String value, {
+    VoidCallback? onEdit,
+  }) {
     final colors = Theme.of(context).colorScheme;
 
     Color iconColor;
 
     switch (title) {
-      case 'Nama':
+      case 'Username':
         iconColor = colors.primary;
         break;
       case 'Email':
         iconColor = colors.tertiary;
+        break;
+      case 'Password':
+        iconColor = colors.primary;
         break;
       case 'Role':
         iconColor = colors.secondary;
@@ -973,7 +1626,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
             height: 42,
             decoration: BoxDecoration(
               color: iconColor.withAlpha(28),
-              borderRadius: BorderRadius.circular(13),
+              borderRadius:
+                  BorderRadius.circular(13),
             ),
             child: Icon(
               icon,
@@ -991,23 +1645,40 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   title,
                   style: GoogleFonts.poppins(
                     fontSize: 12,
-                    color: colors.onSurfaceVariant,
+                    color:
+                        colors.onSurfaceVariant,
                   ),
                 ),
                 const SizedBox(height: 2),
                 Text(
                   value,
                   maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
+                  overflow:
+                      TextOverflow.ellipsis,
                   style: GoogleFonts.poppins(
                     fontSize: 14,
-                    fontWeight: FontWeight.w600,
+                    fontWeight:
+                        FontWeight.w600,
                     color: colors.onSurface,
                   ),
                 ),
               ],
             ),
           ),
+          if (onEdit != null)
+            IconButton(
+              onPressed: _isUpdatingAccount
+                  ? null
+                  : onEdit,
+              icon: Icon(
+                Icons.edit_outlined,
+                size: 20,
+                color: _isUpdatingAccount
+                    ? colors.onSurfaceVariant
+                    : colors.primary,
+              ),
+              tooltip: 'Edit',
+            ),
         ],
       ),
     );
