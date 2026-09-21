@@ -68,6 +68,8 @@ class _ForgotPasswordScreenState
     try {
       await supabase.auth.resetPasswordForEmail(
         email,
+        redirectTo:
+            'com.example.formaly://login-callback/',
       );
 
       if (!mounted) {
@@ -92,13 +94,11 @@ class _ForgotPasswordScreenState
         'Gagal mengirim link reset password. Silakan coba lagi.',
       );
     } finally {
-      if (!mounted) {
-        return;
+      if (mounted) {
+        setState(() {
+          isLoading = false;
+        });
       }
-
-      setState(() {
-        isLoading = false;
-      });
     }
   }
 

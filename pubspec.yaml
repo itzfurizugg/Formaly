@@ -33,6 +33,7 @@ dependencies:
 
   # Scanner QR untuk verifikasi sebelum ujian
   mobile_scanner: ^7.4.2
+  app_links: ^7.0.0
 
 dev_dependencies:
   flutter_test:

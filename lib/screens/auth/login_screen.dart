@@ -135,6 +135,83 @@ class _LoginScreenState extends State<LoginScreen> {
     }
   }
 
+  // ============================================================
+  // MAGIC LINK
+  // ============================================================
+
+  Future<void> sendMagicLink() async {
+    if (isLoading) {
+      return;
+    }
+
+    final String email =
+        emailController.text.trim().toLowerCase();
+
+    // Validasi email.
+    if (email.isEmpty) {
+      _showMessage(
+        'Masukkan email terlebih dahulu.',
+      );
+      _focusEmail();
+      return;
+    }
+
+    if (!_isValidEmail(email)) {
+      _showMessage(
+        'Masukkan alamat email yang valid.',
+      );
+      _focusEmail();
+      return;
+    }
+
+    FocusScope.of(context).unfocus();
+
+    setState(() {
+      isLoading = true;
+    });
+
+    try {
+      await supabase.auth.signInWithOtp(
+        email: email,
+        emailRedirectTo:
+            'com.example.formaly://login-callback/',
+        shouldCreateUser: false,
+      );
+
+      if (!mounted) {
+        return;
+      }
+
+      _showMessage(
+        'Magic Link sudah dikirim ke $email. Silakan cek email kamu.',
+      );
+    } on AuthException catch (e) {
+      if (!mounted) {
+        return;
+      }
+
+      _showMessage(
+        _cleanAuthMessage(e.message),
+      );
+    } catch (_) {
+      if (!mounted) {
+        return;
+      }
+
+      _showMessage(
+        'Gagal mengirim Magic Link. Silakan coba lagi.',
+      );
+    } finally {
+      if (!mounted) {
+        return;
+      }
+
+      setState(() {
+        isLoading = false;
+      });
+    }
+  }
+
   // Membuka halaman lupa password.
   void openForgotPassword() {
     if (isLoading) {
@@ -389,12 +466,14 @@ class _LoginScreenState extends State<LoginScreen> {
                       textInputAction:
                           TextInputAction.done,
                       suffixIcon: IconButton(
-                        onPressed: () {
-                          setState(() {
-                            obscurePassword =
-                                !obscurePassword;
-                          });
-                        },
+                        onPressed: isLoading
+                            ? null
+                            : () {
+                                setState(() {
+                                  obscurePassword =
+                                      !obscurePassword;
+                                });
+                              },
                         splashRadius: 18,
                         icon: Icon(
                           obscurePassword
@@ -482,6 +561,46 @@ class _LoginScreenState extends State<LoginScreen> {
 
                     const SizedBox(height: 8),
 
+                    // Tombol Magic Link.
+                    SizedBox(
+                      width: double.infinity,
+                      height: 38,
+                      child: OutlinedButton.icon(
+                        onPressed:
+                            isLoading
+                                ? null
+                                : sendMagicLink,
+                        icon: const Icon(
+                          Icons.mark_email_read_outlined,
+                          size: 16,
+                        ),
+                        label: Text(
+                          'Masuk dengan Magic Link',
+                          style: GoogleFonts.poppins(
+                            fontSize: 12.5,
+                            fontWeight:
+                                FontWeight.w600,
+                          ),
+                        ),
+                        style:
+                            OutlinedButton.styleFrom(
+                          backgroundColor:
+                              const Color(0xffF7F7F7),
+                          foregroundColor:
+                              const Color(0xff30333A),
+                          side: const BorderSide(
+                            color: Color(0xffE6E6E6),
+                          ),
+                          elevation: 0,
+                          shape:
+                              const StadiumBorder(),
+                          padding: EdgeInsets.zero,
+                        ),
+                      ),
+                    ),
+
+                    const SizedBox(height: 8),
+
                     // Tombol daftar model pill abu-abu.
                     SizedBox(
                       width: double.infinity,
@@ -541,6 +660,7 @@ class _LoginScreenState extends State<LoginScreen> {
       child: TextField(
         controller: controller,
         focusNode: focusNode,
+        enabled: !isLoading,
         obscureText: obscureText,
         textInputAction: textInputAction,
         onSubmitted: onSubmitted,
@@ -583,6 +703,14 @@ class _LoginScreenState extends State<LoginScreen> {
                 BorderRadius.circular(5),
             borderSide: const BorderSide(
               color: Color(0xffCFCFCF),
+            ),
+          ),
+          disabledBorder:
+              OutlineInputBorder(
+            borderRadius:
+                BorderRadius.circular(5),
+            borderSide: const BorderSide(
+              color: Color(0xffE6E6E6),
             ),
           ),
         ),

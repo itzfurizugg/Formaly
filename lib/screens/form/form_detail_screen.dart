@@ -283,7 +283,9 @@ class _FormDetailScreenState extends State<FormDetailScreen> {
       final formResponse =
           await _supabase
               .from('forms')
-              .select('id')
+              .select(
+                'id, allow_multiple_submissions',
+              )
               .eq(
                 'id',
                 cleanFormId,
@@ -306,6 +308,55 @@ class _FormDetailScreenState extends State<FormDetailScreen> {
         throw Exception(
           'ID form dari Supabase tidak valid.',
         );
+      }
+
+      // ========================================================
+      // 1A. CEK BATAS PENGERJAAN FORM
+      //
+      // allow_multiple_submissions = false
+      // -> satu user hanya boleh mengerjakan satu kali.
+      //
+      // allow_multiple_submissions = true
+      // -> user boleh mengerjakan form lebih dari satu kali.
+      //
+      // Pengecekan dilakukan berdasarkan:
+      // submissions.form_id
+      // submissions.user_id
+      // ========================================================
+
+      final bool allowMultipleSubmissions =
+          formResponse['allow_multiple_submissions'] == true;
+
+      if (!allowMultipleSubmissions) {
+        final user =
+            _supabase.auth.currentUser;
+
+        if (user == null) {
+          throw Exception(
+            'User belum login. Silakan login terlebih dahulu.',
+          );
+        }
+
+        final previousSubmissions =
+            await _supabase
+                .from('submissions')
+                .select('id')
+                .eq(
+                  'form_id',
+                  verifiedFormId,
+                )
+                .eq(
+                  'user_id',
+                  user.id,
+                )
+                .limit(1);
+
+        if (previousSubmissions.isNotEmpty) {
+          throw Exception(
+            'Form ini hanya dapat dikerjakan satu kali. '
+            'Kamu sudah pernah mengerjakan form ini.',
+          );
+        }
       }
 
       // ========================================================
@@ -1110,4 +1161,4 @@ class _FormDetailScreenState extends State<FormDetailScreen> {
       ),
     );
   }
-}  
+}

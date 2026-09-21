@@ -2,13 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import 'core/routes/app_routes.dart';
+import 'core/routes/auth_gate.dart';
 import 'core/theme/app_theme.dart';
 import 'core/theme/theme_controller.dart';
 
 import 'screens/auth/login_screen.dart';
 import 'screens/auth/register_screen.dart';
 import 'screens/home/home_screen.dart';
-import 'screens/splash/splash_screen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -53,7 +53,7 @@ class FormalyApp extends StatelessWidget {
           // Daftar route aplikasi.
           routes: {
             AppRoutes.splash:
-                (_) => const SplashScreen(),
+                (_) => const AuthGate(),
             AppRoutes.login:
                 (_) => const LoginScreen(),
             AppRoutes.register:
