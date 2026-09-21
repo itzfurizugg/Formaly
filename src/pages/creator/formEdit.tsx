@@ -4,6 +4,8 @@ import { AnimatePresence, motion } from "motion/react"
 import {
     BookOpenText,
     Eye,
+    FileText,
+    Globe,
     ListFilter,
     Save,
     Shuffle,
@@ -98,6 +100,11 @@ const SETTING_ROWS: {
             hint: "Jika dimatikan, satu akun hanya bisa mengerjakan form satu kali.",
         },
     ]
+
+const STATUS_OPTIONS: { value: string; label: string; icon: typeof Eye }[] = [
+    { value: "draft", label: "Draft", icon: FileText },
+    { value: "published", label: "Public", icon: Globe },
+]
 
 interface FormEditCache {
     title: string
@@ -538,11 +545,11 @@ function FormEdit() {
                             <FormTabs id={id} active="detail" />
                         </div>
 
-                        {/* Kolom kiri: Detail + Pengaturan ditumpuk (desktop). Di mobile
+                        {/* Kolom kiri: Detail + Mode + Pengaturan ditumpuk (desktop). Di mobile
                         wrapper memakai `contents` agar semua kartu jadi grid-item langsung,
-                        urutannya diatur lewat order-*: formEdit → header → tag → formSettings → delete. */}
+                        urutannya diatur lewat order-*: formEdit → mode → header → tag → formSettings → delete. */}
                         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start ml-1">
-                            {/* Kolom kiri: Detail Form + Pengaturan Form ditumpuk */}
+                            {/* Kolom kiri: Detail Form + Mode Form + Pengaturan Form ditumpuk */}
                             <div className="contents lg:block lg:col-span-7 lg:space-y-6">
                                 {/* 1. Detail Form */}
                                 <div className="order-1 lg:order-1 bg-white dark:bg-second border border-second p-3 sm:p-4 lg:p-6 shadow-sm rounded-xl flex flex-col justify-between">
@@ -604,18 +611,26 @@ function FormEdit() {
 
                                         <div>
                                             <label className="block text-sm font-medium text-darks mb-1.5">Status</label>
-                                            <select className="select select-bordered w-full bg-base dark:bg-base dark:border-darks/30 border-second focus:border-done focus:outline-none" value={status} onChange={(e) => setStatus(e.target.value)}>
-                                                <option value="draft">Draft</option>
-                                                <option value="published">Public</option>
-                                            </select>
-                                            <p className="text-xs text-tinted mt-1.5 hidden sm:block">
-                                                Hanya form berstatus <span className="font-medium text-darks">Public</span> yang bisa diakses orang lain, termasuk lewat tag.
-                                            </p>
-                                        </div>
-
-                                        <div>
-                                            <label className="block text-sm font-medium text-darks mb-2">Mode Form</label>
-                                            <ModeSelector value={layoutMode} onChange={setLayoutMode} />
+                                            <div className="grid grid-cols-2 gap-2">
+                                                {STATUS_OPTIONS.map((opt) => {
+                                                    const selected = status === opt.value
+                                                    return (
+                                                        <button
+                                                            key={opt.value}
+                                                            type="button"
+                                                            role="radio"
+                                                            aria-checked={selected}
+                                                            onClick={() => setStatus(opt.value)}
+                                                            className={`flex items-center justify-center gap-2 rounded-xl border-2 px-3 py-2.5 text-sm font-medium transition-all duration-200 active:scale-[0.98] ${selected
+                                                                ? "border-done bg-done/10 text-done"
+                                                                : "border-second bg-white dark:bg-second text-darks hover:shadow-sm"
+                                                                }`}
+                                                        >
+                                                            {opt.label}
+                                                        </button>
+                                                    )
+                                                })}
+                                            </div>
                                         </div>
 
                                         <button
@@ -629,8 +644,21 @@ function FormEdit() {
                                     </form>
                                 </div>
 
-                                {/* 3. Pengaturan Form */}
-                                <div className="order-4 lg:order-none bg-white dark:bg-second border border-second p-3 sm:p-4 lg:p-6 shadow-sm rounded-xl flex flex-col justify-between">
+                                {/* 2. Mode Form */}
+                                <div className="order-2 lg:order-none bg-white dark:bg-second border border-second p-3 sm:p-4 lg:p-6 shadow-sm rounded-xl">
+                                    <div className="flex items-center gap-2 mb-1 mt-2 ml-2">
+                                        <h2 className="font-semibold text-darks text-lg">Mode Form</h2>
+                                    </div>
+                                    <p className="text-sm text-tinted mb-4 ml-2 leading-relaxed">
+                                        Tentukan bagaimana soal ditampilkan dan dikelompokkan kepada responden.
+                                    </p>
+                                    <div className="px-0.5 sm:px-1">
+                                        <ModeSelector value={layoutMode} onChange={setLayoutMode} />
+                                    </div>
+                                </div>
+
+                                {/* 4. Pengaturan Form */}
+                                <div className="order-5 lg:order-none bg-white dark:bg-second border border-second p-3 sm:p-4 lg:p-6 shadow-sm rounded-xl flex flex-col justify-between">
                                     <div>
                                         <div className="flex items-center gap-2 mb-1 mt-2 ml-2">
                                             <h2 className="font-semibold text-darks text-lg">Pengaturan Form</h2>
@@ -668,8 +696,8 @@ function FormEdit() {
                             {/* Kolom kanan sticky: Header (Banner) + Hapus Form. Di mobile `contents`
                             supaya Banner urut ke-2 (setelah Detail) dan Hapus di paling bawah. */}
                             <div className="contents lg:block lg:col-span-5 lg:space-y-6 lg:sticky lg:top-20 lg:self-start mr-1">
-                                {/* 2. Header (Tampilan Banner) */}
-                                <div className="order-2 lg:order-none bg-white dark:bg-second border border-second p-3 shadow-sm rounded-xl">
+                                {/* 3. Header (Tampilan Banner) */}
+                                <div className="order-3 lg:order-none bg-white dark:bg-second border border-second p-3 shadow-sm rounded-xl">
                                     <div>
                                         <div className="flex items-center gap-2 mb-1 mt-2 ml-2">
                                             <h2 className="font-semibold text-darks text-lg">Tampilan Banner</h2>
@@ -735,14 +763,14 @@ function FormEdit() {
                                 </div>
 
                                 {/* Tag */}
-                                <div className="order-3 lg:order-none bg-white dark:bg-second shadow-sm border border-second p-5 rounded-xl">
+                                <div className="order-4 lg:order-none bg-white dark:bg-second shadow-sm border border-second p-5 rounded-xl">
                                     <div className="ml-2">
                                         <TagInput formId={id ?? ""} />
                                     </div>
                                 </div>
 
-                                {/* 4. Hapus Form */}
-                                <div className="order-5 lg:order-none bg-white dark:bg-second border border-second p-3 shadow-sm rounded-xl flex flex-col justify-between">
+                                {/* 6. Hapus Form */}
+                                <div className="order-6 lg:order-none bg-white dark:bg-second border border-second p-3 shadow-sm rounded-xl flex flex-col justify-between">
                                     <div>
                                         <div className="flex items-center gap-2 mb-1 mt-2 ml-2">
                                             <h2 className="font-semibold text-wrong text-lg">Hapus Form</h2>

@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react"
+import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { createPortal } from "react-dom"
 import ReactQuill from "react-quill-new"
 import type Quill from "quill"
@@ -10,7 +10,7 @@ import { motion, AnimatePresence } from "motion/react"
 import { Sigma, Link2, X } from "lucide-react"
 import { sanitizeRichText, inlineRichText, embedsToText, tokenizeLatex, toBlockLatex, fromBlockLatex, convertLatexInHtml, convertCodeBlocksInHtml } from "../lib/richtext"
 import { enhanceVideoIframes } from "../lib/videoGui"
-import { modalBackdrop, modalPanel } from "../lib/motion"
+import { easeOutExpo, modalBackdrop, modalPanel } from "../lib/motion"
 
 // Quill v2 module "formula" membutuhkan KaTeX pada window.
 ;(window as unknown as { katex: typeof katex }).katex = katex
@@ -111,8 +111,16 @@ function katexPreview(latex: string): string {
  */
 function RichTextEditor({ value, onChange, placeholder, className = "", compact = false }: RichTextEditorProps) {
     const [active, setActive] = useState(false)
+    const [editorMounted, setEditorMounted] = useState(false)
     const wrapperRef = useRef<HTMLDivElement>(null)
     const quillRef = useRef<ReactQuill | null>(null)
+    // Editor Quill baru benar-benar siap setelah mount; effect yang butuh
+    // instance-nya (inject tombol Σ, autoconvert, klik-edit rumus) harus
+    // menunggu flag ini, bukan hanya `active`.
+    const setQuillRef = useCallback((el: ReactQuill | null) => {
+        quillRef.current = el
+        setEditorMounted(!!el)
+    }, [])
     const [formulaModal, setFormulaModal] = useState<FormulaModalState>({ open: false, index: null, block: false })
     const [formulaLatex, setFormulaLatex] = useState("")
     const [linkModalOpen, setLinkModalOpen] = useState(false)
@@ -178,7 +186,7 @@ function RichTextEditor({ value, onChange, placeholder, className = "", compact 
     const formats = useMemo(() => (compact ? compactFormats : fullFormats), [compact])
 
     useEffect(() => {
-        if (active) {
+        if (active && editorMounted) {
             const t = window.setTimeout(() => {
                 try {
                     quillRef.current?.getEditor()?.focus()
@@ -188,11 +196,11 @@ function RichTextEditor({ value, onChange, placeholder, className = "", compact 
             }, 0)
             return () => window.clearTimeout(t)
         }
-    }, [active])
+    }, [active, editorMounted])
 
     // Sisipkan tombol "Sisipkan Rumus (Σ)" ke dalam toolbar Quill setelah editor aktif.
     useEffect(() => {
-        if (!active) return
+        if (!active || !editorMounted) return
         let cancelled = false
         const t = window.setTimeout(() => {
             if (cancelled) return
@@ -200,7 +208,7 @@ function RichTextEditor({ value, onChange, placeholder, className = "", compact 
             if (!quill) return
             const toolbarEl = (quill.getModule("toolbar") as { container?: HTMLElement } | undefined)?.container
             if (!toolbarEl) return
-            if (toolbarEl.querySelector(".formaly-tex-trigger")) return
+            if (toolbarEl.querySelector(".ql-formaly-tex-trigger")) return
 
             const formats = toolbarEl.querySelector(".ql-formats")?.parentElement || toolbarEl
 
@@ -228,11 +236,11 @@ function RichTextEditor({ value, onChange, placeholder, className = "", compact 
             cancelled = true
             window.clearTimeout(t)
         }
-    }, [active])
+    }, [active, editorMounted])
 
     // Autoconvert LaTeX & code block saat mengetik/paste → langsung WYSIWYG.
     useEffect(() => {
-        if (!active) return
+        if (!active || !editorMounted) return
         let cancelled = false
         const cleanups: (() => void)[] = []
 
@@ -394,11 +402,11 @@ function RichTextEditor({ value, onChange, placeholder, className = "", compact 
             window.clearTimeout(t)
             cleanups.forEach((c) => c())
         }
-    }, [active])
+    }, [active, editorMounted])
 
     // Klik pada rumus (elemen .ql-formula) di dalam editor membuka modal RE-EDIT.
     useEffect(() => {
-        if (!active) return
+        if (!active || !editorMounted) return
         const editor = wrapperRef.current
         if (!editor) return
 
@@ -443,7 +451,7 @@ function RichTextEditor({ value, onChange, placeholder, className = "", compact 
         return () => {
             editor.removeEventListener("click", onClick)
         }
-    }, [active])
+    }, [active, editorMounted])
 
     const handleFocus = (e: React.FocusEvent) => {
         if (e.currentTarget.contains(e.relatedTarget as Node)) return
@@ -480,7 +488,7 @@ function RichTextEditor({ value, onChange, placeholder, className = "", compact 
 
         if (index !== null && index >= 0) {
             // RE-EDIT: replace formula yang sudah ada di posisi tersebut.
-            quill.updateContents(new Delta().retain(index).delete(1).insert({ formula: stored }))
+            quill.updateContents(new Delta().retain(index).delete(1).insert({ formula: stored }), "user")
         } else {
             // INSERT baru di posisi kursor.
             const sel = quill.getSelection()
@@ -535,37 +543,57 @@ function RichTextEditor({ value, onChange, placeholder, className = "", compact 
             className={`${active ? "rich-editor" : "rich-preview-wrap"} ${compact ? "rich-editor-compact" : ""} ${className}`}
         >
             {active ? (
-                <ReactQuill
-                    ref={quillRef}
-                    theme="snow"
-                    value={convertLatexInHtml(convertCodeBlocksInHtml(value))}
-                    onChange={onChange}
-                    useSemanticHTML={false}
-                    modules={modules}
-                    formats={formats}
-                    placeholder={placeholder}
-                />
-            ) : (
-                <div
-                    role="button"
-                    tabIndex={0}
-                    onClick={() => setActive(true)}
-                    onKeyDown={(e) => {
-                        if (e.key === "Enter" || e.key === " ") {
-                            e.preventDefault()
-                            setActive(true)
-                        }
-                    }}
-                    className={`rich-preview min-h-[44px] cursor-text border rounded-sm px-3 py-2 shadow-sm transition-all hover:border-done/50 bg-base-200 dark:bg-base border-second ${
-                        value && sanitizeRichText(value).trim() ? "text-darks" : "text-tinted"
-                    }`}
+                // Tinggi editor dibiarkan natural (auto) supaya tidak ada animasi
+                // height yang bisa ter-trigger ulang saat mengetik. Transisi cukup
+                // fade + slide halus agar tidak kaku.
+                <motion.div
+                    initial={{ opacity: 0, y: -8 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.25, ease: easeOutExpo }}
                 >
-                    {value && sanitizeRichText(value).trim() ? (
-                        <RichText html={value} />
-                    ) : (
-                        <span className="text-tinted lg:ml-2">{placeholder}</span>
-                    )}
-                </div>
+                    <ReactQuill
+                        ref={setQuillRef}
+                        theme="snow"
+                        value={convertLatexInHtml(convertCodeBlocksInHtml(value))}
+                        onChange={(html, _delta, source) => {
+                            // Hanya perubahan dari user yang diteruskan. Perubahan "api"
+                            // (normalisasi Quill saat mount / setContents) diabaikan agar
+                            // value tidak ikut berubah hanya karena buka-tutup editor.
+                            if (source === "user") onChange(html)
+                        }}
+                        useSemanticHTML={false}
+                        modules={modules}
+                        formats={formats}
+                        placeholder={placeholder}
+                    />
+                </motion.div>
+            ) : (
+                <motion.div
+                    initial={{ opacity: 0, y: -8 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.3, ease: easeOutExpo }}
+                >
+                    <div
+                        role="button"
+                        tabIndex={0}
+                        onClick={() => setActive(true)}
+                        onKeyDown={(e) => {
+                            if (e.key === "Enter" || e.key === " ") {
+                                e.preventDefault()
+                                setActive(true)
+                            }
+                        }}
+                        className={`rich-preview min-h-[44px] cursor-text border rounded-sm px-3 py-2 shadow-sm transition-all hover:border-done/50 bg-base-200 dark:bg-base border-second ${
+                            value && sanitizeRichText(value).trim() ? "text-darks" : "text-tinted"
+                        }`}
+                    >
+                        {value && sanitizeRichText(value).trim() ? (
+                            <RichText html={value} />
+                        ) : (
+                            <span className="text-tinted lg:ml-2">{placeholder}</span>
+                        )}
+                    </div>
+                </motion.div>
             )}
 
             {/* ---- Modal Insert Link (pengganti tooltip/popup bawaan Quill) ---- */}
