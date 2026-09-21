@@ -51,6 +51,14 @@ interface Answer {
     [key: string]: string | string[]
 }
 
+function shuffleInPlace<T>(items: T[]): T[] {
+    for (let i = items.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1))
+        ;[items[i], items[j]] = [items[j], items[i]]
+    }
+    return items
+}
+
 interface LocationState {
     current?: number
     answers?: Answer
@@ -75,7 +83,7 @@ function FormPage() {
     const submissionId = locationState?.submissionId ?? null
 
     const [questions, setQuestions] = useState<Question[]>([])
-    const [formMeta, setFormMeta] = useState<{ title: string; duration: number; randomize_questions?: boolean | null } | null>(null)
+    const [formMeta, setFormMeta] = useState<{ title: string; duration: number; randomize_questions?: boolean | null; randomize_options?: boolean | null; header_color?: string | null } | null>(null)
     const [layoutMode, setLayoutMode] = useState<string | null>(locationState?.layoutMode ?? null)
     const [sections, setSections] = useState<SectionNav[]>(locationState?.sections ?? [])
     const [current, setCurrent] = useState(locationState?.current || 0)
@@ -264,7 +272,7 @@ function FormPage() {
         setNotFound(false)
         const { data: formData } = await supabase
             .from("forms")
-            .select("title, duration, status, randomize_questions, layout_mode")
+            .select("title, duration, status, randomize_questions, randomize_options, header_color, layout_mode")
             .eq("id", formId)
             .single()
 
@@ -400,6 +408,14 @@ function FormPage() {
                 for (let i = nextQuestions.length - 1; i > 0; i--) {
                     const j = Math.floor(Math.random() * (i + 1))
                         ;[nextQuestions[i], nextQuestions[j]] = [nextQuestions[j], nextQuestions[i]]
+                }
+            }
+        }
+
+        if (formData.randomize_options) {
+            for (const q of nextQuestions) {
+                if (q.question_options?.length > 1) {
+                    q.question_options = shuffleInPlace([...q.question_options])
                 }
             }
         }
@@ -827,7 +843,7 @@ function FormPage() {
                 ) : (
                     <div className="flex min-h-screen flex-col items-center px-3 pt-4 pb-24 sm:px-3.5 sm:pt-6 md:pb-6">
                         <div className="w-full max-w-3xl xl:mt-3" style={{ zoom: pageZoom }}>
-                            <div className="px-1 pb-3 sm:p-2 sm:mb-3 hidden sm:block">
+                            <div className="px-1 pb-3 sm:p-2 sm:mb-3 hidden sm:block" style={formMeta?.header_color ? { borderTop: `4px solid ${formMeta.header_color}` } : undefined}>
                                 <div className="flex items-center justify-between gap-2">
                                     <h1 className="min-w-0 truncate text-lg sm:text-xl xl:text-4xl font-bold text-darks">{formMeta?.title || "Form"}</h1>
                                     <span className="shrink-0 text-xs text-tinted tabular-nums">{current + 1}/{total}</span>

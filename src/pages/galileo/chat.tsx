@@ -1,7 +1,7 @@
 import * as React from "react"
 import { useEffect, useState, useRef } from "react"
 import { useNavigate } from "react-router-dom"
-import { FileText, Paperclip, Send, LayoutTemplate } from "lucide-react"
+import { FileText, Paperclip, Send, LayoutTemplate, Settings } from "lucide-react"
 import { motion, AnimatePresence } from "motion/react"
 import { Spinner } from "../../components/loading"
 import { supabase } from "../../lib/supabase"
@@ -23,6 +23,9 @@ interface PromptPayload {
     form_id: string | null
     /** Model AI — selalu Smart Route: tugas ringan otomatis ke Gemini, berat ke Nemotron. */
     model_id: string
+    randomize_options: boolean
+    randomize_questions: boolean
+    allow_multiple_submissions: boolean
 }
 
 interface FormRef {
@@ -108,6 +111,10 @@ function ChatPage() {
     // (tidak bergantung pada regex teks, lebih andal).
     const [selectedFormId, setSelectedFormId] = useState<string | null>(null)
     const [textareaFocused, setTextareaFocused] = useState(false)
+    const [randomizeOptions, setRandomizeOptions] = useState(false)
+    const [randomizeQuestions, setRandomizeQuestions] = useState(false)
+    const [allowMultipleSubmissions, setAllowMultipleSubmissions] = useState(false)
+    const [showSettings, setShowSettings] = useState(false)
 
     // Auto-resize textarea: reset ke auto, lalu paksa sesuai scrollHeight.
     // CSS max-h-[45vh] + overflow-y-auto menghandle scroll kalau melebihi batas.
@@ -260,6 +267,9 @@ function ChatPage() {
             // Fallback: telusuri judul form yang disebut "@judul..." dalam teks.
             form_id: selectedFormId ?? resolveMentionId(text, forms),
             model_id: DEFAULT_MODEL_ID,
+            randomize_options: randomizeOptions,
+            randomize_questions: randomizeQuestions,
+            allow_multiple_submissions: allowMultipleSubmissions,
         }
         sessionStorage.setItem("galileo:prompt", JSON.stringify(payload))
 
@@ -278,7 +288,7 @@ function ChatPage() {
     return (
         <div className="flex flex-col items-center justify-center min-h-[calc(100vh-2rem)] sm:min-h-screen px-3.5 sm:px-6 py-5 sm:py-10">
             <BackButton to="/creator" />
-            <div className="w-full max-w-2xl flex flex-col my-auto">
+            <div className="w-full max-w-2xl flex flex-col mt-auto mb-0 sm:my-auto">
                 <motion.div variants={fadeSlide} initial="hidden" animate="show" className="w-full">
                     <motion.div
                         layout
@@ -392,21 +402,51 @@ function ChatPage() {
                         </div>
 
                         <div className="absolute bottom-4 left-3.5 right-3.5 sm:left-4 sm:right-4 sm:bottom-5 flex items-center justify-between gap-2 px-1 pt-2.5">
-                            <button
-                                type="button"
-                                onClick={() => fileInputRef.current?.click()}
-                                className="btn btn-sm rounded-full bg-base-300 border-none text-darks hover:bg-darks/20 transition-colors gap-1.5 px-3 text-xs"
-                                aria-label="Tambahkan dokumen untuk konteks"
-                                title="Tambahkan dokumen untuk konteks"
-                            >
-                                <Paperclip className="h-3.5 w-3.5 shrink-0" />
-                                <span>Sisipkan Materi</span>
-                            </button>
+                            <div className="flex flex-row gap-2">
+                                <div className="relative flex items-center gap-2">
+                                    <button
+                                        type="button"
+                                        onClick={() => fileInputRef.current?.click()}
+                                        className="btn btn-sm rounded-full bg-base-300 border-none text-darks hover:bg-darks/20 transition-colors gap-1.5 px-3 text-xs"
+                                        aria-label="Tambahkan dokumen untuk konteks"
+                                        title="Tambahkan dokumen untuk konteks"
+                                    >
+                                        <Paperclip className="h-3.5 w-3.5 shrink-0" />
+                                        <span>Sisipkan Materi</span>
+                                    </button>
+
+                                    <button
+                                        type="button"
+                                        onClick={() => setShowSettings((open) => !open)}
+                                        className="btn btn-sm rounded-full bg-base-300 border-none text-darks hover:bg-darks/20 transition-colors gap-1.5 px-3 text-xs"
+                                        aria-label="Pengaturan form"
+                                        aria-expanded={showSettings}
+                                    >
+                                        <Settings className="h-3.5 w-3.5 shrink-0" />
+                                    </button>
+                                    <AnimatePresence>
+                                        {showSettings && (
+                                            <motion.div
+                                                initial={{ opacity: 0, y: 12, scale: 0.96 }}
+                                                animate={{ opacity: 1, y: 0, scale: 1 }}
+                                                exit={{ opacity: 0, y: 8, scale: 0.98 }}
+                                                transition={{ type: "spring", stiffness: 420, damping: 28 }}
+                                                className="absolute left-0 top-full bottom-auto mt-2 w-64 origin-top-left rounded-xl border border-second bg-white dark:bg-second p-3 shadow-lg text-xs text-darks sm:top-auto sm:bottom-full sm:mt-0 sm:mb-2 sm:origin-bottom-left z-50"
+                                            >
+                                                <p className="font-semibold mb-2">Pengaturan form</p>
+                                                <label className="flex items-start gap-2 py-1.5"><input type="checkbox" checked={randomizeOptions} onChange={(e) => setRandomizeOptions(e.target.checked)} /> <span><b>Acak pola kunci jawaban</b><br /><span className="text-tinted">Urutan opsi berbeda setiap responden.</span></span></label>
+                                                <label className="flex items-center gap-2 py-1.5"><input type="checkbox" checked={randomizeQuestions} onChange={(e) => setRandomizeQuestions(e.target.checked)} /> Acak urutan soal</label>
+                                                <label className="flex items-center gap-2 py-1.5"><input type="checkbox" checked={allowMultipleSubmissions} onChange={(e) => setAllowMultipleSubmissions(e.target.checked)} /> Izinkan pengerjaan ulang</label>
+                                            </motion.div>
+                                        )}
+                                    </AnimatePresence>
+                                </div>
+                            </div>
 
                             <button
                                 type="submit"
                                 disabled={(!message.trim() && !file) || loading}
-                                className="btn btn-sm rounded-full bg-darks border-none text-base disabled:opacity-40 hover:opacity-90 transition-opacity shrink-0"
+                                className="btn btn-sm rounded-lg bg-darks border-none text-base disabled:opacity-40 hover:opacity-90 transition-opacity shrink-0"
                                 aria-label="Kirim"
                             >
                                 {loading ? <Spinner size={16} /> : <Send className="h-4 w-4" />}

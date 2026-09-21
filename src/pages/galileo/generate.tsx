@@ -21,6 +21,9 @@ interface PromptPayload {
     form_id?: string | null
     /** id model AI yang dipilih pengguna di chat.tsx lewat model picker. */
     model_id?: string | null
+    randomize_options?: boolean
+    randomize_questions?: boolean
+    allow_multiple_submissions?: boolean
 }
 
 type QuestionType = "single_choice" | "multiple_choice" | "text" | "dropdown" | "file_upload" | "date_time"
@@ -47,6 +50,11 @@ interface GenForm {
     description: string
     duration_minutes: number | null
     passing_score: number
+    randomize_questions: boolean
+    randomize_options: boolean
+    allow_multiple_submissions: boolean
+    show_score_to_respondent: boolean
+    show_answers_to_respondent: boolean
     questions: GenQuestion[]
 }
 
@@ -58,6 +66,11 @@ const FORM_RULES =
     '  "description": string,\n' +
     '  "duration_minutes": number | null,\n' +
     '  "passing_score": number (0-100),\n' +
+    '  "randomize_questions": boolean,\n' +
+    '  "randomize_options": boolean,\n' +
+    '  "allow_multiple_submissions": boolean,\n' +
+    '  "show_score_to_respondent": boolean,\n' +
+    '  "show_answers_to_respondent": boolean,\n' +
     '  "questions": [\n' +
     '    {\n' +
     '      "question_text": string,\n' +
@@ -243,7 +256,18 @@ function parseGenerated(raw: string): GenForm {
         throw new Error("AI tidak mengembalikan soal yang valid. Coba prompt lain atau pertegas jumlah soalnya.")
     }
 
-    return { title, description, duration_minutes: duration, passing_score: passing, questions }
+    return {
+        title,
+        description,
+        duration_minutes: duration,
+        passing_score: passing,
+        randomize_questions: Boolean(obj?.randomize_questions),
+        randomize_options: Boolean(obj?.randomize_options),
+        allow_multiple_submissions: Boolean(obj?.allow_multiple_submissions),
+        show_score_to_respondent: obj?.show_score_to_respondent !== false,
+        show_answers_to_respondent: Boolean(obj?.show_answers_to_respondent),
+        questions,
+    }
 }
 
 /**
@@ -330,6 +354,11 @@ async function saveForm(userId: string, form: GenForm): Promise<string> {
             description: form.description || null,
             duration: form.duration_minutes,
             passing_score: form.passing_score,
+            randomize_questions: form.randomize_questions,
+            randomize_options: form.randomize_options,
+            allow_multiple_submissions: form.allow_multiple_submissions,
+            show_score_to_respondent: form.show_score_to_respondent,
+            show_answers_to_respondent: form.show_answers_to_respondent,
             status: "draft",
         })
         .select("id")
@@ -511,6 +540,9 @@ function GeneratePage() {
 
             setStep(STAGES[1])
             const form = parseGenerated(raw)
+            if (payload?.randomize_options !== undefined) form.randomize_options = payload.randomize_options
+            if (payload?.randomize_questions !== undefined) form.randomize_questions = payload.randomize_questions
+            if (payload?.allow_multiple_submissions !== undefined) form.allow_multiple_submissions = payload.allow_multiple_submissions
 
             setStep(STAGES[2])
             const formId = formIdEdit
