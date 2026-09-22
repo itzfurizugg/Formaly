@@ -54,13 +54,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
           .maybeSingle();
 
       if (userResponse == null) {
-        throw Exception(
-          'Data profil tidak ditemukan di tabel users.',
-        );
+        throw Exception('Data profil tidak ditemukan di tabel users.');
       }
 
-      String loadedName =
-          userResponse['name']?.toString().trim() ?? '';
+      String loadedName = userResponse['name']?.toString().trim() ?? '';
 
       // Coba ambil nama dari tabel profiles.
       try {
@@ -70,8 +67,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
             .eq('id', user.id)
             .maybeSingle();
 
-        final profileName =
-            profileResponse?['name']?.toString().trim() ?? '';
+        final profileName = profileResponse?['name']?.toString().trim() ?? '';
 
         if (profileName.isNotEmpty) {
           loadedName = profileName;
@@ -82,18 +78,16 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
       final String loadedEmail =
           userResponse['email']?.toString().trim().isNotEmpty == true
-              ? userResponse['email'].toString().trim()
-              : (user.email?.trim() ?? '');
+          ? userResponse['email'].toString().trim()
+          : (user.email?.trim() ?? '');
 
-      final String loadedRole =
-          userResponse['role']?.toString().trim() ?? '';
+      final String loadedRole = userResponse['role']?.toString().trim() ?? '';
 
       DateTime? loadedCreatedAt;
       final createdAtValue = userResponse['created_at'];
 
       if (createdAtValue != null) {
-        loadedCreatedAt =
-            DateTime.tryParse(createdAtValue.toString());
+        loadedCreatedAt = DateTime.tryParse(createdAtValue.toString());
       }
 
       if (!mounted) return;
@@ -122,6 +116,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
     final bool? shouldLogout = await showModalBottomSheet<bool>(
       context: context,
       backgroundColor: Colors.transparent,
+      barrierColor: Colors.black.withValues(alpha: .28),
+      isScrollControlled: true,
+      useSafeArea: true,
       builder: (sheetContext) => _SheetBox(
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -171,9 +168,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
       Navigator.pushAndRemoveUntil(
         context,
-        MaterialPageRoute(
-          builder: (_) => const LoginScreen(),
-        ),
+        MaterialPageRoute(builder: (_) => const LoginScreen()),
         (route) => false,
       );
     } catch (e) {
@@ -183,10 +178,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
         _isLoggingOut = false;
       });
 
-      _showMessage(
-        'Gagal keluar: ${_cleanError(e)}',
-        isError: true,
-      );
+      _showMessage('Gagal keluar: ${_cleanError(e)}', isError: true);
     }
   }
 
@@ -197,9 +189,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     if (!mounted) return;
 
     _showMessage(
-      mode == ThemeMode.dark
-          ? 'Dark Mode aktif.'
-          : 'Light Mode aktif.',
+      mode == ThemeMode.dark ? 'Dark Mode aktif.' : 'Light Mode aktif.',
     );
   }
 
@@ -239,14 +229,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
         '${localDate.year}';
   }
 
-  bool get _isCreator =>
-      _role.trim().toLowerCase() == 'creator';
+  bool get _isCreator => _role.trim().toLowerCase() == 'creator';
 
   // Menampilkan pesan singkat kepada user.
-  void _showMessage(
-    String message, {
-    bool isError = false,
-  }) {
+  void _showMessage(String message, {bool isError = false}) {
     if (!mounted) return;
 
     final colors = Theme.of(context).colorScheme;
@@ -257,21 +243,18 @@ class _ProfileScreenState extends State<ProfileScreen> {
         SnackBar(
           content: Text(
             message,
-            style: TextStyle(fontFamily: 'FunnelDisplay',
+            style: TextStyle(
+              fontFamily: 'FunnelDisplay',
 
               fontSize: 13,
               color: colors.onInverseSurface,
             ),
           ),
           behavior: SnackBarBehavior.floating,
-          backgroundColor:
-              isError
-                  ? colors.error
-                  : colors.inverseSurface,
+          backgroundColor: isError ? colors.error : colors.inverseSurface,
         ),
       );
   }
-
 
   @override
   Widget build(BuildContext context) {
@@ -281,8 +264,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
         child: _isLoading
             ? _buildLoading()
             : _errorMessage != null
-                ? _buildError()
-                : _buildProfile(),
+            ? _buildError()
+            : _buildProfile(),
       ),
     );
   }
@@ -292,9 +275,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
       physics: const AlwaysScrollableScrollPhysics(),
       children: const [
         SizedBox(height: 240),
-        Center(
-          child: CircularProgressIndicator(color: kDone),
-        ),
+        Center(child: CircularProgressIndicator(color: kDone)),
       ],
     );
   }
@@ -319,13 +300,23 @@ class _ProfileScreenState extends State<ProfileScreen> {
         Text(
           'Gagal Memuat Profil',
           textAlign: TextAlign.center,
-          style: TextStyle(fontFamily: 'FunnelDisplay', fontSize: 22, fontWeight: FontWeight.w700, color: kDarks),
+          style: TextStyle(
+            fontFamily: 'FunnelDisplay',
+            fontSize: 22,
+            fontWeight: FontWeight.w700,
+            color: kDarks,
+          ),
         ),
         const SizedBox(height: 10),
         Text(
           _errorMessage ?? 'Terjadi kesalahan.',
           textAlign: TextAlign.center,
-          style: TextStyle(fontFamily: 'FunnelDisplay', fontSize: 14, color: kTinted, height: 1.5),
+          style: TextStyle(
+            fontFamily: 'FunnelDisplay',
+            fontSize: 14,
+            color: kTinted,
+            height: 1.5,
+          ),
         ),
         const SizedBox(height: 24),
         Center(
@@ -390,7 +381,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         iconColor: kDone,
                         iconBg: kDone.withValues(alpha: .1),
                         title: 'Upgrade ke Creator',
-                        subtitle: 'Jadilah yang membuat formulir untuk banyak orang.',
+                        subtitle:
+                            'Jadilah yang membuat formulir untuk banyak orang.',
                         onTap: () => _showMessage(
                           'Fitur Upgrade Creator belum tersedia.',
                         ),
@@ -406,7 +398,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   ],
                 ),
                 const SizedBox(height: 20),
-                _buildLogoutButton(),
               ],
             ),
           ),
@@ -497,7 +488,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 const SizedBox(height: 6),
                 Row(
                   children: [
-                    Icon(Icons.calendar_today_outlined, size: 12, color: kTinted),
+                    Icon(
+                      Icons.calendar_today_outlined,
+                      size: 12,
+                      color: kTinted,
+                    ),
                     const SizedBox(width: 6),
                     Text(
                       'Bergabung pada ${_formatDate(_createdAt)}',
@@ -524,8 +519,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
     final String label = raw == 'admin'
         ? 'Admin'
         : raw == 'creator'
-            ? 'Creator'
-            : 'User';
+        ? 'Creator'
+        : 'User';
 
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
@@ -556,8 +551,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
       child: Column(
         children: [
           for (int i = 0; i < children.length; i++) ...[
-            if (i > 0)
-              Divider(height: 1, thickness: 1, color: kSecond),
+            if (i > 0) Divider(height: 1, thickness: 1, color: kSecond),
             children[i],
           ],
         ],
@@ -650,10 +644,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
           foregroundColor: kWrong,
           backgroundColor: kBase,
           elevation: 0,
-          side: BorderSide(
-            color: kWrong.withValues(alpha: .2),
-            width: 2,
-          ),
+          side: BorderSide(color: kWrong.withValues(alpha: .2), width: 2),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(16),
           ),
@@ -672,7 +663,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
     await showModalBottomSheet<void>(
       context: context,
       backgroundColor: Colors.transparent,
+      barrierColor: Colors.black.withValues(alpha: .28),
       isScrollControlled: true,
+      useSafeArea: true,
       builder: (_) => _SheetBox(
         child: _AccountModal(
           name: _name,
@@ -689,12 +682,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
     await showModalBottomSheet<void>(
       context: context,
       backgroundColor: Colors.transparent,
+      barrierColor: Colors.black.withValues(alpha: .28),
       isScrollControlled: true,
-      builder: (_) => _SheetBox(
-        child: _PasswordModal(
-          onSubmit: _savePassword,
-        ),
-      ),
+      useSafeArea: true,
+      builder: (_) => _SheetBox(child: _PasswordModal(onSubmit: _savePassword)),
     );
   }
 
@@ -705,20 +696,15 @@ class _ProfileScreenState extends State<ProfileScreen> {
     if (user == null) return 'User belum login.';
 
     try {
-      await _supabase.from('users').update({
-        'name': name,
-        'email': email,
-      }).eq('id', user.id);
+      await _supabase
+          .from('users')
+          .update({'name': name, 'email': email})
+          .eq('id', user.id);
 
-      await _supabase.from('profiles').update({
-        'name': name,
-      }).eq('id', user.id);
+      await _supabase.from('profiles').update({'name': name}).eq('id', user.id);
 
       await _supabase.auth.updateUser(
-        UserAttributes(
-          email: email,
-          data: {'name': name},
-        ),
+        UserAttributes(email: email, data: {'name': name}),
       );
 
       if (!mounted) return null;
@@ -752,9 +738,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     }
 
     try {
-      await _supabase.auth.updateUser(
-        UserAttributes(password: newPassword),
-      );
+      await _supabase.auth.updateUser(UserAttributes(password: newPassword));
 
       return null;
     } on AuthException catch (e) {
@@ -769,6 +753,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
     await showModalBottomSheet<void>(
       context: context,
       backgroundColor: Colors.transparent,
+      barrierColor: Colors.black.withValues(alpha: .28),
+      isScrollControlled: true,
+      useSafeArea: true,
       builder: (sheetContext) => _SheetBox(
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -824,6 +811,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
               },
             ),
             const SizedBox(height: 16),
+            const Divider(height: 1, color: kSecond),
+            const SizedBox(height: 16),
+            _buildLogoutButton(),
+            const SizedBox(height: 8),
           ],
         ),
       ),
@@ -873,10 +864,7 @@ class _SheetHeader extends StatelessWidget {
         Container(
           width: 36,
           height: 36,
-          decoration: const BoxDecoration(
-            color: kBase,
-            shape: BoxShape.circle,
-          ),
+          decoration: const BoxDecoration(color: kBase, shape: BoxShape.circle),
           child: Icon(icon, size: 16, color: color),
         ),
         const SizedBox(width: 10),
@@ -919,7 +907,7 @@ class _SheetBox extends StatelessWidget {
         padding: const EdgeInsets.all(24),
         decoration: const BoxDecoration(
           color: Colors.white,
-          borderRadius: BorderRadius.vertical(top: Radius.circular(32)),
+          borderRadius: BorderRadius.zero,
         ),
         child: child,
       ),
@@ -1085,15 +1073,20 @@ class _AccountModalState extends State<_AccountModal> {
       children: [
         const _SheetHandle(),
         const SizedBox(height: 24),
-        _SheetHeader(
+        const _SheetHeader(
           icon: Icons.person_outline_rounded,
           title: 'Informasi Akun',
-          onClose: _saving ? null : () => Navigator.pop(context),
+          onClose: null,
         ),
         const SizedBox(height: 12),
         const Text(
           'Perbarui username dan email kamu. Perubahan email akan memerlukan verifikasi ulang.',
-          style: TextStyle(fontFamily: 'FunnelDisplay', fontSize: 12, color: kTinted, height: 1.5),
+          style: TextStyle(
+            fontFamily: 'FunnelDisplay',
+            fontSize: 12,
+            color: kTinted,
+            height: 1.5,
+          ),
         ),
         if (_error != null) ...[
           const SizedBox(height: 12),
@@ -1168,7 +1161,9 @@ class _AccountModalState extends State<_AccountModal> {
           keyboardType: email ? TextInputType.emailAddress : TextInputType.text,
           autocorrect: !email,
           enableSuggestions: !email,
-          textCapitalization: email ? TextCapitalization.none : TextCapitalization.words,
+          textCapitalization: email
+              ? TextCapitalization.none
+              : TextCapitalization.words,
           style: const TextStyle(
             fontFamily: 'FunnelDisplay',
             fontSize: 14,
@@ -1184,7 +1179,10 @@ class _AccountModalState extends State<_AccountModal> {
             prefixIcon: Icon(icon, size: 18, color: kTinted),
             filled: true,
             fillColor: kBase,
-            contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            contentPadding: const EdgeInsets.symmetric(
+              horizontal: 16,
+              vertical: 12,
+            ),
             enabledBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(10),
               borderSide: const BorderSide(color: kSecond),
@@ -1279,7 +1277,12 @@ class _PasswordModalState extends State<_PasswordModal> {
         const SizedBox(height: 12),
         const Text(
           'Gunakan kata sandi yang kuat dan belum pernah dipakai sebelumnya.',
-          style: TextStyle(fontFamily: 'FunnelDisplay', fontSize: 12, color: kTinted, height: 1.5),
+          style: TextStyle(
+            fontFamily: 'FunnelDisplay',
+            fontSize: 12,
+            color: kTinted,
+            height: 1.5,
+          ),
         ),
         if (_error != null) ...[
           const SizedBox(height: 12),
@@ -1365,14 +1368,19 @@ class _PasswordModalState extends State<_PasswordModal> {
             suffixIcon: IconButton(
               onPressed: () => setState(() => _showPw = !_showPw),
               icon: Icon(
-                _showPw ? Icons.visibility_off_outlined : Icons.visibility_outlined,
+                _showPw
+                    ? Icons.visibility_off_outlined
+                    : Icons.visibility_outlined,
                 size: 18,
                 color: kTinted,
               ),
             ),
             filled: true,
             fillColor: kBase,
-            contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            contentPadding: const EdgeInsets.symmetric(
+              horizontal: 16,
+              vertical: 12,
+            ),
             enabledBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(10),
               borderSide: const BorderSide(color: kSecond),

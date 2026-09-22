@@ -1,10 +1,12 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:mobile_scanner/mobile_scanner.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../widgets/auth_shell.dart';
 import '../../widgets/formaly_dock.dart';
+import '../../widgets/formaly_top_bar.dart';
 import '../form/form_detail_screen.dart';
 import '../history/history.dart';
 import '../profile/profile_screen.dart';
@@ -55,20 +57,24 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   Widget build(BuildContext context) {
     // Sembunyikan dock saat keyboard terbuka (seperti di web).
-    final bool keyboardOpen =
-        MediaQuery.of(context).viewInsets.bottom > 0;
+    final bool keyboardOpen = MediaQuery.of(context).viewInsets.bottom > 0;
 
     return Scaffold(
       backgroundColor: kBase,
       body: Stack(
         children: [
-          IndexedStack(index: currentIndex, children: pages),
+          Column(
+            children: [
+              const FormalyTopBar(),
+              Expanded(
+                child: IndexedStack(index: currentIndex, children: pages),
+              ),
+            ],
+          ),
           Align(
             alignment: Alignment.bottomCenter,
             child: AnimatedSlide(
-              offset: keyboardOpen
-                  ? const Offset(0, 1.5)
-                  : Offset.zero,
+              offset: keyboardOpen ? const Offset(0, 1.5) : Offset.zero,
               duration: const Duration(milliseconds: 200),
               curve: Curves.easeInOut,
               child: FormalyDock(
@@ -101,8 +107,7 @@ class HomePage extends StatefulWidget {
 class _HomePageState extends State<HomePage> {
   final SupabaseClient _supabase = Supabase.instance.client;
 
-  final TextEditingController searchController =
-      TextEditingController();
+  final TextEditingController searchController = TextEditingController();
 
   bool isSearching = false;
   String? errorMessage;
@@ -191,10 +196,7 @@ class _HomePageState extends State<HomePage> {
     final enteredTag = searchController.text.trim();
 
     if (enteredTag.isEmpty) {
-      _showMessage(
-        'Masukkan tag terlebih dahulu.',
-        isError: true,
-      );
+      _showMessage('Masukkan tag terlebih dahulu.', isError: true);
       return;
     }
 
@@ -207,38 +209,29 @@ class _HomePageState extends State<HomePage> {
       final tag = await _findTag(enteredTag);
 
       if (tag == null) {
-        throw Exception(
-          'Tag "$enteredTag" tidak ditemukan.',
-        );
+        throw Exception('Tag "$enteredTag" tidak ditemukan.');
       }
 
       final tagId = tag['id']?.toString().trim() ?? '';
 
-      final tagName =
-          tag['name']?.toString().trim().isNotEmpty == true
-              ? tag['name'].toString().trim()
-              : enteredTag;
+      final tagName = tag['name']?.toString().trim().isNotEmpty == true
+          ? tag['name'].toString().trim()
+          : enteredTag;
 
       if (tagId.isEmpty) {
-        throw Exception(
-          'ID tag tidak ditemukan.',
-        );
+        throw Exception('ID tag tidak ditemukan.');
       }
 
       final formIds = await _findFormIdsByTag(tagId);
 
       if (formIds.isEmpty) {
-        throw Exception(
-          'Belum ada formulir yang menggunakan tag "$tagName".',
-        );
+        throw Exception('Belum ada formulir yang menggunakan tag "$tagName".');
       }
 
       final forms = await _findFormsByIds(formIds);
 
       if (forms.isEmpty) {
-        throw Exception(
-          'Formulir untuk tag "$tagName" tidak ditemukan.',
-        );
+        throw Exception('Formulir untuk tag "$tagName" tidak ditemukan.');
       }
 
       if (!mounted) {
@@ -246,31 +239,21 @@ class _HomePageState extends State<HomePage> {
       }
 
       if (forms.length == 1) {
-        final formId =
-            forms.first['id']?.toString().trim() ?? '';
+        final formId = forms.first['id']?.toString().trim() ?? '';
 
         if (formId.isEmpty) {
-          throw Exception(
-            'ID formulir tidak valid.',
-          );
+          throw Exception('ID formulir tidak valid.');
         }
 
         await Navigator.push(
           context,
-          MaterialPageRoute(
-            builder: (_) => FormDetailScreen(
-              formId: formId,
-            ),
-          ),
+          MaterialPageRoute(builder: (_) => FormDetailScreen(formId: formId)),
         );
 
         return;
       }
 
-      await _showFormPicker(
-        tagName: tagName,
-        forms: forms,
-      );
+      await _showFormPicker(tagName: tagName, forms: forms);
     } catch (e) {
       if (!mounted) {
         return;
@@ -282,10 +265,7 @@ class _HomePageState extends State<HomePage> {
         errorMessage = message;
       });
 
-      _showMessage(
-        message,
-        isError: true,
-      );
+      _showMessage(message, isError: true);
     } finally {
       if (mounted) {
         setState(() {
@@ -296,16 +276,11 @@ class _HomePageState extends State<HomePage> {
   }
 
   // Mencari tag pada tabel `tags`.
-  Future<Map<String, dynamic>?> _findTag(
-    String tagName,
-  ) async {
+  Future<Map<String, dynamic>?> _findTag(String tagName) async {
     final response = await _supabase
         .from('tags')
         .select('id, name')
-        .ilike(
-          'name',
-          tagName,
-        )
+        .ilike('name', tagName)
         .maybeSingle();
 
     if (response == null) {
@@ -316,22 +291,16 @@ class _HomePageState extends State<HomePage> {
   }
 
   // Mencari ID form berdasarkan tag.
-  Future<List<String>> _findFormIdsByTag(
-    String tagId,
-  ) async {
+  Future<List<String>> _findFormIdsByTag(String tagId) async {
     final response = await _supabase
         .from('form_tags')
         .select('form_id')
-        .eq(
-          'tag_id',
-          tagId,
-        );
+        .eq('tag_id', tagId);
 
     final ids = <String>{};
 
     for (final row in response) {
-      final formId =
-          row['form_id']?.toString().trim() ?? '';
+      final formId = row['form_id']?.toString().trim() ?? '';
 
       if (formId.isNotEmpty) {
         ids.add(formId);
@@ -355,19 +324,11 @@ class _HomePageState extends State<HomePage> {
           'id, title, description, status, '
           'exam_mode, duration, created_at',
         )
-        .inFilter(
-          'id',
-          formIds,
-        )
-        .order(
-          'created_at',
-          ascending: false,
-        );
+        .inFilter('id', formIds)
+        .order('created_at', ascending: false);
 
     return response
-        .map<Map<String, dynamic>>(
-          (row) => Map<String, dynamic>.from(row),
-        )
+        .map<Map<String, dynamic>>((row) => Map<String, dynamic>.from(row))
         .toList();
   }
 
@@ -379,32 +340,20 @@ class _HomePageState extends State<HomePage> {
     await showModalBottomSheet<void>(
       context: context,
       isScrollControlled: true,
-      backgroundColor:
-          Theme.of(context).colorScheme.surface,
+      backgroundColor: Theme.of(context).colorScheme.surface,
       shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(
-          top: Radius.circular(24),
-        ),
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
       ),
       builder: (sheetContext) {
-        final colors =
-            Theme.of(sheetContext).colorScheme;
+        final colors = Theme.of(sheetContext).colorScheme;
 
         return SafeArea(
           child: Padding(
-            padding: const EdgeInsets.fromLTRB(
-              20,
-              20,
-              20,
-              28,
-            ),
+            padding: const EdgeInsets.fromLTRB(20, 20, 20, 28),
             child: SizedBox(
-              height:
-                  MediaQuery.of(sheetContext).size.height *
-                      0.7,
+              height: MediaQuery.of(sheetContext).size.height * 0.7,
               child: Column(
-                crossAxisAlignment:
-                    CrossAxisAlignment.start,
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Center(
                     child: Container(
@@ -412,15 +361,15 @@ class _HomePageState extends State<HomePage> {
                       height: 5,
                       decoration: BoxDecoration(
                         color: colors.outlineVariant,
-                        borderRadius:
-                            BorderRadius.circular(20),
+                        borderRadius: BorderRadius.circular(20),
                       ),
                     ),
                   ),
                   const SizedBox(height: 20),
                   Text(
                     'Pilih Formulir',
-                    style: TextStyle(fontFamily: 'FunnelDisplay',
+                    style: TextStyle(
+                      fontFamily: 'FunnelDisplay',
 
                       fontSize: 22,
                       fontWeight: FontWeight.bold,
@@ -430,7 +379,8 @@ class _HomePageState extends State<HomePage> {
                   const SizedBox(height: 6),
                   Text(
                     'Tag "$tagName" memiliki ${forms.length} formulir.',
-                    style: TextStyle(fontFamily: 'FunnelDisplay',
+                    style: TextStyle(
+                      fontFamily: 'FunnelDisplay',
 
                       color: colors.onSurfaceVariant,
                     ),
@@ -439,129 +389,89 @@ class _HomePageState extends State<HomePage> {
                   Expanded(
                     child: ListView.separated(
                       itemCount: forms.length,
-                      separatorBuilder: (_, _) =>
-                          const SizedBox(height: 10),
+                      separatorBuilder: (_, _) => const SizedBox(height: 10),
                       itemBuilder: (context, index) {
                         final form = forms[index];
 
-                        final formId =
-                            form['id']?.toString().trim() ??
-                                '';
+                        final formId = form['id']?.toString().trim() ?? '';
 
                         final title =
-                            form['title']
-                                        ?.toString()
-                                        .trim()
-                                        .isNotEmpty ==
-                                    true
-                                ? form['title']
-                                    .toString()
-                                    .trim()
-                                : 'Form tanpa judul';
+                            form['title']?.toString().trim().isNotEmpty == true
+                            ? form['title'].toString().trim()
+                            : 'Form tanpa judul';
 
                         final description =
-                            form['description']
-                                    ?.toString()
-                                    .trim() ??
-                                '';
+                            form['description']?.toString().trim() ?? '';
 
                         return Material(
-                          color:
-                              colors.surfaceContainerHighest,
-                          borderRadius:
-                              BorderRadius.circular(16),
+                          color: colors.surfaceContainerHighest,
+                          borderRadius: BorderRadius.circular(16),
                           child: InkWell(
-                            borderRadius:
-                                BorderRadius.circular(16),
+                            borderRadius: BorderRadius.circular(16),
                             onTap: formId.isEmpty
                                 ? null
                                 : () {
-                                    Navigator.pop(
-                                      sheetContext,
-                                    );
+                                    Navigator.pop(sheetContext);
 
                                     Navigator.push(
                                       context,
                                       MaterialPageRoute(
                                         builder: (_) =>
-                                            FormDetailScreen(
-                                          formId: formId,
-                                        ),
+                                            FormDetailScreen(formId: formId),
                                       ),
                                     );
                                   },
                             child: Container(
-                              padding:
-                                  const EdgeInsets.all(16),
+                              padding: const EdgeInsets.all(16),
                               decoration: BoxDecoration(
                                 border: Border.all(
-                                  color:
-                                      colors.outlineVariant,
+                                  color: colors.outlineVariant,
                                 ),
-                                borderRadius:
-                                    BorderRadius.circular(16),
+                                borderRadius: BorderRadius.circular(16),
                               ),
                               child: Row(
                                 children: [
                                   Container(
                                     width: 46,
                                     height: 46,
-                                    decoration:
-                                        BoxDecoration(
+                                    decoration: BoxDecoration(
                                       color: colors.surface,
-                                      borderRadius:
-                                          BorderRadius.circular(
-                                        14,
-                                      ),
+                                      borderRadius: BorderRadius.circular(14),
                                     ),
                                     child: Icon(
-                                      Icons
-                                          .description_outlined,
-                                      color:
-                                          colors.onSurface,
+                                      Icons.description_outlined,
+                                      color: colors.onSurface,
                                     ),
                                   ),
                                   const SizedBox(width: 14),
                                   Expanded(
                                     child: Column(
                                       crossAxisAlignment:
-                                          CrossAxisAlignment
-                                              .start,
+                                          CrossAxisAlignment.start,
                                       children: [
                                         Text(
                                           title,
                                           maxLines: 2,
-                                          overflow:
-                                              TextOverflow
-                                                  .ellipsis,
-                                          style:
-                                              TextStyle(fontFamily: 'FunnelDisplay',
+                                          overflow: TextOverflow.ellipsis,
+                                          style: TextStyle(
+                                            fontFamily: 'FunnelDisplay',
 
-                                            fontWeight:
-                                                FontWeight
-                                                    .bold,
+                                            fontWeight: FontWeight.bold,
                                             fontSize: 15,
-                                            color:
-                                                colors.onSurface,
+                                            color: colors.onSurface,
                                           ),
                                         ),
-                                        if (description
-                                            .isNotEmpty) ...[
-                                          const SizedBox(
-                                            height: 4,
-                                          ),
+                                        if (description.isNotEmpty) ...[
+                                          const SizedBox(height: 4),
                                           Text(
                                             description,
                                             maxLines: 2,
-                                            overflow:
-                                                TextOverflow
-                                                    .ellipsis,
-                                            style:
-                                                TextStyle(fontFamily: 'FunnelDisplay',
+                                            overflow: TextOverflow.ellipsis,
+                                            style: TextStyle(
+                                              fontFamily: 'FunnelDisplay',
 
                                               fontSize: 12,
-                                              color: colors
-                                                  .onSurfaceVariant,
+                                              color: colors.onSurfaceVariant,
                                             ),
                                           ),
                                         ],
@@ -570,11 +480,9 @@ class _HomePageState extends State<HomePage> {
                                   ),
                                   const SizedBox(width: 8),
                                   Icon(
-                                    Icons
-                                        .arrow_forward_ios_rounded,
+                                    Icons.arrow_forward_ios_rounded,
                                     size: 18,
-                                    color:
-                                        colors.onSurfaceVariant,
+                                    color: colors.onSurfaceVariant,
                                   ),
                                 ],
                               ),
@@ -594,10 +502,7 @@ class _HomePageState extends State<HomePage> {
   }
 
   // Menampilkan pesan kepada user.
-  void _showMessage(
-    String message, {
-    bool isError = false,
-  }) {
+  void _showMessage(String message, {bool isError = false}) {
     if (!mounted) {
       return;
     }
@@ -609,8 +514,7 @@ class _HomePageState extends State<HomePage> {
       ..showSnackBar(
         SnackBar(
           content: Text(message),
-          backgroundColor:
-              isError ? colors.error : null,
+          backgroundColor: isError ? colors.error : null,
           behavior: SnackBarBehavior.floating,
         ),
       );
@@ -656,7 +560,8 @@ class _HomePageState extends State<HomePage> {
                 Text(
                   'Mulai Mengerjakan!',
                   textAlign: TextAlign.center,
-                  style: TextStyle(fontFamily: 'FunnelDisplay',
+                  style: TextStyle(
+                    fontFamily: 'FunnelDisplay',
 
                     fontSize: 36,
                     fontWeight: FontWeight.w900,
@@ -671,7 +576,8 @@ class _HomePageState extends State<HomePage> {
                 Text(
                   'Mulai Mengerjakan formulir dengan memasukkan tag di bawah.',
                   textAlign: TextAlign.center,
-                  style: TextStyle(fontFamily: 'FunnelDisplay',
+                  style: TextStyle(
+                    fontFamily: 'FunnelDisplay',
 
                     fontSize: 14,
                     color: kDarks,
@@ -683,6 +589,20 @@ class _HomePageState extends State<HomePage> {
                 ConstrainedBox(
                   constraints: const BoxConstraints(maxWidth: 576),
                   child: _buildSearch(),
+                ),
+                const SizedBox(height: 16),
+                OutlinedButton.icon(
+                  onPressed: () => Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (_) => const QrScanScreen()),
+                  ),
+                  icon: const Icon(Icons.qr_code_scanner_rounded),
+                  label: const Text('Scan QR'),
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: kDarks,
+                    side: const BorderSide(color: kDarks),
+                    shape: const StadiumBorder(),
+                  ),
                 ),
               ],
             ),
@@ -730,7 +650,8 @@ class _HomePageState extends State<HomePage> {
                 ),
                 child: Text(
                   'F',
-                  style: TextStyle(fontFamily: 'FunnelDisplay',
+                  style: TextStyle(
+                    fontFamily: 'FunnelDisplay',
 
                     color: Colors.white,
                     fontSize: 14,
@@ -750,7 +671,8 @@ class _HomePageState extends State<HomePage> {
                         f.title,
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
-                        style: TextStyle(fontFamily: 'FunnelDisplay',
+                        style: TextStyle(
+                          fontFamily: 'FunnelDisplay',
 
                           fontSize: 12,
                           fontWeight: FontWeight.w700,
@@ -762,7 +684,8 @@ class _HomePageState extends State<HomePage> {
                         f.author,
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
-                        style: TextStyle(fontFamily: 'FunnelDisplay',
+                        style: TextStyle(
+                          fontFamily: 'FunnelDisplay',
 
                           fontSize: 10,
                           color: kTinted,
@@ -789,8 +712,7 @@ class _HomePageState extends State<HomePage> {
                     height: 6,
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
-                      color: const Color(0xFFFBBF24)
-                          .withValues(alpha: .7),
+                      color: const Color(0xFFFBBF24).withValues(alpha: .7),
                     ),
                   ),
                   const SizedBox(width: 6),
@@ -814,7 +736,8 @@ class _HomePageState extends State<HomePage> {
             child: Text(
               f.question,
               key: ValueKey(f.question),
-              style: TextStyle(fontFamily: 'FunnelDisplay',
+              style: TextStyle(
+                fontFamily: 'FunnelDisplay',
 
                 fontSize: 16,
                 fontWeight: FontWeight.w700,
@@ -826,9 +749,17 @@ class _HomePageState extends State<HomePage> {
 
           const SizedBox(height: 12),
 
-          _buildOptionPill(text: f.options.first, primary: true, showText: showText),
+          _buildOptionPill(
+            text: f.options.first,
+            primary: true,
+            showText: showText,
+          ),
           const SizedBox(height: 6),
-          _buildOptionPill(text: f.options.last, primary: false, showText: showText),
+          _buildOptionPill(
+            text: f.options.last,
+            primary: false,
+            showText: showText,
+          ),
         ],
       ),
     );
@@ -856,7 +787,8 @@ class _HomePageState extends State<HomePage> {
               text,
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
-              style: TextStyle(fontFamily: 'FunnelDisplay',
+              style: TextStyle(
+                fontFamily: 'FunnelDisplay',
 
                 fontSize: 12,
                 fontWeight: FontWeight.w600,
@@ -891,15 +823,11 @@ class _HomePageState extends State<HomePage> {
             color: Colors.white,
             borderRadius: BorderRadius.circular(30),
             border: Border.all(
-              color: _searchFocused
-                  ? kTinted.withValues(alpha: .5)
-                  : kSecond,
+              color: _searchFocused ? kTinted.withValues(alpha: .5) : kSecond,
             ),
             boxShadow: [
               BoxShadow(
-                color: kDarks.withValues(
-                  alpha: _searchFocused ? .1 : .05,
-                ),
+                color: kDarks.withValues(alpha: _searchFocused ? .1 : .05),
                 blurRadius: _searchFocused ? 18 : 10,
                 offset: const Offset(0, 4),
               ),
@@ -918,14 +846,16 @@ class _HomePageState extends State<HomePage> {
                   onSubmitted: (_) {
                     if (canSearch) searchForm();
                   },
-                  style: TextStyle(fontFamily: 'FunnelDisplay',
+                  style: TextStyle(
+                    fontFamily: 'FunnelDisplay',
 
                     color: kDarks,
                     fontSize: 14,
                   ),
                   decoration: InputDecoration(
                     hintText: 'Cari berdasarkan tag',
-                    hintStyle: TextStyle(fontFamily: 'FunnelDisplay',
+                    hintStyle: TextStyle(
+                      fontFamily: 'FunnelDisplay',
 
                       color: kTinted,
                       fontSize: 14,
@@ -946,11 +876,7 @@ class _HomePageState extends State<HomePage> {
                     _searchFocusNode.requestFocus();
                   },
                   visualDensity: VisualDensity.compact,
-                  icon: Icon(
-                    Icons.close_rounded,
-                    size: 16,
-                    color: kTinted,
-                  ),
+                  icon: Icon(Icons.close_rounded, size: 16, color: kTinted),
                 ),
               const SizedBox(width: 4),
               Container(
@@ -961,12 +887,9 @@ class _HomePageState extends State<HomePage> {
                   style: ElevatedButton.styleFrom(
                     elevation: 0,
                     backgroundColor: kDone,
-                    disabledBackgroundColor:
-                        kDone.withValues(alpha: .4),
+                    disabledBackgroundColor: kDone.withValues(alpha: .4),
                     foregroundColor: Colors.white,
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 20,
-                    ),
+                    padding: const EdgeInsets.symmetric(horizontal: 20),
                     shape: const StadiumBorder(),
                   ),
                   child: isSearching
@@ -986,7 +909,8 @@ class _HomePageState extends State<HomePage> {
                               const SizedBox(width: 6),
                               Text(
                                 'Cari',
-                                style: TextStyle(fontFamily: 'FunnelDisplay',
+                                style: TextStyle(
+                                  fontFamily: 'FunnelDisplay',
 
                                   fontSize: 13,
                                   fontWeight: FontWeight.w500,
@@ -1006,21 +930,17 @@ class _HomePageState extends State<HomePage> {
           const SizedBox(height: 16),
           Container(
             width: double.infinity,
-            padding: const EdgeInsets.symmetric(
-              horizontal: 12,
-              vertical: 12,
-            ),
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
             decoration: BoxDecoration(
               color: kWrong.withValues(alpha: .1),
               borderRadius: BorderRadius.circular(12),
-              border: Border.all(
-                color: kWrong.withValues(alpha: .2),
-              ),
+              border: Border.all(color: kWrong.withValues(alpha: .2)),
             ),
             child: Text(
               errorMessage!,
               textAlign: TextAlign.center,
-              style: TextStyle(fontFamily: 'FunnelDisplay',
+              style: TextStyle(
+                fontFamily: 'FunnelDisplay',
 
                 fontSize: 12,
                 fontWeight: FontWeight.w500,
@@ -1035,6 +955,33 @@ class _HomePageState extends State<HomePage> {
 }
 
 // Data form tiruan untuk kartu showcase di home.
+class QrScanScreen extends StatefulWidget {
+  const QrScanScreen({super.key});
+
+  @override
+  State<QrScanScreen> createState() => _QrScanScreenState();
+}
+
+class _QrScanScreenState extends State<QrScanScreen> {
+  bool _handled = false;
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: const Text('Scan QR')),
+      body: MobileScanner(
+        onDetect: (capture) {
+          if (_handled || capture.barcodes.isEmpty) return;
+          final value = capture.barcodes.first.rawValue;
+          if (value == null || value.isEmpty) return;
+          _handled = true;
+          Navigator.pop(context, value);
+        },
+      ),
+    );
+  }
+}
+
 class _ShowcaseForm {
   final String title;
   final String author;

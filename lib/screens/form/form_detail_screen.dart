@@ -96,7 +96,7 @@ class _FormDetailScreenState extends State<FormDetailScreen> {
 
       if (formResponse == null) {
         throw Exception(
-          'Form dengan ID "$cleanFormId" tidak ditemukan di Supabase.',
+          'Form "$cleanFormId" tidak ditemukan.',
         );
       }
 
