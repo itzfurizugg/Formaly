@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import '../../widgets/auth_shell.dart';
+
 class ForgotPasswordScreen extends StatefulWidget {
   const ForgotPasswordScreen({super.key});
 
@@ -216,84 +218,18 @@ class _ForgotPasswordScreenState
   Widget build(
     BuildContext context,
   ) {
-    return Scaffold(
-      // Design saja yang disesuaikan dengan gambar referensi.
-      backgroundColor: const Color(0xffF7F7F7),
-
-      body: SafeArea(
-        child: SingleChildScrollView(
-          keyboardDismissBehavior:
-              ScrollViewKeyboardDismissBehavior.onDrag,
-          padding: const EdgeInsets.fromLTRB(
-            10,
-            28,
-            10,
-            24,
-          ),
-          child: Column(
-            children: [
-              // Logo Formaly:
-              // "Form" bold, "aly" regular.
-              RichText(
-                text: TextSpan(
-                  children: [
-                    TextSpan(
-                      text: 'Form',
-                      style: GoogleFonts.poppins(
-                        fontSize: 36,
-                        fontWeight: FontWeight.w800,
-                        color: const Color(0xff3E4149),
-                        letterSpacing: -1,
-                        height: 1,
-                      ),
-                    ),
-                    TextSpan(
-                      text: 'aly',
-                      style: GoogleFonts.poppins(
-                        fontSize: 36,
-                        fontWeight: FontWeight.w400,
-                        color: const Color(0xff3E4149),
-                        letterSpacing: -1,
-                        height: 1,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-
-              const SizedBox(height: 30),
-
-              // Card utama mengikuti gambar referensi.
-              Container(
-                width: double.infinity,
-                padding: const EdgeInsets.fromLTRB(
-                  20,
-                  22,
-                  20,
-                  22,
-                ),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(22),
-                  border: Border.all(
-                    color: const Color(0xffE5E5E5),
-                  ),
-                  boxShadow: const [
-                    BoxShadow(
-                      color: Color(0x12000000),
-                      blurRadius: 5,
-                      offset: Offset(0, 2),
-                    ),
-                  ],
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    // Tombol kembali berada di dalam card.
+    return AuthShell(
+      showHeadline: false,
+      child: Container(
+        padding: const EdgeInsets.all(20),
+        width: double.infinity,
+        decoration: const BoxDecoration(color: Colors.transparent),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+                    // Tombol kembali.
                     Material(
-                      color: const Color(0xffF7F7F7),
-                      elevation: 1,
-                      shadowColor: Colors.black12,
+                      color: const Color(0xffEEEEEE),
                       shape: const CircleBorder(),
                       child: InkWell(
                         customBorder: const CircleBorder(),
@@ -301,25 +237,25 @@ class _ForgotPasswordScreenState
                             ? null
                             : () => Navigator.pop(context),
                         child: const SizedBox(
-                          width: 34,
-                          height: 34,
+                          width: 40,
+                          height: 40,
                           child: Icon(
                             Icons.arrow_back_rounded,
-                            size: 17,
-                            color: Color(0xff3E4149),
+                            size: 20,
+                            color: Color(0xff393E46),
                           ),
                         ),
                       ),
                     ),
 
-                    const SizedBox(height: 11),
+                    const SizedBox(height: 18),
 
                     Text(
-                      'Kata Sandi Lupa',
+                      'Lupa Password',
                       style: GoogleFonts.poppins(
-                        fontSize: 24,
+                        fontSize: 26,
                         fontWeight: FontWeight.w700,
-                        color: const Color(0xff3E4149),
+                        color: const Color(0xff393E46),
                         height: 1.2,
                       ),
                     ),
@@ -421,7 +357,7 @@ class _ForgotPasswordScreenState
                           ),
                         ),
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color(0xff3E4149),
+                          backgroundColor: const Color(0xff393E46),
                           foregroundColor: Colors.white,
                           disabledBackgroundColor:
                               const Color(0xff96989D),
@@ -461,11 +397,7 @@ class _ForgotPasswordScreenState
                         ),
                       ),
                     ),
-                  ],
-                ),
-              ),
-            ],
-          ),
+          ],
         ),
       ),
     );

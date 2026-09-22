@@ -3,6 +3,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../core/routes/app_routes.dart';
+import '../../widgets/auth_shell.dart';
 
 class NewPasswordScreen extends StatefulWidget {
   // Halaman untuk membuat password baru.
@@ -300,54 +301,42 @@ class _NewPasswordScreenState
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      // Background halaman.
-      backgroundColor: Colors.white,
-
-      // AppBar halaman.
-      appBar: AppBar(
-        backgroundColor: Colors.white,
-        surfaceTintColor:
-            Colors.transparent,
-        elevation: 0,
-        automaticallyImplyLeading:
-            false,
-        centerTitle: true,
-        title: Text(
-          'Password Baru',
-          style:
-              GoogleFonts.poppins(
-            color: Colors.black,
-            fontWeight:
-                FontWeight.bold,
-          ),
-        ),
-      ),
-
-      // Isi halaman.
-      body: SafeArea(
-        child: SingleChildScrollView(
-          keyboardDismissBehavior:
-              ScrollViewKeyboardDismissBehavior.onDrag,
-          padding:
-              const EdgeInsets.symmetric(
-            horizontal: 28,
-            vertical: 20,
-          ),
-          child: Column(
-            crossAxisAlignment:
-                CrossAxisAlignment.start,
-            children: [
-              // Judul halaman.
-              Text(
-                'Buat Password Baru',
-                style:
-                    GoogleFonts.poppins(
-                  fontSize: 34,
-                  fontWeight:
-                      FontWeight.bold,
+    return AuthShell(
+      showHeadline: false,
+      child: Container(
+        padding: const EdgeInsets.all(20),
+        width: double.infinity,
+        decoration: const BoxDecoration(color: Colors.transparent),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Tombol kembali.
+            Material(
+              color: const Color(0xffEEEEEE),
+              shape: const CircleBorder(),
+              child: InkWell(
+                customBorder: const CircleBorder(),
+                onTap: isLoading ? null : () => Navigator.pop(context),
+                child: const SizedBox(
+                  width: 40,
+                  height: 40,
+                  child: Icon(Icons.arrow_back_rounded, size: 20, color: Color(0xff393E46)),
                 ),
               ),
+            ),
+            const SizedBox(height: 18),
+
+            // Judul halaman.
+            Text(
+              'Buat Password Baru',
+              style:
+                  GoogleFonts.poppins(
+                fontSize: 26,
+                fontWeight:
+                    FontWeight.w700,
+                color: const Color(0xff393E46),
+              ),
+            ),
 
               const SizedBox(
                 height: 8,
@@ -591,7 +580,7 @@ class _NewPasswordScreenState
                   style:
                       ElevatedButton.styleFrom(
                     backgroundColor:
-                        const Color(0xff343A40),
+                        const Color(0xff393E46),
                     disabledBackgroundColor:
                         Colors.grey.shade400,
                     foregroundColor:
@@ -681,9 +670,7 @@ class _NewPasswordScreenState
                   ],
                 ),
               ),
-            ],
-          ),
-        ),
+        ],
       ),
     );
   }

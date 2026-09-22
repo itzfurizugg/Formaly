@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import '../../widgets/auth_shell.dart';
 import 'new_password_screen.dart';
 
 class VerifyOtpScreen extends StatefulWidget {
@@ -255,48 +256,40 @@ class _VerifyOtpScreenState
         otpController.text.trim().length == 6 &&
         !busy;
 
-    return Scaffold(
-      // Background halaman.
-      backgroundColor: Colors.white,
-
-      // AppBar halaman.
-      appBar: AppBar(
-        backgroundColor: Colors.white,
-        surfaceTintColor:
-            Colors.transparent,
-        elevation: 0,
-        leading: IconButton(
-          onPressed: busy
-              ? null
-              : () => Navigator.pop(context),
-          icon: const Icon(
-            Icons.arrow_back_ios_new,
-            color: Colors.black,
-          ),
-        ),
-      ),
-
-      // Isi halaman.
-      body: SafeArea(
-        child: SingleChildScrollView(
-          keyboardDismissBehavior:
-              ScrollViewKeyboardDismissBehavior.onDrag,
-          padding: const EdgeInsets.symmetric(
-            horizontal: 28,
-            vertical: 20,
-          ),
-          child: Column(
-            crossAxisAlignment:
-                CrossAxisAlignment.start,
-            children: [
-              // Judul halaman.
-              Text(
-                'Verifikasi OTP',
-                style: GoogleFonts.poppins(
-                  fontSize: 34,
-                  fontWeight: FontWeight.bold,
+    return AuthShell(
+      showHeadline: false,
+      child: Container(
+        padding: const EdgeInsets.all(20),
+        width: double.infinity,
+        decoration: const BoxDecoration(color: Colors.transparent),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Tombol kembali.
+            Material(
+              color: const Color(0xffEEEEEE),
+              shape: const CircleBorder(),
+              child: InkWell(
+                customBorder: const CircleBorder(),
+                onTap: busy ? null : () => Navigator.pop(context),
+                child: const SizedBox(
+                  width: 40,
+                  height: 40,
+                  child: Icon(Icons.arrow_back_rounded, size: 20, color: Color(0xff393E46)),
                 ),
               ),
+            ),
+            const SizedBox(height: 18),
+
+            // Judul halaman.
+            Text(
+              'Verifikasi OTP',
+              style: GoogleFonts.poppins(
+                fontSize: 26,
+                fontWeight: FontWeight.w700,
+                color: const Color(0xff393E46),
+              ),
+            ),
 
               const SizedBox(height: 8),
 
@@ -428,7 +421,7 @@ class _VerifyOtpScreenState
                   style:
                       ElevatedButton.styleFrom(
                     backgroundColor:
-                        const Color(0xff343A40),
+                        const Color(0xff393E46),
                     disabledBackgroundColor:
                         Colors.grey.shade400,
                     foregroundColor:
@@ -537,9 +530,7 @@ class _VerifyOtpScreenState
                 ),
               ),
 
-              const SizedBox(height: 20),
-            ],
-          ),
+              ],
         ),
       ),
     );
