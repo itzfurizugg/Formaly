@@ -6,7 +6,6 @@ import {
     Eye,
     FileText,
     Globe,
-    ListFilter,
     Save,
     Shuffle,
     Trash2,
@@ -44,7 +43,6 @@ import ModalPortal from "../../components/modalPortal"
 interface FormSettingsData {
     show_score_to_respondent: boolean
     show_answers_to_respondent: boolean
-    show_correct_filter_to_respondent: boolean
     randomize_questions: boolean
     allow_multiple_submissions: boolean
 }
@@ -52,7 +50,6 @@ interface FormSettingsData {
 const DEFAULTS: FormSettingsData = {
     show_score_to_respondent: true,
     show_answers_to_respondent: false,
-    show_correct_filter_to_respondent: true,
     randomize_questions: false,
     allow_multiple_submissions: false,
 }
@@ -74,16 +71,9 @@ const SETTING_ROWS: {
         {
             key: "show_answers_to_respondent",
             icon: BookOpenText,
-            title: "Tampilkan jawaban kepada responden",
-            description: "Responden bisa melihat rincian jawabannya beserta koreksi benar/salah di halaman hasil.",
+            title: "Tampilkan jawaban dan filter benar/salah kepada responden",
+            description: "Responden bisa melihat rincian jawaban beserta filter berdasarkan status benar, salah, isian, atau tanpa penilaian di halaman hasil.",
             hint: "Cocok dimatikan untuk ujian agar kunci jawaban tidak tersebar.",
-        },
-        {
-            key: "show_correct_filter_to_respondent",
-            icon: ListFilter,
-            title: "Tampilkan filter benar/salah di halaman hasil",
-            description: "Responden bisa memfilter rincian jawaban berdasarkan status benar, salah, isian, atau tanpa penilaian.",
-            hint: "Hanya berlaku jika rincian jawaban ditampilkan.",
         },
         {
             key: "randomize_questions",
@@ -208,7 +198,6 @@ function FormEdit() {
         const nextSettings: FormSettingsData = {
             show_score_to_respondent: data.show_score_to_respondent ?? DEFAULTS.show_score_to_respondent,
             show_answers_to_respondent: data.show_answers_to_respondent ?? DEFAULTS.show_answers_to_respondent,
-            show_correct_filter_to_respondent: data.show_correct_filter_to_respondent ?? DEFAULTS.show_correct_filter_to_respondent,
             randomize_questions: data.randomize_questions ?? DEFAULTS.randomize_questions,
             allow_multiple_submissions: data.allow_multiple_submissions ?? DEFAULTS.allow_multiple_submissions,
         }
@@ -407,8 +396,8 @@ function FormEdit() {
                 .from("forms")
                 .update({
                     show_score_to_respondent: settings.show_score_to_respondent,
-                    show_answers_to_respondent: settings.show_answers_to_respondent,
-                    show_correct_filter_to_respondent: settings.show_correct_filter_to_respondent,
+                     show_answers_to_respondent: settings.show_answers_to_respondent,
+                     show_correct_filter_to_respondent: settings.show_answers_to_respondent,
                     randomize_questions: settings.randomize_questions,
                     allow_multiple_submissions: settings.allow_multiple_submissions,
                     header_color: headerColor || null,
@@ -463,8 +452,8 @@ function FormEdit() {
                 .from("forms")
                 .update({
                     show_score_to_respondent: settings.show_score_to_respondent,
-                    show_answers_to_respondent: settings.show_answers_to_respondent,
-                    show_correct_filter_to_respondent: settings.show_correct_filter_to_respondent,
+                     show_answers_to_respondent: settings.show_answers_to_respondent,
+                     show_correct_filter_to_respondent: settings.show_answers_to_respondent,
                     randomize_questions: settings.randomize_questions,
                     allow_multiple_submissions: settings.allow_multiple_submissions,
                     header_color: headerColor || null,
@@ -621,9 +610,11 @@ function FormEdit() {
                                                             role="radio"
                                                             aria-checked={selected}
                                                             onClick={() => setStatus(opt.value)}
-                                                            className={`flex items-center justify-center gap-2 rounded-xl border-2 px-3 py-2.5 text-sm font-medium transition-all duration-200 active:scale-[0.98] ${selected
-                                                                ? "border-done bg-done/10 text-done"
-                                                                : "border-second bg-white dark:bg-second text-darks hover:shadow-sm"
+                                                            className={`flex items-center justify-center gap-2 rounded-sm border-2 px-3 py-2.5 text-sm font-medium transition-all duration-200 active:scale-[0.98] ${selected
+                                                             ? opt.value === "draft"
+                                                                 ? "border-darks bg-darks text-base"
+                                                                 : "border-done bg-done text-base"
+                                                             : "border-second bg-white dark:bg-second text-darks hover:shadow-sm"
                                                                 }`}
                                                         >
                                                             {opt.label}
