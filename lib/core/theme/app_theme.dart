@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 
 import '../constants/app_color.dart';
 
@@ -23,8 +22,10 @@ class AppTheme {
         surface: Colors.white,
       ),
 
-      // Menggunakan font Poppins.
-      textTheme: GoogleFonts.poppinsTextTheme(),
+      // Menggunakan font Funnel Display (sama dengan web).
+      textTheme: ThemeData.light().textTheme.apply(
+            fontFamily: 'FunnelDisplay',
+          ),
 
       // Tampilan AppBar mode terang.
       appBarTheme: const AppBarTheme(
@@ -92,10 +93,10 @@ class AppTheme {
         surface: const Color(0xff1E1E1E),
       ),
 
-      // Font Poppins untuk mode gelap.
-      textTheme: GoogleFonts.poppinsTextTheme(
-        ThemeData.dark().textTheme,
-      ),
+// Font Funnel Display untuk mode gelap.
+      textTheme: ThemeData.dark().textTheme.apply(
+            fontFamily: 'FunnelDisplay',
+          ),
 
       // Tampilan AppBar mode gelap.
       appBarTheme: const AppBarTheme(

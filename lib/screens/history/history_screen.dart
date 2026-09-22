@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 
 import '../../core/models/history_model.dart';
 import '../../core/services/history_service.dart';
@@ -58,7 +57,8 @@ class _HistoryScreenState extends State<HistoryScreen> {
         centerTitle: true,
         title: Text(
           'Riwayat',
-          style: GoogleFonts.poppins(
+          style: TextStyle(fontFamily: 'FunnelDisplay',
+
             color: colors.onSurface,
             fontWeight: FontWeight.bold,
           ),
@@ -137,7 +137,8 @@ class _HistoryScreenState extends State<HistoryScreen> {
           Text(
             'Belum ada riwayat.',
             textAlign: TextAlign.center,
-            style: GoogleFonts.poppins(
+            style: TextStyle(fontFamily: 'FunnelDisplay',
+
               fontSize: 16,
               color: colors.onSurface,
               fontWeight: FontWeight.w600,
@@ -147,7 +148,8 @@ class _HistoryScreenState extends State<HistoryScreen> {
           Text(
             'Riwayat pengerjaan form akan muncul di sini.',
             textAlign: TextAlign.center,
-            style: GoogleFonts.poppins(
+            style: TextStyle(fontFamily: 'FunnelDisplay',
+
               fontSize: 13,
               color: colors.onSurfaceVariant,
             ),
@@ -252,7 +254,8 @@ class _HistoryScreenState extends State<HistoryScreen> {
                         title,
                         maxLines: 2,
                         overflow: TextOverflow.ellipsis,
-                        style: GoogleFonts.poppins(
+                        style: TextStyle(fontFamily: 'FunnelDisplay',
+
                           fontSize: 17,
                           fontWeight: FontWeight.bold,
                           color: colors.onSurface,
@@ -377,7 +380,8 @@ class _HistoryScreenState extends State<HistoryScreen> {
           const SizedBox(width: 7),
           Text(
             finished ? 'SELESAI' : 'BELUM SELESAI',
-            style: GoogleFonts.poppins(
+            style: TextStyle(fontFamily: 'FunnelDisplay',
+
               fontSize: 12,
               fontWeight: FontWeight.w600,
               color: finished
@@ -421,7 +425,8 @@ class _HistoryScreenState extends State<HistoryScreen> {
             padding: const EdgeInsets.only(top: 5),
             child: Text(
               label,
-              style: GoogleFonts.poppins(
+              style: TextStyle(fontFamily: 'FunnelDisplay',
+
                 fontSize: 13,
                 color: colors.onSurfaceVariant,
               ),
@@ -435,7 +440,8 @@ class _HistoryScreenState extends State<HistoryScreen> {
             child: Text(
               value,
               textAlign: TextAlign.right,
-              style: GoogleFonts.poppins(
+              style: TextStyle(fontFamily: 'FunnelDisplay',
+
                 fontSize: 13,
                 fontWeight: FontWeight.w600,
                 color: colors.onSurface,

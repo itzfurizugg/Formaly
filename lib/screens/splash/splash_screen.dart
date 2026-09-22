@@ -6,7 +6,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:supabase_flutter/supabase_flutter.dart'; 
  
 import '../../core/services/exam_draft_service.dart'; 
-import '../auth/login_screen.dart'; 
+import '../auth/login.dart'; 
 import '../form/question_screen.dart'; 
 import '../home/home_screen.dart'; 
  
@@ -101,7 +101,8 @@ class _SplashScreenState extends State<SplashScreen> {
                       children: [ 
                         TextSpan( 
                           text: 'Form', 
-                          style: GoogleFonts.poppins( 
+                          style: TextStyle(fontFamily: 'FunnelDisplay',
+ 
                             fontSize: 46, 
                             fontWeight: FontWeight.w800, 
                             color: Colors.black, 
@@ -109,7 +110,8 @@ class _SplashScreenState extends State<SplashScreen> {
                         ), 
                         TextSpan( 
                           text: 'aly', 
-                          style: GoogleFonts.poppins( 
+                          style: TextStyle(fontFamily: 'FunnelDisplay',
+ 
                             fontSize: 46, 
                             fontWeight: FontWeight.w400, 
                             color: Colors.black, 
@@ -121,7 +123,8 @@ class _SplashScreenState extends State<SplashScreen> {
                   const SizedBox(height: 12), 
                   Text( 
                     'Form Maker App', 
-                    style: GoogleFonts.poppins( 
+                    style: TextStyle(fontFamily: 'FunnelDisplay',
+ 
                       fontSize: 15, 
                       color: Colors.grey, 
                     ), 

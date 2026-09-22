@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../core/routes/app_routes.dart';
@@ -138,14 +137,16 @@ class _NewPasswordScreenState
             ),
             title: Text(
               'Password Berhasil Diubah',
-              style: GoogleFonts.poppins(
+              style: TextStyle(fontFamily: 'FunnelDisplay',
+
                 fontWeight: FontWeight.bold,
               ),
             ),
             content: Text(
               'Password kamu sudah berhasil '
               'diperbarui. Silakan login kembali.',
-              style: GoogleFonts.poppins(
+              style: TextStyle(fontFamily: 'FunnelDisplay',
+
                 height: 1.5,
               ),
             ),
@@ -275,7 +276,8 @@ class _NewPasswordScreenState
         SnackBar(
           content: Text(
             message,
-            style: GoogleFonts.poppins(
+            style: TextStyle(fontFamily: 'FunnelDisplay',
+
               fontSize: 13,
             ),
           ),
@@ -330,11 +332,13 @@ class _NewPasswordScreenState
             Text(
               'Buat Password Baru',
               style:
-                  GoogleFonts.poppins(
-                fontSize: 26,
+                  TextStyle(fontFamily: 'FunnelDisplay',
+
+                fontSize: 24,
                 fontWeight:
                     FontWeight.w700,
-                color: const Color(0xff393E46),
+                color: kDarks,
+                height: 1.2,
               ),
             ),
 
@@ -346,25 +350,27 @@ class _NewPasswordScreenState
               Text(
                 'Masukkan password baru untuk akun kamu.',
                 style:
-                    GoogleFonts.poppins(
+                    TextStyle(fontFamily: 'FunnelDisplay',
+
                   fontSize: 14,
-                  color:
-                      Colors.grey.shade600,
+                  color: kTinted,
                   height: 1.5,
                 ),
               ),
 
               const SizedBox(
-                height: 36,
+                height: 24,
               ),
 
               // Label password baru.
               Text(
                 'Password Baru',
                 style:
-                    GoogleFonts.poppins(
-                  fontWeight:
-                      FontWeight.w600,
+                    TextStyle(fontFamily: 'FunnelDisplay',
+
+                  fontSize: 13,
+                  fontWeight: FontWeight.w600,
+                  color: kDarks,
                 ),
               ),
 
@@ -393,10 +399,6 @@ class _NewPasswordScreenState
                     InputDecoration(
                   hintText:
                       'Masukkan password baru',
-                  prefixIcon:
-                      const Icon(
-                    Icons.lock_outline,
-                  ),
                   suffixIcon:
                       IconButton(
                     onPressed:
@@ -410,19 +412,18 @@ class _NewPasswordScreenState
                     ),
                   ),
                   filled: true,
-                  fillColor:
-                      const Color(0xffF7F7F7),
+                  fillColor: kSecond,
                   border:
                       OutlineInputBorder(
                     borderRadius:
-                        BorderRadius.circular(14),
+                        BorderRadius.circular(12),
                     borderSide:
                         BorderSide.none,
                   ),
                   enabledBorder:
                       OutlineInputBorder(
                     borderRadius:
-                        BorderRadius.circular(14),
+                        BorderRadius.circular(12),
                     borderSide:
                         BorderSide(
                       color:
@@ -432,18 +433,17 @@ class _NewPasswordScreenState
                   focusedBorder:
                       OutlineInputBorder(
                     borderRadius:
-                        BorderRadius.circular(14),
+                        BorderRadius.circular(12),
                     borderSide:
                         const BorderSide(
-                      color:
-                          Color(0xff343A40),
+                      color: kDone,
                       width: 1.2,
                     ),
                   ),
                   disabledBorder:
                       OutlineInputBorder(
                     borderRadius:
-                        BorderRadius.circular(14),
+                        BorderRadius.circular(12),
                     borderSide:
                         BorderSide(
                       color:
@@ -467,9 +467,11 @@ class _NewPasswordScreenState
               Text(
                 'Konfirmasi Password',
                 style:
-                    GoogleFonts.poppins(
-                  fontWeight:
-                      FontWeight.w600,
+                    TextStyle(fontFamily: 'FunnelDisplay',
+
+                  fontSize: 13,
+                  fontWeight: FontWeight.w600,
+                  color: kDarks,
                 ),
               ),
 
@@ -496,10 +498,6 @@ class _NewPasswordScreenState
                     InputDecoration(
                   hintText:
                       'Ulangi password baru',
-                  prefixIcon:
-                      const Icon(
-                    Icons.lock_outline,
-                  ),
                   suffixIcon:
                       IconButton(
                     onPressed:
@@ -513,19 +511,18 @@ class _NewPasswordScreenState
                     ),
                   ),
                   filled: true,
-                  fillColor:
-                      const Color(0xffF7F7F7),
+                  fillColor: kSecond,
                   border:
                       OutlineInputBorder(
                     borderRadius:
-                        BorderRadius.circular(14),
+                        BorderRadius.circular(12),
                     borderSide:
                         BorderSide.none,
                   ),
                   enabledBorder:
                       OutlineInputBorder(
                     borderRadius:
-                        BorderRadius.circular(14),
+                        BorderRadius.circular(12),
                     borderSide:
                         BorderSide(
                       color:
@@ -535,18 +532,17 @@ class _NewPasswordScreenState
                   focusedBorder:
                       OutlineInputBorder(
                     borderRadius:
-                        BorderRadius.circular(14),
+                        BorderRadius.circular(12),
                     borderSide:
                         const BorderSide(
-                      color:
-                          Color(0xff343A40),
+                      color: kDone,
                       width: 1.2,
                     ),
                   ),
                   disabledBorder:
                       OutlineInputBorder(
                     borderRadius:
-                        BorderRadius.circular(14),
+                        BorderRadius.circular(12),
                     borderSide:
                         BorderSide(
                       color:
@@ -570,7 +566,7 @@ class _NewPasswordScreenState
               SizedBox(
                 width:
                     double.infinity,
-                height: 54,
+                height: 48,
                 child:
                     ElevatedButton(
                   onPressed:
@@ -579,18 +575,13 @@ class _NewPasswordScreenState
                           : updatePassword,
                   style:
                       ElevatedButton.styleFrom(
-                    backgroundColor:
-                        const Color(0xff393E46),
+                    backgroundColor: kDarks,
                     disabledBackgroundColor:
                         Colors.grey.shade400,
                     foregroundColor:
                         Colors.white,
                     elevation: 0,
-                    shape:
-                        RoundedRectangleBorder(
-                      borderRadius:
-                          BorderRadius.circular(16),
-                    ),
+                    shape: const StadiumBorder(),
                   ),
                   child: isLoading
                       ? const SizedBox(
@@ -606,7 +597,9 @@ class _NewPasswordScreenState
                       : Text(
                           'Simpan Password',
                           style:
-                              GoogleFonts.poppins(
+                              TextStyle(fontFamily: 'FunnelDisplay',
+
+                            fontSize: 15,
                             fontWeight:
                                 FontWeight.bold,
                           ),
@@ -657,7 +650,8 @@ class _NewPasswordScreenState
                         'kamu akan diarahkan kembali ke halaman '
                         'login untuk masuk dengan password baru.',
                         style:
-                            GoogleFonts.poppins(
+                            TextStyle(fontFamily: 'FunnelDisplay',
+
                           fontSize:
                               12,
                           color:
@@ -667,11 +661,12 @@ class _NewPasswordScreenState
                         ),
                       ),
                     ),
-                  ],
-                ),
-              ),
+],
+                          ),
+                        ),
         ],
-      ),
+        ),
+        ),
     );
   }
 }

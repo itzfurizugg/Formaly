@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../core/routes/app_routes.dart';
@@ -291,14 +290,16 @@ class _VerifySignupScreenState
           ),
           title: Text(
             'Pendaftaran Berhasil',
-            style: GoogleFonts.poppins(
+            style: TextStyle(fontFamily: 'FunnelDisplay',
+
               fontWeight:
                   FontWeight.bold,
             ),
           ),
           content: Text(
             'Email kamu sudah terverifikasi dan data akun berhasil disimpan. Silakan login untuk mulai menggunakan Formaly.',
-            style: GoogleFonts.poppins(
+            style: TextStyle(fontFamily: 'FunnelDisplay',
+
               height: 1.5,
             ),
           ),
@@ -348,7 +349,8 @@ class _VerifySignupScreenState
         SnackBar(
           content: Text(
             message,
-            style: GoogleFonts.poppins(
+            style: TextStyle(fontFamily: 'FunnelDisplay',
+
               fontSize: 13,
             ),
           ),
@@ -421,10 +423,12 @@ class _VerifySignupScreenState
             // Judul halaman.
             Text(
               'Verifikasi Email',
-              style: GoogleFonts.poppins(
-                fontSize: 26,
+              style: TextStyle(fontFamily: 'FunnelDisplay',
+
+                fontSize: 24,
                 fontWeight: FontWeight.w700,
-                color: const Color(0xff393E46),
+                color: kDarks,
+                height: 1.2,
               ),
             ),
 
@@ -433,10 +437,10 @@ class _VerifySignupScreenState
               // Informasi verifikasi.
               Text(
                 'Masukkan kode 6 digit yang dikirim ke email kamu untuk menyelesaikan pendaftaran.',
-                style: GoogleFonts.poppins(
+                style: TextStyle(fontFamily: 'FunnelDisplay',
+
                   fontSize: 14,
-                  color:
-                      Colors.grey.shade600,
+                  color: kTinted,
                   height: 1.6,
                 ),
               ),
@@ -446,23 +450,25 @@ class _VerifySignupScreenState
               Text(
                 normalizedEmail,
                 maxLines: 2,
-                overflow:
-                    TextOverflow.ellipsis,
-                style: GoogleFonts.poppins(
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(fontFamily: 'FunnelDisplay',
+
                   fontSize: 14,
-                  fontWeight:
-                      FontWeight.w600,
+                  fontWeight: FontWeight.w600,
+                  color: kDarks,
                 ),
               ),
 
-              const SizedBox(height: 36),
+              const SizedBox(height: 24),
 
               // Label kode verifikasi.
               Text(
                 'Kode Verifikasi',
-                style: GoogleFonts.poppins(
-                  fontWeight:
-                      FontWeight.w600,
+                style: TextStyle(fontFamily: 'FunnelDisplay',
+
+                  fontWeight: FontWeight.w600,
+                  fontSize: 13,
+                  color: kDarks,
                 ),
               ),
 
@@ -488,7 +494,8 @@ class _VerifySignupScreenState
                     6,
                   ),
                 ],
-                style: GoogleFonts.poppins(
+                style: TextStyle(fontFamily: 'FunnelDisplay',
+
                   fontSize: 28,
                   fontWeight:
                       FontWeight.bold,
@@ -499,19 +506,18 @@ class _VerifySignupScreenState
                   counterText: '',
                   hintText: '000000',
                   filled: true,
-                  fillColor:
-                      const Color(0xffF7F7F7),
+                  fillColor: kSecond,
                   border:
                       OutlineInputBorder(
                     borderRadius:
-                        BorderRadius.circular(14),
+                        BorderRadius.circular(12),
                     borderSide:
                         BorderSide.none,
                   ),
                   enabledBorder:
                       OutlineInputBorder(
                     borderRadius:
-                        BorderRadius.circular(14),
+                        BorderRadius.circular(12),
                     borderSide:
                         BorderSide(
                       color:
@@ -521,18 +527,17 @@ class _VerifySignupScreenState
                   focusedBorder:
                       OutlineInputBorder(
                     borderRadius:
-                        BorderRadius.circular(14),
+                        BorderRadius.circular(12),
                     borderSide:
                         const BorderSide(
-                      color:
-                          Color(0xff343A40),
+                      color: kDone,
                       width: 1.2,
                     ),
                   ),
                   disabledBorder:
                       OutlineInputBorder(
                     borderRadius:
-                        BorderRadius.circular(14),
+                        BorderRadius.circular(12),
                     borderSide:
                         BorderSide(
                       color:
@@ -555,7 +560,7 @@ class _VerifySignupScreenState
               // Tombol verifikasi email.
               SizedBox(
                 width: double.infinity,
-                height: 54,
+                height: 48,
                 child:
                     ElevatedButton(
                   onPressed:
@@ -564,18 +569,13 @@ class _VerifySignupScreenState
                           : null,
                   style:
                       ElevatedButton.styleFrom(
-                    backgroundColor:
-                        const Color(0xff393E46),
+                    backgroundColor: kDarks,
                     disabledBackgroundColor:
                         Colors.grey.shade400,
                     foregroundColor:
                         Colors.white,
                     elevation: 0,
-                    shape:
-                        RoundedRectangleBorder(
-                      borderRadius:
-                          BorderRadius.circular(16),
-                    ),
+                    shape: const StadiumBorder(),
                   ),
                   child: isLoading
                       ? const SizedBox(
@@ -591,7 +591,9 @@ class _VerifySignupScreenState
                       : Text(
                           'Verifikasi Email',
                           style:
-                              GoogleFonts.poppins(
+                              TextStyle(fontFamily: 'FunnelDisplay',
+
+                            fontSize: 15,
                             fontWeight:
                                 FontWeight.bold,
                           ),
@@ -620,11 +622,12 @@ class _VerifySignupScreenState
                       : Text(
                           'Kirim ulang kode',
                           style:
-                              GoogleFonts.poppins(
+                              TextStyle(fontFamily: 'FunnelDisplay',
+
+                            fontSize: 14,
                             fontWeight:
                                 FontWeight.w600,
-                            color:
-                                Colors.black,
+                            color: kDarks,
                           ),
                         ),
                 ),
@@ -669,7 +672,8 @@ class _VerifySignupScreenState
                       child: Text(
                         'Kode ini digunakan untuk memverifikasi email saat membuat akun Formaly. Gunakan kode terbaru yang kamu terima.',
                         style:
-                            GoogleFonts.poppins(
+                            TextStyle(fontFamily: 'FunnelDisplay',
+
                           fontSize: 12,
                           color:
                               Colors.grey.shade700,
@@ -678,10 +682,11 @@ class _VerifySignupScreenState
                       ),
                     ),
                   ],
-                ),
-              ),
+                    ),
+                  ),
         ],
-      ),
+        ),
+        ),
     );
   }
 }

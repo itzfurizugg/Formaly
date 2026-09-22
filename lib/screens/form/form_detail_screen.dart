@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:flutter_widget_from_html_core/flutter_widget_from_html_core.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
@@ -583,7 +582,8 @@ class _FormDetailScreenState extends State<FormDetailScreen> {
             Text(
           'Detail Form',
           style:
-              GoogleFonts.poppins(
+              TextStyle(fontFamily: 'FunnelDisplay',
+
             color:
                 colors.onSurface,
             fontWeight:
@@ -652,7 +652,8 @@ class _FormDetailScreenState extends State<FormDetailScreen> {
               textAlign:
                   TextAlign.center,
               style:
-                  GoogleFonts.poppins(
+                  TextStyle(fontFamily: 'FunnelDisplay',
+
                 fontSize: 20,
                 fontWeight:
                     FontWeight.bold,
@@ -668,7 +669,8 @@ class _FormDetailScreenState extends State<FormDetailScreen> {
               textAlign:
                   TextAlign.center,
               style:
-                  GoogleFonts.poppins(
+                  TextStyle(fontFamily: 'FunnelDisplay',
+
                 fontSize: 14,
                 color: colors
                     .onSurfaceVariant,
@@ -695,8 +697,7 @@ class _FormDetailScreenState extends State<FormDetailScreen> {
                     Text(
                   'Coba Lagi',
                   style:
-                      GoogleFonts
-                          .poppins(
+                      TextStyle(fontFamily: 'FunnelDisplay',
                     fontWeight:
                         FontWeight.bold,
                   ),
@@ -821,7 +822,8 @@ class _FormDetailScreenState extends State<FormDetailScreen> {
                   textAlign:
                       TextAlign.center,
                   style:
-                      GoogleFonts.poppins(
+                      TextStyle(fontFamily: 'FunnelDisplay',
+
                     fontSize: 28,
                     fontWeight:
                         FontWeight.bold,
@@ -836,7 +838,8 @@ class _FormDetailScreenState extends State<FormDetailScreen> {
                   textAlign:
                       TextAlign.center,
                   style:
-                      GoogleFonts.poppins(
+                      TextStyle(fontFamily: 'FunnelDisplay',
+
                     color: colors
                         .onSurfaceVariant,
                     fontSize: 14,
@@ -883,8 +886,7 @@ class _FormDetailScreenState extends State<FormDetailScreen> {
                       Text(
                         'Tag: $formTag',
                         style:
-                            GoogleFonts
-                                .poppins(
+                            TextStyle(fontFamily: 'FunnelDisplay',
                           fontWeight:
                               FontWeight
                                   .w600,
@@ -943,7 +945,8 @@ class _FormDetailScreenState extends State<FormDetailScreen> {
           Text(
             'Deskripsi',
             style:
-                GoogleFonts.poppins(
+                TextStyle(fontFamily: 'FunnelDisplay',
+
               fontSize: 18,
               fontWeight:
                   FontWeight.bold,
@@ -979,7 +982,8 @@ class _FormDetailScreenState extends State<FormDetailScreen> {
                     ? Text(
                         'Tidak ada deskripsi untuk form ini.',
                         style:
-                            GoogleFonts.poppins(
+                            TextStyle(fontFamily: 'FunnelDisplay',
+
                           fontSize: 14,
                           height: 1.7,
                           color:
@@ -991,7 +995,8 @@ class _FormDetailScreenState extends State<FormDetailScreen> {
                         renderMode:
                             RenderMode.column,
                         textStyle:
-                            GoogleFonts.poppins(
+                            TextStyle(fontFamily: 'FunnelDisplay',
+
                           fontSize: 14,
                           color:
                               colors.onSurface,
@@ -1070,8 +1075,7 @@ class _FormDetailScreenState extends State<FormDetailScreen> {
                               ? 'TIDAK ADA SOAL'
                               : 'START',
                           style:
-                              GoogleFonts
-                                  .poppins(
+                              TextStyle(fontFamily: 'FunnelDisplay',
                             color:
                                 colors.onPrimary,
                             fontWeight:
@@ -1137,7 +1141,8 @@ class _FormDetailScreenState extends State<FormDetailScreen> {
             textAlign:
                 TextAlign.center,
             style:
-                GoogleFonts.poppins(
+                TextStyle(fontFamily: 'FunnelDisplay',
+
               color:
                   colors.onSurfaceVariant,
             ),
@@ -1151,7 +1156,8 @@ class _FormDetailScreenState extends State<FormDetailScreen> {
             textAlign:
                 TextAlign.center,
             style:
-                GoogleFonts.poppins(
+                TextStyle(fontFamily: 'FunnelDisplay',
+
               fontWeight:
                   FontWeight.bold,
               fontSize: 18,

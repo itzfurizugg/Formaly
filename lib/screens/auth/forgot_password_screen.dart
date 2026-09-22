@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../widgets/auth_shell.dart';
@@ -118,14 +117,16 @@ class _ForgotPasswordScreenState
           ),
           title: Text(
             'Link Reset Password Terkirim',
-            style: GoogleFonts.poppins(
+            style: TextStyle(fontFamily: 'FunnelDisplay',
+
               fontWeight: FontWeight.bold,
             ),
           ),
           content: Text(
             'Link untuk mengubah password sudah dikirim ke $email.\n\n'
             'Buka email tersebut, lalu tekan tombol "Reset Password".',
-            style: GoogleFonts.poppins(
+            style: TextStyle(fontFamily: 'FunnelDisplay',
+
               height: 1.6,
             ),
           ),
@@ -189,7 +190,8 @@ class _ForgotPasswordScreenState
         SnackBar(
           content: Text(
             message,
-            style: GoogleFonts.poppins(
+            style: TextStyle(fontFamily: 'FunnelDisplay',
+
               fontSize: 13,
             ),
           ),
@@ -229,7 +231,7 @@ class _ForgotPasswordScreenState
           children: [
                     // Tombol kembali.
                     Material(
-                      color: const Color(0xffEEEEEE),
+                      color: kSecond,
                       shape: const CircleBorder(),
                       child: InkWell(
                         customBorder: const CircleBorder(),
@@ -242,7 +244,7 @@ class _ForgotPasswordScreenState
                           child: Icon(
                             Icons.arrow_back_rounded,
                             size: 20,
-                            color: Color(0xff393E46),
+                            color: kDarks,
                           ),
                         ),
                       ),
@@ -252,10 +254,11 @@ class _ForgotPasswordScreenState
 
                     Text(
                       'Lupa Password',
-                      style: GoogleFonts.poppins(
-                        fontSize: 26,
+                      style: TextStyle(fontFamily: 'FunnelDisplay',
+
+                        fontSize: 28,
                         fontWeight: FontWeight.w700,
-                        color: const Color(0xff393E46),
+                        color: kDarks,
                         height: 1.2,
                       ),
                     ),
@@ -263,25 +266,25 @@ class _ForgotPasswordScreenState
                     const SizedBox(height: 8),
 
                     Text(
-                      'Masukkan email kamu, dan kami akan\n'
-                      'mengirimkan tautan untuk mengatur\n'
-                      'ulang kata sandi.',
-                      style: GoogleFonts.poppins(
-                        fontSize: 12.5,
+                      'Masukkan email kamu, dan kami akan mengirimkan tautan untuk mengatur ulang password.',
+                      style: TextStyle(fontFamily: 'FunnelDisplay',
+
+                        fontSize: 14,
                         fontWeight: FontWeight.w400,
-                        color: const Color(0xff9299AA),
+                        color: kTinted,
                         height: 1.5,
                       ),
                     ),
 
-                    const SizedBox(height: 22),
+                    const SizedBox(height: 24),
 
                     Text(
-                      'E-mail',
-                      style: GoogleFonts.poppins(
-                        fontSize: 13.5,
-                        fontWeight: FontWeight.w500,
-                        color: const Color(0xff30333A),
+                      'Email',
+                      style: TextStyle(fontFamily: 'FunnelDisplay',
+
+                        fontSize: 13,
+                        fontWeight: FontWeight.w600,
+                        color: kDarks,
                       ),
                     ),
 
@@ -299,50 +302,46 @@ class _ForgotPasswordScreenState
                         enableSuggestions: false,
                         textCapitalization: TextCapitalization.none,
                         onSubmitted: (_) => sendResetLink(),
-                        style: GoogleFonts.poppins(
-                          fontSize: 12.5,
-                          color: const Color(0xff30333A),
+                        style: TextStyle(fontFamily: 'FunnelDisplay',
+
+                          fontSize: 13,
+                          color: kDarks,
                         ),
                         decoration: InputDecoration(
                           hintText: 'nama@email.com',
-                          hintStyle: GoogleFonts.poppins(
-                            fontSize: 12.5,
-                            color: const Color(0xff929292),
+                          hintStyle: TextStyle(fontFamily: 'FunnelDisplay',
+
+                            fontSize: 13,
+                            color: kTinted,
                           ),
                           filled: true,
-                          fillColor: const Color(0xffF5F5F5),
+                          fillColor: kSecond,
                           contentPadding:
                               const EdgeInsets.symmetric(
-                            horizontal: 12,
+                            horizontal: 14,
                             vertical: 0,
                           ),
                           enabledBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(4),
-                            borderSide: const BorderSide(
-                              color: Color(0xffE6E6E6),
-                            ),
+                            borderRadius: BorderRadius.circular(12),
+                            borderSide: BorderSide.none,
                           ),
                           focusedBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(4),
-                            borderSide: const BorderSide(
-                              color: Color(0xffCFCFCF),
-                            ),
+                            borderRadius: BorderRadius.circular(12),
+                            borderSide: const BorderSide(color: kDone),
                           ),
                           disabledBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(4),
-                            borderSide: const BorderSide(
-                              color: Color(0xffE6E6E6),
-                            ),
+                            borderRadius: BorderRadius.circular(12),
+                            borderSide: BorderSide.none,
                           ),
                         ),
                       ),
                     ),
 
-                    const SizedBox(height: 20),
+                    const SizedBox(height: 24),
 
                     SizedBox(
                       width: double.infinity,
-                      height: 40,
+                      height: 44,
                       child: ElevatedButton.icon(
                         onPressed: isLoading ? null : sendResetLink,
                         icon: const Icon(
@@ -351,48 +350,48 @@ class _ForgotPasswordScreenState
                         ),
                         label: Text(
                           'Kirim Tautan Reset',
-                          style: GoogleFonts.poppins(
-                            fontSize: 12,
-                            fontWeight: FontWeight.w500,
+                          style: TextStyle(fontFamily: 'FunnelDisplay',
+
+                            fontSize: 13,
+                            fontWeight: FontWeight.w600,
                           ),
                         ),
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color(0xff393E46),
+                          backgroundColor: kDarks,
                           foregroundColor: Colors.white,
                           disabledBackgroundColor:
                               const Color(0xff96989D),
                           disabledForegroundColor: Colors.white,
                           elevation: 0,
-                          padding: EdgeInsets.zero,
                           shape: const StadiumBorder(),
                         ),
                       ),
                     ),
 
-                    const SizedBox(height: 8),
+                    const SizedBox(height: 10),
 
                     SizedBox(
                       width: double.infinity,
-                      height: 40,
+                      height: 44,
                       child: OutlinedButton(
                         onPressed: isLoading
                             ? null
                             : () => Navigator.pop(context),
                         style: OutlinedButton.styleFrom(
-                          backgroundColor: const Color(0xffF7F7F7),
-                          foregroundColor: const Color(0xff30333A),
+                          backgroundColor: kBase,
+                          foregroundColor: kDarks,
                           side: const BorderSide(
-                            color: Color(0xffE6E6E6),
+                            color: kSecond,
                           ),
                           elevation: 0,
-                          padding: EdgeInsets.zero,
                           shape: const StadiumBorder(),
                         ),
                         child: Text(
-                          'Sudah Ingat? Masuk',
-                          style: GoogleFonts.poppins(
-                            fontSize: 12,
-                            fontWeight: FontWeight.w500,
+                          'Sudah ingat? Masuk',
+                          style: TextStyle(fontFamily: 'FunnelDisplay',
+
+                            fontSize: 13,
+                            fontWeight: FontWeight.w600,
                           ),
                         ),
                       ),

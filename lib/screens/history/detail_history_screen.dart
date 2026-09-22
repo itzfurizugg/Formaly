@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 
 import '../../core/constants/app_color.dart';
 import '../../core/models/history_model.dart';
@@ -49,14 +48,16 @@ class _DetailHistoryScreenState extends State<DetailHistoryScreen> {
           ),
           title: Text(
             'Hapus riwayat?',
-            style: GoogleFonts.poppins(
+            style: TextStyle(fontFamily: 'FunnelDisplay',
+
               fontWeight: FontWeight.bold,
             ),
           ),
           content: Text(
             'Riwayat pengerjaan ini akan dihapus. '
             'Tindakan ini tidak dapat dibatalkan.',
-            style: GoogleFonts.poppins(
+            style: TextStyle(fontFamily: 'FunnelDisplay',
+
               height: 1.5,
             ),
           ),
@@ -70,7 +71,8 @@ class _DetailHistoryScreenState extends State<DetailHistoryScreen> {
               },
               child: Text(
                 'Batal',
-                style: GoogleFonts.poppins(
+                style: TextStyle(fontFamily: 'FunnelDisplay',
+
                   color: colors.primary,
                   fontWeight: FontWeight.w600,
                 ),
@@ -93,7 +95,8 @@ class _DetailHistoryScreenState extends State<DetailHistoryScreen> {
               ),
               child: Text(
                 'Hapus',
-                style: GoogleFonts.poppins(
+                style: TextStyle(fontFamily: 'FunnelDisplay',
+
                   fontWeight: FontWeight.w600,
                 ),
               ),
@@ -140,7 +143,8 @@ class _DetailHistoryScreenState extends State<DetailHistoryScreen> {
             backgroundColor: colors.error,
             content: Text(
               'Gagal menghapus riwayat: ${e.toString()}',
-              style: GoogleFonts.poppins(
+              style: TextStyle(fontFamily: 'FunnelDisplay',
+
                 fontSize: 13,
               ),
             ),
@@ -187,7 +191,8 @@ class _DetailHistoryScreenState extends State<DetailHistoryScreen> {
               ),
               child: Text(
                 title,
-                style: GoogleFonts.poppins(
+                style: TextStyle(fontFamily: 'FunnelDisplay',
+
                   fontSize: 13,
                   fontWeight: FontWeight.w600,
                   color: colors.onSurfaceVariant,
@@ -202,7 +207,8 @@ class _DetailHistoryScreenState extends State<DetailHistoryScreen> {
             ),
             child: Text(
               ':',
-              style: GoogleFonts.poppins(
+              style: TextStyle(fontFamily: 'FunnelDisplay',
+
                 fontWeight: FontWeight.w600,
                 color: colors.onSurfaceVariant,
               ),
@@ -217,7 +223,8 @@ class _DetailHistoryScreenState extends State<DetailHistoryScreen> {
               ),
               child: Text(
                 value,
-                style: GoogleFonts.poppins(
+                style: TextStyle(fontFamily: 'FunnelDisplay',
+
                   fontSize: 13,
                   fontWeight: FontWeight.w600,
                   color: colors.onSurface,
@@ -310,7 +317,8 @@ class _DetailHistoryScreenState extends State<DetailHistoryScreen> {
         centerTitle: true,
         title: Text(
           'Detail Riwayat',
-          style: GoogleFonts.poppins(
+          style: TextStyle(fontFamily: 'FunnelDisplay',
+
             fontWeight: FontWeight.bold,
             color: colors.onSurface,
           ),
@@ -378,7 +386,8 @@ class _DetailHistoryScreenState extends State<DetailHistoryScreen> {
                       Expanded(
                         child: Text(
                           title,
-                          style: GoogleFonts.poppins(
+                          style: TextStyle(fontFamily: 'FunnelDisplay',
+
                             fontSize: 20,
                             fontWeight: FontWeight.bold,
                             color: colors.onSurface,
@@ -411,7 +420,8 @@ class _DetailHistoryScreenState extends State<DetailHistoryScreen> {
                         const SizedBox(width: 7),
                         Text(
                           'Tag: $tag',
-                          style: GoogleFonts.poppins(
+                          style: TextStyle(fontFamily: 'FunnelDisplay',
+
                             fontSize: 13,
                             fontWeight: FontWeight.w600,
                             color: colors.onSecondaryContainer,
@@ -429,7 +439,8 @@ class _DetailHistoryScreenState extends State<DetailHistoryScreen> {
             // Judul informasi pengerjaan.
             Text(
               'Informasi Pengerjaan',
-              style: GoogleFonts.poppins(
+              style: TextStyle(fontFamily: 'FunnelDisplay',
+
                 fontSize: 18,
                 fontWeight: FontWeight.bold,
                 color: colors.onSurface,
@@ -544,7 +555,8 @@ class _DetailHistoryScreenState extends State<DetailHistoryScreen> {
                           isFinished
                               ? 'Pengerjaan Selesai'
                               : 'Pengerjaan Belum Selesai',
-                          style: GoogleFonts.poppins(
+                          style: TextStyle(fontFamily: 'FunnelDisplay',
+
                             fontWeight: FontWeight.bold,
                             color: statusIcon,
                           ),
@@ -554,7 +566,8 @@ class _DetailHistoryScreenState extends State<DetailHistoryScreen> {
                           isFinished
                               ? 'Jawaban telah dikirim.'
                               : 'Pengerjaan belum selesai.',
-                          style: GoogleFonts.poppins(
+                          style: TextStyle(fontFamily: 'FunnelDisplay',
+
                             fontSize: 12,
                             color: colors.onSurfaceVariant,
                           ),
@@ -601,7 +614,8 @@ class _DetailHistoryScreenState extends State<DetailHistoryScreen> {
                       padding: const EdgeInsets.only(top: 2),
                       child: Text(
                         'Detail nilai dan jawaban tidak ditampilkan pada riwayat user.',
-                        style: GoogleFonts.poppins(
+                        style: TextStyle(fontFamily: 'FunnelDisplay',
+
                           fontSize: 12,
                           color: colors.onSurfaceVariant,
                           height: 1.5,
@@ -637,7 +651,8 @@ class _DetailHistoryScreenState extends State<DetailHistoryScreen> {
                   _isDeleting
                       ? 'Menghapus...'
                       : 'Hapus Riwayat',
-                  style: GoogleFonts.poppins(
+                  style: TextStyle(fontFamily: 'FunnelDisplay',
+
                     fontWeight: FontWeight.w600,
                   ),
                 ),

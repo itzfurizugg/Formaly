@@ -6,8 +6,8 @@ import 'core/routes/auth_gate.dart';
 import 'core/theme/app_theme.dart';
 import 'core/theme/theme_controller.dart';
 
-import 'screens/auth/login_screen.dart';
-import 'screens/auth/register_screen.dart';
+import 'screens/auth/login.dart';
+import 'screens/auth/register.dart';
 import 'screens/home/home_screen.dart';
 
 void main() async {

@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 
 class SubmitDialog extends StatelessWidget {
   final VoidCallback onSubmit;
@@ -17,13 +16,15 @@ class SubmitDialog extends StatelessWidget {
       ),
       title: Text(
         "Selesaikan Form",
-        style: GoogleFonts.poppins(
+        style: TextStyle(fontFamily: 'FunnelDisplay',
+
           fontWeight: FontWeight.bold,
         ),
       ),
       content: Text(
         "Apakah Anda yakin ingin mengumpulkan seluruh jawaban?",
-        style: GoogleFonts.poppins(),
+        style: TextStyle(fontFamily: 'FunnelDisplay',
+),
       ),
       actions: [
 

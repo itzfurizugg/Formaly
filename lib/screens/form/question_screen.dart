@@ -2,7 +2,6 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:flutter_widget_from_html_core/flutter_widget_from_html_core.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:flutter_ntp/flutter_ntp.dart';
@@ -1631,7 +1630,8 @@ class _QuestionScreenState extends State<QuestionScreen> {
                   Text(
                     'Daftar Soal',
                     style:
-                        GoogleFonts.poppins(
+                        TextStyle(fontFamily: 'FunnelDisplay',
+
                       fontSize: 22,
                       fontWeight:
                           FontWeight.bold,
@@ -1726,7 +1726,8 @@ class _QuestionScreenState extends State<QuestionScreen> {
                             child: Text(
                               '${index + 1}',
                               style:
-                                  GoogleFonts.poppins(
+                                  TextStyle(fontFamily: 'FunnelDisplay',
+
                                 color:
                                     textColor,
                                 fontWeight:
@@ -1771,7 +1772,8 @@ class _QuestionScreenState extends State<QuestionScreen> {
                       child: Text(
                         'Kembali ke Soal',
                         style:
-                            GoogleFonts.poppins(
+                            TextStyle(fontFamily: 'FunnelDisplay',
+
                           fontWeight:
                               FontWeight.bold,
                         ),
@@ -1850,7 +1852,8 @@ class _QuestionScreenState extends State<QuestionScreen> {
           title: Text(
             'Konfirmasi Submit',
             style:
-                GoogleFonts.poppins(
+                TextStyle(fontFamily: 'FunnelDisplay',
+
               fontWeight:
                   FontWeight.bold,
             ),
@@ -1858,7 +1861,8 @@ class _QuestionScreenState extends State<QuestionScreen> {
           content: Text(
             message,
             style:
-                GoogleFonts.poppins(),
+                TextStyle(fontFamily: 'FunnelDisplay',
+),
           ),
           actions: [
             TextButton(
@@ -1938,7 +1942,8 @@ class _QuestionScreenState extends State<QuestionScreen> {
               textAlign:
                   TextAlign.center,
               style:
-                  GoogleFonts.poppins(),
+                  TextStyle(fontFamily: 'FunnelDisplay',
+),
             ),
 
             const SizedBox(
@@ -1987,7 +1992,8 @@ class _QuestionScreenState extends State<QuestionScreen> {
     return HtmlWidget(
       content,
       renderMode: RenderMode.column,
-      textStyle: GoogleFonts.poppins(
+      textStyle: TextStyle(fontFamily: 'FunnelDisplay',
+
         fontSize: fontSize,
         fontWeight: fontWeight,
         color: color,
@@ -2037,7 +2043,8 @@ class _QuestionScreenState extends State<QuestionScreen> {
                 ? 'Memuat Soal...'
                 : formTitle,
             style:
-                GoogleFonts.poppins(
+                TextStyle(fontFamily: 'FunnelDisplay',
+
               color:
                   colors.onSurface,
               fontWeight:
@@ -2124,7 +2131,8 @@ class _QuestionScreenState extends State<QuestionScreen> {
                   child: Text(
                     'Soal ${currentQuestion + 1}',
                     style:
-                        GoogleFonts.poppins(
+                        TextStyle(fontFamily: 'FunnelDisplay',
+
                       fontWeight:
                           FontWeight.bold,
                     ),
@@ -2153,7 +2161,8 @@ class _QuestionScreenState extends State<QuestionScreen> {
                     child: Text(
                       timerText,
                       style:
-                          GoogleFonts.poppins(
+                          TextStyle(fontFamily: 'FunnelDisplay',
+
                         color:
                             colors.error,
                         fontWeight:
@@ -2204,7 +2213,8 @@ class _QuestionScreenState extends State<QuestionScreen> {
                 '${currentQuestion + 1}/'
                 '${questions.length}',
                 style:
-                    GoogleFonts.poppins(
+                    TextStyle(fontFamily: 'FunnelDisplay',
+
                   fontWeight:
                       FontWeight.w500,
                 ),
@@ -2394,7 +2404,8 @@ class _QuestionScreenState extends State<QuestionScreen> {
                           ),
                         ),
                         style:
-                            GoogleFonts.poppins(
+                            TextStyle(fontFamily: 'FunnelDisplay',
+
                           fontSize: 14,
                           height: 1.5,
                         ),
@@ -2405,7 +2416,8 @@ class _QuestionScreenState extends State<QuestionScreen> {
                           'Pilihan jawaban '
                           'belum tersedia.',
                           style:
-                              GoogleFonts.poppins(),
+                              TextStyle(fontFamily: 'FunnelDisplay',
+),
                         ),
                       )
                     else
@@ -2552,7 +2564,8 @@ class _QuestionScreenState extends State<QuestionScreen> {
                                               65 + index,
                                             ),
                                             style:
-                                                GoogleFonts.poppins(
+                                                TextStyle(fontFamily: 'FunnelDisplay',
+
                                               fontWeight:
                                                   FontWeight.bold,
                                               color:
@@ -2645,7 +2658,8 @@ class _QuestionScreenState extends State<QuestionScreen> {
                       child: Text(
                         'Kembali',
                         style:
-                            GoogleFonts.poppins(
+                            TextStyle(fontFamily: 'FunnelDisplay',
+
                           color:
                               colors.primary,
                           fontWeight:
@@ -2724,7 +2738,8 @@ class _QuestionScreenState extends State<QuestionScreen> {
                                       ? 'Submit'
                                       : 'Selanjutnya',
                                   style:
-                                      GoogleFonts.poppins(
+                                      TextStyle(fontFamily: 'FunnelDisplay',
+
                                     fontWeight:
                                         FontWeight.bold,
                                     fontSize: 16,

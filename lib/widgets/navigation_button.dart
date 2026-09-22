@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 
 class NavigationButton extends StatelessWidget {
   final bool isFirst;
@@ -32,7 +31,8 @@ class NavigationButton extends StatelessWidget {
             ),
             label: Text(
               'Sebelumnya',
-              style: GoogleFonts.poppins(
+              style: TextStyle(fontFamily: 'FunnelDisplay',
+
                 fontWeight: FontWeight.w600,
                 color: isFirst
                     ? colors.onSurfaceVariant
@@ -71,7 +71,8 @@ class NavigationButton extends StatelessWidget {
               isLast
                   ? 'Submit'
                   : 'Selanjutnya',
-              style: GoogleFonts.poppins(
+              style: TextStyle(fontFamily: 'FunnelDisplay',
+
                 fontWeight: FontWeight.w600,
                 color: colors.onPrimary,
               ),

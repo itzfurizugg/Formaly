@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 
 class QuestionCard extends StatelessWidget {
   final String question;
@@ -51,7 +50,8 @@ class QuestionCard extends StatelessWidget {
               const SizedBox(width: 10),
               Text(
                 'Pertanyaan',
-                style: GoogleFonts.poppins(
+                style: TextStyle(fontFamily: 'FunnelDisplay',
+
                   fontSize: 14,
                   color: colors.primary,
                   fontWeight: FontWeight.w600,
@@ -64,7 +64,8 @@ class QuestionCard extends StatelessWidget {
 
           Text(
             question,
-            style: GoogleFonts.poppins(
+            style: TextStyle(fontFamily: 'FunnelDisplay',
+
               fontSize: 18,
               height: 1.5,
               fontWeight: FontWeight.w600,

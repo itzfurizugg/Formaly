@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../core/routes/app_routes.dart';
@@ -298,7 +297,8 @@ class _LoginScreenState extends State<LoginScreen> {
         SnackBar(
           content: Text(
             message,
-            style: GoogleFonts.poppins(
+            style: TextStyle(fontFamily: 'FunnelDisplay',
+
               fontSize: 13,
             ),
           ),
@@ -331,29 +331,34 @@ class _LoginScreenState extends State<LoginScreen> {
 
   Widget _buildLoginForm() {
     return Container(
-      padding: const EdgeInsets.all(20),
+      padding: const EdgeInsets.fromLTRB(20, 24, 20, 32),
       decoration: const BoxDecoration(color: Colors.transparent),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text('Masuk', style: GoogleFonts.poppins(fontSize: 26, fontWeight: FontWeight.w700, color: const Color(0xff393E46))),
+          Text('Masuk', style: TextStyle(fontFamily: 'FunnelDisplay',
+fontSize: 24, fontWeight: FontWeight.w700, color: kDarks)),
           const SizedBox(height: 4),
-          Text('Masuk untuk melanjutkan ke akun kamu', style: GoogleFonts.poppins(fontSize: 13, color: const Color(0xff929AAB))),
-          const SizedBox(height: 28),
-          Text('Email', style: GoogleFonts.poppins(fontSize: 13, fontWeight: FontWeight.w600, color: const Color(0xff393E46))),
+          Text('Masuk untuk melanjutkan ke akun kamu', style: TextStyle(fontFamily: 'FunnelDisplay',
+fontSize: 14, color: kTinted)),
+          const SizedBox(height: 24),
+          Text('Email', style: TextStyle(fontFamily: 'FunnelDisplay',
+fontSize: 13, fontWeight: FontWeight.w600, color: kDarks)),
           const SizedBox(height: 7),
           _buildInputField(controller: emailController, focusNode: emailFocusNode, hintText: 'nama@email.com', textInputAction: TextInputAction.next, onSubmitted: (_) => passwordFocusNode.requestFocus()),
           const SizedBox(height: 16),
-          Text('Password', style: GoogleFonts.poppins(fontSize: 13, fontWeight: FontWeight.w600, color: const Color(0xff393E46))),
+          Text('Password', style: TextStyle(fontFamily: 'FunnelDisplay',
+fontSize: 13, fontWeight: FontWeight.w600, color: kDarks)),
           const SizedBox(height: 7),
-          _buildInputField(controller: passwordController, focusNode: passwordFocusNode, hintText: 'Masukkan password', obscureText: obscurePassword, textInputAction: TextInputAction.done, suffixIcon: IconButton(onPressed: isLoading ? null : () => setState(() => obscurePassword = !obscurePassword), icon: Icon(obscurePassword ? Icons.visibility_outlined : Icons.visibility_off_outlined, size: 18, color: const Color(0xff929AAB))), onSubmitted: (_) => isLoading ? null : login()),
-          Align(alignment: Alignment.centerLeft, child: TextButton(onPressed: isLoading ? null : openForgotPassword, style: TextButton.styleFrom(padding: EdgeInsets.zero), child: Text('Lupa password?', style: GoogleFonts.poppins(fontSize: 12, color: const Color(0xff007DCC))))),
+          _buildInputField(controller: passwordController, focusNode: passwordFocusNode, hintText: 'Masukkan password', obscureText: obscurePassword, textInputAction: TextInputAction.done, suffixIcon: IconButton(onPressed: isLoading ? null : () => setState(() => obscurePassword = !obscurePassword), icon: Icon(obscurePassword ? Icons.visibility_outlined : Icons.visibility_off_outlined, size: 18, color: kTinted)), onSubmitted: (_) => isLoading ? null : login()),
+          Align(alignment: Alignment.centerLeft, child: TextButton(onPressed: isLoading ? null : openForgotPassword, style: TextButton.styleFrom(padding: EdgeInsets.zero), child: Text('Lupa password?', style: TextStyle(fontFamily: 'FunnelDisplay',
+fontSize: 12, color: kDone)))),
           const SizedBox(height: 18),
-          SizedBox(width: double.infinity, height: 44, child: ElevatedButton.icon(onPressed: isLoading ? null : login, icon: const Icon(Icons.login_rounded, size: 17), label: Text(isLoading ? 'Memproses...' : 'Masuk', style: GoogleFonts.poppins(fontWeight: FontWeight.w600)), style: ElevatedButton.styleFrom(backgroundColor: const Color(0xff393E46), foregroundColor: Colors.white, elevation: 0, shape: const StadiumBorder()))),
+          SizedBox(width: double.infinity, height: 44, child: ElevatedButton.icon(onPressed: isLoading ? null : login, icon: const Icon(Icons.login_rounded, size: 17), label: Text(isLoading ? 'Memproses...' : 'Masuk', style: TextStyle(fontFamily: 'FunnelDisplay',
+fontWeight: FontWeight.w600, fontSize: 13)), style: ElevatedButton.styleFrom(backgroundColor: kDarks, foregroundColor: Colors.white, elevation: 0, shape: const StadiumBorder()))),
           const SizedBox(height: 10),
-          SizedBox(width: double.infinity, height: 44, child: OutlinedButton.icon(onPressed: isLoading ? null : sendMagicLink, icon: const Icon(Icons.mark_email_read_outlined, size: 17), label: Text('Masuk dengan Magic Link', style: GoogleFonts.poppins(fontWeight: FontWeight.w600)), style: OutlinedButton.styleFrom(foregroundColor: const Color(0xff393E46), side: const BorderSide(color: Color(0xffEEEEEE)), shape: const StadiumBorder()))),
-          const SizedBox(height: 10),
-          SizedBox(width: double.infinity, height: 44, child: OutlinedButton(onPressed: isLoading ? null : openRegister, style: OutlinedButton.styleFrom(foregroundColor: const Color(0xff393E46), backgroundColor: const Color(0xffF7F7F7), side: const BorderSide(color: Color(0xffEEEEEE)), shape: const StadiumBorder()), child: Text('Belum punya akun? Daftar', style: GoogleFonts.poppins(fontWeight: FontWeight.w600)))),
+          SizedBox(width: double.infinity, height: 44, child: OutlinedButton(onPressed: isLoading ? null : openRegister, style: OutlinedButton.styleFrom(backgroundColor: kBase, foregroundColor: kDarks, side: const BorderSide(color: kSecond), elevation: 0, shape: const StadiumBorder()), child: Text('Belum punya akun? Daftar', style: TextStyle(fontFamily: 'FunnelDisplay',
+fontSize: 13, fontWeight: FontWeight.w600)))),
         ],
       ),
     );
@@ -382,18 +387,20 @@ class _LoginScreenState extends State<LoginScreen> {
         onSubmitted: onSubmitted,
         autocorrect: false,
         enableSuggestions: !obscureText,
-        style: GoogleFonts.poppins(
+        style: TextStyle(fontFamily: 'FunnelDisplay',
+
           fontSize: 13,
-          color: const Color(0xff393E46),
+          color: kDarks,
         ),
         decoration: InputDecoration(
           hintText: hintText,
-          hintStyle: GoogleFonts.poppins(
+          hintStyle: TextStyle(fontFamily: 'FunnelDisplay',
+
             fontSize: 13,
-            color: const Color(0xff929AAB),
+            color: kTinted,
           ),
           filled: true,
-          fillColor: const Color(0xffEEEEEE),
+          fillColor: kSecond,
           contentPadding: const EdgeInsets.symmetric(
             horizontal: 14,
             vertical: 0,
@@ -409,7 +416,7 @@ class _LoginScreenState extends State<LoginScreen> {
           ),
           focusedBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(12),
-            borderSide: const BorderSide(color: Color(0xff007DCC)),
+            borderSide: const BorderSide(color: kDone),
           ),
           disabledBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(12),

@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../core/routes/app_routes.dart';
@@ -296,7 +295,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
         SnackBar(
           content: Text(
             message,
-            style: GoogleFonts.poppins(
+            style: TextStyle(fontFamily: 'FunnelDisplay',
+
               fontSize: 13,
             ),
           ),
@@ -342,7 +342,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
           children: [
                     // Tombol kembali.
                     Material(
-                      color: const Color(0xffEEEEEE),
+                      color: kSecond,
                       shape: const CircleBorder(),
                       child: InkWell(
                         customBorder: const CircleBorder(),
@@ -355,7 +355,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                           child: Icon(
                             Icons.arrow_back_rounded,
                             size: 20,
-                            color: Color(0xff393E46),
+                            color: kDarks,
                           ),
                         ),
                       ),
@@ -365,10 +365,11 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
                     Text(
                       'Daftar',
-                      style: GoogleFonts.poppins(
-                        fontSize: 26,
+                      style: TextStyle(fontFamily: 'FunnelDisplay',
+
+                        fontSize: 24,
                         fontWeight: FontWeight.w700,
-                        color: const Color(0xff393E46),
+                        color: kDarks,
                         height: 1.2,
                       ),
                     ),
@@ -377,9 +378,10 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
                     Text(
                       'Daftar untuk mulai membuat formulir anda!',
-                      style: GoogleFonts.poppins(
-                        fontSize: 13,
-                        color: const Color(0xff9299AA),
+                      style: TextStyle(fontFamily: 'FunnelDisplay',
+
+                        fontSize: 14,
+                        color: kTinted,
                         height: 1.4,
                       ),
                     ),
@@ -397,7 +399,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                       },
                     ),
 
-                    const SizedBox(height: 11),
+                    const SizedBox(height: 16),
 
                     _buildRegisterField(
                       label: 'Email',
@@ -411,7 +413,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                       },
                     ),
 
-                    const SizedBox(height: 11),
+                    const SizedBox(height: 16),
 
                     _buildRegisterField(
                       label: 'Password',
@@ -433,7 +435,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                               ? Icons.visibility_outlined
                               : Icons.visibility_off_outlined,
                           size: 18,
-                          color: const Color(0xff929AAB),
+                          color: kTinted,
                         ),
                       ),
                       onSubmitted: (_) {
@@ -441,7 +443,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                       },
                     ),
 
-                    const SizedBox(height: 11),
+                    const SizedBox(height: 16),
 
                     _buildRegisterField(
                       label: 'Konfirmasi Password',
@@ -463,7 +465,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                               ? Icons.visibility_outlined
                               : Icons.visibility_off_outlined,
                           size: 18,
-                          color: const Color(0xff929AAB),
+                          color: kTinted,
                         ),
                       ),
                       onSubmitted: (_) {
@@ -489,7 +491,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
                           isLoading
                               ? 'Memproses...'
                               : 'Daftar',
-                          style: GoogleFonts.poppins(
+                          style: TextStyle(fontFamily: 'FunnelDisplay',
+
                             fontSize: 13,
                             fontWeight: FontWeight.w600,
                           ),
@@ -497,7 +500,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                         style:
                             ElevatedButton.styleFrom(
                           backgroundColor:
-                              const Color(0xff393E46),
+                              kDarks,
                           foregroundColor: Colors.white,
                           disabledBackgroundColor:
                               const Color(0xff8B8D94),
@@ -527,9 +530,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
                           backgroundColor:
                               Colors.transparent,
                           foregroundColor:
-                              const Color(0xff393E46),
+                              kDarks,
                           side: const BorderSide(
-                            color: Color(0xffEEEEEE),
+                            color: kSecond,
                           ),
                           elevation: 0,
                           shape:
@@ -537,7 +540,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
                         ),
                         child: Text(
                           'Sudah punya akun? Masuk',
-                          style: GoogleFonts.poppins(
+                          style: TextStyle(fontFamily: 'FunnelDisplay',
+
                             fontSize: 13,
                             fontWeight: FontWeight.w600,
                           ),
@@ -567,10 +571,11 @@ class _RegisterScreenState extends State<RegisterScreen> {
       children: [
         Text(
           label,
-          style: GoogleFonts.poppins(
+          style: TextStyle(fontFamily: 'FunnelDisplay',
+
             fontSize: 13,
             fontWeight: FontWeight.w600,
-            color: const Color(0xff393E46),
+            color: kDarks,
           ),
         ),
 
@@ -587,18 +592,20 @@ class _RegisterScreenState extends State<RegisterScreen> {
             onSubmitted: onSubmitted,
             autocorrect: false,
             enableSuggestions: !obscureText,
-            style: GoogleFonts.poppins(
+            style: TextStyle(fontFamily: 'FunnelDisplay',
+
               fontSize: 13,
-              color: const Color(0xff393E46),
+              color: kDarks,
             ),
             decoration: InputDecoration(
               hintText: hintText,
-              hintStyle: GoogleFonts.poppins(
+              hintStyle: TextStyle(fontFamily: 'FunnelDisplay',
+
                 fontSize: 13,
-                color: const Color(0xff929AAB),
+                color: kTinted,
               ),
               filled: true,
-              fillColor: const Color(0xffEEEEEE),
+              fillColor: kSecond,
               contentPadding:
                   const EdgeInsets.symmetric(
                 horizontal: 14,
@@ -617,7 +624,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
               focusedBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(12),
                 borderSide: const BorderSide(
-                  color: Color(0xff007DCC),
+                  color: kDone,
                 ),
               ),
             ),

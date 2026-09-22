@@ -1,7 +1,6 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 
 class TimerCard extends StatefulWidget {
   final int minutes;
@@ -86,7 +85,8 @@ class _TimerCardState extends State<TimerCard> {
 
           Text(
             format(duration),
-            style: GoogleFonts.poppins(
+            style: TextStyle(fontFamily: 'FunnelDisplay',
+
               fontWeight: FontWeight.bold,
               color: Colors.red,
             ),

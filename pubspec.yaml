@@ -43,3 +43,17 @@ dev_dependencies:
 
 flutter:
   uses-material-design: true
+
+  fonts:
+    - family: FunnelDisplay
+      fonts:
+        - asset: assets/fonts/FunnelDisplay-400.ttf
+          weight: 400
+        - asset: assets/fonts/FunnelDisplay-500.ttf
+          weight: 500
+        - asset: assets/fonts/FunnelDisplay-600.ttf
+          weight: 600
+        - asset: assets/fonts/FunnelDisplay-700.ttf
+          weight: 700
+        - asset: assets/fonts/FunnelDisplay-800.ttf
+          weight: 800

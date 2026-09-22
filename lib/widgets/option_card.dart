@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 
 class OptionCard extends StatelessWidget {
   final String text;
@@ -69,7 +68,8 @@ class OptionCard extends StatelessWidget {
               backgroundColor: letterBackground,
               child: Text(
                 String.fromCharCode(65 + index),
-                style: GoogleFonts.poppins(
+                style: TextStyle(fontFamily: 'FunnelDisplay',
+
                   fontWeight: FontWeight.bold,
                   color: letterColor,
                 ),
@@ -81,7 +81,8 @@ class OptionCard extends StatelessWidget {
             Expanded(
               child: Text(
                 text,
-                style: GoogleFonts.poppins(
+                style: TextStyle(fontFamily: 'FunnelDisplay',
+
                   fontSize: 15,
                   fontWeight: FontWeight.w500,
                   color: textColor,

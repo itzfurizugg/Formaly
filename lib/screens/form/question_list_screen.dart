@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 
 class QuestionListScreen extends StatelessWidget {
   // Total jumlah soal.
@@ -47,7 +46,8 @@ class QuestionListScreen extends StatelessWidget {
         centerTitle: true,
         title: Text(
           'Daftar Soal',
-          style: GoogleFonts.poppins(
+          style: TextStyle(fontFamily: 'FunnelDisplay',
+
             color: colors.onSurface,
             fontWeight: FontWeight.bold,
           ),
@@ -83,7 +83,8 @@ class QuestionListScreen extends StatelessWidget {
                           const SizedBox(height: 15),
                           Text(
                             'Belum ada soal.',
-                            style: GoogleFonts.poppins(
+                            style: TextStyle(fontFamily: 'FunnelDisplay',
+
                               color: colors.onSurfaceVariant,
                               fontWeight: FontWeight.w500,
                             ),
@@ -190,7 +191,8 @@ class QuestionListScreen extends StatelessWidget {
                               child: Center(
                                 child: Text(
                                   '${index + 1}',
-                                  style: GoogleFonts.poppins(
+                                  style: TextStyle(fontFamily: 'FunnelDisplay',
+
                                     color: textColor,
                                     fontWeight: FontWeight.bold,
                                     fontSize: 15,
@@ -211,7 +213,8 @@ class QuestionListScreen extends StatelessWidget {
               alignment: Alignment.centerLeft,
               child: Text(
                 'Keterangan',
-                style: GoogleFonts.poppins(
+                style: TextStyle(fontFamily: 'FunnelDisplay',
+
                   fontSize: 14,
                   fontWeight: FontWeight.bold,
                   color: colors.onSurface,
@@ -275,7 +278,8 @@ class QuestionListScreen extends StatelessWidget {
                 ),
                 label: Text(
                   'Kembali ke Soal',
-                  style: GoogleFonts.poppins(
+                  style: TextStyle(fontFamily: 'FunnelDisplay',
+
                     fontWeight: FontWeight.bold,
                   ),
                 ),
@@ -323,7 +327,8 @@ class QuestionListScreen extends StatelessWidget {
         const SizedBox(width: 9),
         Text(
           label,
-          style: GoogleFonts.poppins(
+          style: TextStyle(fontFamily: 'FunnelDisplay',
+
             fontSize: 13,
             color: colors.onSurface,
           ),

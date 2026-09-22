@@ -3,7 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
-import '../../screens/auth/login_screen.dart';
+import '../../screens/auth/login.dart';
 import '../../screens/auth/new_password_screen.dart';
 import '../../screens/form/question_screen.dart';
 import '../../screens/home/home_screen.dart';

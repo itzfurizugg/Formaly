@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:google_fonts/google_fonts.dart';
 
 import '../../core/models/history_model.dart';
 import '../home/home_screen.dart';
@@ -50,7 +49,8 @@ class ResultScreen extends StatelessWidget {
               Text(
                 "Form Berhasil Disubmit",
                 textAlign: TextAlign.center,
-                style: GoogleFonts.poppins(
+                style: TextStyle(fontFamily: 'FunnelDisplay',
+
                   fontSize: 26,
                   fontWeight: FontWeight.bold,
                 ),
@@ -61,7 +61,8 @@ class ResultScreen extends StatelessWidget {
               Text(
                 "Jawaban kamu berhasil disimpan ke riwayat.",
                 textAlign: TextAlign.center,
-                style: GoogleFonts.poppins(
+                style: TextStyle(fontFamily: 'FunnelDisplay',
+
                   color: colors.onSurfaceVariant,
                 ),
               ),
@@ -204,7 +205,8 @@ class ResultScreen extends StatelessWidget {
                       history.isFinished
                           ? "SELESAI"
                           : "BELUM SELESAI",
-                      style: GoogleFonts.poppins(
+                      style: TextStyle(fontFamily: 'FunnelDisplay',
+
                         fontWeight: FontWeight.bold,
                         color: colors.onSecondaryContainer,
                       ),
@@ -253,7 +255,8 @@ class ResultScreen extends StatelessWidget {
                   ),
                   child: Text(
                     "Kembali ke Beranda",
-                    style: GoogleFonts.poppins(
+                    style: TextStyle(fontFamily: 'FunnelDisplay',
+
                       color: colors.onPrimary,
                       fontWeight: FontWeight.bold,
                       fontSize: 16,
@@ -284,7 +287,8 @@ class ResultScreen extends StatelessWidget {
         Expanded(
           child: Text(
             title,
-            style: GoogleFonts.poppins(
+            style: TextStyle(fontFamily: 'FunnelDisplay',
+
               color: colors.onSurfaceVariant,
             ),
           ),
@@ -296,7 +300,8 @@ class ResultScreen extends StatelessWidget {
           child: Text(
             value,
             textAlign: TextAlign.right,
-            style: GoogleFonts.poppins(
+            style: TextStyle(fontFamily: 'FunnelDisplay',
+
               fontWeight: FontWeight.bold,
             ),
           ),

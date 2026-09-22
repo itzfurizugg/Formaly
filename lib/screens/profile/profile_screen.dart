@@ -1,9 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../core/theme/theme_controller.dart';
-import '../auth/login_screen.dart';
+import '../auth/login.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -136,7 +135,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
           ),
           title: Text(
             'Ubah Username',
-            style: GoogleFonts.poppins(
+            style: TextStyle(fontFamily: 'FunnelDisplay',
+
               fontWeight: FontWeight.bold,
               color: colors.onSurface,
             ),
@@ -162,7 +162,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
               },
               child: Text(
                 'Batal',
-                style: GoogleFonts.poppins(
+                style: TextStyle(fontFamily: 'FunnelDisplay',
+
                   color: colors.primary,
                   fontWeight: FontWeight.w600,
                 ),
@@ -177,7 +178,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
               },
               child: Text(
                 'Simpan',
-                style: GoogleFonts.poppins(
+                style: TextStyle(fontFamily: 'FunnelDisplay',
+
                   fontWeight: FontWeight.w600,
                 ),
               ),
@@ -324,7 +326,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
           ),
           title: Text(
             'Ubah Email',
-            style: GoogleFonts.poppins(
+            style: TextStyle(fontFamily: 'FunnelDisplay',
+
               fontWeight: FontWeight.bold,
               color: colors.onSurface,
             ),
@@ -354,7 +357,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
               },
               child: Text(
                 'Batal',
-                style: GoogleFonts.poppins(
+                style: TextStyle(fontFamily: 'FunnelDisplay',
+
                   color: colors.primary,
                   fontWeight: FontWeight.w600,
                 ),
@@ -369,7 +373,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
               },
               child: Text(
                 'Simpan',
-                style: GoogleFonts.poppins(
+                style: TextStyle(fontFamily: 'FunnelDisplay',
+
                   fontWeight: FontWeight.w600,
                 ),
               ),
@@ -511,7 +516,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
           ),
           title: Text(
             'Ubah Password',
-            style: GoogleFonts.poppins(
+            style: TextStyle(fontFamily: 'FunnelDisplay',
+
               fontWeight: FontWeight.bold,
               color: colors.onSurface,
             ),
@@ -557,7 +563,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
               },
               child: Text(
                 'Batal',
-                style: GoogleFonts.poppins(
+                style: TextStyle(fontFamily: 'FunnelDisplay',
+
                   color: colors.primary,
                   fontWeight: FontWeight.w600,
                 ),
@@ -575,7 +582,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
               },
               child: Text(
                 'Simpan',
-                style: GoogleFonts.poppins(
+                style: TextStyle(fontFamily: 'FunnelDisplay',
+
                   fontWeight: FontWeight.w600,
                 ),
               ),
@@ -692,14 +700,16 @@ class _ProfileScreenState extends State<ProfileScreen> {
           ),
           title: Text(
             'Keluar dari akun?',
-            style: GoogleFonts.poppins(
+            style: TextStyle(fontFamily: 'FunnelDisplay',
+
               fontWeight: FontWeight.bold,
               color: colors.onSurface,
             ),
           ),
           content: Text(
             'Kamu perlu login kembali untuk mengakses akun ini.',
-            style: GoogleFonts.poppins(
+            style: TextStyle(fontFamily: 'FunnelDisplay',
+
               height: 1.5,
               color: colors.onSurfaceVariant,
             ),
@@ -710,7 +720,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   Navigator.pop(dialogContext, false),
               child: Text(
                 'Batal',
-                style: GoogleFonts.poppins(
+                style: TextStyle(fontFamily: 'FunnelDisplay',
+
                   color: colors.primary,
                   fontWeight: FontWeight.w600,
                 ),
@@ -730,7 +741,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
               ),
               child: Text(
                 'Keluar',
-                style: GoogleFonts.poppins(
+                style: TextStyle(fontFamily: 'FunnelDisplay',
+
                   fontWeight: FontWeight.w600,
                 ),
               ),
@@ -884,7 +896,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
         SnackBar(
           content: Text(
             message,
-            style: GoogleFonts.poppins(
+            style: TextStyle(fontFamily: 'FunnelDisplay',
+
               fontSize: 13,
               color: colors.onInverseSurface,
             ),
@@ -961,7 +974,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
         Text(
           'Gagal Memuat Profil',
           textAlign: TextAlign.center,
-          style: GoogleFonts.poppins(
+          style: TextStyle(fontFamily: 'FunnelDisplay',
+
             fontSize: 22,
             fontWeight: FontWeight.bold,
             color: colors.onSurface,
@@ -972,7 +986,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
           _errorMessage ??
               'Terjadi kesalahan.',
           textAlign: TextAlign.center,
-          style: GoogleFonts.poppins(
+          style: TextStyle(fontFamily: 'FunnelDisplay',
+
             fontSize: 14,
             color: colors.onSurfaceVariant,
             height: 1.5,
@@ -987,7 +1002,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
             ),
             label: Text(
               'Coba Lagi',
-              style: GoogleFonts.poppins(
+              style: TextStyle(fontFamily: 'FunnelDisplay',
+
                 fontWeight: FontWeight.w600,
               ),
             ),
@@ -1042,7 +1058,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
         Text(
           'Tampilan',
-          style: GoogleFonts.poppins(
+          style: TextStyle(fontFamily: 'FunnelDisplay',
+
             fontSize: 18,
             fontWeight: FontWeight.bold,
             color: colors.onSurface,
@@ -1057,7 +1074,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
         Text(
           'Informasi Akun',
-          style: GoogleFonts.poppins(
+          style: TextStyle(fontFamily: 'FunnelDisplay',
+
             fontSize: 18,
             fontWeight: FontWeight.bold,
             color: colors.onSurface,
@@ -1174,7 +1192,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   _isCreator
                       ? 'Akun Creator\nAkun ini memiliki akses sebagai creator.'
                       : 'Akun Pengguna\nAkun siap digunakan untuk mengerjakan formulir.',
-                  style: GoogleFonts.poppins(
+                  style: TextStyle(fontFamily: 'FunnelDisplay',
+
                     fontSize: 12,
                     fontWeight: FontWeight.w600,
                     color: _isCreator
@@ -1213,7 +1232,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
               _isLoggingOut
                   ? 'Keluar...'
                   : 'Keluar dari Akun',
-              style: GoogleFonts.poppins(
+              style: TextStyle(fontFamily: 'FunnelDisplay',
+
                 fontWeight: FontWeight.w600,
               ),
             ),
@@ -1238,7 +1258,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
         Center(
           child: Text(
             'Formaly',
-            style: GoogleFonts.poppins(
+            style: TextStyle(fontFamily: 'FunnelDisplay',
+
               fontSize: 12,
               color: colors.onSurfaceVariant,
               fontWeight: FontWeight.w500,
@@ -1310,7 +1331,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         Text(
                           'Mode Tampilan',
                           style:
-                              GoogleFonts.poppins(
+                              TextStyle(fontFamily: 'FunnelDisplay',
+
                             fontSize: 15,
                             fontWeight:
                                 FontWeight.bold,
@@ -1326,7 +1348,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                               ? 'Dark Mode sedang digunakan'
                               : 'Light Mode sedang digunakan',
                           style:
-                              GoogleFonts.poppins(
+                              TextStyle(fontFamily: 'FunnelDisplay',
+
                             fontSize: 12,
                             color: isDark
                                 ? colors
@@ -1462,7 +1485,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 child: Center(
                   child: Text(
                     _initials(name),
-                    style: GoogleFonts.poppins(
+                    style: TextStyle(fontFamily: 'FunnelDisplay',
+
                       fontSize: 28,
                       fontWeight:
                           FontWeight.bold,
@@ -1508,7 +1532,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
             maxLines: 2,
             overflow:
                 TextOverflow.ellipsis,
-            style: GoogleFonts.poppins(
+            style: TextStyle(fontFamily: 'FunnelDisplay',
+
               fontSize: 24,
               fontWeight: FontWeight.bold,
               color: colors.onSurface,
@@ -1523,7 +1548,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
             maxLines: 2,
             overflow:
                 TextOverflow.ellipsis,
-            style: GoogleFonts.poppins(
+            style: TextStyle(fontFamily: 'FunnelDisplay',
+
               fontSize: 13,
               color: colors.onSurfaceVariant,
             ),
@@ -1565,7 +1591,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 Text(
                   role,
                   style:
-                      GoogleFonts.poppins(
+                      TextStyle(fontFamily: 'FunnelDisplay',
+
                     fontSize: 12.5,
                     fontWeight:
                         FontWeight.w600,
@@ -1643,7 +1670,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
               children: [
                 Text(
                   title,
-                  style: GoogleFonts.poppins(
+                  style: TextStyle(fontFamily: 'FunnelDisplay',
+
                     fontSize: 12,
                     color:
                         colors.onSurfaceVariant,
@@ -1655,7 +1683,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   maxLines: 2,
                   overflow:
                       TextOverflow.ellipsis,
-                  style: GoogleFonts.poppins(
+                  style: TextStyle(fontFamily: 'FunnelDisplay',
+
                     fontSize: 14,
                     fontWeight:
                         FontWeight.w600,

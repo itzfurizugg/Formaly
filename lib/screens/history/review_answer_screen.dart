@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 
 import '../../core/models/answer_model.dart';
 
@@ -25,7 +24,8 @@ class ReviewAnswerScreen extends StatelessWidget {
         centerTitle: true,
         title: Text(
           'Review Jawaban',
-          style: GoogleFonts.poppins(
+          style: TextStyle(fontFamily: 'FunnelDisplay',
+
             color: Colors.black,
             fontWeight: FontWeight.bold,
           ),
@@ -58,7 +58,8 @@ class ReviewAnswerScreen extends StatelessWidget {
               Text(
                 'Review Jawaban Tidak Tersedia',
                 textAlign: TextAlign.center,
-                style: GoogleFonts.poppins(
+                style: TextStyle(fontFamily: 'FunnelDisplay',
+
                   fontSize: 21,
                   fontWeight: FontWeight.bold,
                   color: const Color(0xff343A40),
@@ -71,7 +72,8 @@ class ReviewAnswerScreen extends StatelessWidget {
                 'Jawaban dan hasil penilaian tidak ditampilkan '
                 'kepada user.',
                 textAlign: TextAlign.center,
-                style: GoogleFonts.poppins(
+                style: TextStyle(fontFamily: 'FunnelDisplay',
+
                   fontSize: 14,
                   color: Colors.grey.shade600,
                   height: 1.6,
@@ -105,7 +107,8 @@ class ReviewAnswerScreen extends StatelessWidget {
                         'Detail jawaban, jawaban benar, benar/salah, '
                         'dan nilai hanya digunakan untuk proses '
                         'penilaian internal.',
-                        style: GoogleFonts.poppins(
+                        style: TextStyle(fontFamily: 'FunnelDisplay',
+
                           fontSize: 12,
                           color: Colors.grey.shade600,
                           height: 1.5,
@@ -136,7 +139,8 @@ class ReviewAnswerScreen extends StatelessWidget {
                   ),
                   child: Text(
                     'Kembali',
-                    style: GoogleFonts.poppins(
+                    style: TextStyle(fontFamily: 'FunnelDisplay',
+
                       fontWeight: FontWeight.bold,
                     ),
                   ),
