@@ -1,7 +1,5 @@
 import 'package:flutter/material.dart';
 
-import 'auth_shell.dart';
-
 class DockItem {
   final String label;
   final IconData icon;
@@ -33,34 +31,56 @@ class FormalyDock extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = Theme.of(context).colorScheme;
+
     return SafeArea(
       minimum: const EdgeInsets.fromLTRB(16, 0, 16, 40),
       child: Row(
-        mainAxisAlignment: MainAxisAlignment.center,
+        mainAxisAlignment:
+            MainAxisAlignment.center,
         children: [
           Container(
             padding: const EdgeInsets.all(10),
             decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(36),
-              border: Border.all(color: Colors.white70),
-              boxShadow: const [
+              // Mengikuti Light / Dark Mode.
+              color: colors.surface,
+              borderRadius:
+                  BorderRadius.circular(36),
+              border: Border.all(
+                color: colors.outlineVariant,
+              ),
+              boxShadow: [
                 BoxShadow(
-                  color: Color(0x40000000),
+                  color: colors.shadow.withValues(
+                    alpha: .25,
+                  ),
                   blurRadius: 32,
-                  offset: Offset(0, 10),
+                  offset: const Offset(
+                    0,
+                    10,
+                  ),
                 ),
               ],
             ),
             child: Row(
-              mainAxisSize: MainAxisSize.min,
+              mainAxisSize:
+                  MainAxisSize.min,
               children: [
-                for (int i = 0; i < items.length; i++) ...[
-                  if (i > 0) const SizedBox(width: 2),
+                for (
+                  int i = 0;
+                  i < items.length;
+                  i++
+                ) ...[
+                  if (i > 0)
+                    const SizedBox(
+                      width: 2,
+                    ),
                   _DockItemButton(
                     item: items[i],
-                    selected: i == currentIndex,
-                    onTap: () => onTap(i),
+                    selected:
+                        i == currentIndex,
+                    onTap:
+                        () => onTap(i),
                   ),
                 ],
               ],
@@ -72,7 +92,8 @@ class FormalyDock extends StatelessWidget {
   }
 }
 
-class _DockItemButton extends StatelessWidget {
+class _DockItemButton
+    extends StatelessWidget {
   final DockItem item;
   final bool selected;
   final VoidCallback onTap;
@@ -85,59 +106,115 @@ class _DockItemButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final Color activeTile = kDarks.withValues(alpha: .1);
+    final colors =
+        Theme.of(context).colorScheme;
+
+    // Tetap mempertahankan bentuk active tile
+    // seperti desain sebelumnya, tetapi mengikuti
+    // warna text/icon dari theme.
+    final Color activeTile =
+        colors.onSurface.withValues(
+      alpha: .1,
+    );
 
     return GestureDetector(
-      behavior: HitTestBehavior.opaque,
+      behavior:
+          HitTestBehavior.opaque,
       onTap: onTap,
       child: AnimatedContainer(
-        duration: const Duration(milliseconds: 280),
-        curve: Curves.easeOutCubic,
-        padding: EdgeInsets.symmetric(
-          horizontal: selected ? 18 : 14,
+        duration:
+            const Duration(
+          milliseconds: 280,
+        ),
+        curve:
+            Curves.easeOutCubic,
+        padding:
+            EdgeInsets.symmetric(
+          horizontal:
+              selected ? 18 : 14,
           vertical: 10,
         ),
-        decoration: BoxDecoration(
-          color: selected ? activeTile : Colors.transparent,
-          borderRadius: BorderRadius.circular(999),
+        decoration:
+            BoxDecoration(
+          color: selected
+              ? activeTile
+              : Colors.transparent,
+          borderRadius:
+              BorderRadius.circular(
+            999,
+          ),
         ),
         child: Row(
-          mainAxisSize: MainAxisSize.min,
+          mainAxisSize:
+              MainAxisSize.min,
           children: [
             AnimatedSwitcher(
-              duration: const Duration(milliseconds: 240),
-              switchInCurve: Curves.easeOutBack,
-              switchOutCurve: Curves.easeIn,
-              transitionBuilder: (child, animation) => FadeTransition(
+              duration:
+                  const Duration(
+                milliseconds: 240,
+              ),
+              switchInCurve:
+                  Curves.easeOutBack,
+              switchOutCurve:
+                  Curves.easeIn,
+              transitionBuilder:
+                  (
+                child,
+                animation,
+              ) =>
+                      FadeTransition(
                 opacity: animation,
-                child: ScaleTransition(
-                  scale: Tween<double>(
+                child:
+                    ScaleTransition(
+                  scale:
+                      Tween<double>(
                     begin: .7,
                     end: 1,
-                  ).animate(animation),
+                  ).animate(
+                    animation,
+                  ),
                   child: child,
                 ),
               ),
               child: Icon(
-                selected ? item.activeIcon : item.icon,
-                key: ValueKey(selected),
-                size: 20,
-                color: kDarks.withValues(alpha: selected ? 1 : .7),
+                selected
+                    ? item.activeIcon
+                    : item.icon,
+                key:
+                    ValueKey(selected),
+                size: 22,
+                color: colors
+                    .onSurface
+                    .withValues(
+                  alpha:
+                      selected ? 1 : .7,
+                ),
               ),
             ),
             AnimatedSize(
-              duration: const Duration(milliseconds: 280),
-              curve: Curves.easeOutCubic,
+              duration:
+                  const Duration(
+                milliseconds: 280,
+              ),
+              curve:
+                  Curves.easeOutCubic,
               child: selected
                   ? Padding(
-                      padding: const EdgeInsets.only(left: 7),
+                      padding:
+                          const EdgeInsets
+                              .only(
+                        left: 7,
+                      ),
                       child: Text(
                         item.label,
-                        style: TextStyle(fontFamily: 'FunnelDisplay',
-
-                          fontSize: 14,
-                          fontWeight: FontWeight.w700,
-                          color: kDarks,
+                        style: TextStyle(
+                          fontFamily:
+                              'FunnelDisplay',
+                          fontSize: 11,
+                          fontWeight:
+                              FontWeight.w700,
+                          color:
+                              colors.onSurface,
                         ),
                       ),
                     )

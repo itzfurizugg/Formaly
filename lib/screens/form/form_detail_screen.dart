@@ -35,6 +35,9 @@ class _FormDetailScreenState extends State<FormDetailScreen> {
   String formDescription = '';
   String formTag = '-';
 
+  // Banner form dari Creator Web.
+  String formBanner = '';
+
   int durationMinutes = 0;
   int questionCount = 0;
 
@@ -44,10 +47,44 @@ class _FormDetailScreenState extends State<FormDetailScreen> {
     'com.example.formaly/exam_security',
   );
 
+  // Base URL Go Storage Formaly.
+  static const String _storageBaseUrl =
+      'https://formaly-storage.commandspes.tech';
+
   @override
   void initState() {
     super.initState();
     loadForm();
+  }
+
+  // ============================================================
+  // RESOLVE MEDIA URL
+  // ============================================================
+
+  String _resolveMediaUrl(String raw) {
+    final String value = raw.trim();
+
+    if (value.isEmpty) {
+      return '';
+    }
+
+    // Kalau database sudah menyimpan URL lengkap,
+    // gunakan langsung.
+    if (value.startsWith('http://') ||
+        value.startsWith('https://')) {
+      return value;
+    }
+
+    // Go Storage mengembalikan path seperti:
+    // /media/2026/09/22/xxxx.jpg
+    if (value.startsWith('/')) {
+      return '$_storageBaseUrl$value';
+    }
+
+    // Antisipasi kalau path disimpan tanpa "/"
+    // seperti:
+    // media/2026/09/22/xxxx.jpg
+    return '$_storageBaseUrl/$value';
   }
 
   // ============================================================
@@ -63,8 +100,7 @@ class _FormDetailScreenState extends State<FormDetailScreen> {
     });
 
     try {
-      final String cleanFormId =
-          widget.formId.trim();
+      final String cleanFormId = widget.formId.trim();
 
       if (cleanFormId.isEmpty) {
         throw Exception(
@@ -75,18 +111,14 @@ class _FormDetailScreenState extends State<FormDetailScreen> {
       // ========================================================
       // 1. AMBIL DATA FORM
       //
-      // PENTING:
-      // Tabel `forms` TIDAK memiliki kolom `tag`.
-      // Jadi jangan pernah memakai:
-      //
-      // select('..., tag')
-      //
+      // header_image adalah banner form yang diatur oleh
+      // Creator Web. Android hanya mengambil dan menampilkan.
       // ========================================================
 
       final formResponse = await _supabase
           .from('forms')
           .select(
-            'id, title, description, duration',
+            'id, title, description, duration, header_image',
           )
           .eq(
             'id',
@@ -126,6 +158,21 @@ class _FormDetailScreenState extends State<FormDetailScreen> {
       final int loadedDuration =
           _toInt(
         formResponse['duration'],
+      );
+
+      // ========================================================
+      // AMBIL BANNER
+      //
+      // Banner hanya ditampilkan dari kolom header_image.
+      // Path dari Go Storage akan diubah menjadi URL lengkap.
+      // Tidak ada proses set / upload / edit banner di Android.
+      // ========================================================
+
+      final String loadedBanner =
+          _resolveMediaUrl(
+        formResponse['header_image']
+                ?.toString() ??
+            '',
       );
 
       // ========================================================
@@ -179,8 +226,7 @@ class _FormDetailScreenState extends State<FormDetailScreen> {
                       '';
 
               if (tagName.isNotEmpty) {
-                loadedTag =
-                    tagName;
+                loadedTag = tagName;
               }
             }
           }
@@ -223,6 +269,9 @@ class _FormDetailScreenState extends State<FormDetailScreen> {
         formTag =
             loadedTag;
 
+        formBanner =
+            loadedBanner;
+
         durationMinutes =
             loadedDuration;
 
@@ -232,7 +281,6 @@ class _FormDetailScreenState extends State<FormDetailScreen> {
         isLoading = false;
         errorMessage = null;
       });
-
     } catch (e) {
       if (!mounted) return;
 
@@ -463,7 +511,12 @@ class _FormDetailScreenState extends State<FormDetailScreen> {
       ..showSnackBar(
         SnackBar(
           content:
-              Text(message),
+              Text(
+            message,
+            style: const TextStyle(
+              fontFamily: 'FunnelDisplay',
+            ),
+          ),
           behavior:
               SnackBarBehavior.floating,
         ),
@@ -582,8 +635,9 @@ class _FormDetailScreenState extends State<FormDetailScreen> {
             Text(
           'Detail Form',
           style:
-              TextStyle(fontFamily: 'FunnelDisplay',
-
+              TextStyle(
+            fontFamily:
+                'FunnelDisplay',
             color:
                 colors.onSurface,
             fontWeight:
@@ -652,8 +706,9 @@ class _FormDetailScreenState extends State<FormDetailScreen> {
               textAlign:
                   TextAlign.center,
               style:
-                  TextStyle(fontFamily: 'FunnelDisplay',
-
+                  TextStyle(
+                fontFamily:
+                    'FunnelDisplay',
                 fontSize: 20,
                 fontWeight:
                     FontWeight.bold,
@@ -669,8 +724,9 @@ class _FormDetailScreenState extends State<FormDetailScreen> {
               textAlign:
                   TextAlign.center,
               style:
-                  TextStyle(fontFamily: 'FunnelDisplay',
-
+                  TextStyle(
+                fontFamily:
+                    'FunnelDisplay',
                 fontSize: 14,
                 color: colors
                     .onSurfaceVariant,
@@ -697,7 +753,9 @@ class _FormDetailScreenState extends State<FormDetailScreen> {
                     Text(
                   'Coba Lagi',
                   style:
-                      TextStyle(fontFamily: 'FunnelDisplay',
+                      const TextStyle(
+                    fontFamily:
+                        'FunnelDisplay',
                     fontWeight:
                         FontWeight.bold,
                   ),
@@ -747,6 +805,17 @@ class _FormDetailScreenState extends State<FormDetailScreen> {
                 .start,
 
         children: [
+          // ======================================================
+          // BANNER
+          // ======================================================
+
+          if (formBanner.trim().isNotEmpty)
+            _buildBanner(),
+
+          if (formBanner.trim().isNotEmpty)
+            const SizedBox(
+                height: 20),
+
           // ======================================================
           // HEADER
           // ======================================================
@@ -822,8 +891,9 @@ class _FormDetailScreenState extends State<FormDetailScreen> {
                   textAlign:
                       TextAlign.center,
                   style:
-                      TextStyle(fontFamily: 'FunnelDisplay',
-
+                      TextStyle(
+                    fontFamily:
+                        'FunnelDisplay',
                     fontSize: 28,
                     fontWeight:
                         FontWeight.bold,
@@ -838,8 +908,9 @@ class _FormDetailScreenState extends State<FormDetailScreen> {
                   textAlign:
                       TextAlign.center,
                   style:
-                      TextStyle(fontFamily: 'FunnelDisplay',
-
+                      TextStyle(
+                    fontFamily:
+                        'FunnelDisplay',
                     color: colors
                         .onSurfaceVariant,
                     fontSize: 14,
@@ -886,7 +957,9 @@ class _FormDetailScreenState extends State<FormDetailScreen> {
                       Text(
                         'Tag: $formTag',
                         style:
-                            TextStyle(fontFamily: 'FunnelDisplay',
+                            TextStyle(
+                          fontFamily:
+                              'FunnelDisplay',
                           fontWeight:
                               FontWeight
                                   .w600,
@@ -945,8 +1018,9 @@ class _FormDetailScreenState extends State<FormDetailScreen> {
           Text(
             'Deskripsi',
             style:
-                TextStyle(fontFamily: 'FunnelDisplay',
-
+                TextStyle(
+              fontFamily:
+                  'FunnelDisplay',
               fontSize: 18,
               fontWeight:
                   FontWeight.bold,
@@ -982,8 +1056,9 @@ class _FormDetailScreenState extends State<FormDetailScreen> {
                     ? Text(
                         'Tidak ada deskripsi untuk form ini.',
                         style:
-                            TextStyle(fontFamily: 'FunnelDisplay',
-
+                            TextStyle(
+                          fontFamily:
+                              'FunnelDisplay',
                           fontSize: 14,
                           height: 1.7,
                           color:
@@ -995,8 +1070,9 @@ class _FormDetailScreenState extends State<FormDetailScreen> {
                         renderMode:
                             RenderMode.column,
                         textStyle:
-                            TextStyle(fontFamily: 'FunnelDisplay',
-
+                            TextStyle(
+                          fontFamily:
+                              'FunnelDisplay',
                           fontSize: 14,
                           color:
                               colors.onSurface,
@@ -1075,7 +1151,9 @@ class _FormDetailScreenState extends State<FormDetailScreen> {
                               ? 'TIDAK ADA SOAL'
                               : 'START',
                           style:
-                              TextStyle(fontFamily: 'FunnelDisplay',
+                              TextStyle(
+                            fontFamily:
+                                'FunnelDisplay',
                             color:
                                 colors.onPrimary,
                             fontWeight:
@@ -1091,6 +1169,120 @@ class _FormDetailScreenState extends State<FormDetailScreen> {
           const SizedBox(
               height: 20),
         ],
+      ),
+    );
+  }
+
+  // ============================================================
+  // BANNER WIDGET
+  // ============================================================
+
+  Widget _buildBanner() {
+    final colors =
+        Theme.of(context)
+            .colorScheme;
+
+    return ClipRRect(
+      borderRadius:
+          BorderRadius.circular(
+        22,
+      ),
+
+      child:
+          AspectRatio(
+        aspectRatio: 16 / 7,
+
+        child:
+            Container(
+          color:
+              colors.surfaceContainerHighest,
+
+          child:
+              Image.network(
+            formBanner,
+            width:
+                double.infinity,
+            height:
+                double.infinity,
+            fit:
+                BoxFit.cover,
+
+            loadingBuilder:
+                (
+              context,
+              child,
+              loadingProgress,
+            ) {
+              if (loadingProgress ==
+                  null) {
+                return child;
+              }
+
+              return Center(
+                child:
+                    CircularProgressIndicator(
+                  value:
+                      loadingProgress
+                                  .expectedTotalBytes !=
+                              null
+                          ? loadingProgress
+                                  .cumulativeBytesLoaded /
+                              loadingProgress
+                                  .expectedTotalBytes!
+                          : null,
+                ),
+              );
+            },
+
+            errorBuilder:
+                (
+              context,
+              error,
+              stackTrace,
+            ) {
+              return Container(
+                color: colors
+                    .surfaceContainerHighest,
+
+                alignment:
+                    Alignment.center,
+
+                child: Column(
+                  mainAxisAlignment:
+                      MainAxisAlignment
+                          .center,
+
+                  children: [
+                    Icon(
+                      Icons
+                          .image_not_supported_outlined,
+                      size: 38,
+                      color: colors
+                          .onSurfaceVariant,
+                    ),
+
+                    const SizedBox(
+                        height: 8),
+
+                    Text(
+                      'Banner tidak dapat dimuat',
+                      style:
+                          const TextStyle(
+                        fontFamily:
+                            'FunnelDisplay',
+                        fontSize:
+                            12,
+                      ).copyWith(
+                        color: colors
+                            .onSurfaceVariant,
+                      ),
+                    ),
+                  ],
+                ),
+              );
+            },
+          ),
+        ),
       ),
     );
   }
@@ -1141,8 +1333,9 @@ class _FormDetailScreenState extends State<FormDetailScreen> {
             textAlign:
                 TextAlign.center,
             style:
-                TextStyle(fontFamily: 'FunnelDisplay',
-
+                TextStyle(
+              fontFamily:
+                  'FunnelDisplay',
               color:
                   colors.onSurfaceVariant,
             ),
@@ -1156,8 +1349,9 @@ class _FormDetailScreenState extends State<FormDetailScreen> {
             textAlign:
                 TextAlign.center,
             style:
-                TextStyle(fontFamily: 'FunnelDisplay',
-
+                TextStyle(
+              fontFamily:
+                  'FunnelDisplay',
               fontWeight:
                   FontWeight.bold,
               fontSize: 18,

@@ -17,7 +17,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   bool _isLoading = true;
   bool _isLoggingOut = false;
-  bool _isUpdatingAccount = false;
+  final bool _isUpdatingAccount = false;
   String? _errorMessage;
 
   String _name = '';
@@ -271,28 +271,41 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 
   Widget _buildLoading() {
+    final colors = Theme.of(context).colorScheme;
+
     return ListView(
       physics: const AlwaysScrollableScrollPhysics(),
-      children: const [
-        SizedBox(height: 240),
-        Center(child: CircularProgressIndicator(color: kDone)),
+      children: [
+        const SizedBox(height: 240),
+        Center(
+          child: CircularProgressIndicator(
+            color: colors.primary,
+          ),
+        ),
       ],
     );
   }
 
   Widget _buildError() {
+    final colors = Theme.of(context).colorScheme;
+
     return ListView(
       physics: const AlwaysScrollableScrollPhysics(),
       padding: const EdgeInsets.all(22),
       children: [
         const SizedBox(height: 90),
-        const Center(
+        Center(
           child: SizedBox(
             width: 76,
             height: 76,
             child: CircleAvatar(
-              backgroundColor: Color(0x1AD90000),
-              child: Icon(Icons.error_outline_rounded, size: 42, color: kWrong),
+              backgroundColor:
+                  colors.error.withValues(alpha: .1),
+              child: Icon(
+                Icons.error_outline_rounded,
+                size: 42,
+                color: colors.error,
+              ),
             ),
           ),
         ),
@@ -304,7 +317,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
             fontFamily: 'FunnelDisplay',
             fontSize: 22,
             fontWeight: FontWeight.w700,
-            color: kDarks,
+            color: colors.onSurface,
           ),
         ),
         const SizedBox(height: 10),
@@ -314,7 +327,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
           style: TextStyle(
             fontFamily: 'FunnelDisplay',
             fontSize: 14,
-            color: kTinted,
+            color: colors.onSurfaceVariant,
             height: 1.5,
           ),
         ),
@@ -324,11 +337,19 @@ class _ProfileScreenState extends State<ProfileScreen> {
             height: 44,
             child: ElevatedButton.icon(
               onPressed: _loadProfile,
-              icon: const Icon(Icons.refresh_rounded, size: 18),
-              label: const Text('Coba Lagi'),
+              icon: const Icon(
+                Icons.refresh_rounded,
+                size: 18,
+              ),
+              label: const Text(
+                'Coba Lagi',
+                style: TextStyle(
+                  fontFamily: 'FunnelDisplay',
+                ),
+              ),
               style: ElevatedButton.styleFrom(
-                backgroundColor: kDone,
-                foregroundColor: Colors.white,
+                backgroundColor: colors.primary,
+                foregroundColor: colors.onPrimary,
                 elevation: 0,
                 shape: const StadiumBorder(),
               ),
@@ -343,11 +364,18 @@ class _ProfileScreenState extends State<ProfileScreen> {
   Widget _buildProfile() {
     return ListView(
       physics: const AlwaysScrollableScrollPhysics(),
-      padding: const EdgeInsets.fromLTRB(14, 10, 14, 40),
+      padding: const EdgeInsets.fromLTRB(
+        14,
+        10,
+        14,
+        40,
+      ),
       children: [
         Center(
           child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 640),
+            constraints: const BoxConstraints(
+              maxWidth: 640,
+            ),
             child: Column(
               children: [
                 _buildHeaderCard(),
@@ -356,16 +384,24 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   children: [
                     _buildMenuItem(
                       icon: Icons.person_outline_rounded,
-                      iconColor: kDarks,
-                      iconBg: kBase,
+                      iconColor: Theme.of(context)
+                          .colorScheme
+                          .onSurface,
+                      iconBg: Theme.of(context)
+                          .colorScheme
+                          .surfaceContainerHighest,
                       title: 'Informasi Akun',
                       subtitle: 'Ubah username dan email kamu',
                       onTap: _openAccountModal,
                     ),
                     _buildMenuItem(
                       icon: Icons.lock_outline_rounded,
-                      iconColor: kDarks,
-                      iconBg: kBase,
+                      iconColor: Theme.of(context)
+                          .colorScheme
+                          .onSurface,
+                      iconBg: Theme.of(context)
+                          .colorScheme
+                          .surfaceContainerHighest,
                       title: 'Ubah Kata Sandi',
                       subtitle: 'Perbarui kata sandi akun kamu',
                       onTap: _openPasswordModal,
@@ -389,10 +425,15 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       ),
                     _buildMenuItem(
                       icon: Icons.settings_outlined,
-                      iconColor: kDarks,
-                      iconBg: kBase,
+                      iconColor: Theme.of(context)
+                          .colorScheme
+                          .onSurface,
+                      iconBg: Theme.of(context)
+                          .colorScheme
+                          .surfaceContainerHighest,
                       title: 'Pengaturan',
-                      subtitle: 'Kelola preferensi tampilan dan aplikasi.',
+                      subtitle:
+                          'Kelola preferensi tampilan dan aplikasi.',
                       onTap: _openSettings,
                     ),
                   ],
@@ -408,6 +449,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   // Header: avatar + nama + role badge + email + tanggal bergabung.
   Widget _buildHeaderCard() {
+    final colors = Theme.of(context).colorScheme;
+
     final String initial = _name.trim().isEmpty
         ? 'U'
         : _name.trim().substring(0, 1).toUpperCase();
@@ -415,9 +458,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: colors.surface,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: kSecond),
+        border: Border.all(
+          color: colors.outlineVariant,
+        ),
       ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -432,7 +477,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
             ),
             child: Text(
               initial,
-              style: TextStyle(
+              style: const TextStyle(
                 fontFamily: 'FunnelDisplay',
                 fontSize: 36,
                 fontWeight: FontWeight.w700,
@@ -443,10 +488,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
           const SizedBox(width: 16),
           Expanded(
             child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+              crossAxisAlignment:
+                  CrossAxisAlignment.start,
               children: [
                 Row(
-                  crossAxisAlignment: CrossAxisAlignment.center,
+                  crossAxisAlignment:
+                      CrossAxisAlignment.center,
                   children: [
                     Flexible(
                       child: Text(
@@ -457,7 +504,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           fontFamily: 'FunnelDisplay',
                           fontSize: 20,
                           fontWeight: FontWeight.w700,
-                          color: kDarks,
+                          color: colors.onSurface,
                         ),
                       ),
                     ),
@@ -467,9 +514,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 ),
                 const SizedBox(height: 8),
                 Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+                  crossAxisAlignment:
+                      CrossAxisAlignment.start,
                   children: [
-                    Icon(Icons.mail_outline_rounded, size: 14, color: kTinted),
+                    Icon(
+                      Icons.mail_outline_rounded,
+                      size: 14,
+                      color: colors.onSurfaceVariant,
+                    ),
                     const SizedBox(width: 6),
                     Expanded(
                       child: Text(
@@ -479,7 +531,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         style: TextStyle(
                           fontFamily: 'FunnelDisplay',
                           fontSize: 14,
-                          color: kTinted,
+                          color: colors.onSurfaceVariant,
                         ),
                       ),
                     ),
@@ -487,19 +539,25 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 ),
                 const SizedBox(height: 6),
                 Row(
+                  crossAxisAlignment:
+                      CrossAxisAlignment.start,
                   children: [
                     Icon(
                       Icons.calendar_today_outlined,
                       size: 12,
-                      color: kTinted,
+                      color: colors.onSurfaceVariant,
                     ),
                     const SizedBox(width: 6),
-                    Text(
-                      'Bergabung pada ${_formatDate(_createdAt)}',
-                      style: TextStyle(
-                        fontFamily: 'FunnelDisplay',
-                        fontSize: 12,
-                        color: kTinted,
+                    Expanded(
+                      child: Text(
+                        'Bergabung pada ${_formatDate(_createdAt)}',
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(
+                          fontFamily: 'FunnelDisplay',
+                          fontSize: 12,
+                          color: colors.onSurfaceVariant,
+                        ),
                       ),
                     ),
                   ],
@@ -523,7 +581,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
         : 'User';
 
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+      padding: const EdgeInsets.symmetric(
+        horizontal: 10,
+        vertical: 4,
+      ),
       decoration: BoxDecoration(
         color: color.withValues(alpha: .1),
         borderRadius: BorderRadius.circular(999),
@@ -541,17 +602,28 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 
   // Kelompok menu: card putih dengan pembatas antar item.
-  Widget _buildMenuGroup({required List<Widget> children}) {
+  Widget _buildMenuGroup({
+    required List<Widget> children,
+  }) {
+    final colors = Theme.of(context).colorScheme;
+
     return Container(
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: colors.surface,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: kSecond),
+        border: Border.all(
+          color: colors.outlineVariant,
+        ),
       ),
       child: Column(
         children: [
           for (int i = 0; i < children.length; i++) ...[
-            if (i > 0) Divider(height: 1, thickness: 1, color: kSecond),
+            if (i > 0)
+              Divider(
+                height: 1,
+                thickness: 1,
+                color: colors.outlineVariant,
+              ),
             children[i],
           ],
         ],
@@ -567,6 +639,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
     required String subtitle,
     required VoidCallback onTap,
   }) {
+    final colors = Theme.of(context).colorScheme;
+
     return Material(
       color: Colors.transparent,
       child: InkWell(
@@ -582,12 +656,17 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   color: iconBg,
                   shape: BoxShape.circle,
                 ),
-                child: Icon(icon, size: 16, color: iconColor),
+                child: Icon(
+                  icon,
+                  size: 16,
+                  color: iconColor,
+                ),
               ),
               const SizedBox(width: 12),
               Expanded(
                 child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+                  crossAxisAlignment:
+                      CrossAxisAlignment.start,
                   children: [
                     Text(
                       title,
@@ -595,22 +674,28 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         fontFamily: 'FunnelDisplay',
                         fontSize: 14,
                         fontWeight: FontWeight.w700,
-                        color: kDarks,
+                        color: colors.onSurface,
                       ),
                     ),
                     const SizedBox(height: 2),
                     Text(
                       subtitle,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
                       style: TextStyle(
                         fontFamily: 'FunnelDisplay',
                         fontSize: 12,
-                        color: kTinted,
+                        color: colors.onSurfaceVariant,
                       ),
                     ),
                   ],
                 ),
               ),
-              Icon(Icons.chevron_right_rounded, size: 16, color: kTinted),
+              Icon(
+                Icons.chevron_right_rounded,
+                size: 16,
+                color: colors.onSurfaceVariant,
+              ),
             ],
           ),
         ),
@@ -619,32 +704,43 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 
   Widget _buildLogoutButton() {
+    final colors = Theme.of(context).colorScheme;
+
     return SizedBox(
       height: 48,
       child: OutlinedButton.icon(
         onPressed: _isLoggingOut ? null : _logout,
         icon: _isLoggingOut
-            ? const SizedBox(
+            ? SizedBox(
                 width: 18,
                 height: 18,
                 child: CircularProgressIndicator(
                   strokeWidth: 2.2,
-                  color: kWrong,
+                  color: colors.error,
                 ),
               )
-            : const Icon(Icons.logout_rounded, size: 18),
+            : Icon(
+                Icons.logout_rounded,
+                size: 18,
+                color: colors.error,
+              ),
         label: Text(
           _isLoggingOut ? 'Keluar...' : 'Keluar',
           style: TextStyle(
             fontFamily: 'FunnelDisplay',
             fontWeight: FontWeight.w600,
+            color: colors.error,
           ),
         ),
         style: OutlinedButton.styleFrom(
-          foregroundColor: kWrong,
-          backgroundColor: kBase,
+          foregroundColor: colors.error,
+          backgroundColor:
+              colors.surfaceContainerHighest,
           elevation: 0,
-          side: BorderSide(color: kWrong.withValues(alpha: .2), width: 2),
+          side: BorderSide(
+            color: colors.error.withValues(alpha: .2),
+            width: 2,
+          ),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(16),
           ),
@@ -690,7 +786,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 
   // Menyimpan username dan email dari modal Informasi Akun.
-  Future<String?> _saveAccount(String name, String email) async {
+  Future<String?> _saveAccount(
+    String name,
+    String email,
+  ) async {
     final user = _supabase.auth.currentUser;
 
     if (user == null) return 'User belum login.';
@@ -759,7 +858,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
       builder: (sheetContext) => _SheetBox(
         child: Column(
           mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
+          crossAxisAlignment:
+              CrossAxisAlignment.start,
           children: [
             const _SheetHandle(),
             const SizedBox(height: 24),
@@ -769,14 +869,21 @@ class _ProfileScreenState extends State<ProfileScreen> {
               onClose: null,
             ),
             const SizedBox(height: 20),
-            const Text(
-              'Mode Tampilan',
-              style: TextStyle(
-                fontFamily: 'FunnelDisplay',
-                fontSize: 13,
-                fontWeight: FontWeight.w600,
-                color: kDarks,
-              ),
+            Builder(
+              builder: (context) {
+                final colors =
+                    Theme.of(context).colorScheme;
+
+                return Text(
+                  'Mode Tampilan',
+                  style: TextStyle(
+                    fontFamily: 'FunnelDisplay',
+                    fontSize: 13,
+                    fontWeight: FontWeight.w600,
+                    color: colors.onSurface,
+                  ),
+                );
+              },
             ),
             const SizedBox(height: 10),
             StatefulBuilder(
@@ -787,17 +894,24 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     segments: const [
                       ButtonSegment<ThemeMode>(
                         value: ThemeMode.light,
-                        icon: Icon(Icons.light_mode_outlined, size: 18),
+                        icon: Icon(
+                          Icons.light_mode_outlined,
+                          size: 18,
+                        ),
                         label: Text('Light'),
                       ),
                       ButtonSegment<ThemeMode>(
                         value: ThemeMode.dark,
-                        icon: Icon(Icons.dark_mode_outlined, size: 18),
+                        icon: Icon(
+                          Icons.dark_mode_outlined,
+                          size: 18,
+                        ),
                         label: Text('Dark'),
                       ),
                     ],
                     selected: {
-                      ThemeController.instance.themeMode == ThemeMode.dark
+                      ThemeController.instance.themeMode ==
+                              ThemeMode.dark
                           ? ThemeMode.dark
                           : ThemeMode.light,
                     },
@@ -831,12 +945,14 @@ class _SheetHandle extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = Theme.of(context).colorScheme;
+
     return Center(
       child: Container(
         width: 40,
         height: 4,
         decoration: BoxDecoration(
-          color: const Color(0xFFE0E0E0),
+          color: colors.outlineVariant,
           borderRadius: BorderRadius.circular(2),
         ),
       ),
@@ -848,24 +964,35 @@ class _SheetHeader extends StatelessWidget {
   final IconData icon;
   final String title;
   final VoidCallback? onClose;
-  final Color color;
+  final Color? color;
 
   const _SheetHeader({
     required this.icon,
     required this.title,
     this.onClose,
-    this.color = kDarks,
+    this.color,
   });
 
   @override
   Widget build(BuildContext context) {
+    final colors = Theme.of(context).colorScheme;
+    final Color headerColor =
+        color ?? colors.onSurface;
+
     return Row(
       children: [
         Container(
           width: 36,
           height: 36,
-          decoration: const BoxDecoration(color: kBase, shape: BoxShape.circle),
-          child: Icon(icon, size: 16, color: color),
+          decoration: BoxDecoration(
+            color: colors.surfaceContainerHighest,
+            shape: BoxShape.circle,
+          ),
+          child: Icon(
+            icon,
+            size: 16,
+            color: headerColor,
+          ),
         ),
         const SizedBox(width: 10),
         Expanded(
@@ -875,15 +1002,20 @@ class _SheetHeader extends StatelessWidget {
               fontFamily: 'FunnelDisplay',
               fontSize: 16,
               fontWeight: FontWeight.w700,
-              color: color,
+              color: headerColor,
             ),
           ),
         ),
         if (onClose != null)
           IconButton(
             onPressed: onClose,
-            visualDensity: VisualDensity.compact,
-            icon: const Icon(Icons.close_rounded, size: 18, color: kTinted),
+            visualDensity:
+                VisualDensity.compact,
+            icon: Icon(
+              Icons.close_rounded,
+              size: 18,
+              color: colors.onSurfaceVariant,
+            ),
           ),
       ],
     );
@@ -894,20 +1026,27 @@ class _SheetHeader extends StatelessWidget {
 class _SheetBox extends StatelessWidget {
   final Widget child;
 
-  const _SheetBox({required this.child});
+  const _SheetBox({
+    required this.child,
+  });
 
   @override
   Widget build(BuildContext context) {
+    final colors = Theme.of(context).colorScheme;
+
     return Padding(
       padding: EdgeInsets.only(
-        bottom: MediaQuery.of(context).viewInsets.bottom,
+        bottom:
+            MediaQuery.of(context).viewInsets.bottom,
       ),
       child: Container(
         width: double.infinity,
         padding: const EdgeInsets.all(24),
-        decoration: const BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.zero,
+        decoration: BoxDecoration(
+          color: colors.surface,
+          borderRadius: const BorderRadius.vertical(
+            top: Radius.circular(32),
+          ),
         ),
         child: child,
       ),
@@ -922,7 +1061,7 @@ class _SheetActions extends StatelessWidget {
   final VoidCallback onCancel;
   final VoidCallback onConfirm;
   final bool loading;
-  final Color confirmColor;
+  final Color? confirmColor;
 
   const _SheetActions({
     required this.cancelLabel,
@@ -930,29 +1069,53 @@ class _SheetActions extends StatelessWidget {
     required this.onCancel,
     required this.onConfirm,
     this.loading = false,
-    this.confirmColor = kDarks,
+    this.confirmColor,
   });
 
   @override
   Widget build(BuildContext context) {
+    final colors = Theme.of(context).colorScheme;
+
+    // Pertahankan warna lama di Light Mode,
+    // tetapi gunakan warna primary saat Dark Mode
+    // agar tombol tetap terbaca.
+    final Color resolvedConfirmColor =
+        confirmColor ??
+            (Theme.of(context).brightness ==
+                    Brightness.dark
+                ? colors.primary
+                : kDarks);
+
     return Row(
       children: [
         Expanded(
           child: OutlinedButton(
-            onPressed: loading ? null : onCancel,
+            onPressed:
+                loading ? null : onCancel,
             style: OutlinedButton.styleFrom(
-              padding: const EdgeInsets.symmetric(vertical: 16),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(16),
+              padding:
+                  const EdgeInsets.symmetric(
+                vertical: 16,
               ),
-              side: const BorderSide(color: Color(0xFFE0E0E0)),
+              shape:
+                  RoundedRectangleBorder(
+                borderRadius:
+                    BorderRadius.circular(16),
+              ),
+              side: BorderSide(
+                color:
+                    colors.outlineVariant,
+              ),
             ),
             child: Text(
               cancelLabel,
               style: TextStyle(
-                fontFamily: 'FunnelDisplay',
-                fontWeight: FontWeight.w700,
-                color: kTinted,
+                fontFamily:
+                    'FunnelDisplay',
+                fontWeight:
+                    FontWeight.w700,
+                color:
+                    colors.onSurfaceVariant,
               ),
             ),
           ),
@@ -960,32 +1123,48 @@ class _SheetActions extends StatelessWidget {
         const SizedBox(width: 16),
         Expanded(
           child: ElevatedButton(
-            onPressed: loading ? null : onConfirm,
-            style: ElevatedButton.styleFrom(
-              backgroundColor: confirmColor,
-              foregroundColor: Colors.white,
-              disabledBackgroundColor: confirmColor.withValues(alpha: .4),
-              padding: const EdgeInsets.symmetric(vertical: 16),
+            onPressed:
+                loading ? null : onConfirm,
+            style:
+                ElevatedButton.styleFrom(
+              backgroundColor:
+                  resolvedConfirmColor,
+              foregroundColor:
+                  colors.onPrimary,
+              disabledBackgroundColor:
+                  resolvedConfirmColor
+                      .withValues(alpha: .4),
+              padding:
+                  const EdgeInsets.symmetric(
+                vertical: 16,
+              ),
               elevation: 0,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(16),
+              shape:
+                  RoundedRectangleBorder(
+                borderRadius:
+                    BorderRadius.circular(16),
               ),
             ),
             child: loading
-                ? const SizedBox(
+                ? SizedBox(
                     width: 20,
                     height: 20,
-                    child: CircularProgressIndicator(
+                    child:
+                        CircularProgressIndicator(
                       strokeWidth: 2,
-                      color: Colors.white,
+                      color:
+                          colors.onPrimary,
                     ),
                   )
                 : Text(
                     confirmLabel,
                     style: TextStyle(
-                      fontFamily: 'FunnelDisplay',
-                      fontWeight: FontWeight.w700,
-                      color: Colors.white,
+                      fontFamily:
+                          'FunnelDisplay',
+                      fontWeight:
+                          FontWeight.w700,
+                      color:
+                          colors.onPrimary,
                     ),
                   ),
           ),
@@ -999,7 +1178,10 @@ class _SheetActions extends StatelessWidget {
 class _AccountModal extends StatefulWidget {
   final String name;
   final String email;
-  final Future<String?> Function(String name, String email) onSubmit;
+  final Future<String?> Function(
+    String name,
+    String email,
+  ) onSubmit;
 
   const _AccountModal({
     required this.name,
@@ -1008,10 +1190,12 @@ class _AccountModal extends StatefulWidget {
   });
 
   @override
-  State<_AccountModal> createState() => _AccountModalState();
+  State<_AccountModal> createState() =>
+      _AccountModalState();
 }
 
-class _AccountModalState extends State<_AccountModal> {
+class _AccountModalState
+    extends State<_AccountModal> {
   late final TextEditingController _name;
   late final TextEditingController _email;
   bool _saving = false;
@@ -1020,8 +1204,14 @@ class _AccountModalState extends State<_AccountModal> {
   @override
   void initState() {
     super.initState();
-    _name = TextEditingController(text: widget.name);
-    _email = TextEditingController(text: widget.email);
+    _name =
+        TextEditingController(
+      text: widget.name,
+    );
+    _email =
+        TextEditingController(
+      text: widget.email,
+    );
   }
 
   @override
@@ -1032,16 +1222,26 @@ class _AccountModalState extends State<_AccountModal> {
   }
 
   Future<void> _submit() async {
-    final String name = _name.text.trim();
-    final String email = _email.text.trim().toLowerCase();
+    final String name =
+        _name.text.trim();
+    final String email =
+        _email.text.trim().toLowerCase();
 
     if (name.isEmpty) {
-      setState(() => _error = 'Username tidak boleh kosong.');
+      setState(
+        () => _error =
+            'Username tidak boleh kosong.',
+      );
       return;
     }
 
-    if (!RegExp(r'^[^@\s]+@[^@\s]+\.[^@\s]+$').hasMatch(email)) {
-      setState(() => _error = 'Format email tidak valid.');
+    if (!RegExp(
+      r'^[^@\s]+@[^@\s]+\.[^@\s]+$',
+    ).hasMatch(email)) {
+      setState(
+        () => _error =
+            'Format email tidak valid.',
+      );
       return;
     }
 
@@ -1050,7 +1250,11 @@ class _AccountModalState extends State<_AccountModal> {
       _error = null;
     });
 
-    final String? error = await widget.onSubmit(name, email);
+    final String? error =
+        await widget.onSubmit(
+      name,
+      email,
+    );
 
     if (!mounted) return;
 
@@ -1067,24 +1271,36 @@ class _AccountModalState extends State<_AccountModal> {
 
   @override
   Widget build(BuildContext context) {
+    final colors =
+        Theme.of(context).colorScheme;
+
     return Column(
-      mainAxisSize: MainAxisSize.min,
-      crossAxisAlignment: CrossAxisAlignment.start,
+      mainAxisSize:
+          MainAxisSize.min,
+      crossAxisAlignment:
+          CrossAxisAlignment.start,
       children: [
         const _SheetHandle(),
         const SizedBox(height: 24),
-        const _SheetHeader(
-          icon: Icons.person_outline_rounded,
-          title: 'Informasi Akun',
-          onClose: null,
+        _SheetHeader(
+          icon:
+              Icons.person_outline_rounded,
+          title:
+              'Informasi Akun',
+          onClose: _saving
+              ? null
+              : () => Navigator.pop(context),
         ),
         const SizedBox(height: 12),
-        const Text(
-          'Perbarui username dan email kamu. Perubahan email akan memerlukan verifikasi ulang.',
+        Text(
+          'Perbarui username dan email kamu. '
+          'Perubahan email akan memerlukan verifikasi ulang.',
           style: TextStyle(
-            fontFamily: 'FunnelDisplay',
+            fontFamily:
+                'FunnelDisplay',
             fontSize: 12,
-            color: kTinted,
+            color:
+                colors.onSurfaceVariant,
             height: 1.5,
           ),
         ),
@@ -1092,17 +1308,24 @@ class _AccountModalState extends State<_AccountModal> {
           const SizedBox(height: 12),
           Container(
             width: double.infinity,
-            padding: const EdgeInsets.all(10),
-            decoration: BoxDecoration(
-              color: kWrong.withValues(alpha: .1),
-              borderRadius: BorderRadius.circular(10),
+            padding:
+                const EdgeInsets.all(10),
+            decoration:
+                BoxDecoration(
+              color: kWrong.withValues(
+                alpha: .1,
+              ),
+              borderRadius:
+                  BorderRadius.circular(10),
             ),
             child: Text(
               _error!,
               style: TextStyle(
-                fontFamily: 'FunnelDisplay',
+                fontFamily:
+                    'FunnelDisplay',
                 fontSize: 12,
-                fontWeight: FontWeight.w500,
+                fontWeight:
+                    FontWeight.w500,
                 color: kWrong,
               ),
             ),
@@ -1112,14 +1335,16 @@ class _AccountModalState extends State<_AccountModal> {
         _buildModalField(
           label: 'Username',
           controller: _name,
-          icon: Icons.person_outline_rounded,
+          icon:
+              Icons.person_outline_rounded,
           hint: 'Nama kamu',
         ),
         const SizedBox(height: 14),
         _buildModalField(
           label: 'Email',
           controller: _email,
-          icon: Icons.mail_outline_rounded,
+          icon:
+              Icons.mail_outline_rounded,
           hint: 'nama@email.com',
           email: true,
         ),
@@ -1127,7 +1352,9 @@ class _AccountModalState extends State<_AccountModal> {
         _SheetActions(
           cancelLabel: 'Batal',
           confirmLabel: 'Simpan',
-          onCancel: _saving ? () {} : () => Navigator.pop(context),
+          onCancel: _saving
+              ? () {}
+              : () => Navigator.pop(context),
           onConfirm: _submit,
           loading: _saving,
         ),
@@ -1143,53 +1370,85 @@ class _AccountModalState extends State<_AccountModal> {
     required String hint,
     bool email = false,
   }) {
+    final colors =
+        Theme.of(context).colorScheme;
+
     return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
+      crossAxisAlignment:
+          CrossAxisAlignment.start,
       children: [
         Text(
           label,
-          style: const TextStyle(
-            fontFamily: 'FunnelDisplay',
+          style: TextStyle(
+            fontFamily:
+                'FunnelDisplay',
             fontSize: 12,
-            fontWeight: FontWeight.w600,
-            color: kDarks,
+            fontWeight:
+                FontWeight.w600,
+            color:
+                colors.onSurface,
           ),
         ),
         const SizedBox(height: 6),
         TextField(
           controller: controller,
-          keyboardType: email ? TextInputType.emailAddress : TextInputType.text,
+          keyboardType: email
+              ? TextInputType.emailAddress
+              : TextInputType.text,
           autocorrect: !email,
           enableSuggestions: !email,
           textCapitalization: email
               ? TextCapitalization.none
               : TextCapitalization.words,
-          style: const TextStyle(
-            fontFamily: 'FunnelDisplay',
+          style: TextStyle(
+            fontFamily:
+                'FunnelDisplay',
             fontSize: 14,
-            color: kDarks,
+            color:
+                colors.onSurface,
           ),
-          decoration: InputDecoration(
+          decoration:
+              InputDecoration(
             hintText: hint,
-            hintStyle: const TextStyle(
-              fontFamily: 'FunnelDisplay',
+            hintStyle: TextStyle(
+              fontFamily:
+                  'FunnelDisplay',
               fontSize: 13,
-              color: kTinted,
+              color:
+                  colors.onSurfaceVariant,
             ),
-            prefixIcon: Icon(icon, size: 18, color: kTinted),
+            prefixIcon:
+                Icon(
+              icon,
+              size: 18,
+              color:
+                  colors.onSurfaceVariant,
+            ),
             filled: true,
-            fillColor: kBase,
-            contentPadding: const EdgeInsets.symmetric(
+            fillColor:
+                colors.surfaceContainerHighest,
+            contentPadding:
+                const EdgeInsets.symmetric(
               horizontal: 16,
               vertical: 12,
             ),
-            enabledBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(10),
-              borderSide: const BorderSide(color: kSecond),
+            enabledBorder:
+                OutlineInputBorder(
+              borderRadius:
+                  BorderRadius.circular(10),
+              borderSide: BorderSide(
+                color:
+                    colors.outlineVariant,
+              ),
             ),
-            focusedBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(10),
-              borderSide: const BorderSide(color: kDone),
+            focusedBorder:
+                OutlineInputBorder(
+              borderRadius:
+                  BorderRadius.circular(10),
+              borderSide: BorderSide(
+                color:
+                    colors.primary,
+              ),
             ),
           ),
         ),
@@ -1200,17 +1459,27 @@ class _AccountModalState extends State<_AccountModal> {
 
 // Modal: Ubah Kata Sandi.
 class _PasswordModal extends StatefulWidget {
-  final Future<String?> Function(String newPassword, String confirm) onSubmit;
+  final Future<String?> Function(
+    String newPassword,
+    String confirm,
+  ) onSubmit;
 
-  const _PasswordModal({required this.onSubmit});
+  const _PasswordModal({
+    required this.onSubmit,
+  });
 
   @override
-  State<_PasswordModal> createState() => _PasswordModalState();
+  State<_PasswordModal> createState() =>
+      _PasswordModalState();
 }
 
-class _PasswordModalState extends State<_PasswordModal> {
-  final TextEditingController _password = TextEditingController();
-  final TextEditingController _confirm = TextEditingController();
+class _PasswordModalState
+    extends State<_PasswordModal> {
+  final TextEditingController _password =
+      TextEditingController();
+  final TextEditingController _confirm =
+      TextEditingController();
+
   bool _showPw = false;
   bool _saving = false;
   String? _error;
@@ -1223,21 +1492,32 @@ class _PasswordModalState extends State<_PasswordModal> {
   }
 
   Future<void> _submit() async {
-    final String pw = _password.text;
-    final String confirm = _confirm.text;
+    final String pw =
+        _password.text;
+    final String confirm =
+        _confirm.text;
 
     if (pw.isEmpty) {
-      setState(() => _error = 'Kata sandi tidak boleh kosong.');
+      setState(
+        () => _error =
+            'Kata sandi tidak boleh kosong.',
+      );
       return;
     }
 
     if (pw.length < 6) {
-      setState(() => _error = 'Kata sandi minimal 6 karakter.');
+      setState(
+        () => _error =
+            'Kata sandi minimal 6 karakter.',
+      );
       return;
     }
 
     if (pw != confirm) {
-      setState(() => _error = 'Konfirmasi kata sandi tidak cocok.');
+      setState(
+        () => _error =
+            'Konfirmasi kata sandi tidak cocok.',
+      );
       return;
     }
 
@@ -1246,7 +1526,11 @@ class _PasswordModalState extends State<_PasswordModal> {
       _error = null;
     });
 
-    final String? error = await widget.onSubmit(pw, confirm);
+    final String? error =
+        await widget.onSubmit(
+      pw,
+      confirm,
+    );
 
     if (!mounted) return;
 
@@ -1263,24 +1547,36 @@ class _PasswordModalState extends State<_PasswordModal> {
 
   @override
   Widget build(BuildContext context) {
+    final colors =
+        Theme.of(context).colorScheme;
+
     return Column(
-      mainAxisSize: MainAxisSize.min,
-      crossAxisAlignment: CrossAxisAlignment.start,
+      mainAxisSize:
+          MainAxisSize.min,
+      crossAxisAlignment:
+          CrossAxisAlignment.start,
       children: [
         const _SheetHandle(),
         const SizedBox(height: 24),
         _SheetHeader(
-          icon: Icons.lock_outline_rounded,
-          title: 'Ubah Kata Sandi',
-          onClose: _saving ? null : () => Navigator.pop(context),
+          icon:
+              Icons.lock_outline_rounded,
+          title:
+              'Ubah Kata Sandi',
+          onClose: _saving
+              ? null
+              : () => Navigator.pop(context),
         ),
         const SizedBox(height: 12),
-        const Text(
-          'Gunakan kata sandi yang kuat dan belum pernah dipakai sebelumnya.',
+        Text(
+          'Gunakan kata sandi yang kuat dan '
+          'belum pernah dipakai sebelumnya.',
           style: TextStyle(
-            fontFamily: 'FunnelDisplay',
+            fontFamily:
+                'FunnelDisplay',
             fontSize: 12,
-            color: kTinted,
+            color:
+                colors.onSurfaceVariant,
             height: 1.5,
           ),
         ),
@@ -1288,17 +1584,23 @@ class _PasswordModalState extends State<_PasswordModal> {
           const SizedBox(height: 12),
           Container(
             width: double.infinity,
-            padding: const EdgeInsets.all(10),
-            decoration: BoxDecoration(
-              color: kWrong.withValues(alpha: .1),
-              borderRadius: BorderRadius.circular(10),
+            padding:
+                const EdgeInsets.all(10),
+            decoration:
+                BoxDecoration(
+              color:
+                  kWrong.withValues(alpha: .1),
+              borderRadius:
+                  BorderRadius.circular(10),
             ),
             child: Text(
               _error!,
-              style: TextStyle(
-                fontFamily: 'FunnelDisplay',
+              style: const TextStyle(
+                fontFamily:
+                    'FunnelDisplay',
                 fontSize: 12,
-                fontWeight: FontWeight.w500,
+                fontWeight:
+                    FontWeight.w500,
                 color: kWrong,
               ),
             ),
@@ -1312,15 +1614,19 @@ class _PasswordModalState extends State<_PasswordModal> {
         ),
         const SizedBox(height: 14),
         _buildPasswordField(
-          label: 'Konfirmasi Kata Sandi',
+          label:
+              'Konfirmasi Kata Sandi',
           controller: _confirm,
-          hint: 'Ulangi kata sandi baru',
+          hint:
+              'Ulangi kata sandi baru',
         ),
         const SizedBox(height: 22),
         _SheetActions(
           cancelLabel: 'Batal',
           confirmLabel: 'Simpan',
-          onCancel: _saving ? () {} : () => Navigator.pop(context),
+          onCancel: _saving
+              ? () {}
+              : () => Navigator.pop(context),
           onConfirm: _submit,
           loading: _saving,
         ),
@@ -1334,16 +1640,23 @@ class _PasswordModalState extends State<_PasswordModal> {
     required TextEditingController controller,
     required String hint,
   }) {
+    final colors =
+        Theme.of(context).colorScheme;
+
     return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
+      crossAxisAlignment:
+          CrossAxisAlignment.start,
       children: [
         Text(
           label,
-          style: const TextStyle(
-            fontFamily: 'FunnelDisplay',
+          style: TextStyle(
+            fontFamily:
+                'FunnelDisplay',
             fontSize: 12,
-            fontWeight: FontWeight.w600,
-            color: kDarks,
+            fontWeight:
+                FontWeight.w600,
+            color:
+                colors.onSurface,
           ),
         ),
         const SizedBox(height: 6),
@@ -1352,42 +1665,74 @@ class _PasswordModalState extends State<_PasswordModal> {
           obscureText: !_showPw,
           autocorrect: false,
           enableSuggestions: false,
-          style: const TextStyle(
-            fontFamily: 'FunnelDisplay',
+          style: TextStyle(
+            fontFamily:
+                'FunnelDisplay',
             fontSize: 14,
-            color: kDarks,
+            color:
+                colors.onSurface,
           ),
-          decoration: InputDecoration(
+          decoration:
+              InputDecoration(
             hintText: hint,
-            hintStyle: const TextStyle(
-              fontFamily: 'FunnelDisplay',
+            hintStyle: TextStyle(
+              fontFamily:
+                  'FunnelDisplay',
               fontSize: 13,
-              color: kTinted,
+              color:
+                  colors.onSurfaceVariant,
             ),
-            prefixIcon: const Icon(Icons.key_rounded, size: 18, color: kTinted),
-            suffixIcon: IconButton(
-              onPressed: () => setState(() => _showPw = !_showPw),
+            prefixIcon:
+                Icon(
+              Icons.key_rounded,
+              size: 18,
+              color:
+                  colors.onSurfaceVariant,
+            ),
+            suffixIcon:
+                IconButton(
+              onPressed: () =>
+                  setState(
+                () =>
+                    _showPw =
+                        !_showPw,
+              ),
               icon: Icon(
                 _showPw
                     ? Icons.visibility_off_outlined
                     : Icons.visibility_outlined,
                 size: 18,
-                color: kTinted,
+                color:
+                    colors.onSurfaceVariant,
               ),
             ),
             filled: true,
-            fillColor: kBase,
-            contentPadding: const EdgeInsets.symmetric(
+            fillColor:
+                colors.surfaceContainerHighest,
+            contentPadding:
+                const EdgeInsets.symmetric(
               horizontal: 16,
               vertical: 12,
             ),
-            enabledBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(10),
-              borderSide: const BorderSide(color: kSecond),
+            enabledBorder:
+                OutlineInputBorder(
+              borderRadius:
+                  BorderRadius.circular(10),
+              borderSide:
+                  BorderSide(
+                color:
+                    colors.outlineVariant,
+              ),
             ),
-            focusedBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(10),
-              borderSide: const BorderSide(color: kDone),
+            focusedBorder:
+                OutlineInputBorder(
+              borderRadius:
+                  BorderRadius.circular(10),
+              borderSide:
+                  BorderSide(
+                color:
+                    colors.primary,
+              ),
             ),
           ),
         ),

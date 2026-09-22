@@ -60,7 +60,8 @@ class _HomeScreenState extends State<HomeScreen> {
     final bool keyboardOpen = MediaQuery.of(context).viewInsets.bottom > 0;
 
     return Scaffold(
-      backgroundColor: kBase,
+      backgroundColor:
+          Theme.of(context).scaffoldBackgroundColor,
       body: Stack(
         children: [
           Column(
@@ -82,7 +83,9 @@ class _HomeScreenState extends State<HomeScreen> {
                 currentIndex: currentIndex,
                 onTap: (index) {
                   if (index == currentIndex) return;
-                  setState(() => currentIndex = index);
+                  setState(
+                    () => currentIndex = index,
+                  );
                 },
               ),
             ),
@@ -105,7 +108,8 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
-  final SupabaseClient _supabase = Supabase.instance.client;
+  final SupabaseClient _supabase =
+      Supabase.instance.client;
 
   final TextEditingController searchController = TextEditingController();
 
@@ -117,57 +121,98 @@ class _HomePageState extends State<HomePage> {
     _ShowcaseForm(
       title: 'Kuesioner Kepuasan',
       author: 'Formaly Team',
-      question: 'Apakah anda menyukai Formaly: a form maker?',
-      options: ['Sangat suka', 'Tidak suka'],
+      question:
+          'Apakah anda menyukai Formaly: a form maker?',
+      options: [
+        'Sangat suka',
+        'Tidak suka',
+      ],
     ),
     _ShowcaseForm(
       title: 'Ujian Matematika',
       author: 'Teacher',
-      question: 'Berapa hasil dari 2 + 2?',
-      options: ['4', '67'],
+      question:
+          'Berapa hasil dari 2 + 2?',
+      options: [
+        '4',
+        '67',
+      ],
     ),
     _ShowcaseForm(
       title: 'Survey Lingkungan',
       author: 'Tim Penghijauan',
-      question: 'Apakah anda peduli lingkungan?',
-      options: ['Sangat peduli', 'Kurang peduli'],
+      question:
+          'Apakah anda peduli lingkungan?',
+      options: [
+        'Sangat peduli',
+        'Kurang peduli',
+      ],
     ),
     _ShowcaseForm(
       title: 'Absensi Kelas',
       author: 'Wali Kelas',
-      question: 'Hadir atau tidak hari ini?',
-      options: ['Hadir', 'Tidak hadir'],
+      question:
+          'Hadir atau tidak hari ini?',
+      options: [
+        'Hadir',
+        'Tidak hadir',
+      ],
     ),
     _ShowcaseForm(
       title: 'Cerdas Cermat',
       author: 'OSIS SMAN 1 Digital',
-      question: 'Apakah angin memiliki KTP?',
-      options: ['Tidak', 'Iya'],
+      question:
+          'Apakah angin memiliki KTP?',
+      options: [
+        'Tidak',
+        'Iya',
+      ],
     ),
   ];
 
   int _formIndex = 0;
   Timer? _rotator;
 
-  final FocusNode _searchFocusNode = FocusNode();
+  final FocusNode _searchFocusNode =
+      FocusNode();
   bool _searchFocused = false;
 
   @override
   void initState() {
     super.initState();
-    _rotator = Timer.periodic(const Duration(seconds: 3), (_) {
-      if (!mounted) return;
-      setState(() {
-        _formIndex = (_formIndex + 1) % _showcaseForms.length;
-      });
-    });
-    _searchFocusNode.addListener(_onSearchFocusChanged);
-    searchController.addListener(_onSearchContentChanged);
+
+    _rotator = Timer.periodic(
+      const Duration(seconds: 3),
+      (_) {
+        if (!mounted) return;
+
+        setState(() {
+          _formIndex =
+              (_formIndex + 1) %
+                  _showcaseForms.length;
+        });
+      },
+    );
+
+    _searchFocusNode.addListener(
+      _onSearchFocusChanged,
+    );
+
+    searchController.addListener(
+      _onSearchContentChanged,
+    );
   }
 
   void _onSearchFocusChanged() {
-    if (_searchFocused == _searchFocusNode.hasFocus) return;
-    setState(() => _searchFocused = _searchFocusNode.hasFocus);
+    if (_searchFocused ==
+        _searchFocusNode.hasFocus) {
+      return;
+    }
+
+    setState(
+      () => _searchFocused =
+          _searchFocusNode.hasFocus,
+    );
   }
 
   void _onSearchContentChanged() {
@@ -177,10 +222,19 @@ class _HomePageState extends State<HomePage> {
   @override
   void dispose() {
     _rotator?.cancel();
-    _searchFocusNode.removeListener(_onSearchFocusChanged);
+
+    _searchFocusNode.removeListener(
+      _onSearchFocusChanged,
+    );
+
     _searchFocusNode.dispose();
-    searchController.removeListener(_onSearchContentChanged);
+
+    searchController.removeListener(
+      _onSearchContentChanged,
+    );
+
     searchController.dispose();
+
     super.dispose();
   }
 
@@ -193,7 +247,8 @@ class _HomePageState extends State<HomePage> {
       return;
     }
 
-    final enteredTag = searchController.text.trim();
+    final enteredTag =
+        searchController.text.trim();
 
     if (enteredTag.isEmpty) {
       _showMessage('Masukkan tag terlebih dahulu.', isError: true);
@@ -206,13 +261,15 @@ class _HomePageState extends State<HomePage> {
     });
 
     try {
-      final tag = await _findTag(enteredTag);
+      final tag =
+          await _findTag(enteredTag);
 
       if (tag == null) {
         throw Exception('Tag "$enteredTag" tidak ditemukan.');
       }
 
-      final tagId = tag['id']?.toString().trim() ?? '';
+      final tagId =
+          tag['id']?.toString().trim() ?? '';
 
       final tagName = tag['name']?.toString().trim().isNotEmpty == true
           ? tag['name'].toString().trim()
@@ -222,13 +279,19 @@ class _HomePageState extends State<HomePage> {
         throw Exception('ID tag tidak ditemukan.');
       }
 
-      final formIds = await _findFormIdsByTag(tagId);
+      final formIds =
+          await _findFormIdsByTag(
+        tagId,
+      );
 
       if (formIds.isEmpty) {
         throw Exception('Belum ada formulir yang menggunakan tag "$tagName".');
       }
 
-      final forms = await _findFormsByIds(formIds);
+      final forms =
+          await _findFormsByIds(
+        formIds,
+      );
 
       if (forms.isEmpty) {
         throw Exception('Formulir untuk tag "$tagName" tidak ditemukan.');
@@ -259,7 +322,8 @@ class _HomePageState extends State<HomePage> {
         return;
       }
 
-      final message = _cleanError(e);
+      final message =
+          _cleanError(e);
 
       setState(() {
         errorMessage = message;
@@ -287,7 +351,9 @@ class _HomePageState extends State<HomePage> {
       return null;
     }
 
-    return Map<String, dynamic>.from(response);
+    return Map<String, dynamic>.from(
+      response,
+    );
   }
 
   // Mencari ID form berdasarkan tag.
@@ -297,7 +363,8 @@ class _HomePageState extends State<HomePage> {
         .select('form_id')
         .eq('tag_id', tagId);
 
-    final ids = <String>{};
+    final ids =
+        <String>{};
 
     for (final row in response) {
       final formId = row['form_id']?.toString().trim() ?? '';
@@ -311,7 +378,8 @@ class _HomePageState extends State<HomePage> {
   }
 
   // Mengambil data form berdasarkan ID.
-  Future<List<Map<String, dynamic>>> _findFormsByIds(
+  Future<List<Map<String, dynamic>>>
+      _findFormsByIds(
     List<String> formIds,
   ) async {
     if (formIds.isEmpty) {
@@ -365,18 +433,22 @@ class _HomePageState extends State<HomePage> {
                       ),
                     ),
                   ),
-                  const SizedBox(height: 20),
+                  const SizedBox(
+                      height: 20),
                   Text(
                     'Pilih Formulir',
                     style: TextStyle(
                       fontFamily: 'FunnelDisplay',
 
                       fontSize: 22,
-                      fontWeight: FontWeight.bold,
-                      color: colors.onSurface,
+                      fontWeight:
+                          FontWeight.bold,
+                      color:
+                          colors.onSurface,
                     ),
                   ),
-                  const SizedBox(height: 6),
+                  const SizedBox(
+                      height: 6),
                   Text(
                     'Tag "$tagName" memiliki ${forms.length} formulir.',
                     style: TextStyle(
@@ -385,7 +457,8 @@ class _HomePageState extends State<HomePage> {
                       color: colors.onSurfaceVariant,
                     ),
                   ),
-                  const SizedBox(height: 16),
+                  const SizedBox(
+                      height: 16),
                   Expanded(
                     child: ListView.separated(
                       itemCount: forms.length,
@@ -429,7 +502,8 @@ class _HomePageState extends State<HomePage> {
                                 ),
                                 borderRadius: BorderRadius.circular(16),
                               ),
-                              child: Row(
+                              child:
+                                  Row(
                                 children: [
                                   Container(
                                     width: 46,
@@ -443,9 +517,11 @@ class _HomePageState extends State<HomePage> {
                                       color: colors.onSurface,
                                     ),
                                   ),
-                                  const SizedBox(width: 14),
+                                  const SizedBox(
+                                      width: 14),
                                   Expanded(
-                                    child: Column(
+                                    child:
+                                        Column(
                                       crossAxisAlignment:
                                           CrossAxisAlignment.start,
                                       children: [
@@ -478,7 +554,8 @@ class _HomePageState extends State<HomePage> {
                                       ],
                                     ),
                                   ),
-                                  const SizedBox(width: 8),
+                                  const SizedBox(
+                                      width: 8),
                                   Icon(
                                     Icons.arrow_forward_ios_rounded,
                                     size: 18,
@@ -507,25 +584,44 @@ class _HomePageState extends State<HomePage> {
       return;
     }
 
-    final colors = Theme.of(context).colorScheme;
+    final colors =
+        Theme.of(context)
+            .colorScheme;
 
     ScaffoldMessenger.of(context)
       ..hideCurrentSnackBar()
       ..showSnackBar(
         SnackBar(
-          content: Text(message),
-          backgroundColor: isError ? colors.error : null,
-          behavior: SnackBarBehavior.floating,
+          content: Text(
+            message,
+            style: TextStyle(
+              fontFamily:
+                  'FunnelDisplay',
+              color:
+                  colors.onInverseSurface,
+            ),
+          ),
+          backgroundColor:
+              isError
+                  ? colors.error
+                  : colors.inverseSurface,
+          behavior:
+              SnackBarBehavior.floating,
         ),
       );
   }
 
   // Membersihkan prefix "Exception:" dari error.
   String _cleanError(Object error) {
-    final text = error.toString();
+    final text =
+        error.toString();
 
-    if (text.startsWith('Exception: ')) {
-      return text.substring('Exception: '.length);
+    if (text.startsWith(
+      'Exception: ',
+    )) {
+      return text.substring(
+        'Exception: '.length,
+      );
     }
 
     return text;
@@ -533,28 +629,58 @@ class _HomePageState extends State<HomePage> {
 
   @override
   Widget build(BuildContext context) {
-    final _ShowcaseForm f = _showcaseForms[_formIndex];
+    final _ShowcaseForm f =
+        _showcaseForms[_formIndex];
 
     return SafeArea(
-      child: SingleChildScrollView(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
+      child:
+          SingleChildScrollView(
+        padding:
+            const EdgeInsets.symmetric(
+          horizontal: 16,
+          vertical: 24,
+        ),
         child: Center(
           child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 900),
+            constraints:
+                const BoxConstraints(
+              maxWidth: 900,
+            ),
             child: Column(
               children: [
-                // Kartu showcase (bg #EEEEEE) berisi kartu form tiruan.
+                // Kartu showcase berisi kartu form tiruan.
                 Container(
                   width: double.infinity,
-                  padding: const EdgeInsets.all(16),
-                  decoration: BoxDecoration(
-                    color: kSecond,
-                    borderRadius: BorderRadius.circular(12),
+                  padding:
+                      const EdgeInsets.all(
+                    16,
                   ),
-                  child: Center(child: _buildFormDecoy(f)),
+                  decoration:
+                      BoxDecoration(
+                    color: Theme.of(context)
+                        .colorScheme
+                        .surfaceContainerHighest,
+                    borderRadius:
+                        BorderRadius.circular(
+                      12,
+                    ),
+                    border: Border.all(
+                      color: Theme.of(context)
+                          .colorScheme
+                          .outlineVariant,
+                    ),
+                  ),
+                  child:
+                      Center(
+                    child:
+                        _buildFormDecoy(
+                      f,
+                    ),
+                  ),
                 ),
 
-                const SizedBox(height: 28),
+                const SizedBox(
+                    height: 28),
 
                 // Judul.
                 Text(
@@ -564,14 +690,19 @@ class _HomePageState extends State<HomePage> {
                     fontFamily: 'FunnelDisplay',
 
                     fontSize: 36,
-                    fontWeight: FontWeight.w900,
-                    color: kDarks,
-                    letterSpacing: -1.2,
+                    fontWeight:
+                        FontWeight.w900,
+                    color: Theme.of(context)
+                        .colorScheme
+                        .onSurface,
+                    letterSpacing:
+                        -1.2,
                     height: 1.1,
                   ),
                 ),
 
-                const SizedBox(height: 8),
+                const SizedBox(
+                    height: 8),
 
                 Text(
                   'Mulai Mengerjakan formulir dengan memasukkan tag di bawah.',
@@ -580,15 +711,22 @@ class _HomePageState extends State<HomePage> {
                     fontFamily: 'FunnelDisplay',
 
                     fontSize: 14,
-                    color: kDarks,
+                    color: Theme.of(context)
+                        .colorScheme
+                        .onSurfaceVariant,
                   ),
                 ),
 
-                const SizedBox(height: 32),
+                const SizedBox(
+                    height: 32),
 
                 ConstrainedBox(
-                  constraints: const BoxConstraints(maxWidth: 576),
-                  child: _buildSearch(),
+                  constraints:
+                      const BoxConstraints(
+                    maxWidth: 576,
+                  ),
+                  child:
+                      _buildSearch(),
                 ),
                 const SizedBox(height: 16),
                 OutlinedButton.icon(
@@ -613,59 +751,114 @@ class _HomePageState extends State<HomePage> {
   }
 
   // Kartu form tiruan yang berputar (animasi mirip web).
-  Widget _buildFormDecoy(_ShowcaseForm f) {
-    final bool showText = MediaQuery.of(context).size.width >= 360;
+  Widget _buildFormDecoy(
+    _ShowcaseForm f,
+  ) {
+    final colors =
+        Theme.of(context)
+            .colorScheme;
+
+    final bool showText =
+        MediaQuery.of(context)
+                .size
+                .width >=
+            360;
 
     return Container(
       width: 280,
-      padding: const EdgeInsets.all(18),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: Colors.white70),
-        boxShadow: const [
+      padding:
+          const EdgeInsets.all(
+        18,
+      ),
+      decoration:
+          BoxDecoration(
+        color:
+            colors.surface,
+        borderRadius:
+            BorderRadius.circular(
+          24,
+        ),
+        border: Border.all(
+          color:
+              colors.outlineVariant,
+        ),
+        boxShadow: [
           BoxShadow(
-            color: Color(0x26000000),
+            color: Colors.black
+                .withValues(
+              alpha: .15,
+            ),
             blurRadius: 40,
-            offset: Offset(0, 16),
+            offset:
+                const Offset(
+              0,
+              16,
+            ),
           ),
         ],
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+      child:
+          Column(
+        crossAxisAlignment:
+            CrossAxisAlignment.start,
         children: [
           Row(
             children: [
               Container(
                 width: 40,
                 height: 40,
-                alignment: Alignment.center,
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    colors: [kDone, kDone.withValues(alpha: .7)],
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
+                alignment:
+                    Alignment.center,
+                decoration:
+                    BoxDecoration(
+                  gradient:
+                      LinearGradient(
+                    colors: [
+                      kDone,
+                      kDone.withValues(
+                        alpha: .7,
+                      ),
+                    ],
+                    begin:
+                        Alignment.topLeft,
+                    end:
+                        Alignment.bottomRight,
                   ),
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius:
+                      BorderRadius.circular(
+                    12,
+                  ),
                 ),
-                child: Text(
+                child: const Text(
                   'F',
                   style: TextStyle(
                     fontFamily: 'FunnelDisplay',
 
                     color: Colors.white,
                     fontSize: 14,
-                    fontWeight: FontWeight.w900,
+                    fontWeight:
+                        FontWeight.w900,
                   ),
                 ),
               ),
-              const SizedBox(width: 12),
+              const SizedBox(
+                  width: 12),
               Expanded(
-                child: AnimatedSwitcher(
-                  duration: const Duration(milliseconds: 300),
-                  child: Column(
-                    key: ValueKey(f.title),
-                    crossAxisAlignment: CrossAxisAlignment.start,
+                child:
+                    AnimatedSwitcher(
+                  duration:
+                      const Duration(
+                    milliseconds: 300,
+                  ),
+                  child:
+                      Column(
+                    key:
+                        ValueKey(
+                      f.title,
+                    ),
+                    crossAxisAlignment:
+                        CrossAxisAlignment
+                            .start,
                     children: [
                       Text(
                         f.title,
@@ -676,37 +869,46 @@ class _HomePageState extends State<HomePage> {
 
                           fontSize: 12,
                           fontWeight: FontWeight.w700,
-                          color: kDarks,
+                          color: colors.onSurface,
                         ),
                       ),
-                      const SizedBox(height: 3),
+                      const SizedBox(
+                          height: 3),
                       Text(
                         f.author,
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                         style: TextStyle(
-                          fontFamily: 'FunnelDisplay',
-
-                          fontSize: 10,
-                          color: kTinted,
+                          fontFamily:
+                              'FunnelDisplay',
+                          fontSize:
+                              10,
+                          color: colors
+                              .onSurfaceVariant,
                         ),
                       ),
                     ],
                   ),
                 ),
               ),
-              const SizedBox(width: 6),
+              const SizedBox(
+                  width: 6),
               Row(
                 children: [
                   Container(
                     width: 6,
                     height: 6,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      color: kWrong.withValues(alpha: .6),
+                    decoration:
+                        BoxDecoration(
+                      shape:
+                          BoxShape.circle,
+                      color: kWrong.withValues(
+                        alpha: .6,
+                      ),
                     ),
                   ),
-                  const SizedBox(width: 6),
+                  const SizedBox(
+                      width: 6),
                   Container(
                     width: 6,
                     height: 6,
@@ -715,13 +917,18 @@ class _HomePageState extends State<HomePage> {
                       color: const Color(0xFFFBBF24).withValues(alpha: .7),
                     ),
                   ),
-                  const SizedBox(width: 6),
+                  const SizedBox(
+                      width: 6),
                   Container(
                     width: 6,
                     height: 6,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      color: kDone.withValues(alpha: .6),
+                    decoration:
+                        BoxDecoration(
+                      shape:
+                          BoxShape.circle,
+                      color: kDone.withValues(
+                        alpha: .6,
+                      ),
                     ),
                   ),
                 ],
@@ -729,10 +936,14 @@ class _HomePageState extends State<HomePage> {
             ],
           ),
 
-          const SizedBox(height: 20),
+          const SizedBox(
+              height: 20),
 
           AnimatedSwitcher(
-            duration: const Duration(milliseconds: 300),
+            duration:
+                const Duration(
+              milliseconds: 300,
+            ),
             child: Text(
               f.question,
               key: ValueKey(f.question),
@@ -740,14 +951,17 @@ class _HomePageState extends State<HomePage> {
                 fontFamily: 'FunnelDisplay',
 
                 fontSize: 16,
-                fontWeight: FontWeight.w700,
-                color: kDarks,
+                fontWeight:
+                    FontWeight.w700,
+                color:
+                    colors.onSurface,
                 height: 1.3,
               ),
             ),
           ),
 
-          const SizedBox(height: 12),
+          const SizedBox(
+              height: 12),
 
           _buildOptionPill(
             text: f.options.first,
@@ -770,17 +984,36 @@ class _HomePageState extends State<HomePage> {
     required bool primary,
     required bool showText,
   }) {
+    final colors =
+        Theme.of(context)
+            .colorScheme;
+
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-      decoration: BoxDecoration(
-        color: primary ? kDone : kBase.withValues(alpha: .75),
-        borderRadius: BorderRadius.circular(12),
+      padding:
+          const EdgeInsets.symmetric(
+        horizontal: 12,
+        vertical: 10,
+      ),
+      decoration:
+          BoxDecoration(
+        color: primary
+            ? kDone
+            : colors
+                .surfaceContainerHighest,
+        borderRadius:
+            BorderRadius.circular(
+          12,
+        ),
         border: primary
             ? null
-            : Border.all(color: kSecond.withValues(alpha: .8)),
+            : Border.all(
+                color: colors
+                    .outlineVariant,
+              ),
       ),
-      child: Row(
+      child:
+          Row(
         children: [
           Expanded(
             child: Text(
@@ -791,18 +1024,28 @@ class _HomePageState extends State<HomePage> {
                 fontFamily: 'FunnelDisplay',
 
                 fontSize: 12,
-                fontWeight: FontWeight.w600,
-                color: primary ? Colors.white : kTinted,
+                fontWeight:
+                    FontWeight.w600,
+                color: primary
+                    ? Colors.white
+                    : colors
+                        .onSurfaceVariant,
               ),
             ),
           ),
           if (primary)
-            Container(
+            const SizedBox(
               width: 6,
               height: 6,
-              decoration: const BoxDecoration(
-                shape: BoxShape.circle,
-                color: Colors.white,
+              child:
+                  DecoratedBox(
+                decoration:
+                    BoxDecoration(
+                  shape:
+                      BoxShape.circle,
+                  color:
+                      Colors.white,
+                ),
               ),
             ),
         ],
@@ -810,115 +1053,279 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  // Search bar pill (mirip komponen Search di web).
+  // ============================================================
+  // SEARCH BAR
+  // ============================================================
+
   Widget _buildSearch() {
-    final bool showText = MediaQuery.of(context).size.width >= 380;
+    final colors =
+        Theme.of(context)
+            .colorScheme;
+
+    final bool showText =
+        MediaQuery.of(context)
+                .size
+                .width >=
+            380;
+
     final bool canSearch =
-        !isSearching && searchController.text.trim().isNotEmpty;
+        !isSearching &&
+            searchController.text
+                .trim()
+                .isNotEmpty;
 
     return Column(
       children: [
         Container(
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(30),
+          width: double.infinity,
+
+          // Memastikan isi search tidak keluar dari
+          // rounded container.
+          clipBehavior:
+              Clip.antiAlias,
+
+          decoration:
+              BoxDecoration(
+            color:
+                colors.surface,
+            borderRadius:
+                BorderRadius.circular(
+              30,
+            ),
             border: Border.all(
-              color: _searchFocused ? kTinted.withValues(alpha: .5) : kSecond,
+              color: _searchFocused
+                  ? colors
+                      .primary
+                      .withValues(
+                    alpha: .6,
+                  )
+                  : colors
+                      .outlineVariant,
             ),
             boxShadow: [
               BoxShadow(
-                color: kDarks.withValues(alpha: _searchFocused ? .1 : .05),
-                blurRadius: _searchFocused ? 18 : 10,
-                offset: const Offset(0, 4),
+                color: colors
+                    .shadow
+                    .withValues(
+                  alpha:
+                      _searchFocused
+                          ? .12
+                          : .05,
+                ),
+                blurRadius:
+                    _searchFocused
+                        ? 18
+                        : 10,
+                offset:
+                    const Offset(
+                  0,
+                  4,
+                ),
               ),
             ],
           ),
-          child: Row(
+
+          child:
+              Row(
             children: [
               Expanded(
-                child: TextField(
-                  controller: searchController,
-                  focusNode: _searchFocusNode,
-                  enabled: !isSearching,
-                  textInputAction: TextInputAction.search,
-                  autocorrect: false,
-                  enableSuggestions: false,
-                  onSubmitted: (_) {
-                    if (canSearch) searchForm();
+                child:
+                    TextField(
+                  controller:
+                      searchController,
+                  focusNode:
+                      _searchFocusNode,
+                  enabled:
+                      !isSearching,
+                  textInputAction:
+                      TextInputAction.search,
+                  autocorrect:
+                      false,
+                  enableSuggestions:
+                      false,
+                  maxLines: 1,
+
+                  onSubmitted:
+                      (_) {
+                    if (canSearch) {
+                      searchForm();
+                    }
                   },
-                  style: TextStyle(
-                    fontFamily: 'FunnelDisplay',
 
-                    color: kDarks,
-                    fontSize: 14,
+                  style:
+                      TextStyle(
+                    fontFamily:
+                        'FunnelDisplay',
+                    color:
+                        colors.onSurface,
+                    fontSize:
+                        14,
                   ),
-                  decoration: InputDecoration(
-                    hintText: 'Cari berdasarkan tag',
-                    hintStyle: TextStyle(
-                      fontFamily: 'FunnelDisplay',
 
-                      color: kTinted,
-                      fontSize: 14,
+                  decoration:
+                      InputDecoration(
+                    hintText:
+                        'Cari berdasarkan tag',
+                    hintStyle:
+                        TextStyle(
+                      fontFamily:
+                          'FunnelDisplay',
+                      color:
+                          colors.onSurfaceVariant,
+                      fontSize:
+                          14,
                     ),
-                    border: InputBorder.none,
-                    contentPadding: const EdgeInsets.symmetric(
-                      horizontal: 20,
-                      vertical: 14,
+                    border:
+                        InputBorder.none,
+                    contentPadding:
+                        const EdgeInsets.symmetric(
+                      horizontal:
+                          18,
+                      vertical:
+                          14,
                     ),
-                    isDense: true,
+                    isDense:
+                        true,
                   ),
                 ),
               ),
-              if (searchController.text.isNotEmpty)
-                IconButton(
-                  onPressed: () {
-                    searchController.clear();
-                    _searchFocusNode.requestFocus();
-                  },
-                  visualDensity: VisualDensity.compact,
-                  icon: Icon(Icons.close_rounded, size: 16, color: kTinted),
-                ),
-              const SizedBox(width: 4),
-              Container(
-                margin: const EdgeInsets.all(4),
-                height: 44,
-                child: ElevatedButton(
-                  onPressed: canSearch ? searchForm : null,
-                  style: ElevatedButton.styleFrom(
-                    elevation: 0,
-                    backgroundColor: kDone,
-                    disabledBackgroundColor: kDone.withValues(alpha: .4),
-                    foregroundColor: Colors.white,
-                    padding: const EdgeInsets.symmetric(horizontal: 20),
-                    shape: const StadiumBorder(),
-                  ),
-                  child: isSearching
-                      ? const SizedBox(
-                          width: 16,
-                          height: 16,
-                          child: CircularProgressIndicator(
-                            strokeWidth: 2.2,
-                            color: Colors.white,
-                          ),
-                        )
-                      : Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            const Icon(Icons.search_rounded, size: 16),
-                            if (showText) ...[
-                              const SizedBox(width: 6),
-                              Text(
-                                'Cari',
-                                style: TextStyle(
-                                  fontFamily: 'FunnelDisplay',
 
-                                  fontSize: 13,
-                                  fontWeight: FontWeight.w500,
+              // Tombol hapus hanya muncul ketika ada teks.
+              if (searchController
+                  .text
+                  .isNotEmpty)
+                SizedBox(
+                  width: 38,
+                  height: 44,
+                  child:
+                      IconButton(
+                    onPressed:
+                        () {
+                      searchController
+                          .clear();
+                      _searchFocusNode
+                          .requestFocus();
+                    },
+                    padding:
+                        EdgeInsets.zero,
+                    visualDensity:
+                        VisualDensity
+                            .compact,
+                    icon:
+                        Icon(
+                      Icons
+                          .close_rounded,
+                      size: 16,
+                      color: colors
+                          .onSurfaceVariant,
+                    ),
+                  ),
+                ),
+
+              const SizedBox(
+                  width: 2),
+
+              // Tombol Cari diberi ukuran tetap supaya
+              // tidak keluar dari container.
+              Padding(
+                padding:
+                    const EdgeInsets.all(
+                  4,
+                ),
+                child:
+                    SizedBox(
+                  width:
+                      showText ? 78 : 44,
+                  height: 44,
+                  child:
+                      ElevatedButton(
+                    onPressed:
+                        canSearch
+                            ? searchForm
+                            : null,
+
+                    style:
+                        ElevatedButton
+                            .styleFrom(
+                      elevation:
+                          0,
+
+                      minimumSize:
+                          Size.zero,
+
+                      fixedSize:
+                          Size(
+                        showText
+                            ? 78
+                            : 44,
+                        44,
+                      ),
+
+                      backgroundColor:
+                          kDone,
+
+                      disabledBackgroundColor:
+                          kDone.withValues(
+                        alpha: .4,
+                      ),
+
+                      foregroundColor:
+                          Colors.white,
+
+                      padding:
+                          EdgeInsets.zero,
+
+                      shape:
+                          const StadiumBorder(),
+                    ),
+
+                    child:
+                        isSearching
+                            ? const SizedBox(
+                                width:
+                                    16,
+                                height:
+                                    16,
+                                child:
+                                    CircularProgressIndicator(
+                                  strokeWidth:
+                                      2.2,
+                                  color:
+                                      Colors.white,
                                 ),
+                              )
+                            : Row(
+                                mainAxisAlignment:
+                                    MainAxisAlignment
+                                        .center,
+                                mainAxisSize:
+                                    MainAxisSize.min,
+                                children: [
+                                  const Icon(
+                                    Icons
+                                        .search_rounded,
+                                    size:
+                                        16,
+                                  ),
+                                  if (showText) ...[
+                                    const SizedBox(
+                                        width: 5),
+                                    const Text(
+                                      'Cari',
+                                      style:
+                                          TextStyle(
+                                        fontFamily:
+                                            'FunnelDisplay',
+                                        fontSize:
+                                            13,
+                                        fontWeight:
+                                            FontWeight.w500,
+                                      ),
+                                    ),
+                                  ],
+                                ],
                               ),
-                            ],
-                          ],
-                        ),
+                  ),
                 ),
               ),
             ],
@@ -927,24 +1334,48 @@ class _HomePageState extends State<HomePage> {
 
         // Banner error.
         if (errorMessage != null) ...[
-          const SizedBox(height: 16),
+          const SizedBox(
+              height: 16),
           Container(
             width: double.infinity,
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
-            decoration: BoxDecoration(
-              color: kWrong.withValues(alpha: .1),
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: kWrong.withValues(alpha: .2)),
+            padding:
+                const EdgeInsets.symmetric(
+              horizontal: 12,
+              vertical: 12,
             ),
-            child: Text(
+            decoration:
+                BoxDecoration(
+              color:
+                  colors.error.withValues(
+                alpha: .1,
+              ),
+              borderRadius:
+                  BorderRadius.circular(
+                12,
+              ),
+              border:
+                  Border.all(
+                color:
+                    colors.error.withValues(
+                  alpha: .2,
+                ),
+              ),
+            ),
+            child:
+                Text(
               errorMessage!,
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                fontFamily: 'FunnelDisplay',
-
-                fontSize: 12,
-                fontWeight: FontWeight.w500,
-                color: kWrong,
+              textAlign:
+                  TextAlign.center,
+              style:
+                  TextStyle(
+                fontFamily:
+                    'FunnelDisplay',
+                fontSize:
+                    12,
+                fontWeight:
+                    FontWeight.w500,
+                color:
+                    colors.error,
               ),
             ),
           ),

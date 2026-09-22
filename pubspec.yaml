@@ -42,6 +42,9 @@ dev_dependencies:
 
   flutter_lints: ^6.0.0
 
+  # Generator launcher icon aplikasi Android
+  flutter_launcher_icons: ^0.14.4
+
 flutter:
   uses-material-design: true
   assets:
@@ -60,3 +63,10 @@ flutter:
           weight: 700
         - asset: assets/fonts/FunnelDisplay-800.ttf
           weight: 800
+
+# Konfigurasi launcher icon Formaly
+flutter_launcher_icons:
+  android: true
+  ios: false
+  image_path: "assets/icon/formaly_icon.png"
+  min_sdk_android: 21
