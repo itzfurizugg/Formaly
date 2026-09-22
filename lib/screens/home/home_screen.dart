@@ -6,7 +6,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../widgets/auth_shell.dart';
 import '../../widgets/formaly_dock.dart';
 import '../form/form_detail_screen.dart';
-import '../history/history_screen.dart';
+import '../history/history.dart';
 import '../profile/profile_screen.dart';
 
 /// Home screen untuk mencari formulir berdasarkan tag.

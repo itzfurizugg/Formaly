@@ -67,7 +67,17 @@
             android:name="flutterEmbedding"
             android:value="2" />
 
-        <service android:name=".ExamNotificationListenerService" android:label="Formaly Exam Notification Monitor" android:permission="android.permission.BIND_NOTIFICATION_LISTENER_SERVICE" android:exported="true">`r`n        <intent-filter>`r`n            <action android:name="android.service.notification.NotificationListenerService" />`r`n        </intent-filter>`r`n    </service>`r`n</application>
+        <service
+            android:name=".ExamNotificationListenerService"
+            android:label="Formaly Exam Notification Monitor"
+            android:permission="android.permission.BIND_NOTIFICATION_LISTENER_SERVICE"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.service.notification.NotificationListenerService" />
+            </intent-filter>
+        </service>
+
+    </application>
 
     <queries>
         <intent>

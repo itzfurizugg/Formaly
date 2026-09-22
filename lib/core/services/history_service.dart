@@ -6,14 +6,12 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import '../models/history_model.dart';
 
 class HistoryService {
-  static final SupabaseClient _supabase =
-      Supabase.instance.client;
+  static final SupabaseClient _supabase = Supabase.instance.client;
 
   static final List<HistoryModel> historyList = [];
 
   static const String _storagePrefix = 'formaly_history_';
-  static const String _deletedStoragePrefix =
-      'formaly_deleted_history_';
+  static const String _deletedStoragePrefix = 'formaly_deleted_history_';
 
   static String _storageKey(String userId) {
     return '$_storagePrefix$userId';
@@ -35,9 +33,7 @@ class HistoryService {
     final user = _supabase.auth.currentUser;
 
     if (user == null) {
-      throw Exception(
-        'User belum login. Silakan login terlebih dahulu.',
-      );
+      throw Exception('User belum login. Silakan login terlebih dahulu.');
     }
 
     final existingIndex = historyList.indexWhere(
@@ -75,9 +71,7 @@ class HistoryService {
     final visibleCached = cached.where(
       (item) =>
           item.submissionId == null ||
-          !deletedIds.contains(
-            item.submissionId!.trim(),
-          ),
+          !deletedIds.contains(item.submissionId!.trim()),
     );
 
     historyList
@@ -88,22 +82,19 @@ class HistoryService {
       final result = await _loadFromSupabase(user.id);
 
       // Data dari Supabase juga selalu difilter.
-      final visibleResult = result.where(
-        (item) =>
-            item.submissionId == null ||
-            !deletedIds.contains(
-              item.submissionId!.trim(),
-            ),
-      ).toList();
+      final visibleResult = result
+          .where(
+            (item) =>
+                item.submissionId == null ||
+                !deletedIds.contains(item.submissionId!.trim()),
+          )
+          .toList();
 
       historyList
         ..clear()
         ..addAll(visibleResult);
 
-      await _saveLocal(
-        user.id,
-        visibleResult,
-      );
+      await _saveLocal(user.id, visibleResult);
 
       return visibleResult;
     } catch (_) {
@@ -120,50 +111,34 @@ class HistoryService {
   // Data di Supabase tidak diubah.
   // ID yang dihapus disimpan permanen di SharedPreferences
   // selama data aplikasi di perangkat tidak dihapus.
-  static Future<void> deleteHistory(
-    String submissionId,
-  ) async {
+  static Future<void> deleteHistory(String submissionId) async {
     final user = _supabase.auth.currentUser;
 
     if (user == null) {
-      throw Exception(
-        'User belum login. Silakan login terlebih dahulu.',
-      );
+      throw Exception('User belum login. Silakan login terlebih dahulu.');
     }
 
-    final String cleanSubmissionId =
-        submissionId.trim();
+    final String cleanSubmissionId = submissionId.trim();
 
     if (cleanSubmissionId.isEmpty) {
-      throw Exception(
-        'ID history tidak valid.',
-      );
+      throw Exception('ID history tidak valid.');
     }
 
     // Simpan ID sebagai history yang sudah dihapus.
     // Data ini tetap ada walaupun user logout lalu login kembali.
-    final deletedIds =
-        await _loadDeletedIds(user.id);
+    final deletedIds = await _loadDeletedIds(user.id);
 
     deletedIds.add(cleanSubmissionId);
 
-    await _saveDeletedIds(
-      user.id,
-      deletedIds,
-    );
+    await _saveDeletedIds(user.id, deletedIds);
 
     // Hapus langsung dari daftar yang sedang tampil.
     historyList.removeWhere(
-      (item) =>
-          item.submissionId?.trim() ==
-          cleanSubmissionId,
+      (item) => item.submissionId?.trim() == cleanSubmissionId,
     );
 
     // Bersihkan cache lokal juga.
-    await _saveLocal(
-      user.id,
-      historyList,
-    );
+    await _saveLocal(user.id, historyList);
   }
 
   // ============================================================
@@ -180,12 +155,9 @@ class HistoryService {
     }
 
     try {
-      final prefs =
-          await SharedPreferences.getInstance();
+      final prefs = await SharedPreferences.getInstance();
 
-      await prefs.remove(
-        _storageKey(user.id),
-      );
+      await prefs.remove(_storageKey(user.id));
     } catch (_) {
       // Cache gagal dihapus tidak boleh membuat aplikasi crash.
     }
@@ -195,24 +167,14 @@ class HistoryService {
   // LOAD DARI SUPABASE
   // ============================================================
 
-  static Future<List<HistoryModel>> _loadFromSupabase(
-    String userId,
-  ) async {
+  static Future<List<HistoryModel>> _loadFromSupabase(String userId) async {
     final response = await _supabase
         .from('submissions')
-        .select(
-          'id, form_id, total_score, status, started_at, submitted_at',
-        )
+        .select('id, form_id, total_score, status, started_at, submitted_at')
         .eq('user_id', userId)
-        .order(
-          'started_at',
-          ascending: false,
-        );
+        .order('started_at', ascending: false);
 
-    final submissions =
-        List<Map<String, dynamic>>.from(
-      response,
-    );
+    final submissions = List<Map<String, dynamic>>.from(response);
 
     if (submissions.isEmpty) {
       return [];
@@ -223,34 +185,25 @@ class HistoryService {
     // ----------------------------------------------------------
 
     final formIds = submissions
-        .map(
-          (row) =>
-              row['form_id']?.toString().trim() ?? '',
-        )
-        .where(
-          (id) => id.isNotEmpty,
-        )
+        .map((row) => row['form_id']?.toString().trim() ?? '')
+        .where((id) => id.isNotEmpty)
         .toSet()
         .toList();
 
-    final Map<String, Map<String, dynamic>>
-        formsById = {};
+    final Map<String, Map<String, dynamic>> formsById = {};
 
     if (formIds.isNotEmpty) {
       final formsResponse = await _supabase
           .from('forms')
-          .select('id, title')
-          .inFilter(
-            'id',
-            formIds,
-          );
+          .select(
+            'id, title, duration, passing_score, show_score_to_respondent, header_image, header_color, media_url, creator_id',
+          )
+          .inFilter('id', formIds);
 
       for (final row in formsResponse) {
-        final map =
-            Map<String, dynamic>.from(row);
+        final map = Map<String, dynamic>.from(row);
 
-        final id =
-            map['id']?.toString().trim() ?? '';
+        final id = map['id']?.toString().trim() ?? '';
 
         if (id.isNotEmpty) {
           formsById[id] = map;
@@ -262,31 +215,19 @@ class HistoryService {
     // TAG
     // ----------------------------------------------------------
 
-    final Map<String, String>
-        firstTagByForm = {};
+    final Map<String, String> firstTagByForm = {};
 
     if (formIds.isNotEmpty) {
       final formTagResponse = await _supabase
           .from('form_tags')
           .select('form_id, tag_id')
-          .inFilter(
-            'form_id',
-            formIds,
-          );
+          .inFilter('form_id', formIds);
 
-      final formTags =
-          List<Map<String, dynamic>>.from(
-        formTagResponse,
-      );
+      final formTags = List<Map<String, dynamic>>.from(formTagResponse);
 
       final tagIds = formTags
-          .map(
-            (row) =>
-                row['tag_id']?.toString().trim() ?? '',
-          )
-          .where(
-            (id) => id.isNotEmpty,
-          )
+          .map((row) => row['tag_id']?.toString().trim() ?? '')
+          .where((id) => id.isNotEmpty)
           .toSet()
           .toList();
 
@@ -296,17 +237,12 @@ class HistoryService {
         final tagsResponse = await _supabase
             .from('tags')
             .select('id, name')
-            .inFilter(
-              'id',
-              tagIds,
-            );
+            .inFilter('id', tagIds);
 
         for (final row in tagsResponse) {
-          final id =
-              row['id']?.toString().trim() ?? '';
+          final id = row['id']?.toString().trim() ?? '';
 
-          final name =
-              row['name']?.toString().trim() ?? '';
+          final name = row['name']?.toString().trim() ?? '';
 
           if (id.isNotEmpty && name.isNotEmpty) {
             tagNames[id] = name;
@@ -315,23 +251,17 @@ class HistoryService {
       }
 
       for (final row in formTags) {
-        final formId =
-            row['form_id']?.toString().trim() ?? '';
+        final formId = row['form_id']?.toString().trim() ?? '';
 
-        final tagId =
-            row['tag_id']?.toString().trim() ?? '';
+        final tagId = row['tag_id']?.toString().trim() ?? '';
 
-        final tagName =
-            tagNames[tagId] ?? '';
+        final tagName = tagNames[tagId] ?? '';
 
         if (formId.isEmpty || tagName.isEmpty) {
           continue;
         }
 
-        firstTagByForm.putIfAbsent(
-          formId,
-          () => tagName,
-        );
+        firstTagByForm.putIfAbsent(formId, () => tagName);
       }
     }
 
@@ -339,28 +269,22 @@ class HistoryService {
     // JUMLAH SOAL
     // ----------------------------------------------------------
 
-    final Map<String, int>
-        questionCountByForm = {};
+    final Map<String, int> questionCountByForm = {};
 
     if (formIds.isNotEmpty) {
       final questionResponse = await _supabase
           .from('questions')
           .select('id, form_id')
-          .inFilter(
-            'form_id',
-            formIds,
-          );
+          .inFilter('form_id', formIds);
 
       for (final row in questionResponse) {
-        final formId =
-            row['form_id']?.toString().trim() ?? '';
+        final formId = row['form_id']?.toString().trim() ?? '';
 
         if (formId.isEmpty) {
           continue;
         }
 
-        questionCountByForm[formId] =
-            (questionCountByForm[formId] ?? 0) + 1;
+        questionCountByForm[formId] = (questionCountByForm[formId] ?? 0) + 1;
       }
     }
 
@@ -371,69 +295,50 @@ class HistoryService {
     final List<HistoryModel> result = [];
 
     for (final row in submissions) {
-      final String submissionId =
-          row['id']?.toString().trim() ?? '';
+      final String submissionId = row['id']?.toString().trim() ?? '';
 
-      final String formId =
-          row['form_id']?.toString().trim() ?? '';
+      final String formId = row['form_id']?.toString().trim() ?? '';
 
-      if (submissionId.isEmpty ||
-          formId.isEmpty) {
+      if (submissionId.isEmpty || formId.isEmpty) {
         continue;
       }
 
       final form = formsById[formId];
 
-      final rawTitle =
-          form?['title']?.toString().trim() ?? '';
+      final rawTitle = form?['title']?.toString().trim() ?? '';
 
-      final title =
-          rawTitle.isEmpty
-              ? 'Form Ujian'
-              : rawTitle;
+      final title = rawTitle.isEmpty ? 'Form Ujian' : rawTitle;
 
-      final DateTime? startedAt = _parseDate(
-        row['started_at'],
-      );
+      final DateTime? startedAt = _parseDate(row['started_at']);
 
-      final DateTime? submittedAt = _parseDate(
-        row['submitted_at'],
-      );
+      final DateTime? submittedAt = _parseDate(row['submitted_at']);
 
-      final status =
-          row['status']
-                  ?.toString()
-                  .trim()
-                  .toUpperCase() ??
-              '';
+      final status = row['status']?.toString().trim().toUpperCase() ?? '';
 
-      final bool isFinished =
-          status == 'SUBMITTED' ||
-          submittedAt != null;
+      final bool isFinished = status == 'SUBMITTED' || submittedAt != null;
 
       result.add(
         HistoryModel(
           submissionId: submissionId,
+          formId: formId,
+          author: form?['author_name']?.toString().trim().isNotEmpty == true
+              ? form!['author_name'].toString().trim()
+              : '-',
+          passingScore: form?['passing_score'] == null
+              ? null
+              : _toInt(form?['passing_score']),
+          showScore: form?['show_score_to_respondent'] != false,
+          headerImage: form?['header_image']?.toString(),
+          headerColor: form?['header_color']?.toString(),
+          headerMedia: form?['media_url']?.toString(),
           title: title,
-          token:
-              firstTagByForm[formId] ?? '-',
-          date: _formatDate(
-            submittedAt ?? startedAt,
-          ),
-          startTime:
-              _formatTime(startedAt),
-          finishTime:
-              _formatTime(submittedAt),
-          duration: _formatElapsed(
-            startedAt,
-            submittedAt,
-          ),
-          score: _toInt(
-            row['total_score'],
-          ),
-          totalQuestion:
-              questionCountByForm[formId] ??
-                  0,
+          token: firstTagByForm[formId] ?? '-',
+          date: _formatDate(submittedAt ?? startedAt),
+          startTime: _formatTime(startedAt),
+          finishTime: _formatTime(submittedAt),
+          duration: _formatElapsed(startedAt, submittedAt),
+          score: _toInt(row['total_score']),
+          totalQuestion: questionCountByForm[formId] ?? 0,
           correctAnswer: 0,
           wrongAnswer: 0,
           isFinished: isFinished,
@@ -449,37 +354,25 @@ class HistoryService {
   // HISTORY YANG DIHAPUS SECARA LOKAL
   // ============================================================
 
-  static Future<Set<String>> _loadDeletedIds(
-    String userId,
-  ) async {
+  static Future<Set<String>> _loadDeletedIds(String userId) async {
     try {
-      final prefs =
-          await SharedPreferences.getInstance();
+      final prefs = await SharedPreferences.getInstance();
 
-      final raw = prefs.getString(
-        _deletedStorageKey(userId),
-      );
+      final raw = prefs.getString(_deletedStorageKey(userId));
 
-      if (raw == null ||
-          raw.trim().isEmpty) {
+      if (raw == null || raw.trim().isEmpty) {
         return <String>{};
       }
 
-      final decoded =
-          jsonDecode(raw);
+      final decoded = jsonDecode(raw);
 
       if (decoded is! List) {
         return <String>{};
       }
 
       return decoded
-          .map(
-            (item) =>
-                item.toString().trim(),
-          )
-          .where(
-            (id) => id.isNotEmpty,
-          )
+          .map((item) => item.toString().trim())
+          .where((id) => id.isNotEmpty)
           .toSet();
     } catch (_) {
       return <String>{};
@@ -490,14 +383,11 @@ class HistoryService {
     String userId,
     Set<String> deletedIds,
   ) async {
-    final prefs =
-        await SharedPreferences.getInstance();
+    final prefs = await SharedPreferences.getInstance();
 
     await prefs.setString(
       _deletedStorageKey(userId),
-      jsonEncode(
-        deletedIds.toList(),
-      ),
+      jsonEncode(deletedIds.toList()),
     );
   }
 
@@ -505,24 +395,17 @@ class HistoryService {
   // LOCAL CACHE
   // ============================================================
 
-  static Future<List<HistoryModel>> _loadLocal(
-    String userId,
-  ) async {
+  static Future<List<HistoryModel>> _loadLocal(String userId) async {
     try {
-      final prefs =
-          await SharedPreferences.getInstance();
+      final prefs = await SharedPreferences.getInstance();
 
-      final raw = prefs.getString(
-        _storageKey(userId),
-      );
+      final raw = prefs.getString(_storageKey(userId));
 
-      if (raw == null ||
-          raw.trim().isEmpty) {
+      if (raw == null || raw.trim().isEmpty) {
         return [];
       }
 
-      final decoded =
-          jsonDecode(raw);
+      final decoded = jsonDecode(raw);
 
       if (decoded is! List) {
         return [];
@@ -530,14 +413,7 @@ class HistoryService {
 
       return decoded
           .whereType<Map>()
-          .map(
-            (item) =>
-                HistoryModel.fromJson(
-              Map<String, dynamic>.from(
-                item,
-              ),
-            ),
-          )
+          .map((item) => HistoryModel.fromJson(Map<String, dynamic>.from(item)))
           .toList();
     } catch (_) {
       return [];
@@ -549,20 +425,11 @@ class HistoryService {
     List<HistoryModel> histories,
   ) async {
     try {
-      final prefs =
-          await SharedPreferences.getInstance();
+      final prefs = await SharedPreferences.getInstance();
 
-      final data = histories
-          .map(
-            (history) =>
-                history.toJson(),
-          )
-          .toList();
+      final data = histories.map((history) => history.toJson()).toList();
 
-      await prefs.setString(
-        _storageKey(userId),
-        jsonEncode(data),
-      );
+      await prefs.setString(_storageKey(userId), jsonEncode(data));
     } catch (_) {
       // Cache hanya pelengkap.
     }
@@ -577,8 +444,7 @@ class HistoryService {
       return null;
     }
 
-    final text =
-        value.toString().trim();
+    final text = value.toString().trim();
 
     if (text.isEmpty) {
       return null;
@@ -587,60 +453,45 @@ class HistoryService {
     return DateTime.tryParse(text);
   }
 
-  static String _formatDate(
-    DateTime? date,
-  ) {
+  static String _formatDate(DateTime? date) {
     if (date == null) {
       return '-';
     }
 
-    final local =
-        date.toLocal();
+    final local = date.toLocal();
 
     return '${_twoDigits(local.day)}/'
         '${_twoDigits(local.month)}/'
         '${local.year}';
   }
 
-  static String _formatTime(
-    DateTime? date,
-  ) {
+  static String _formatTime(DateTime? date) {
     if (date == null) {
       return '-';
     }
 
-    final local =
-        date.toLocal();
+    final local = date.toLocal();
 
     return '${_twoDigits(local.hour)}.'
         '${_twoDigits(local.minute)}';
   }
 
-  static String _formatElapsed(
-    DateTime? startedAt,
-    DateTime? submittedAt,
-  ) {
-    if (startedAt == null ||
-        submittedAt == null) {
+  static String _formatElapsed(DateTime? startedAt, DateTime? submittedAt) {
+    if (startedAt == null || submittedAt == null) {
       return '-';
     }
 
-    final difference =
-        submittedAt.difference(startedAt);
+    final difference = submittedAt.difference(startedAt);
 
-    final int totalSeconds =
-        difference.inSeconds < 0
-            ? 0
-            : difference.inSeconds;
+    final int totalSeconds = difference.inSeconds < 0
+        ? 0
+        : difference.inSeconds;
 
-    final int hours =
-        totalSeconds ~/ 3600;
+    final int hours = totalSeconds ~/ 3600;
 
-    final int minutes =
-        (totalSeconds % 3600) ~/ 60;
+    final int minutes = (totalSeconds % 3600) ~/ 60;
 
-    final int seconds =
-        totalSeconds % 60;
+    final int seconds = totalSeconds % 60;
 
     if (hours > 0) {
       return '$hours Jam $minutes Menit';
@@ -653,17 +504,11 @@ class HistoryService {
     return '$seconds Detik';
   }
 
-  static String _twoDigits(
-    int value,
-  ) {
-    return value
-        .toString()
-        .padLeft(2, '0');
+  static String _twoDigits(int value) {
+    return value.toString().padLeft(2, '0');
   }
 
-  static int _toInt(
-    dynamic value,
-  ) {
+  static int _toInt(dynamic value) {
     if (value == null) {
       return 0;
     }
@@ -672,9 +517,6 @@ class HistoryService {
       return value.toInt();
     }
 
-    return int.tryParse(
-          value.toString(),
-        ) ??
-        0;
+    return int.tryParse(value.toString()) ?? 0;
   }
 }

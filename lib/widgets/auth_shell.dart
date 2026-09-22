@@ -6,6 +6,7 @@ const Color kSecond = Color(0xffEEEEEE);
 const Color kTinted = Color(0xff929AAB);
 const Color kDarks = Color(0xff393E46);
 const Color kDone = Color(0xff007DCC);
+const Color kPass = Color(0xff2FA084);
 const Color kWrong = Color(0xffD90000);
 
 class AuthShell extends StatelessWidget {

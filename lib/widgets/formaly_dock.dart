@@ -34,12 +34,12 @@ class FormalyDock extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return SafeArea(
-      minimum: const EdgeInsets.fromLTRB(16, 0, 16, 14),
+      minimum: const EdgeInsets.fromLTRB(16, 0, 16, 40),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           Container(
-            padding: const EdgeInsets.all(6),
+            padding: const EdgeInsets.all(10),
             decoration: BoxDecoration(
               color: Colors.white,
               borderRadius: BorderRadius.circular(36),
@@ -121,7 +121,7 @@ class _DockItemButton extends StatelessWidget {
               child: Icon(
                 selected ? item.activeIcon : item.icon,
                 key: ValueKey(selected),
-                size: 22,
+                size: 20,
                 color: kDarks.withValues(alpha: selected ? 1 : .7),
               ),
             ),
@@ -135,7 +135,7 @@ class _DockItemButton extends StatelessWidget {
                         item.label,
                         style: TextStyle(fontFamily: 'FunnelDisplay',
 
-                          fontSize: 11,
+                          fontSize: 14,
                           fontWeight: FontWeight.w700,
                           color: kDarks,
                         ),
