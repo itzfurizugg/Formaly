@@ -13,11 +13,11 @@ class FormalyTopBar extends StatelessWidget {
       child: SafeArea(
         bottom: false,
         child: SizedBox(
-          height: 60,
-          child: Padding(
-            padding: const EdgeInsets.all(10),
-            child: Align(
-              alignment: Alignment.centerLeft,
+          height: 70,
+          child: Align(
+            alignment: Alignment.centerLeft,
+            child: Container(
+              margin: const EdgeInsets.only(left: 27, top: 20),
               child: SvgPicture.asset(
                 'assets/logo/logo.svg',
                 width: 104,
