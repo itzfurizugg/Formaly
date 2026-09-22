@@ -9,6 +9,7 @@ import type { EmailOtpType } from "@supabase/supabase-js"
 import { alertPop, easeOutExpo, fadeSlide } from "../../lib/motion"
 import BackButton from "../../components/backButton"
 import { Spinner } from "../../components/loading"
+import authy from "../../assets/otp.png"
 
 const OTP_LENGTH = 6
 
@@ -165,11 +166,11 @@ function Otp() {
                     </div>
                 </div>
 
-                {/* <img
-                    src={vye}
+                <img
+                    src={authy}
                     alt="Ilustrasi"
                     className="pointer-events-none absolute right-0 bottom-0 z-0 w-1/2 lg:w-3/5 xl:w-3/4 max-w-none object-contain object-right-bottom"
-                /> */}
+                />
             </div>
 
             <div className="lg:hidden w-full rounded-none bg-darks px-5 sm:px-10 py-4 flex flex-col justify-center text-white dark:text-second">

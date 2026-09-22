@@ -1,5 +1,5 @@
 import { motion, type Variants } from "motion/react"
-import { Users, Layers, Heart, Sparkles } from "lucide-react"
+import { Heart } from "lucide-react"
 import logo from "../assets/logo.svg"
 import { easeOutExpo } from "../lib/motion"
 import BackButton from "../components/backButton"

@@ -1,7 +1,7 @@
 import { useEffect, useState, useCallback, useMemo, useRef, type DragEvent } from "react"
 import { useParams } from "react-router-dom"
 import { AnimatePresence, motion } from "motion/react"
-import { Plus, Pencil, Trash2, Save, X, Check, GripVertical, ImageIcon, CheckCircle, ListChecks, LayoutList, TriangleAlert } from "lucide-react"
+import { Plus, Pencil, Trash2, Save, X, Check, GripVertical, ImageIcon, CheckCircle, ListChecks, LayoutList, TriangleAlert, ChevronDown } from "lucide-react"
 import { supabase } from "../../lib/supabase"
 import { useAuth } from "../../lib/auth-context"
 import QuestionImportModal from "../../components/creator/QuestionImportModal"
@@ -25,7 +25,6 @@ import { easeOutExpo } from "../../lib/motion"
 import BackButton from "../../components/backButton"
 import Switch from "../../components/switch"
 import FormTabs from "../../components/creator/formTabs"
-import QuestionPreviewSidebar from "../../components/creator/questionPreviewSidebar"
 import { Spinner } from "../../components/loading"
 import {
     fetchPagesWithQuestions,
@@ -119,7 +118,7 @@ function Questions({ embedded = false }: { embedded?: boolean }) {
 
     // Section yang sedang aktif (mode standard) — soal baru dimasukkan ke sini.
     const [activeSectionId, setActiveSectionId] = useState<string | null>(null)
-    const [previewSectionId, setPreviewSectionId] = useState<string | null>(null)
+    const [collapsedSections, setCollapsedSections] = useState<Set<string>>(new Set())
 
     // Restore draft editor yang belum tersimpan (mis. media sudah di-upload tapi
     // soal belum di-save lalu pindah tab/keluar halaman).
@@ -1353,6 +1352,19 @@ function Questions({ embedded = false }: { embedded?: boolean }) {
     // Header + daftar soal dalam satu section (mode standard).
     const renderSectionCard = (page: PageWithQuestions, sectionIdx: number) => {
         const isActive = activeSectionId === page.id
+        const isCollapsed = collapsedSections.has(page.id)
+        const toggleCollapsed = () => {
+            setActiveSectionId(page.id)
+            setCollapsedSections((prev) => {
+                const next = new Set(prev)
+                if (next.has(page.id)) {
+                    next.delete(page.id)
+                } else {
+                    next.add(page.id)
+                }
+                return next
+            })
+        }
         // Section sintetis soal yatim: hanya tampil + bisa dipindahkan keluar.
         // Rename, tambah soal, dan hapus section tidak berlaku (tidak ada baris DB).
         const isOrphanPage = page.id === ORPHAN_PAGE_ID
@@ -1368,15 +1380,12 @@ function Questions({ embedded = false }: { embedded?: boolean }) {
                     } ${sectionPageDrag === page.id ? "opacity-60" : ""}`}
             >
                 <div
-                    className="flex items-start justify-between gap-3 px-4 sm:px-5 py-3 border-b border-second/70 bg-base/40 cursor-pointer"
-                    onClick={() => {
-                        setActiveSectionId(page.id)
-                        setPreviewSectionId(page.id)
-                    }}
+                    className={`flex items-start justify-between gap-3 px-4 sm:px-5 py-3 ${isCollapsed ? "" : "border-b border-second/70"} bg-base/40 cursor-pointer`}
+                    onClick={toggleCollapsed}
                     role="button"
                     tabIndex={0}
                     onKeyDown={(e) => {
-                        if (e.key === "Enter" || e.key === " ") setPreviewSectionId(page.id)
+                        if (e.key === "Enter" || e.key === " ") toggleCollapsed()
                     }}
                 >
                     <div className="flex gap-2.5 items-center min-w-0">
@@ -1419,54 +1428,59 @@ function Questions({ embedded = false }: { embedded?: boolean }) {
                             </p>
                         </div>
                     </div>
-                    {!isOrphanPage && (
-                        <div className="flex items-center gap-1 shrink-0">
-                            <button
-                                onClick={(e) => {
-                                    e.stopPropagation()
-                                    startAdd(page.id)
-                                }}
-                                className="btn btn-sm btn-ghost text-done"
-                                title="Tambah soal di section ini"
-                            >
-                                <Plus className="h-4 w-4" /> <span className="hidden sm:inline">Soal</span>
-                            </button>
-                            <button
-                                onClick={(e) => {
-                                    e.stopPropagation()
-                                    setDeleteSectionChoice({ page, mode: "delete", moveToId: null, deleting: false })
-                                }}
-                                className="btn btn-sm btn-ghost text-wrong"
-                                title="Hapus section"
-                            >
-                                <Trash2 className="h-4 w-4" />
-                            </button>
-                        </div>
-                    )}
+                    <div className="flex items-center gap-1 shrink-0">
+                        {!isOrphanPage && (
+                            <>
+                                <button
+                                    onClick={(e) => {
+                                        e.stopPropagation()
+                                        startAdd(page.id)
+                                    }}
+                                    className="btn btn-sm btn-ghost text-done"
+                                    title="Tambah soal di section ini"
+                                >
+                                    <Plus className="h-4 w-4" /> <span className="hidden sm:inline">Soal</span>
+                                </button>
+                                <button
+                                    onClick={(e) => {
+                                        e.stopPropagation()
+                                        setDeleteSectionChoice({ page, mode: "delete", moveToId: null, deleting: false })
+                                    }}
+                                    className="btn btn-sm btn-ghost text-wrong"
+                                    title="Hapus section"
+                                >
+                                    <Trash2 className="h-4 w-4" />
+                                </button>
+                            </>
+                        )}
+                        <ChevronDown className={`h-4 w-4 shrink-0 text-tinted transition-transform duration-200 ${isCollapsed ? "-rotate-90" : ""}`} />
+                    </div>
                 </div>
 
-                <div className="p-3 sm:p-4">
-                    {page.questions.length === 0 ? (
-                        <div className="text-center py-6 text-sm text-tinted border border-dashed border-second/70 rounded-lg">
-                            Section ini kosong. Klik <span className="text-done font-medium">+ Soal</span> untuk menambahkan.
-                        </div>
-                    ) : (
-                        <div className="space-y-3">
-                            {page.questions.map((q, idx) => (
-                                <div
-                                    key={q.id}
-                                    onDragOver={(e) => {
-                                        if (!sectionDrag || sectionDrag.pageId !== page.id) return
-                                        e.preventDefault()
-                                        e.dataTransfer.dropEffect = "move"
-                                    }}
-                                >
-                                    {renderQuestionCard(q, idx, { pageId: page.id })}
-                                </div>
-                            ))}
-                        </div>
-                    )}
-                </div>
+                {!isCollapsed && (
+                    <div className="p-3 sm:p-4">
+                        {page.questions.length === 0 ? (
+                            <div className="text-center py-6 text-sm text-tinted border border-dashed border-second/70 rounded-lg">
+                                Section ini kosong. Klik <span className="text-done font-medium">+ Soal</span> untuk menambahkan.
+                            </div>
+                        ) : (
+                            <div className="space-y-3">
+                                {page.questions.map((q, idx) => (
+                                    <div
+                                        key={q.id}
+                                        onDragOver={(e) => {
+                                            if (!sectionDrag || sectionDrag.pageId !== page.id) return
+                                            e.preventDefault()
+                                            e.dataTransfer.dropEffect = "move"
+                                        }}
+                                    >
+                                        {renderQuestionCard(q, idx, { pageId: page.id })}
+                                    </div>
+                                ))}
+                            </div>
+                        )}
+                    </div>
+                )}
             </motion.div>
         )
     }
@@ -1623,24 +1637,6 @@ function Questions({ embedded = false }: { embedded?: boolean }) {
                             ))}
                         </div>
                     )}
-                    <AnimatePresence>
-                        {previewSectionId && (() => {
-                            const previewPage = pages.find((p) => p.id === previewSectionId)
-                            if (!previewPage) return null
-                            return (
-                                <QuestionPreviewSidebar
-                                    title={previewPage.title}
-                                    questions={previewPage.questions}
-                                    onClose={() => setPreviewSectionId(null)}
-                                    onSelect={(q) => {
-                                        setPreviewSectionId(null)
-                                        startEdit(q as Question)
-                                    }}
-                                />
-                            )
-                        })()}
-                    </AnimatePresence>
-
                     <AnimatePresence>
                         {showImport && id && (
                             <QuestionImportModal

@@ -286,64 +286,72 @@ function ChatPage() {
     }
 
     return (
-        <div className="flex flex-col items-center justify-center min-h-[calc(100vh-2rem)] sm:min-h-screen px-3.5 sm:px-6 py-5 sm:py-10">
+        <div className="flex flex-col items-center justify-center h-[100dvh] sm:min-h-screen px-3.5 pt-4 pb-2 sm:px-6 sm:py-10">
             <BackButton to="/creator" />
-            <div className="w-full max-w-2xl flex flex-col mt-auto mb-0 sm:my-auto">
-                <motion.div variants={fadeSlide} initial="hidden" animate="show" className="w-full">
-                    <motion.div
-                        layout
-                        transition={{ layout: { type: "spring", stiffness: 340, damping: 30 } }}
-                    >
-                        <h1 className="text-center font-default text-3xl sm:text-4xl text-darks">
-                            Halo, saya <span className="font-bold">Galileo</span>!
-                        </h1>
-                        <p className="text-center text-xs sm:text-sm text-tinted mt-2 mb-5 sm:mb-6 px-2">
-                            Mulai membuat form dengan mudah! Galileo adalah AI Form Builder milik <span className="font-bold">Formaly</span>
-                        </p>
-                    </motion.div>
+            <div className="w-full max-w-2xl flex flex-col flex-1 min-h-0 sm:flex-none sm:my-auto">
+                <div className="flex-1 min-h-0 overflow-y-auto flex flex-col justify-center pb-36 sm:pb-0 sm:flex-none sm:overflow-visible">
+                    <motion.div variants={fadeSlide} initial="hidden" animate="show">
+                        <motion.div
+                            layout
+                            transition={{ layout: { type: "spring", stiffness: 340, damping: 30 } }}
+                        >
+                            <h1 className="text-center font-default text-3xl sm:text-4xl text-darks">
+                                Halo, saya <span className="font-bold">Galileo</span>!
+                            </h1>
+                            <p className="text-center text-xs sm:text-sm text-tinted mt-2 mb-5 sm:mb-6 px-2">
+                                Mulai membuat form dengan mudah! Galileo adalah AI Form Builder milik <span className="font-bold">Formaly</span>
+                            </p>
+                        </motion.div>
 
-                    <AnimatePresence mode="popLayout">
-                        {textareaFocused && (
-                            <motion.div
-                                layout
-                                initial="hidden"
-                                animate="show"
-                                exit="hidden"
-                                variants={{
-                                    hidden: {},
-                                    show: { transition: { staggerChildren: 0.06, delayChildren: 0.05 } },
-                                }}
-                                transition={{ layout: { type: "spring", stiffness: 340, damping: 30 } }}
-                                className="flex flex-wrap justify-center gap-2 mb-3"
-                            >
-                                {QUICK_PROMPTS.map((qp) => (
-                                    <motion.div
-                                        key={qp.label}
-                                        variants={{
-                                            hidden: { opacity: 0, y: 18, scale: 0.9 },
-                                            show: { opacity: 1, y: 0, scale: 1 },
-                                        }}
-                                        transition={{ type: "spring", stiffness: 380, damping: 26 }}
-                                    >
-                                        <button
-                                            type="button"
-                                            onMouseDown={(e) => e.preventDefault()}
-                                            onClick={() => setMessage(qp.prompt)}
-                                            className="btn btn-sm rounded-full bg-white dark:bg-second border-none text-darks hover:bg-darks/20 transition-colors text-xs"
+                        <AnimatePresence mode="popLayout">
+                            {textareaFocused && (
+                                <motion.div
+                                    layout
+                                    initial="hidden"
+                                    animate="show"
+                                    exit="hidden"
+                                    variants={{
+                                        hidden: {},
+                                        show: { transition: { staggerChildren: 0.06, delayChildren: 0.05 } },
+                                    }}
+                                    transition={{ layout: { type: "spring", stiffness: 340, damping: 30 } }}
+                                    className="flex flex-wrap justify-center gap-2 mb-3"
+                                >
+                                    {QUICK_PROMPTS.map((qp) => (
+                                        <motion.div
+                                            key={qp.label}
+                                            variants={{
+                                                hidden: { opacity: 0, y: 18, scale: 0.9 },
+                                                show: { opacity: 1, y: 0, scale: 1 },
+                                            }}
+                                            transition={{ type: "spring", stiffness: 380, damping: 26 }}
                                         >
-                                            {qp.icon} {qp.label}
-                                        </button>
-                                    </motion.div>
-                                ))}
-                            </motion.div>
-                        )}
-                    </AnimatePresence>
+                                            <button
+                                                type="button"
+                                                onMouseDown={(e) => e.preventDefault()}
+                                                onClick={() => setMessage(qp.prompt)}
+                                                className="btn btn-sm rounded-full bg-white dark:bg-second border-none text-darks hover:bg-darks/20 transition-colors text-xs"
+                                            >
+                                                {qp.icon} {qp.label}
+                                            </button>
+                                        </motion.div>
+                                    ))}
+                                </motion.div>
+                            )}
+                        </AnimatePresence>
+                    </motion.div>
+                </div>
 
+                {/* Bar input — fixed di bawah layar pada mobile (mirip UI Claude), kembali normal (static) di desktop. */}
+                <div
+                    className="fixed inset-x-0 bottom-0 z-30 bg-transparent border-t border-second px-3.5 mb-5 pt-2 sm:static sm:border-t-0 sm:px-0 sm:pt-0"
+                    style={{ paddingBottom: "max(0.5rem, env(safe-area-inset-bottom))" }}
+                >
                     <motion.form
                         layout
                         transition={{ layout: { type: "spring", stiffness: 340, damping: 30 } }}
                         onSubmit={handleSubmit}
-                        className="relative bg-white dark:bg-second border border-second rounded-2xl shadow-sm p-3.5 sm:p-5 min-h-[8rem]"
+                        className="relative w-full max-w-2xl mx-auto bg-white dark:bg-second border border-second rounded-2xl shadow-sm p-3.5 sm:p-5 min-h-[8rem]"
                     >
                         {file && (
                             <div className="flex items-center gap-2 mb-2 px-3 py-2 bg-base rounded-lg w-fit max-w-full">
@@ -455,7 +463,7 @@ function ChatPage() {
 
                         {error && <p className="text-sm text-wrong mt-2 px-2">{error}</p>}
                     </motion.form>
-                </motion.div>
+                </div>
 
                 <input
                     ref={fileInputRef}
