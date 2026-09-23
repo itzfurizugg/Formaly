@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter_widget_from_html_core/flutter_widget_from_html_core.dart';
+import 'package:google_fonts/google_fonts.dart';
+import 'package:flutter_widget_from_html/flutter_widget_from_html.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import 'question_screen.dart';
@@ -51,16 +52,7 @@ class _FormDetailScreenState extends State<FormDetailScreen> {
   static const String _storageBaseUrl =
       'https://formaly-storage.commandspes.tech';
 
-  @override
-  void initState() {
-    super.initState();
-    loadForm();
-  }
-
-  // ============================================================
-  // RESOLVE MEDIA URL
-  // ============================================================
-
+  // Mengubah path media relatif dari Go Storage menjadi URL lengkap.
   String _resolveMediaUrl(String raw) {
     final String value = raw.trim();
 
@@ -68,23 +60,22 @@ class _FormDetailScreenState extends State<FormDetailScreen> {
       return '';
     }
 
-    // Kalau database sudah menyimpan URL lengkap,
-    // gunakan langsung.
     if (value.startsWith('http://') ||
         value.startsWith('https://')) {
       return value;
     }
 
-    // Go Storage mengembalikan path seperti:
-    // /media/2026/09/22/xxxx.jpg
     if (value.startsWith('/')) {
       return '$_storageBaseUrl$value';
     }
 
-    // Antisipasi kalau path disimpan tanpa "/"
-    // seperti:
-    // media/2026/09/22/xxxx.jpg
     return '$_storageBaseUrl/$value';
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    loadForm();
   }
 
   // ============================================================
@@ -100,7 +91,8 @@ class _FormDetailScreenState extends State<FormDetailScreen> {
     });
 
     try {
-      final String cleanFormId = widget.formId.trim();
+      final String cleanFormId =
+          widget.formId.trim();
 
       if (cleanFormId.isEmpty) {
         throw Exception(
@@ -118,7 +110,7 @@ class _FormDetailScreenState extends State<FormDetailScreen> {
       final formResponse = await _supabase
           .from('forms')
           .select(
-            'id, title, description, duration, header_image',
+            'id, title, description, duration, header_image, media_url',
           )
           .eq(
             'id',
@@ -128,7 +120,7 @@ class _FormDetailScreenState extends State<FormDetailScreen> {
 
       if (formResponse == null) {
         throw Exception(
-          'Form "$cleanFormId" tidak ditemukan.',
+          'Form dengan ID "$cleanFormId" tidak ditemukan di Supabase.',
         );
       }
 
@@ -164,15 +156,26 @@ class _FormDetailScreenState extends State<FormDetailScreen> {
       // AMBIL BANNER
       //
       // Banner hanya ditampilkan dari kolom header_image.
-      // Path dari Go Storage akan diubah menjadi URL lengkap.
       // Tidak ada proses set / upload / edit banner di Android.
       // ========================================================
 
+      final String headerImage =
+          formResponse['header_image']
+                  ?.toString()
+                  .trim() ??
+              '';
+
+      final String headerMedia =
+          formResponse['media_url']
+                  ?.toString()
+                  .trim() ??
+              '';
+
       final String loadedBanner =
           _resolveMediaUrl(
-        formResponse['header_image']
-                ?.toString() ??
-            '',
+        headerMedia.isNotEmpty
+            ? headerMedia
+            : headerImage,
       );
 
       // ========================================================
@@ -226,7 +229,8 @@ class _FormDetailScreenState extends State<FormDetailScreen> {
                       '';
 
               if (tagName.isNotEmpty) {
-                loadedTag = tagName;
+                loadedTag =
+                    tagName;
               }
             }
           }
@@ -489,11 +493,11 @@ class _FormDetailScreenState extends State<FormDetailScreen> {
         '${_cleanError(e)}',
       );
     } finally {
-      if (!mounted) return;
-
-      setState(() {
-        isStarting = false;
-      });
+      if (mounted) {
+        setState(() {
+          isStarting = false;
+        });
+      }
     }
   }
 
@@ -511,12 +515,7 @@ class _FormDetailScreenState extends State<FormDetailScreen> {
       ..showSnackBar(
         SnackBar(
           content:
-              Text(
-            message,
-            style: const TextStyle(
-              fontFamily: 'FunnelDisplay',
-            ),
-          ),
+              Text(message),
           behavior:
               SnackBarBehavior.floating,
         ),
@@ -635,9 +634,7 @@ class _FormDetailScreenState extends State<FormDetailScreen> {
             Text(
           'Detail Form',
           style:
-              TextStyle(
-            fontFamily:
-                'FunnelDisplay',
+              GoogleFonts.poppins(
             color:
                 colors.onSurface,
             fontWeight:
@@ -706,9 +703,7 @@ class _FormDetailScreenState extends State<FormDetailScreen> {
               textAlign:
                   TextAlign.center,
               style:
-                  TextStyle(
-                fontFamily:
-                    'FunnelDisplay',
+                  GoogleFonts.poppins(
                 fontSize: 20,
                 fontWeight:
                     FontWeight.bold,
@@ -724,9 +719,7 @@ class _FormDetailScreenState extends State<FormDetailScreen> {
               textAlign:
                   TextAlign.center,
               style:
-                  TextStyle(
-                fontFamily:
-                    'FunnelDisplay',
+                  GoogleFonts.poppins(
                 fontSize: 14,
                 color: colors
                     .onSurfaceVariant,
@@ -753,9 +746,8 @@ class _FormDetailScreenState extends State<FormDetailScreen> {
                     Text(
                   'Coba Lagi',
                   style:
-                      const TextStyle(
-                    fontFamily:
-                        'FunnelDisplay',
+                      GoogleFonts
+                          .poppins(
                     fontWeight:
                         FontWeight.bold,
                   ),
@@ -843,8 +835,8 @@ class _FormDetailScreenState extends State<FormDetailScreen> {
                 BoxShadow(
                   color: Colors
                       .black
-                      .withOpacity(
-                    .05,
+                      .withValues(
+                    alpha: .05,
                   ),
                   blurRadius: 12,
                   offset:
@@ -858,42 +850,12 @@ class _FormDetailScreenState extends State<FormDetailScreen> {
 
             child: Column(
               children: [
-                Container(
-                  height: 80,
-                  width: 80,
-
-                  decoration:
-                      BoxDecoration(
-                    color: colors
-                        .surfaceContainerHighest,
-                    borderRadius:
-                        BorderRadius
-                            .circular(
-                      20,
-                    ),
-                  ),
-
-                  child:
-                      Icon(
-                    Icons
-                        .description_outlined,
-                    size: 42,
-                    color:
-                        colors.onSurface,
-                  ),
-                ),
-
-                const SizedBox(
-                    height: 20),
-
                 Text(
                   formTitle,
                   textAlign:
                       TextAlign.center,
                   style:
-                      TextStyle(
-                    fontFamily:
-                        'FunnelDisplay',
+                      GoogleFonts.poppins(
                     fontSize: 28,
                     fontWeight:
                         FontWeight.bold,
@@ -908,9 +870,7 @@ class _FormDetailScreenState extends State<FormDetailScreen> {
                   textAlign:
                       TextAlign.center,
                   style:
-                      TextStyle(
-                    fontFamily:
-                        'FunnelDisplay',
+                      GoogleFonts.poppins(
                     color: colors
                         .onSurfaceVariant,
                     fontSize: 14,
@@ -957,9 +917,8 @@ class _FormDetailScreenState extends State<FormDetailScreen> {
                       Text(
                         'Tag: $formTag',
                         style:
-                            TextStyle(
-                          fontFamily:
-                              'FunnelDisplay',
+                            GoogleFonts
+                                .poppins(
                           fontWeight:
                               FontWeight
                                   .w600,
@@ -1018,9 +977,7 @@ class _FormDetailScreenState extends State<FormDetailScreen> {
           Text(
             'Deskripsi',
             style:
-                TextStyle(
-              fontFamily:
-                  'FunnelDisplay',
+                GoogleFonts.poppins(
               fontSize: 18,
               fontWeight:
                   FontWeight.bold,
@@ -1056,9 +1013,7 @@ class _FormDetailScreenState extends State<FormDetailScreen> {
                     ? Text(
                         'Tidak ada deskripsi untuk form ini.',
                         style:
-                            TextStyle(
-                          fontFamily:
-                              'FunnelDisplay',
+                            GoogleFonts.poppins(
                           fontSize: 14,
                           height: 1.7,
                           color:
@@ -1070,9 +1025,7 @@ class _FormDetailScreenState extends State<FormDetailScreen> {
                         renderMode:
                             RenderMode.column,
                         textStyle:
-                            TextStyle(
-                          fontFamily:
-                              'FunnelDisplay',
+                            GoogleFonts.poppins(
                           fontSize: 14,
                           color:
                               colors.onSurface,
@@ -1151,9 +1104,8 @@ class _FormDetailScreenState extends State<FormDetailScreen> {
                               ? 'TIDAK ADA SOAL'
                               : 'START',
                           style:
-                              TextStyle(
-                            fontFamily:
-                                'FunnelDisplay',
+                              GoogleFonts
+                                  .poppins(
                             color:
                                 colors.onPrimary,
                             fontWeight:
@@ -1267,12 +1219,9 @@ class _FormDetailScreenState extends State<FormDetailScreen> {
                     Text(
                       'Banner tidak dapat dimuat',
                       style:
-                          const TextStyle(
-                        fontFamily:
-                            'FunnelDisplay',
+                          GoogleFonts.poppins(
                         fontSize:
                             12,
-                      ).copyWith(
                         color: colors
                             .onSurfaceVariant,
                       ),
@@ -1333,9 +1282,7 @@ class _FormDetailScreenState extends State<FormDetailScreen> {
             textAlign:
                 TextAlign.center,
             style:
-                TextStyle(
-              fontFamily:
-                  'FunnelDisplay',
+                GoogleFonts.poppins(
               color:
                   colors.onSurfaceVariant,
             ),
@@ -1349,9 +1296,7 @@ class _FormDetailScreenState extends State<FormDetailScreen> {
             textAlign:
                 TextAlign.center,
             style:
-                TextStyle(
-              fontFamily:
-                  'FunnelDisplay',
+                GoogleFonts.poppins(
               fontWeight:
                   FontWeight.bold,
               fontSize: 18,

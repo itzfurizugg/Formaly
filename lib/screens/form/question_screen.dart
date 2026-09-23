@@ -2,9 +2,12 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter_widget_from_html_core/flutter_widget_from_html_core.dart';
+import 'package:flutter_widget_from_html/flutter_widget_from_html.dart';
+import 'package:flutter_math_fork/flutter_math.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:flutter_ntp/flutter_ntp.dart';
+import 'package:battery_plus/battery_plus.dart';
+import 'package:connectivity_plus/connectivity_plus.dart';
 
 import '../../core/models/answer_model.dart';
 import '../../core/models/history_model.dart';
@@ -60,7 +63,7 @@ class _QuestionScreenState extends State<QuestionScreen> {
   Timer? timer;
 
   // Jam ujian disinkronkan dari NTP, bukan jam perangkat.
-  Stopwatch _serverClock = Stopwatch();
+  final Stopwatch _serverClock = Stopwatch();
   DateTime? _serverTimeAtSync;
   Timer? _serverSyncTimer;
   bool _serverTimeReady = false;
@@ -84,6 +87,13 @@ class _QuestionScreenState extends State<QuestionScreen> {
   // Security violation selama ujian.
   bool _securityViolationTriggered = false;
 
+  // Informasi baterai dan koneksi selama ujian.
+  final Battery _battery = Battery();
+  final Connectivity _connectivity = Connectivity();
+  Timer? _deviceStatusTimer;
+  int? _batteryLevel;
+  List<ConnectivityResult> _connectivityResults = [];
+
   @override
   void initState() {
     super.initState();
@@ -93,6 +103,11 @@ class _QuestionScreenState extends State<QuestionScreen> {
     );
 
     loadExam();
+    _loadDeviceStatus();
+    _deviceStatusTimer = Timer.periodic(
+      const Duration(seconds: 5),
+      (_) => _loadDeviceStatus(),
+    );
   }
 
   // Menangani pelanggaran security dari Android.
@@ -147,6 +162,7 @@ class _QuestionScreenState extends State<QuestionScreen> {
 
   @override
   void dispose() {
+    _deviceStatusTimer?.cancel();
     timer?.cancel();
     _serverSyncTimer?.cancel();
     _serverClock.stop();
@@ -157,6 +173,123 @@ class _QuestionScreenState extends State<QuestionScreen> {
     }
 
     super.dispose();
+  }
+
+  // Mengambil informasi baterai dan koneksi perangkat.
+  Future<void> _loadDeviceStatus() async {
+    try {
+      final int batteryLevel =
+          await _battery.batteryLevel;
+
+      final List<ConnectivityResult> connectivityResults =
+          await _connectivity.checkConnectivity();
+
+      if (!mounted) {
+        return;
+      }
+
+      setState(() {
+        _batteryLevel = batteryLevel;
+        _connectivityResults = connectivityResults;
+      });
+    } catch (_) {
+      // Status perangkat hanya informasi tambahan.
+    }
+  }
+
+  String get _connectionLabel {
+    if (_connectivityResults.contains(
+      ConnectivityResult.wifi,
+    )) {
+      return 'Wi-Fi';
+    }
+
+    if (_connectivityResults.contains(
+      ConnectivityResult.mobile,
+    )) {
+      return 'Data';
+    }
+
+    if (_connectivityResults.contains(
+      ConnectivityResult.ethernet,
+    )) {
+      return 'Ethernet';
+    }
+
+    if (_connectivityResults.contains(
+      ConnectivityResult.bluetooth,
+    )) {
+      return 'Bluetooth';
+    }
+
+    return 'Offline';
+  }
+
+  IconData get _connectionIcon {
+    if (_connectivityResults.contains(
+      ConnectivityResult.wifi,
+    )) {
+      return Icons.wifi_rounded;
+    }
+
+    if (_connectivityResults.contains(
+      ConnectivityResult.mobile,
+    )) {
+      return Icons.signal_cellular_alt_rounded;
+    }
+
+    if (_connectivityResults.contains(
+      ConnectivityResult.ethernet,
+    )) {
+      return Icons.settings_ethernet_rounded;
+    }
+
+    if (_connectivityResults.contains(
+      ConnectivityResult.bluetooth,
+    )) {
+      return Icons.bluetooth_rounded;
+    }
+
+    return Icons.wifi_off_rounded;
+  }
+
+  Widget _buildDeviceStatusChip({
+    required IconData icon,
+    required String label,
+    required Color color,
+  }) {
+    final colors = Theme.of(context).colorScheme;
+
+    return Container(
+      padding: const EdgeInsets.symmetric(
+        horizontal: 12,
+        vertical: 8,
+      ),
+      decoration: BoxDecoration(
+        color: colors.surface,
+        borderRadius: BorderRadius.circular(13),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(
+            icon,
+            size: 16,
+            color: color,
+          ),
+          const SizedBox(width: 6),
+          Text(
+            label,
+            style: TextStyle(
+              fontFamily: 'FunnelDisplay',
+              fontSize: 12,
+              fontWeight: FontWeight.w600,
+              color: colors.onSurface,
+            ),
+          ),
+        ],
+      ),
+    );
   }
 
   // Memuat data ujian dari Supabase.
@@ -265,11 +398,9 @@ class _QuestionScreenState extends State<QuestionScreen> {
         } else {
           loadedDeadline = savedDraft.deadline;
 
-          if (loadedDeadline == null) {
-            loadedDeadline = startDateTime.add(
-              Duration(minutes: durationMinutes),
-            );
-          }
+          loadedDeadline ??= startDateTime.add(
+            Duration(minutes: durationMinutes),
+          );
         }
 
         _startServerTimeSync();
@@ -331,7 +462,7 @@ class _QuestionScreenState extends State<QuestionScreen> {
               .from('questions')
               .select(
                 'id, question_text, question_type, score_value, '
-                'order_index, is_required, image_question',
+                'order_index, is_required, image_question, media_url',
               )
               .eq(
                 'form_id',
@@ -413,6 +544,9 @@ class _QuestionScreenState extends State<QuestionScreen> {
               questionRow['is_required'] == true,
           'imageQuestion':
               questionRow['image_question']
+                  ?.toString(),
+          'mediaUrl':
+              questionRow['media_url']
                   ?.toString(),
         });
       }
@@ -1983,7 +2117,7 @@ class _QuestionScreenState extends State<QuestionScreen> {
     required FontWeight fontWeight,
     required Color color,
   }) {
-    final String content = html.trim();
+    final String content = _prepareHtmlContent(html.trim());
 
     if (content.isEmpty) {
       return const SizedBox.shrink();
@@ -1992,8 +2126,8 @@ class _QuestionScreenState extends State<QuestionScreen> {
     return HtmlWidget(
       content,
       renderMode: RenderMode.column,
-      textStyle: TextStyle(fontFamily: 'FunnelDisplay',
-
+      textStyle: TextStyle(
+        fontFamily: 'FunnelDisplay',
         fontSize: fontSize,
         fontWeight: fontWeight,
         color: color,
@@ -2008,8 +2142,353 @@ class _QuestionScreenState extends State<QuestionScreen> {
           };
         }
 
+        // Format code inline seperti <code>...</code>.
+        if (element.localName == 'code') {
+          return {
+            'font-family': 'monospace',
+            'font-size': '0.9em',
+            'background-color': '#ECECEC',
+            'padding': '2px 4px',
+          };
+        }
+
+        // Rumus sederhana yang dibuat Creator menggunakan superscript
+        // dan subscript tetap terlihat seperti notasi matematika.
+        if (element.localName == 'sup' ||
+            element.localName == 'sub') {
+          return {
+            'font-size': '75%',
+          };
+        }
+
         return null;
       },
+      customWidgetBuilder: (element) {
+        // Code block WYSIWYG, misalnya <pre><code>...</code></pre>.
+        // Dibuat monospaced, mempertahankan line break, dan dapat
+        // digeser horizontal tanpa mengubah isi code dari Creator.
+        if (element.localName == 'pre') {
+          return _QuestionCodeBlock(
+            code: element.text,
+          );
+        }
+
+        // Dukungan formula dari Creator bila editor menyimpan LaTeX
+        // pada data-latex/data-formula/data-equation.
+        final String latex =
+            element.attributes['data-formaly-math']?.trim() ??
+            element.attributes['data-latex']?.trim() ??
+            element.attributes['data-formula']?.trim() ??
+            element.attributes['data-equation']?.trim() ??
+            '';
+
+        if (latex.isNotEmpty) {
+          final bool displayMath =
+              element.attributes['data-formaly-math-display'] == 'true' ||
+              element.attributes['data-display-math'] == 'true';
+
+          return _QuestionMath(
+            expression: latex,
+            displayMath: displayMath,
+            fontSize: fontSize,
+            color: color,
+          );
+        }
+
+        // Hanya gambar yang dibuat interaktif untuk zoom manual.
+        // Format/isi WYSIWYG dari creator tetap tidak diubah.
+        if (element.localName != 'img') {
+          return null;
+        }
+
+        final String imageSource =
+            element.attributes['src']?.trim() ?? '';
+
+        if (imageSource.isEmpty) {
+          return null;
+        }
+
+        return _ZoomableQuestionImage(
+          imageUrl: _resolveMediaUrl(imageSource),
+        );
+      },
+    );
+  }
+
+  // Menambahkan renderer formula LaTeX tanpa mengubah HTML asli yang
+  // tersimpan dari Creator. Formula dilindungi agar code block tidak
+  // ikut diproses sebagai rumus.
+  String _prepareHtmlContent(String html) {
+    if (html.isEmpty) {
+      return '';
+    }
+
+    final List<String> protectedBlocks = [];
+    int blockIndex = 0;
+
+    // Pertahankan code block HTML yang memang sudah dibuat oleh WYSIWYG.
+    final RegExp codeBlockPattern = RegExp(
+      r'<(pre|code)\b[^>]*>[\s\S]*?</\1>',
+      caseSensitive: false,
+    );
+
+    String prepared = html.replaceAllMapped(
+      codeBlockPattern,
+      (match) {
+        final String token =
+            'FORMALY_CODE_BLOCK_${blockIndex++}_PLACEHOLDER';
+        protectedBlocks.add(match.group(0) ?? '');
+        return token;
+      },
+    );
+
+    // Dukungan code block Markdown dengan triple backtick.
+    // Contoh yang ditempel oleh Creator:
+    // ```python
+    // x = 10
+    // y = 3
+    // print(x % y)
+    // ```
+    // Backtick tidak ditampilkan di Android; isinya dibuat menjadi
+    // <pre><code> sehingga tampil seperti blok kode pada soal.
+    final RegExp fencedCodePattern = RegExp(
+      r'```[^\r\n`]*\r?\n([\s\S]*?)```',
+      caseSensitive: false,
+    );
+
+    prepared = prepared.replaceAllMapped(
+      fencedCodePattern,
+      (match) {
+        final String code = match.group(1) ?? '';
+        return '<pre><code>${_escapeHtmlAttribute(code)}</code></pre>';
+      },
+    );
+
+    // Dukungan inline code dengan single backtick, misalnya `x % y`.
+    final RegExp inlineCodePattern = RegExp(
+      r'(?<!`)`([^`\r\n]+)`(?!`)',
+    );
+
+    prepared = prepared.replaceAllMapped(
+      inlineCodePattern,
+      (match) {
+        final String code = match.group(1) ?? '';
+        return '<code>${_escapeHtmlAttribute(code)}</code>';
+      },
+    );
+
+    // Lindungi lagi code block yang baru dibuat supaya tanda $ di dalam
+    // code tidak dianggap sebagai awal rumus LaTeX.
+    prepared = prepared.replaceAllMapped(
+      codeBlockPattern,
+      (match) {
+        final String token =
+            'FORMALY_CODE_BLOCK_${blockIndex++}_PLACEHOLDER';
+        protectedBlocks.add(match.group(0) ?? '');
+        return token;
+      },
+    );
+
+    final RegExp latexPattern = RegExp(
+      r'(\$\$([\s\S]*?)\$\$|\$([^$]+?)\$|\\\[([\s\S]*?)\\\]|\\\(([\s\S]*?)\\\))',
+    );
+
+    prepared = prepared.replaceAllMapped(
+      latexPattern,
+      (match) {
+        String expression;
+        bool displayMath;
+
+        if ((match.group(2) ?? '').isNotEmpty) {
+          expression = match.group(2) ?? '';
+          displayMath = true;
+        } else if ((match.group(3) ?? '').isNotEmpty) {
+          expression = match.group(3) ?? '';
+          displayMath = false;
+        } else if ((match.group(4) ?? '').isNotEmpty) {
+          expression = match.group(4) ?? '';
+          displayMath = true;
+        } else {
+          expression = match.group(5) ?? '';
+          displayMath = false;
+        }
+
+        final String token =
+            _escapeHtmlAttribute(expression.trim());
+        final String display =
+            displayMath ? 'true' : 'false';
+
+        return '<div data-formaly-math="$token" '
+            'data-formaly-math-display="$display"></div>';
+      },
+    );
+
+    for (int i = protectedBlocks.length - 1; i >= 0; i--) {
+      final String token =
+          'FORMALY_CODE_BLOCK_${i}_PLACEHOLDER';
+      prepared = prepared.replaceFirst(
+        token,
+        protectedBlocks[i],
+      );
+    }
+
+    return prepared;
+  }
+
+  static const String _storageBaseUrl =
+      'https://formaly-storage.commandspes.tech';
+
+  String _resolveMediaUrl(String raw) {
+    final String value = raw.trim();
+
+    if (value.isEmpty) return '';
+
+    if (value.startsWith('http://') ||
+        value.startsWith('https://')) {
+      return value;
+    }
+
+    if (value.startsWith('/')) {
+      return '$_storageBaseUrl$value';
+    }
+
+    return '$_storageBaseUrl/$value';
+  }
+
+  String _mediaExtension(String url) {
+    final Uri? uri = Uri.tryParse(url);
+    final String path =
+        uri?.path.toLowerCase() ??
+        url.split('?').first.toLowerCase();
+
+    final int dotIndex = path.lastIndexOf('.');
+
+    if (dotIndex == -1 || dotIndex == path.length - 1) {
+      return '';
+    }
+
+    return path.substring(dotIndex + 1);
+  }
+
+  String _escapeHtmlAttribute(String value) {
+    return value
+        .replaceAll('&', '&amp;')
+        .replaceAll('"', '&quot;')
+        .replaceAll('<', '&lt;')
+        .replaceAll('>', '&gt;');
+  }
+
+  bool _htmlContainsImageUrl(String html, String imageUrl) {
+    if (html.trim().isEmpty || imageUrl.isEmpty) {
+      return false;
+    }
+
+    final RegExp imageTagPattern = RegExp(
+      r"""<img\b[^>]*\bsrc\s*=\s*["']([^"']+)["']""",
+      caseSensitive: false,
+    );
+
+    for (final match in imageTagPattern.allMatches(html)) {
+      final String source = match.group(1)?.trim() ?? '';
+      if (_resolveMediaUrl(source) == imageUrl) {
+        return true;
+      }
+    }
+
+    return false;
+  }
+
+  // Menampilkan media tambahan yang disimpan di kolom questions.
+  // image_question = gambar, sedangkan media_url dapat berupa
+  // gambar, video, atau audio dari Creator Web.
+  Widget _buildQuestionMedia(Map<String, dynamic> question) {
+    final String questionHtml =
+        question['question']?.toString() ?? '';
+
+    final String imageUrl = _resolveMediaUrl(
+      question['imageQuestion']?.toString() ?? '',
+    );
+
+    final String mediaUrl = _resolveMediaUrl(
+      question['mediaUrl']?.toString() ?? '',
+    );
+
+    final List<Widget> mediaWidgets = [];
+
+    if (imageUrl.isNotEmpty &&
+        !_htmlContainsImageUrl(questionHtml, imageUrl)) {
+      mediaWidgets.add(
+        _ZoomableQuestionImage(
+          imageUrl: imageUrl,
+        ),
+      );
+    }
+
+    if (mediaUrl.isNotEmpty && mediaUrl != imageUrl) {
+      final String url = _escapeHtmlAttribute(mediaUrl);
+      final String extension = _mediaExtension(mediaUrl);
+
+      if ({
+        'jpg',
+        'jpeg',
+        'png',
+        'webp',
+        'gif',
+      }.contains(extension)) {
+        if (!_htmlContainsImageUrl(questionHtml, mediaUrl)) {
+          mediaWidgets.add(
+            _ZoomableQuestionImage(
+              imageUrl: mediaUrl,
+            ),
+          );
+        }
+      } else if ({
+        'mp4',
+        'webm',
+        'mov',
+        'mkv',
+        'avi',
+      }.contains(extension)) {
+        mediaWidgets.add(
+          HtmlWidget(
+            '<video controls src="$url" style="width:100%;"></video>',
+            renderMode: RenderMode.column,
+          ),
+        );
+      } else if ({
+        'mp3',
+        'wav',
+        'm4a',
+        'aac',
+        'ogg',
+        'flac',
+      }.contains(extension)) {
+        mediaWidgets.add(
+          HtmlWidget(
+            '<audio controls src="$url"></audio>',
+            renderMode: RenderMode.column,
+          ),
+        );
+      }
+    }
+
+    if (mediaWidgets.isEmpty) {
+      return const SizedBox.shrink();
+    }
+
+    return Padding(
+      padding: const EdgeInsets.only(top: 16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: mediaWidgets
+            .map(
+              (widget) => Padding(
+                padding: const EdgeInsets.only(bottom: 12),
+                child: widget,
+              ),
+            )
+            .toList(),
+      ),
     );
   }
 
@@ -2174,6 +2653,41 @@ class _QuestionScreenState extends State<QuestionScreen> {
             ),
 
             const SizedBox(
+              height: 10,
+            ),
+
+            Align(
+              alignment: Alignment.centerRight,
+              child: Wrap(
+                alignment: WrapAlignment.end,
+                spacing: 8,
+                runSpacing: 8,
+                children: [
+                  _buildDeviceStatusChip(
+                    icon: _batteryLevel != null &&
+                            _batteryLevel! <= 20
+                        ? Icons.battery_alert_rounded
+                        : Icons.battery_full_rounded,
+                    label: _batteryLevel == null
+                        ? '--'
+                        : '${_batteryLevel!}%',
+                    color: _batteryLevel != null &&
+                            _batteryLevel! <= 20
+                        ? colors.error
+                        : colors.primary,
+                  ),
+                  _buildDeviceStatusChip(
+                    icon: _connectionIcon,
+                    label: _connectionLabel,
+                    color: _connectionLabel == 'Offline'
+                        ? colors.error
+                        : colors.primary,
+                  ),
+                ],
+              ),
+            ),
+
+            const SizedBox(
               height: 20,
             ),
 
@@ -2268,23 +2782,21 @@ class _QuestionScreenState extends State<QuestionScreen> {
                           ),
                         ],
                       ),
-                      child: InteractiveViewer(
-                        minScale: 0.8,
-                        maxScale: 3.0,
-                        scaleEnabled: true,
-                        panEnabled: true,
-                        constrained: true,
-                        clipBehavior: Clip.none,
-                        boundaryMargin: const EdgeInsets.all(80),
-                        child: _buildHtmlContent(
-                          question['question']
-                              ?.toString() ??
-                              '',
-                          fontSize: 19,
-                          fontWeight:
-                              FontWeight.bold,
-                          color: colors.onSurface,
-                        ),
+                      child: Column(
+                        crossAxisAlignment:
+                            CrossAxisAlignment.stretch,
+                        children: [
+                          _buildHtmlContent(
+                            question['question']
+                                ?.toString() ??
+                                '',
+                            fontSize: 19,
+                            fontWeight:
+                                FontWeight.bold,
+                            color: colors.onSurface,
+                          ),
+                          _buildQuestionMedia(question),
+                        ],
                       ),
                     ),
 
@@ -2756,3 +3268,239 @@ class _QuestionScreenState extends State<QuestionScreen> {
     );
   }
 }
+
+class _QuestionCodeBlock extends StatelessWidget {
+  final String code;
+
+  const _QuestionCodeBlock({
+    required this.code,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      margin: const EdgeInsets.symmetric(vertical: 8),
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: const Color(0xFF1E1E1E),
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: SingleChildScrollView(
+        scrollDirection: Axis.horizontal,
+        child: Text(
+          code,
+          softWrap: false,
+          style: const TextStyle(
+            fontFamily: 'monospace',
+            fontSize: 13.5,
+            height: 1.45,
+            color: Color(0xFFF1F1F1),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _QuestionMath extends StatelessWidget {
+  final String expression;
+  final bool displayMath;
+  final double fontSize;
+  final Color color;
+
+  const _QuestionMath({
+    required this.expression,
+    required this.displayMath,
+    required this.fontSize,
+    required this.color,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final String cleanExpression = expression.trim();
+
+    if (cleanExpression.isEmpty) {
+      return const SizedBox.shrink();
+    }
+
+    try {
+      return Padding(
+        padding: EdgeInsets.symmetric(
+          vertical: displayMath ? 8 : 2,
+        ),
+        child: Math.tex(
+          cleanExpression,
+          mathStyle: displayMath
+              ? MathStyle.display
+              : MathStyle.text,
+          textStyle: TextStyle(
+            fontSize: fontSize,
+            color: color,
+          ),
+        ),
+      );
+    } catch (_) {
+      return Padding(
+        padding: EdgeInsets.symmetric(
+          vertical: displayMath ? 8 : 2,
+        ),
+        child: Text(
+          cleanExpression,
+          style: TextStyle(
+            fontFamily: 'FunnelDisplay',
+            fontSize: fontSize,
+            color: color,
+          ),
+        ),
+      );
+    }
+  }
+}
+
+class _ZoomableQuestionImage extends StatefulWidget {
+  final String imageUrl;
+
+  const _ZoomableQuestionImage({
+    required this.imageUrl,
+  });
+
+  @override
+  State<_ZoomableQuestionImage> createState() =>
+      _ZoomableQuestionImageState();
+}
+
+class _ZoomableQuestionImageState
+    extends State<_ZoomableQuestionImage> {
+  final TransformationController _transformationController =
+      TransformationController();
+
+  double _scale = 1.0;
+
+  @override
+  void initState() {
+    super.initState();
+    _transformationController.addListener(_handleTransformationChanged);
+  }
+
+  @override
+  void didUpdateWidget(
+    covariant _ZoomableQuestionImage oldWidget,
+  ) {
+    super.didUpdateWidget(oldWidget);
+
+    if (oldWidget.imageUrl != widget.imageUrl) {
+      _setScale(1.0);
+    }
+  }
+
+  void _handleTransformationChanged() {
+    final double nextScale =
+        _transformationController.value.getMaxScaleOnAxis();
+
+    if ((nextScale - _scale).abs() < 0.001 || !mounted) {
+      return;
+    }
+
+    setState(() {
+      _scale = nextScale.clamp(1.0, 3.0).toDouble();
+    });
+  }
+
+  void _setScale(double value) {
+    final double nextScale = value.clamp(1.0, 3.0).toDouble();
+
+    _transformationController.value =
+        Matrix4.diagonal3Values(nextScale, nextScale, 1.0);
+
+    if (mounted) {
+      setState(() {
+        _scale = nextScale;
+      });
+    }
+  }
+
+  void _zoomIn() {
+    _setScale(_scale + 0.5);
+  }
+
+  void _zoomOut() {
+    _setScale(_scale - 0.5);
+  }
+
+  @override
+  void dispose() {
+    _transformationController.removeListener(
+      _handleTransformationChanged,
+    );
+    _transformationController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = Theme.of(context).colorScheme;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.end,
+          children: [
+            IconButton(
+              onPressed: _scale <= 1.0 ? null : _zoomOut,
+              icon: const Icon(Icons.zoom_out_rounded),
+              tooltip: 'Zoom out',
+              visualDensity: VisualDensity.compact,
+              color: colors.onSurface,
+            ),
+            Text(
+              '${_scale.toStringAsFixed(1)}x',
+              style: TextStyle(
+                fontFamily: 'FunnelDisplay',
+                fontSize: 12,
+                fontWeight: FontWeight.w600,
+                color: colors.onSurfaceVariant,
+              ),
+            ),
+            IconButton(
+              onPressed: _scale >= 3.0 ? null : _zoomIn,
+              icon: const Icon(Icons.zoom_in_rounded),
+              tooltip: 'Zoom in',
+              visualDensity: VisualDensity.compact,
+              color: colors.onSurface,
+            ),
+          ],
+        ),
+        ClipRRect(
+          borderRadius: BorderRadius.circular(12),
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(
+              maxHeight: 320,
+            ),
+            child: InteractiveViewer(
+              transformationController:
+                  _transformationController,
+              minScale: 1.0,
+              maxScale: 3.0,
+              scaleEnabled: false,
+              panEnabled: true,
+              constrained: true,
+              alignment: Alignment.center,
+              boundaryMargin: EdgeInsets.zero,
+              clipBehavior: Clip.hardEdge,
+              child: Image.network(
+                widget.imageUrl,
+                width: double.infinity,
+                fit: BoxFit.contain,
+                errorBuilder: (_, _, _) =>
+                    const SizedBox.shrink(),
+              ),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+}
+

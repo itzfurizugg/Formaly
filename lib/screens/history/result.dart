@@ -29,6 +29,8 @@ class _DetailHistoryScreenState extends State<DetailHistoryScreen> {
   Future<void> _deleteHistory() async {
     if (_isDeleting) return;
 
+    final colors = Theme.of(context).colorScheme;
+
     final bool? confirmed = await showModalBottomSheet<bool>(
       context: context,
       backgroundColor: Colors.transparent,
@@ -39,9 +41,11 @@ class _DetailHistoryScreenState extends State<DetailHistoryScreen> {
         child: Container(
           width: double.infinity,
           padding: const EdgeInsets.all(24),
-          decoration: const BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.vertical(top: Radius.circular(32)),
+          decoration: BoxDecoration(
+            color: colors.surface,
+            borderRadius: const BorderRadius.vertical(
+              top: Radius.circular(32),
+            ),
           ),
           child: Column(
             mainAxisSize: MainAxisSize.min,
@@ -52,7 +56,7 @@ class _DetailHistoryScreenState extends State<DetailHistoryScreen> {
                   width: 40,
                   height: 4,
                   decoration: BoxDecoration(
-                    color: const Color(0xFFE0E0E0),
+                    color: colors.outlineVariant,
                     borderRadius: BorderRadius.circular(2),
                   ),
                 ),
@@ -88,14 +92,14 @@ class _DetailHistoryScreenState extends State<DetailHistoryScreen> {
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(16),
                         ),
-                        side: const BorderSide(color: Color(0xFFE0E0E0)),
+                        side: BorderSide(color: colors.outlineVariant),
                       ),
-                      child: const Text(
+                      child: Text(
                         'Batal',
                         style: TextStyle(
                           fontFamily: 'FunnelDisplay',
                           fontWeight: FontWeight.w700,
-                          color: kTinted,
+                          color: colors.onSurfaceVariant,
                         ),
                       ),
                     ),
@@ -206,13 +210,15 @@ class _DetailHistoryScreenState extends State<DetailHistoryScreen> {
           : Image.network(
               source,
               fit: BoxFit.cover,
-              errorBuilder: (_, __, ___) => fallback(),
+              errorBuilder: (_, _, _) => fallback(),
             ),
     );
   }
 
   // Menampilkan satu item informasi (tile info web /pages/form).
   Widget _buildInfoItem(String title, String value) {
+    final colors = Theme.of(context).colorScheme;
+
     return Padding(
       padding: const EdgeInsets.only(bottom: 14),
       child: Row(
@@ -222,10 +228,10 @@ class _DetailHistoryScreenState extends State<DetailHistoryScreen> {
             width: 34,
             height: 34,
             decoration: BoxDecoration(
-              color: kBase,
+              color: colors.surfaceContainerHighest,
               borderRadius: BorderRadius.circular(10),
             ),
-            child: Icon(_getInfoIcon(title), size: 17, color: kTinted),
+            child: Icon(_getInfoIcon(title), size: 17, color: colors.onSurfaceVariant),
           ),
           const SizedBox(width: 12),
           Expanded(
@@ -233,10 +239,10 @@ class _DetailHistoryScreenState extends State<DetailHistoryScreen> {
               padding: const EdgeInsets.only(top: 8),
               child: Text(
                 title,
-                style: const TextStyle(
+                style: TextStyle(
                   fontFamily: 'FunnelDisplay',
                   fontSize: 12.5,
-                  color: kTinted,
+                  color: colors.onSurfaceVariant,
                 ),
               ),
             ),
@@ -248,11 +254,11 @@ class _DetailHistoryScreenState extends State<DetailHistoryScreen> {
               child: Text(
                 value,
                 textAlign: TextAlign.right,
-                style: const TextStyle(
+                style: TextStyle(
                   fontFamily: 'FunnelDisplay',
                   fontSize: 13,
                   fontWeight: FontWeight.w600,
-                  color: kDarks,
+                  color: colors.onSurface,
                 ),
               ),
             ),
@@ -303,25 +309,34 @@ class _DetailHistoryScreenState extends State<DetailHistoryScreen> {
 
   // Judul section dengan garis hairline (pola web result).
   Widget _sectionHeading(String text) {
+    final colors = Theme.of(context).colorScheme;
+
     return Row(
       children: [
         Text(
           text,
-          style: const TextStyle(
+          style: TextStyle(
             fontFamily: 'FunnelDisplay',
             fontSize: 18,
             fontWeight: FontWeight.w700,
-            color: kDarks,
+            color: colors.onSurface,
           ),
         ),
         const SizedBox(width: 14),
-        const Expanded(child: Divider(height: 1, color: kSecond)),
+        Expanded(
+          child: Divider(
+            height: 1,
+            color: colors.outlineVariant,
+          ),
+        ),
       ],
     );
   }
 
   @override
   Widget build(BuildContext context) {
+    final colors = Theme.of(context).colorScheme;
+
     final String title = _safeText(widget.history.title);
 
     final String tag =
@@ -343,18 +358,18 @@ class _DetailHistoryScreenState extends State<DetailHistoryScreen> {
     final Color statusColor = isFinished ? kPass : kWrong;
 
     return Scaffold(
-      backgroundColor: kSecond,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
-        backgroundColor: kSecond,
+        backgroundColor: colors.surface,
         surfaceTintColor: Colors.transparent,
         elevation: 0,
         centerTitle: true,
-        title: const Text(
+        title: Text(
           'Detail Riwayat',
           style: TextStyle(
             fontFamily: 'FunnelDisplay',
             fontWeight: FontWeight.bold,
-            color: kDarks,
+            color: colors.onSurface,
           ),
         ),
       ),
@@ -368,9 +383,9 @@ class _DetailHistoryScreenState extends State<DetailHistoryScreen> {
               width: double.infinity,
               clipBehavior: Clip.antiAlias,
               decoration: BoxDecoration(
-                color: Colors.white,
+                color: colors.surface,
                 borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: kSecond),
+                border: Border.all(color: colors.outlineVariant),
                 boxShadow: const [
                   BoxShadow(
                     color: Color(0x07000000),
@@ -386,20 +401,20 @@ class _DetailHistoryScreenState extends State<DetailHistoryScreen> {
 
             Text(
               'Hasil Pengerjaan',
-              style: const TextStyle(
+              style: TextStyle(
                 fontFamily: 'FunnelDisplay',
                 fontSize: 28,
                 fontWeight: FontWeight.w700,
-                color: kDarks,
+                color: colors.onSurface,
               ),
             ),
             const SizedBox(height: 4),
             Text(
               title,
-              style: const TextStyle(
+              style: TextStyle(
                 fontFamily: 'FunnelDisplay',
                 fontSize: 14,
-                color: kTinted,
+                color: colors.onSurfaceVariant,
               ),
             ),
             const SizedBox(height: 20),
@@ -409,9 +424,9 @@ class _DetailHistoryScreenState extends State<DetailHistoryScreen> {
                 width: double.infinity,
                 padding: const EdgeInsets.all(20),
                 decoration: BoxDecoration(
-                  color: Colors.white,
+                  color: colors.surface,
                   borderRadius: BorderRadius.circular(16),
-                  border: Border.all(color: kSecond),
+                  border: Border.all(color: colors.outlineVariant),
                   boxShadow: const [
                     BoxShadow(
                       color: Color(0x07000000),
@@ -426,12 +441,12 @@ class _DetailHistoryScreenState extends State<DetailHistoryScreen> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          const Text(
+                          Text(
                             'Total Skor',
                             style: TextStyle(
                               fontFamily: 'FunnelDisplay',
                               fontSize: 12,
-                              color: kTinted,
+                              color: colors.onSurfaceVariant,
                             ),
                           ),
                           const SizedBox(height: 2),
@@ -457,10 +472,10 @@ class _DetailHistoryScreenState extends State<DetailHistoryScreen> {
                         const SizedBox(height: 8),
                         Text(
                           date,
-                          style: const TextStyle(
+                          style: TextStyle(
                             fontFamily: 'FunnelDisplay',
                             fontSize: 12,
-                            color: kTinted,
+                            color: colors.onSurfaceVariant,
                           ),
                         ),
                       ],
@@ -507,9 +522,9 @@ class _DetailHistoryScreenState extends State<DetailHistoryScreen> {
               width: double.infinity,
               padding: const EdgeInsets.all(18),
               decoration: BoxDecoration(
-                color: Colors.white,
+                color: colors.surface,
                 borderRadius: BorderRadius.circular(16),
-                border: Border.all(color: kSecond),
+                border: Border.all(color: colors.outlineVariant),
                 boxShadow: const [
                   BoxShadow(
                     color: Color(0x07000000),
@@ -525,7 +540,7 @@ class _DetailHistoryScreenState extends State<DetailHistoryScreen> {
                   _buildInfoItem('Jam Mulai', startTime),
                   _buildInfoItem('Jam Selesai', finishTime),
                   _buildInfoItem('Durasi', duration),
-                  Divider(height: 12, color: kSecond),
+                  Divider(height: 12, color: colors.outlineVariant),
                   const SizedBox(height: 4),
                   _buildInfoItem('Total Soal', totalQuestion),
                 ],
@@ -578,10 +593,10 @@ class _DetailHistoryScreenState extends State<DetailHistoryScreen> {
                           isFinished
                               ? 'Jawaban telah dikirim.'
                               : 'Pengerjaan belum selesai.',
-                          style: const TextStyle(
+                          style: TextStyle(
                             fontFamily: 'FunnelDisplay',
                             fontSize: 12,
-                            color: kTinted,
+                            color: colors.onSurfaceVariant,
                           ),
                         ),
                       ],
@@ -619,15 +634,15 @@ class _DetailHistoryScreenState extends State<DetailHistoryScreen> {
                     ),
                   ),
                   const SizedBox(width: 10),
-                  const Expanded(
+                  Expanded(
                     child: Padding(
-                      padding: EdgeInsets.only(top: 4),
+                      padding: const EdgeInsets.only(top: 4),
                       child: Text(
                         'Detail nilai dan jawaban tidak ditampilkan pada riwayat user.',
                         style: TextStyle(
                           fontFamily: 'FunnelDisplay',
                           fontSize: 12,
-                          color: kTinted,
+                          color: colors.onSurfaceVariant,
                           height: 1.5,
                         ),
                       ),

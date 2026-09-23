@@ -635,10 +635,14 @@ class _HomePageState extends State<HomePage> {
     return SafeArea(
       child:
           SingleChildScrollView(
+        // Ruang bawah dibuat cukup agar tombol Scan QR dapat berhenti
+        // di atas FormalyDock dan tidak tertutup saat scroll mentok.
         padding:
-            const EdgeInsets.symmetric(
-          horizontal: 16,
-          vertical: 24,
+            const EdgeInsets.fromLTRB(
+          16,
+          24,
+          16,
+          120,
         ),
         child: Center(
           child: ConstrainedBox(
@@ -737,8 +741,10 @@ class _HomePageState extends State<HomePage> {
                   icon: const Icon(Icons.qr_code_scanner_rounded),
                   label: const Text('Scan QR'),
                   style: OutlinedButton.styleFrom(
-                    foregroundColor: kDarks,
-                    side: const BorderSide(color: kDarks),
+                    foregroundColor: Theme.of(context).colorScheme.onSurface,
+                    side: BorderSide(
+                      color: Theme.of(context).colorScheme.onSurface,
+                    ),
                     shape: const StadiumBorder(),
                   ),
                 ),
@@ -1426,3 +1432,4 @@ class _ShowcaseForm {
     required this.options,
   });
 }
+ 

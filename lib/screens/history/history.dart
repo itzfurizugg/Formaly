@@ -32,34 +32,44 @@ class _HistoryScreenState extends State<HistoryScreen> {
   @override
   Widget build(BuildContext context) {
     final histories = List<HistoryModel>.from(HistoryService.historyList);
+    final colors = Theme.of(context).colorScheme;
+
     return Scaffold(
-      backgroundColor: kBase,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
-        backgroundColor: kBase,
+        backgroundColor: colors.surface,
         surfaceTintColor: Colors.transparent,
         elevation: 0,
-        title: const Text(
+        title: Text(
           'Riwayat',
           style: TextStyle(
             fontFamily: 'FunnelDisplay',
             fontSize: 26,
             fontWeight: FontWeight.w700,
-            color: kDarks,
+            color: colors.onSurface,
           ),
         ),
         actions: [
           IconButton(
             onPressed: _isLoading ? null : _loadHistory,
-            icon: const Icon(Icons.refresh_rounded, color: kDone),
+            icon: Icon(
+              Icons.refresh_rounded,
+              color: kDone,
+            ),
           ),
         ],
       ),
       body: _isLoading
-          ? const Center(child: CircularProgressIndicator(color: kDone))
+          ? Center(
+              child: CircularProgressIndicator(
+                color: kDone,
+              ),
+            )
           : histories.isEmpty
           ? _emptyState()
           : RefreshIndicator(
               color: kDone,
+              backgroundColor: colors.surface,
               onRefresh: _loadHistory,
               child: LayoutBuilder(
                 builder: (context, constraints) {
@@ -69,7 +79,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
                       padding: padding,
                       physics: const AlwaysScrollableScrollPhysics(),
                       itemCount: histories.length,
-                      separatorBuilder: (_, __) => const SizedBox(height: 12),
+                      separatorBuilder: (_, _) => const SizedBox(height: 12),
                       itemBuilder: (context, index) =>
                           _card(context, histories[index]),
                     );
@@ -95,24 +105,36 @@ class _HistoryScreenState extends State<HistoryScreen> {
     );
   }
 
-  Widget _emptyState() => RefreshIndicator(
-    color: kDone,
-    onRefresh: _loadHistory,
-    child: ListView(
-      physics: const AlwaysScrollableScrollPhysics(),
-      children: const [
-        SizedBox(height: 170),
-        Icon(Icons.description_outlined, size: 52, color: kTinted),
-        SizedBox(height: 14),
-        Center(
-          child: Text(
-            'Belum ada histori formulir.',
-            style: TextStyle(fontFamily: 'FunnelDisplay', color: kTinted),
+  Widget _emptyState() {
+    final colors = Theme.of(context).colorScheme;
+
+    return RefreshIndicator(
+      color: kDone,
+      backgroundColor: colors.surface,
+      onRefresh: _loadHistory,
+      child: ListView(
+        physics: const AlwaysScrollableScrollPhysics(),
+        children: [
+          const SizedBox(height: 170),
+          const Icon(
+            Icons.description_outlined,
+            size: 52,
+            color: kTinted,
           ),
-        ),
-      ],
-    ),
-  );
+          const SizedBox(height: 14),
+          Center(
+            child: Text(
+              'Belum ada histori formulir.',
+              style: TextStyle(
+                fontFamily: 'FunnelDisplay',
+                color: colors.onSurfaceVariant,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
 
   Color? _parseHeaderColor(String? value) {
     final color = value?.trim() ?? '';
@@ -157,12 +179,14 @@ class _HistoryScreenState extends State<HistoryScreen> {
           : Image.network(
               source,
               fit: BoxFit.cover,
-              errorBuilder: (_, __, ___) => fallback,
+              errorBuilder: (_, _, _) => fallback,
             ),
     );
   }
 
   Widget _card(BuildContext context, HistoryModel history) {
+    final colors = Theme.of(context).colorScheme;
+
     final failed =
         history.showScore &&
         history.passingScore != null &&
@@ -181,7 +205,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
         ? 'Tanpa Waktu'
         : history.duration;
     return Material(
-      color: Colors.white,
+      color: colors.surface,
       borderRadius: BorderRadius.circular(14),
       child: InkWell(
         borderRadius: BorderRadius.circular(14),
@@ -213,11 +237,11 @@ class _HistoryScreenState extends State<HistoryScreen> {
                           history.title.trim().isEmpty ? 'Form' : history.title,
                           maxLines: 2,
                           overflow: TextOverflow.ellipsis,
-                          style: const TextStyle(
+                          style: TextStyle(
                             fontFamily: 'FunnelDisplay',
                             fontSize: 19,
                             fontWeight: FontWeight.w700,
-                            color: kDarks,
+                            color: colors.onSurface,
                           ),
                         ),
                       ),
@@ -246,42 +270,42 @@ class _HistoryScreenState extends State<HistoryScreen> {
                   const SizedBox(height: 4),
                   Text(
                     'Oleh ${history.author}',
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontFamily: 'FunnelDisplay',
                       fontSize: 12,
-                      color: kTinted,
+                      color: colors.onSurfaceVariant,
                     ),
                   ),
                   const SizedBox(height: 14),
                   Row(
                     children: [
-                      const Icon(
+                      Icon(
                         Icons.timer_outlined,
                         size: 15,
-                        color: kTinted,
+                        color: colors.onSurfaceVariant,
                       ),
                       const SizedBox(width: 5),
                       Text(
                         duration,
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontFamily: 'FunnelDisplay',
                           fontSize: 12,
-                          color: kTinted,
+                          color: colors.onSurfaceVariant,
                         ),
                       ),
                       const SizedBox(width: 14),
-                      const Icon(
+                      Icon(
                         Icons.description_outlined,
                         size: 15,
-                        color: kTinted,
+                        color: colors.onSurfaceVariant,
                       ),
                       const SizedBox(width: 5),
                       Text(
                         '${history.totalQuestion} soal',
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontFamily: 'FunnelDisplay',
                           fontSize: 12,
-                          color: kTinted,
+                          color: colors.onSurfaceVariant,
                         ),
                       ),
                     ],

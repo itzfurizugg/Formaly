@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_svg/flutter_svg.dart';
 
-import 'auth_shell.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 
 class FormalyTopBar extends StatelessWidget {
   const FormalyTopBar({super.key});
@@ -9,7 +8,7 @@ class FormalyTopBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Material(
-      color: kBase,
+      color: Theme.of(context).colorScheme.surface,
       child: SafeArea(
         bottom: false,
         child: SizedBox(
@@ -23,6 +22,13 @@ class FormalyTopBar extends StatelessWidget {
                 width: 104,
                 height: 31,
                 fit: BoxFit.contain,
+                colorFilter:
+                    Theme.of(context).brightness == Brightness.dark
+                        ? const ColorFilter.mode(
+                            Colors.white,
+                            BlendMode.srcIn,
+                          )
+                        : null,
               ),
             ),
           ),
