@@ -1,0 +1,9 @@
+services:
+  formaly:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: formaly
+    restart: unless-stopped
+    ports:
+      - "33333:80"
