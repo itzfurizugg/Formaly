@@ -18,6 +18,7 @@ import { Spinner } from "../../components/loading"
 import { showAlert } from "../../lib/alerts"
 import { networkNow, networkISOString, syncTime, onTimeSync } from "../../lib/networkTime"
 import { isStandardMode } from "../../lib/formPages"
+import { useTheme } from "../../lib/theme-context"
 
 interface Option {
     id: string
@@ -68,7 +69,24 @@ function normalizeHex(value: string | null | undefined): string | null {
     return `#${h.toLowerCase()}`
 }
 
-/** Warna aksen hex jadi rgba dengan alpha tertentu. */
+/** Campur hex dengan putih — t=1 jadi putih penuh; dipakai bikin pastel. */
+function mixWithBlack(hex: string, t: number): string {
+    const n = parseInt(hex.replace("#", ""), 16)
+    const mix = (c: number) => Math.round(c * (1 - t))
+    const to = (v: number) => v.toString(16).padStart(2, "0")
+    return `#${to(mix((n >> 16) & 255))}${to(mix((n >> 8) & 255))}${to(mix(n & 255))}`
+}
+
+function mixWithWhite(hex: string, t: number): string {
+    const n = parseInt(hex.replace("#", ""), 16)
+    const r = (n >> 16) & 255
+    const g = (n >> 8) & 255
+    const b = n & 255
+    const mix = (c: number) => Math.round(c * (1 - t) + 255 * t)
+    const to = (v: number) => v.toString(16).padStart(2, "0")
+    return `#${to(mix(r))}${to(mix(g))}${to(mix(b))}`
+}
+
 function accentRgba(hex: string, alpha: number): string {
     const n = parseInt(hex.replace("#", ""), 16)
     return `rgba(${(n >> 16) & 255}, ${(n >> 8) & 255}, ${n & 255}, ${alpha})`
@@ -101,8 +119,16 @@ function FormPage() {
     const { formId } = useParams()
     const navigate = useNavigate()
     const { user, loading: authLoading } = useAuth()
+    const { theme } = useTheme()
     const location = useLocation()
     const locationState = location.state as LocationState | null
+    // Tema form hanya diterapkan layar besar; mobile tetap layout lama.
+    const [isLg, setIsLg] = useState(typeof window !== "undefined" ? window.innerWidth >= 1024 : false)
+    useEffect(() => {
+        const onResize = () => setIsLg(window.innerWidth >= 1024)
+        window.addEventListener("resize", onResize)
+        return () => window.removeEventListener("resize", onResize)
+    }, [])
     // Submission dibuat di server lewat RPC start_form_submission (IN_PROGRESS)
     // sebelum halaman ini boleh dibuka. Tanpa itu, akses langsung via URL ditolak.
     const submissionId = locationState?.submissionId ?? null
@@ -135,6 +161,16 @@ function FormPage() {
     // Aksen tema form (header_color) — dipakai untuk bg lembut halaman, pil
     // opsi terpilih, dsb. Null kalau form tanpa warna kustom.
     const accent = normalizeHex(formMeta?.header_color)
+    // Tema = versi PASTEL dari warna header (dasar pekat dicampur putih besar-
+    // besaran), dipakai solid di semua permukaan supaya seragam warnanya.
+    // Hanya berlaku desktop (lg+); mobile tetap layout lama.
+    const themeBg = accent && isLg
+        ? (theme === "dark" ? mixWithBlack(accent, 0.9) : mixWithWhite(accent, 0.9))
+        : undefined
+    // Background halaman memakai pastel sama; dark mode memakai versi gelap aksen.
+    const pageBg = accent
+        ? (theme === "dark" ? mixWithBlack(accent, 0.9) : mixWithWhite(accent, 0.9))
+        : undefined
 
     // Flag ragu aktif: ada soal yang ditandai ragu-ragu. Selagi ada tanda ragu,
     // kirim manual diblokir; jawaban baru dikirim otomatis saat timer habis
@@ -593,7 +629,9 @@ function FormPage() {
     }
 
     const renderQuestionContent = (q: Question, indexLabel: number, isStandardModeCard = false) => (
-        <div className={`${isStandardModeCard ? "bg-white dark:bg-[#252525]" : "bg-base-300 lg:bg-white dark:bg-base-300"} border border-second p-3 sm:p-4 lg:p-6 lg:shadow-sm rounded-xl`}>
+        <div
+            className={`${isStandardModeCard ? "bg-white dark:bg-[#252525]" : "bg-white lg:bg-white dark:bg-base-300"} border border-second p-3 sm:p-4 lg:p-6 lg:shadow-sm rounded-xl mt-2`}
+        >
             <div className="flex items-center justify-between mb-3">
                 <div className="flex gap-2">
                     <p className="text-sm text-tinted font-semibold">Soal {indexLabel}</p>
@@ -743,7 +781,7 @@ function FormPage() {
                                         className={`shrink-0 w-5 h-5 rounded-full border-2 flex items-center justify-center ${isMulti ? "rounded-md" : "rounded-full"
                                             } ${selected && !accent ? "border-darks bg-darks" : "border-tinted"}`}
                                     >
-                                        {selected && <Check className="h-3 w-3 text-white dark:text-second" style={optText ? { color: optText } : undefined} strokeWidth={3} />}
+                                        {selected && <Check className="h-3 w-3 text-white dark:text-second" style={optText ? { color: optText } : undefined} strokeWidth={5} />}
                                     </span>
                                     {option.media_url && (
                                         <span className="shrink-0">
@@ -780,10 +818,25 @@ function FormPage() {
                 ) : isStandard ? (
                     <div
                         className="flex min-h-screen flex-col items-center px-3 pt-4 pb-24 sm:px-3.5 sm:pt-6 md:pb-6"
-                        style={accent ? { background: `linear-gradient(180deg, ${accentRgba(accent, 0.09)}, transparent 42vh)` } : undefined}
+                        style={pageBg ? { background: pageBg } : undefined}
                     >
                         <div className="w-full max-w-3xl xl:mt-3" style={{ zoom: pageZoom }}>
-                            {isStandard && currentSection && <div style={accent ? { borderTop: `3px solid ${accent}` } : undefined} className="sticky top-0 z-30 -mx-3 lg:-mx-3 mb-3 bg-base-300/95 px-3 py-2 backdrop-blur sm:mx-0 sm:px-2">
+                            <div
+                                className={`mb-4 overflow-hidden rounded-2xl ${themeBg ? "" : "hidden sm:block"}`}
+                                style={accent
+                                    ? { background: themeBg }
+                                    : { background: "var(--color-base-200)", border: "1px solid var(--color-second)" }}
+                            >
+                                <div className="px-5 py-5 sm:px-6 sm:py-6">
+                                    <h1 className="truncate text-lg sm:text-2xl font-bold" style={accent ? { color: accent } : undefined}>
+                                        {formMeta?.title || "Form"}
+                                    </h1>
+                                    <p className="mt-1 text-xs font-medium" style={accent ? { color: accentRgba(accent, 0.7) } : { color: "var(--color-base-content)" }}>
+                                        Bagian {current + 1} dari {sections.length}
+                                    </p>
+                                </div>
+                            </div>
+                            {isStandard && currentSection && <div  className="sticky top-0 z-30 -mx-3 lg:-mx-3 mb-3 bg-base-300/95 px-3 py-2 backdrop-blur sm:mx-0 sm:px-2">
                                 <div className="flex items-center justify-between gap-2 px-3 py-2">
                                     <div className="min-w-0 flex items-center gap-2">
                                         <h2 className="truncate text-base font-semibold text-darks sm:text-lg">{currentSection?.title || `Bagian ${current + 1}`}</h2>
@@ -843,7 +896,7 @@ function FormPage() {
                             )}
 
                             {/* Tombol navigasi section di bawah konten */}
-                            <div className="hidden md:flex items-center justify-between gap-3 lg:-mx-3 lg:px-3 sticky bottom-0 z-30 mt-4 py-3 bg-base-300">
+                            <div className="hidden md:flex items-center justify-between gap-3 lg:-mx-3 lg:px-3 sticky bottom-0 z-30 mt-4 py-3 bg-base-300" style={pageBg ? { background: pageBg } : undefined}>
                                 <PageIndicator total={total} current={current} onPrev={prev} onNext={next} onListClick={goToList} onRaguToggle={toggleRagu} onRequestSubmit={requestSubmit} submitting={submitting} label="Bagian" hideRagu />
                             </div>
                         </div>
@@ -851,7 +904,7 @@ function FormPage() {
 
                         {/* Mobile: bar fixed di bawah */}
                         <div className="fixed bottom-0 left-0 right-0 z-40 md:hidden pointer-events-none">
-                            <div className="bg-base-300 px-3 py-2 pb-[max(1.5rem,env(safe-area-inset-bottom))] border-t border-second/70">
+                            <div className="bg-base-300 px-3 py-2 pb-[max(1.5rem,env(safe-area-inset-bottom))] border-t border-second/70" style={pageBg ? { background: pageBg } : undefined}>
                                 <div className="w-full max-w-3xl mx-auto flex items-center justify-between gap-2 pointer-events-auto mt-2">
                                     {/* <span
                                         className={`inline-flex items-center gap-1 px-3 py-0.5 rounded-full text-[11px] font-semibold tabular-nums ${!hasTimer
@@ -879,17 +932,28 @@ function FormPage() {
                 ) : (
                     <div
                         className="flex min-h-screen flex-col items-center px-3 pt-4 pb-24 sm:px-3.5 sm:pt-6 md:pb-6"
-                        style={accent ? { background: `linear-gradient(180deg, ${accentRgba(accent, 0.09)}, transparent 42vh)` } : undefined}
+                        style={pageBg ? { background: pageBg } : undefined}
                     >
                         <div className="w-full max-w-3xl xl:mt-3" style={{ zoom: pageZoom }}>
-                            <div className="px-1 pb-3 sm:p-2 sm:mb-3 hidden sm:block" style={formMeta?.header_color ? { borderTop: `4px solid ${formMeta.header_color}` } : undefined}>
-                                <div className="flex items-center justify-between gap-2">
-                                    <h1 className="min-w-0 truncate text-lg sm:text-xl xl:text-4xl font-bold text-darks">{formMeta?.title || "Form"}</h1>
-                                    <span className="shrink-0 text-xs text-tinted tabular-nums">{current + 1}/{total}</span>
+                            <div
+                                className={`mb-4 overflow-hidden rounded-2xl ${themeBg ? "" : "hidden sm:block"}`}
+                                style={accent
+                                    ? { background: themeBg }
+                                    : { background: "var(--color-base-200)", border: "1px solid var(--color-second)" }}
+                            >
+                                <div className="px-5 py-5 sm:px-6 sm:py-6">
+                                    <div className="flex items-center justify-between gap-2">
+                                        <h1 className="min-w-0 truncate text-lg sm:text-2xl font-bold" style={accent ? { color: accent } : undefined}>
+                                            {formMeta?.title || "Form"}
+                                        </h1>
+                                        <span className="shrink-0 text-xs tabular-nums" style={accent ? { color: accent } : undefined}>
+                                            {current + 1}/{total}
+                                        </span>
+                                    </div>
+                                    <p className="mt-1 text-xs font-medium" style={accent ? { color: accentRgba(accent, 0.7) } : { color: "var(--color-base-content)" }}>
+                                        {current + 1} dari {total} soal
+                                    </p>
                                 </div>
-                                <p className="hidden sm:block text-xs text-tinted mt-1">
-                                    {current + 1} dari {total} soal
-                                </p>
                             </div>
                             <div className="relative flex items-center justify-end lg:hidden">
                                 <button
@@ -922,7 +986,7 @@ function FormPage() {
                             </motion.div>
 
                             {/* NOTE: LAYOUT DESKTOP (>= md) — PageIndicator & tombol Kirim inline di bawah konten */}
-                            <div className="hidden md:flex items-center justify-between gap-3 sticky bottom-0 z-30 mt-4 py-3 bg-base-300">
+                            <div className="hidden md:flex items-center justify-between gap-3 sticky bottom-0 z-30 mt-4 py-3 bg-base-300" style={pageBg ? { background: pageBg } : undefined}>
                                 <PageIndicator total={total} current={current} onPrev={prev} onNext={next} onListClick={goToList} isRagu={question ? !!raguQuestions[question.id] : false} onRaguToggle={toggleRagu} onRequestSubmit={requestSubmit} submitting={submitting} groupRagu />
                             </div>
                         </div>
@@ -930,8 +994,8 @@ function FormPage() {
 
                         {/* NOTE: LAYOUT MOBILE (< md) — bar fixed di bawah dengan gradasi */}
                         <div className="fixed bottom-0 left-0 right-0 z-40 md:hidden pointer-events-none">
-                            <div className="bg-base-300 px-3 pt-3 pb-[max(1.5rem,env(safe-area-inset-bottom))] border-t border-second/70">
-                                <div className="w-full max-w-3xl mx-auto flex flex-wrap items-center justify-between gap-2 pointer-events-auto mb-0">
+                            <div className="bg-base-300 px-3 pt-3 pb-[max(1.5rem,env(safe-area-inset-bottom))] border-t border-second/70" style={pageBg ? { background: pageBg } : undefined}>
+                                <div className="w-full max-w-3xl mx-auto flex flex-wrap items-center justify-between gap-2 pointer-events-auto mb-0" style={pageBg ? { background: pageBg } : undefined}>
                                     <PageIndicator total={total} current={current} onPrev={prev} onNext={next} onListClick={goToList} isRagu={question ? !!raguQuestions[question.id] : false} onRaguToggle={toggleRagu} onRequestSubmit={requestSubmit} submitting={submitting} />
                                 </div>
                             </div>
