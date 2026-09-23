@@ -1,4 +1,4 @@
-import { getModel, type AIModel } from "../pages/galileo/models"
+import { getModel, type AIModel } from "../pages/creator/galileo/models"
 
 export interface AIMedia {
     fileName: string
@@ -289,6 +289,8 @@ async function callModel(
                 return await callClaude(m, messages, system, controller.signal)
             case "Custom":
                 return await callCustom(m, messages, system, controller.signal)
+            default:
+                throw new Error(`Provider belum didukung: ${(m.provider as string) ?? "unknown"}`)
         }
     } catch (err) {
         if (err instanceof DOMException && err.name === "AbortError") {

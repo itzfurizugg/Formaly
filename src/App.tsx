@@ -60,8 +60,8 @@ const CreatorSubmissionDetail = lazy(() => creatorEntry().then((m) => ({ default
 const CreatorShared = lazy(() => creatorEntry().then((m) => ({ default: m.CreatorShared })))
 const CreatorLayout = lazy(() => creatorEntry().then((m) => ({ default: m.CreatorLayout })))
 const CreatorProfile = lazy(() => creatorEntry().then((m) => ({ default: m.CreatorProfile })))
-const CreatorGalileo = lazy(() => import("./pages/galileo/chat"))
-const CreatorGalileoGenerate = lazy(() => import("./pages/galileo/generate"))
+const CreatorGalileo = lazy(() => import("./pages/creator/galileo/chat"))
+const CreatorGalileoGenerate = lazy(() => import("./pages/creator/galileo/generate"))
 const ErrorHandling = lazy(() => import("./pages/errorHandling"))
 
 const hideNavPaths = ["/login", "/register", "/auth", "/forgot-password", "/reset-password", "/form/description", "/form", "/form/list", "/form/result", "/credit", "/pages/errorHandling", "/settings", "/upgrade-to-creator"]

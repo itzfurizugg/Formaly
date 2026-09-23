@@ -3,13 +3,13 @@ import { useEffect, useState, useRef } from "react"
 import { useNavigate } from "react-router-dom"
 import { FileText, Paperclip, Send, LayoutTemplate, Settings } from "lucide-react"
 import { motion, AnimatePresence } from "motion/react"
-import { Spinner } from "../../components/loading"
-import { supabase } from "../../lib/supabase"
-import { useAuth } from "../../lib/auth-context"
-import { extractFileText } from "../../lib/fileText"
+import { Spinner } from "../../../components/loading"
+import { supabase } from "../../../lib/supabase"
+import { useAuth } from "../../../lib/auth-context"
+import { extractFileText } from "../../../lib/fileText"
 import { DEFAULT_MODEL_ID } from "./models"
-import { fadeSlide } from "../../lib/motion"
-import BackButton from "../../components/backButton"
+import { fadeSlide } from "../../../lib/motion"
+import BackButton from "../../../components/backButton"
 
 interface PromptPayload {
     prompt: string
@@ -123,19 +123,21 @@ function ChatPage() {
     const timeGreeting =
         hour < 11 ? "Selamat Pagi" : hour < 15 ? "Selamat Siang" : hour < 19 ? "Selamat Sore" : "Selamat Malam"
 
-    const greetingMessages = [
-        { id: 1, message: "Halo, saya Galileo!" },
-        { id: 2, message: "Mulai membuat form Anda!" },
-        { id: 3, message: `${timeGreeting}, ${name}!` },
-        { id: 4, message: "Hal baru selalu mulai dari sini"}
+    const greetingMessages: { id: number; message: React.ReactNode }[] = [
+        { id: 1, message: <>Halo, saya <span className="font-bold">Galileo</span>!</> },
+        { id: 2, message: <>Mulai membuat <span className="italic">form</span> Anda!</> },
+        { id: 3, message: <>{timeGreeting}, <span className="font-bold">{name}</span>!</> },
+        { id: 4, message: <>Hal baru selalu mulai dari <span className="italic">sini</span></> },
     ]
 
-    const [greetingIndex] = useState(() => {
+    const greetingIndexRef = useRef<number | null>(null)
+    if (greetingIndexRef.current === null) {
         const last = Number(sessionStorage.getItem("galileo:greeting") ?? -1)
         const next = (last + 1) % greetingMessages.length
         sessionStorage.setItem("galileo:greeting", String(next))
-        return next
-    })
+        greetingIndexRef.current = next
+    }
+    const greetingIndex = greetingIndexRef.current
 
     // Auto-resize textarea: reset ke auto, lalu paksa sesuai scrollHeight.
     // CSS max-h-[45vh] + overflow-y-auto menghandle scroll kalau melebihi batas.
@@ -326,7 +328,7 @@ function ChatPage() {
                                         transition={{ duration: 0.3 }}
                                         className="inline-block"
                                     >
-                                        <span className="font-bold">{greetingMessages[greetingIndex].message}</span>
+                                        <span className="text-center">{greetingMessages[greetingIndex].message}</span>
                                     </motion.span>
                                 </AnimatePresence>
                             </h1>
