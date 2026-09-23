@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
@@ -337,6 +338,91 @@ class _HomePageState extends State<HomePage> {
         });
       }
     }
+  }
+
+  // ============================================================
+  // SCAN QR
+  // ============================================================
+
+  Future<void> _scanQr() async {
+    final String? scannedValue = await Navigator.push<String>(
+      context,
+      MaterialPageRoute(
+        builder: (_) => const QrScanScreen(),
+      ),
+    );
+
+    if (!mounted ||
+        scannedValue == null ||
+        scannedValue.trim().isEmpty) {
+      return;
+    }
+
+    final String value = scannedValue.trim();
+    final Uri? uri = Uri.tryParse(value);
+
+    if (uri == null) {
+      _showMessage(
+        'QR Code tidak valid.',
+        isError: true,
+      );
+      return;
+    }
+
+    final List<String> segments = uri.pathSegments;
+
+    // Format:
+    // https://formaly.my.id/form/description?formId=UUID
+    if (uri.path == '/form/description' ||
+        (segments.length >= 2 &&
+            segments[0] == 'form' &&
+            segments[1] == 'description')) {
+      final String formId =
+          uri.queryParameters['formId']?.trim() ?? '';
+
+      if (formId.isEmpty) {
+        _showMessage(
+          'Form ID pada QR Code tidak ditemukan.',
+          isError: true,
+        );
+        return;
+      }
+
+      await Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (_) => FormDetailScreen(
+            formId: formId,
+          ),
+        ),
+      );
+
+      return;
+    }
+
+    // Format:
+    // https://formaly.my.id/form/TAGS
+    if (segments.length >= 2 &&
+        segments[0] == 'form') {
+      final String tag = segments[1].trim();
+
+      if (tag.isEmpty) {
+        _showMessage(
+          'TAG pada QR Code tidak ditemukan.',
+          isError: true,
+        );
+        return;
+      }
+
+      searchController.text = tag;
+      await searchForm();
+      return;
+    }
+
+    _showMessage(
+      'Format QR Code Formaly tidak dikenali.',
+      isError: true,
+    );
   }
 
   // Mencari tag pada tabel `tags`.
@@ -734,10 +820,7 @@ class _HomePageState extends State<HomePage> {
                 ),
                 const SizedBox(height: 16),
                 OutlinedButton.icon(
-                  onPressed: () => Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (_) => const QrScanScreen()),
-                  ),
+                  onPressed: _scanQr,
                   icon: const Icon(Icons.qr_code_scanner_rounded),
                   label: const Text('Scan QR'),
                   style: OutlinedButton.styleFrom(
@@ -1402,16 +1485,33 @@ class QrScanScreen extends StatefulWidget {
 class _QrScanScreenState extends State<QrScanScreen> {
   bool _handled = false;
 
+  static const MethodChannel _qrSoundChannel =
+      MethodChannel(
+    'com.example.formaly/exam_security',
+  );
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: const Text('Scan QR')),
       body: MobileScanner(
-        onDetect: (capture) {
+        onDetect: (capture) async {
           if (_handled || capture.barcodes.isEmpty) return;
+
           final value = capture.barcodes.first.rawValue;
+
           if (value == null || value.isEmpty) return;
+
           _handled = true;
+
+          unawaited(
+            _qrSoundChannel
+              .invokeMethod('playQrScanSound')
+              .catchError((_) {}),
+            );
+
+          if (!mounted) return;
+
           Navigator.pop(context, value);
         },
       ),
@@ -1432,4 +1532,3 @@ class _ShowcaseForm {
     required this.options,
   });
 }
- 
