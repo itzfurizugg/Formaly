@@ -2,11 +2,11 @@ import { useEffect, useState } from "react"
 import { useParams } from "react-router-dom"
 import { Copy, Globe } from "lucide-react"
 import { motion } from "motion/react"
-import { showAlert } from "../../lib/alerts"
-import BackButton from "../../components/backButton"
-import FormTabs from "../../components/creator/formTabs"
-import { supabase } from "../../lib/supabase"
-import { fadeSlide, listContainer, listItem } from "../../lib/motion"
+import { showAlert } from "../../../lib/alerts"
+import BackButton from "../../../components/backButton"
+import FormTabs from "../../../components/creator/formTabs"
+import { supabase } from "../../../lib/supabase"
+import { fadeSlide, listContainer, listItem } from "../../../lib/motion"
 
 function Shared() {
     const { id } = useParams()

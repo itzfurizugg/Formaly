@@ -142,7 +142,7 @@ function CreatorSidebar() {
                 ))}
             </motion.nav>
 
-            <div className="p-3 border-t border-second shrink-0 pb-5">
+            <Link to="/creator/profile" className="block p-3 border-t border-second shrink-0 pb-5 hover:bg-base-300 transition-colors">
                 <div className="flex items-center gap-3 rounded-lg px-2 py-2 min-w-0">
                     <div className="w-9 h-9 rounded-full bg-done overflow-hidden flex items-center justify-center shrink-0 ring-2 ring-white dark:ring-second">
                         <span className="text-sm font-bold text-white dark:text-second">
@@ -154,7 +154,7 @@ function CreatorSidebar() {
                         <p className="text-xs text-tinted truncate">{profile?.email || "user@email.com"}</p>
                     </div>
                 </div>
-            </div>
+            </Link>
         </motion.aside>
     )
 }

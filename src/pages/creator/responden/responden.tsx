@@ -2,12 +2,12 @@ import { useEffect, useState, useCallback } from "react"
 import { useNavigate } from "react-router-dom"
 import { motion } from "motion/react"
 import { ChartNoAxesColumn, ChevronRight, FileText, ListChecks, Timer } from "lucide-react"
-import { supabase } from "../../lib/supabase"
-import { useAuth } from "../../lib/auth-context"
-import BackButton from "../../components/backButton"
-import FormHeader from "../../components/creator/formHeader"
-import { listContainer, listItem } from "../../lib/motion"
-import { showAlert } from "../../lib/alerts"
+import { supabase } from "../../../lib/supabase"
+import { useAuth } from "../../../lib/auth-context"
+import BackButton from "../../../components/backButton"
+import FormHeader from "../../../components/creator/formHeader"
+import { listContainer, listItem } from "../../../lib/motion"
+import { showAlert } from "../../../lib/alerts"
 
 interface FormRow {
     id: string

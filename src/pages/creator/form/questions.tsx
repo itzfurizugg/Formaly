@@ -2,30 +2,30 @@ import { useEffect, useState, useCallback, useMemo, useRef, type DragEvent } fro
 import { useParams } from "react-router-dom"
 import { AnimatePresence, motion } from "motion/react"
 import { Plus, Pencil, Trash2, Save, X, Check, GripVertical, ImageIcon, CheckCircle, ListChecks, LayoutList, TriangleAlert, ChevronDown } from "lucide-react"
-import { supabase } from "../../lib/supabase"
-import { useAuth } from "../../lib/auth-context"
-import QuestionImportModal from "../../components/creator/QuestionImportModal"
-import CreateButton from "../../components/creator/createButton"
-import MediaUpload from "../../components/MediaUpload"
-import QuestionMedia from "../../components/QuestionMedia"
+import { supabase } from "../../../lib/supabase"
+import { useAuth } from "../../../lib/auth-context"
+import QuestionImportModal from "../../../components/creator/QuestionImportModal"
+import CreateButton from "../../../components/creator/createButton"
+import MediaUpload from "../../../components/MediaUpload"
+import QuestionMedia from "../../../components/QuestionMedia"
 import {
     extractQuestionConfig,
     embedQuestionConfig,
     FILE_UPLOAD_DEFAULTS,
     type QuestionConfig,
     type DateTimeVariant,
-} from "../../lib/questionConfig"
-import RichTextEditor, { RichText } from "../../components/richText"
-import { richTextToPlain } from "../../lib/richtext"
-import { alertSaveSuccess, confirmDelete, showAlert } from "../../lib/alerts"
-import { deleteStoredMedia } from "../../lib/mediaStorage"
-import { collectQuestionMediaUrls } from "../../lib/mediaCleanup"
-import { pageGet, pageSet } from "../../lib/pageCache"
-import { easeOutExpo } from "../../lib/motion"
-import BackButton from "../../components/backButton"
-import Switch from "../../components/switch"
-import FormTabs from "../../components/creator/formTabs"
-import { Spinner } from "../../components/loading"
+} from "../../../lib/questionConfig"
+import RichTextEditor, { RichText } from "../../../components/richText"
+import { richTextToPlain } from "../../../lib/richtext"
+import { alertSaveSuccess, confirmDelete, showAlert } from "../../../lib/alerts"
+import { deleteStoredMedia } from "../../../lib/mediaStorage"
+import { collectQuestionMediaUrls } from "../../../lib/mediaCleanup"
+import { pageGet, pageSet } from "../../../lib/pageCache"
+import { easeOutExpo } from "../../../lib/motion"
+import BackButton from "../../../components/backButton"
+import Switch from "../../../components/switch"
+import FormTabs from "../../../components/creator/formTabs"
+import { Spinner } from "../../../components/loading"
 import {
     fetchPagesWithQuestions,
     createPage,
@@ -38,7 +38,7 @@ import {
     defaultPageTitle,
     ORPHAN_PAGE_ID,
     type FormPage,
-} from "../../lib/formPages"
+} from "../../../lib/formPages"
 
 const TYPES_WITH_OPTIONS = ["single_choice", "multiple_choice", "dropdown"]
 const TYPES_NO_OPTIONS = ["text", "file_upload", "date_time"] as const

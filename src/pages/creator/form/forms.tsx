@@ -1,9 +1,9 @@
 import { Link } from "react-router-dom"
 import { Plus } from "lucide-react"
 import { motion } from "motion/react"
-import FormList from "../../components/creator/formList"
-import BackButton from "../../components/backButton"
-import { fadeSlide } from "../../lib/motion"
+import FormList from "../../../components/creator/formList"
+import BackButton from "../../../components/backButton"
+import { fadeSlide } from "../../../lib/motion"
 
 function CreatorForms() {
     return (

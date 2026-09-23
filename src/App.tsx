@@ -59,6 +59,7 @@ const CreatorSubmissions = lazy(() => creatorEntry().then((m) => ({ default: m.C
 const CreatorSubmissionDetail = lazy(() => creatorEntry().then((m) => ({ default: m.CreatorSubmissionDetail })))
 const CreatorShared = lazy(() => creatorEntry().then((m) => ({ default: m.CreatorShared })))
 const CreatorLayout = lazy(() => creatorEntry().then((m) => ({ default: m.CreatorLayout })))
+const CreatorProfile = lazy(() => creatorEntry().then((m) => ({ default: m.CreatorProfile })))
 const CreatorGalileo = lazy(() => import("./pages/galileo/chat"))
 const CreatorGalileoGenerate = lazy(() => import("./pages/galileo/generate"))
 const ErrorHandling = lazy(() => import("./pages/errorHandling"))
@@ -98,7 +99,7 @@ function AppShell() {
     })
     return () => subscription.unsubscribe()
   }, [location.pathname, navigate])
-  const isCreator = location.pathname.startsWith("/creator")
+  const isCreator = location.pathname.startsWith("/creator") || (location.pathname === "/settings" && new URLSearchParams(location.search).get("mode") === "creator")
 
   // Path yang punya halaman nyata. Selain ini jatuh ke ErrorHandling (route "*"),
   // jadi Navbar umum & Dock disembunyikan biar halaman error tampil minim.
@@ -115,7 +116,7 @@ function AppShell() {
   // Navbar umum & Dock disembunyikan pada daftar path di bawah (auth, form,
   // credit, dll.) — senada dengan aturan di lib/nav.ts (isGeneralNavVisible).
   const navHiddenHere =
-    hideNavPaths.includes(location.pathname) ||
+    (hideNavPaths.includes(location.pathname) && !(location.pathname === "/settings" && isCreator)) ||
     /^\/form\/[^/]+$/.test(location.pathname) ||
     isResultPage ||
     isDonePage
@@ -256,6 +257,14 @@ function AppShell() {
                 element={
                   <CreatorGuard>
                     <CreatorGalileo />
+                  </CreatorGuard>
+                }
+              />
+              <Route
+                path="/creator/profile"
+                element={
+                  <CreatorGuard>
+                    <CreatorProfile />
                   </CreatorGuard>
                 }
               />

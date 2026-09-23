@@ -32,7 +32,7 @@ function SettingsPage() {
     return (
         <div className="flex flex-col items-center px-3.5 sm:px-6 py-5 sm:py-15">
             <div className="w-full max-w-2xl">
-                <BackButton to="/profile" showOnDesktop />
+                <BackButton showOnDesktop />
 
                 <div className="ml-2">
                     <h1 className="text-3xl lg:text-5xl font-bold font-display text-darks mb-1">Pengaturan</h1>

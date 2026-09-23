@@ -12,24 +12,24 @@ import {
     Pipette,
     Repeat,
 } from "lucide-react"
-import { supabase } from "../../lib/supabase"
-import { useAuth } from "../../lib/auth-context"
-import { alertSaveError, alertSaveSuccess, confirmDelete, showAlert } from "../../lib/alerts"
-import { fadeSlide } from "../../lib/motion"
-import { PRESET_HEADER_COLORS } from "../../lib/colorbase"
-import { isValidImageUrl } from "../../lib/imageUrl"
-import { pageGet, pageSet } from "../../lib/pageCache"
-import { deleteStoredMedia } from "../../lib/mediaStorage"
-import { collectFormMediaUrls } from "../../lib/mediaCleanup"
-import MediaUpload from "../../components/MediaUpload"
-import RichTextEditor from "../../components/richText"
-import BackButton from "../../components/backButton"
-import Switch from "../../components/switch"
-import FormTabs from "../../components/creator/formTabs"
-import FormHeader from "../../components/creator/formHeader"
-import TagInput from "../../components/creator/TagInput"
-import ModeSelector from "../../components/creator/ModeSelector"
-import Loading, { Spinner } from "../../components/loading"
+import { supabase } from "../../../lib/supabase"
+import { useAuth } from "../../../lib/auth-context"
+import { alertSaveError, alertSaveSuccess, confirmDelete, showAlert } from "../../../lib/alerts"
+import { fadeSlide } from "../../../lib/motion"
+import { PRESET_HEADER_COLORS } from "../../../lib/colorbase"
+import { isValidImageUrl } from "../../../lib/imageUrl"
+import { pageGet, pageSet } from "../../../lib/pageCache"
+import { deleteStoredMedia } from "../../../lib/mediaStorage"
+import { collectFormMediaUrls } from "../../../lib/mediaCleanup"
+import MediaUpload from "../../../components/MediaUpload"
+import RichTextEditor from "../../../components/richText"
+import BackButton from "../../../components/backButton"
+import Switch from "../../../components/switch"
+import FormTabs from "../../../components/creator/formTabs"
+import FormHeader from "../../../components/creator/formHeader"
+import TagInput from "../../../components/creator/TagInput"
+import ModeSelector from "../../../components/creator/ModeSelector"
+import Loading, { Spinner } from "../../../components/loading"
 import {
     LAYOUT_QUIZ,
     LAYOUT_STANDARD,
@@ -37,8 +37,8 @@ import {
     migrateToQuiz,
     migrateToStandard,
     type FormLayoutMode,
-} from "../../lib/formPages"
-import ModalPortal from "../../components/modalPortal"
+} from "../../../lib/formPages"
+import ModalPortal from "../../../components/modalPortal"
 
 interface FormSettingsData {
     show_score_to_respondent: boolean
@@ -530,7 +530,7 @@ function FormEdit() {
                         Border transparan bawah dipakai untuk mencegah margin-bottom FormTabs
                         collapse keluar dari box sticky, sehingga strip 24px di bawah pill ikut
                         dilapisi bg-white dark:bg-second dan shadow card tidak bocor saat lewat di bawahnya. */}
-                        <div className="lg:sticky lg:top-0 lg:z-30 lg:bg-base-300 dark:bg-base lg:pt-1 bg-base-300 w-full">
+                        <div className="sticky top-0 z-30 w-full bg-base-300 dark:bg-base lg:pt-1">
                             <FormTabs id={id} active="detail" />
                         </div>
 
@@ -598,7 +598,7 @@ function FormEdit() {
                                             </div>
                                         </div>
 
-                                        <div>
+                                        <div className="py-2">
                                             <label className="block text-sm font-medium text-darks mb-1.5">Status</label>
                                             <div className="grid grid-cols-2 gap-2">
                                                 {STATUS_OPTIONS.map((opt) => {
@@ -686,7 +686,7 @@ function FormEdit() {
 
                             {/* Kolom kanan sticky: Header (Banner) + Hapus Form. Di mobile `contents`
                             supaya Banner urut ke-2 (setelah Detail) dan Hapus di paling bawah. */}
-                            <div className="contents lg:block lg:col-span-5 lg:space-y-6 lg:sticky lg:top-20 lg:self-start mr-1">
+                            <div className="contents lg:block lg:col-span-5 lg:space-y-6 lg:sticky lg:top-20 lg:self-start mr-1 bg-base-300 dark:bg-base">
                                 {/* 3. Header (Tampilan Banner) */}
                                 <div className="order-3 lg:order-none bg-white dark:bg-second border border-second p-3 shadow-sm rounded-xl">
                                     <div>

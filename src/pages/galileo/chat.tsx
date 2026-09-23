@@ -91,7 +91,7 @@ const QUICK_PROMPTS = [
 
 function ChatPage() {
     const navigate = useNavigate()
-    const { user } = useAuth()
+    const { user, profile } = useAuth()
 
     const [message, setMessage] = useState("")
     const [file, setFile] = useState<File | null>(null)
@@ -115,6 +115,27 @@ function ChatPage() {
     const [randomizeQuestions, setRandomizeQuestions] = useState(false)
     const [allowMultipleSubmissions, setAllowMultipleSubmissions] = useState(false)
     const [showSettings, setShowSettings] = useState(false)
+
+    // Sapaan berdasarkan waktu + nama user; pesan ganti bergantian tiap refresh
+    // (urutan 1 → 2 → 3 → 4 → 1…), index terakhir disimpan di sessionStorage.
+    const name = profile?.name || "Teman"
+    const hour = new Date().getHours()
+    const timeGreeting =
+        hour < 11 ? "Selamat Pagi" : hour < 15 ? "Selamat Siang" : hour < 19 ? "Selamat Sore" : "Selamat Malam"
+
+    const greetingMessages = [
+        { id: 1, message: "Halo, saya Galileo!" },
+        { id: 2, message: "Mulai membuat form Anda!" },
+        { id: 3, message: `${timeGreeting}, ${name}!` },
+        { id: 4, message: "Hal baru selalu mulai dari sini"}
+    ]
+
+    const [greetingIndex] = useState(() => {
+        const last = Number(sessionStorage.getItem("galileo:greeting") ?? -1)
+        const next = (last + 1) % greetingMessages.length
+        sessionStorage.setItem("galileo:greeting", String(next))
+        return next
+    })
 
     // Auto-resize textarea: reset ke auto, lalu paksa sesuai scrollHeight.
     // CSS max-h-[45vh] + overflow-y-auto menghandle scroll kalau melebihi batas.
@@ -296,7 +317,18 @@ function ChatPage() {
                             transition={{ layout: { type: "spring", stiffness: 340, damping: 30 } }}
                         >
                             <h1 className="text-center font-default text-3xl sm:text-4xl text-darks">
-                                Halo, saya <span className="font-bold">Galileo</span>!
+                                <AnimatePresence mode="wait">
+                                    <motion.span
+                                        key={greetingIndex}
+                                        initial={{ opacity: 0, y: 10 }}
+                                        animate={{ opacity: 1, y: 0 }}
+                                        exit={{ opacity: 0, y: -10 }}
+                                        transition={{ duration: 0.3 }}
+                                        className="inline-block"
+                                    >
+                                        <span className="font-bold">{greetingMessages[greetingIndex].message}</span>
+                                    </motion.span>
+                                </AnimatePresence>
                             </h1>
                             <p className="text-center text-xs sm:text-sm text-tinted mt-2 mb-5 sm:mb-6 px-2">
                                 Mulai membuat form dengan mudah! Galileo adalah AI Form Builder milik <span className="font-bold">Formaly</span>

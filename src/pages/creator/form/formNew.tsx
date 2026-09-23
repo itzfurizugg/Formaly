@@ -2,18 +2,18 @@ import { useState } from "react"
 import { useNavigate } from "react-router-dom"
 import { motion } from "motion/react"
 import { Pipette } from "lucide-react"
-import { supabase } from "../../lib/supabase"
-import { useAuth } from "../../lib/auth-context"
-import BackButton from "../../components/backButton"
-import { alertSaveError, alertSaveSuccess } from "../../lib/alerts"
-import RichTextEditor from "../../components/richText"
-import { Spinner } from "../../components/loading"
-import { fadeSlide } from "../../lib/motion"
-import ModeSelector from "../../components/creator/ModeSelector"
-import FormHeader from "../../components/creator/formHeader"
-import MediaUpload from "../../components/MediaUpload"
-import { PRESET_HEADER_COLORS } from "../../lib/colorbase"
-import { LAYOUT_QUIZ, type FormLayoutMode } from "../../lib/formPages"
+import { supabase } from "../../../lib/supabase"
+import { useAuth } from "../../../lib/auth-context"
+import BackButton from "../../../components/backButton"
+import { alertSaveError, alertSaveSuccess } from "../../../lib/alerts"
+import RichTextEditor from "../../../components/richText"
+import { Spinner } from "../../../components/loading"
+import { fadeSlide } from "../../../lib/motion"
+import ModeSelector from "../../../components/creator/ModeSelector"
+import FormHeader from "../../../components/creator/formHeader"
+import MediaUpload from "../../../components/MediaUpload"
+import { PRESET_HEADER_COLORS } from "../../../lib/colorbase"
+import { LAYOUT_QUIZ, type FormLayoutMode } from "../../../lib/formPages"
 
 function FormNew() {
     const navigate = useNavigate()
@@ -70,16 +70,15 @@ function FormNew() {
             className="flex flex-col items-center px-3.5 sm:px-6 py-5 sm:py-15"
         >
             <div className="w-full max-w-7xl">
-                <BackButton to="/creator/forms" showOnDesktop />
-
                 <form onSubmit={handleSubmit} className="space-y-4">
-                    <div className="sticky top-16 sm:top-15 lg:top-0 z-30 -mx-3.5 box-border min-h-[108px] bg-base-300 px-3.5 py-3 sm:-mx-6 sm:px-6 sm:py-4 sm:min-h-[96px] lg:min-h-[72px]">
-                        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                    <div className="sticky top-0 z-30 -mx-3.5 box-border min-h-[108px] bg-base-300 px-3.5 py-3 pb-3 sm:-mx-6 sm:px-6 sm:pb-4 lg:pt-4 sm:min-h-[96px] lg:min-h-[72px]">
+                        <BackButton to="/creator/forms" showOnDesktop />
+                        <div className="flex flex-col gap-3 flex-row items-center justify-between">
                             <div>
                                 <h1 className="text-2xl sm:text-4xl font-bold text-darks">Buat Form Baru</h1>
                                 <p className="text-sm text-tinted">Lengkapi informasi dasar form.</p>
                             </div>
-                            <button type="submit" disabled={loading || uploadingBanner} className="btn bg-darks text-base justify-center h-11 rounded-xl border-none w-full sm:w-auto sm:px-6 hover:opacity-90 transition-opacity disabled:opacity-60">
+                            <button type="submit" disabled={loading || uploadingBanner} className="btn bg-darks text-base justify-center h-11 rounded-full lg:rounded-xl border-none w-fit px-4 hover:opacity-90 transition-opacity disabled:opacity-60">
                                 {loading ? <Spinner size={16} /> : "Simpan & Lanjut"}
                             </button>
                         </div>
