@@ -59,6 +59,31 @@ function shuffleInPlace<T>(items: T[]): T[] {
     return items
 }
 
+/** Normalisasi hex (#abc → #aabbcc); null kalau bukan hex valid. */
+function normalizeHex(value: string | null | undefined): string | null {
+    if (!value) return null
+    let h = value.replace("#", "").trim()
+    if (h.length === 3) h = h.split("").map((c) => c + c).join("")
+    if (h.length !== 6 || !/^[0-9a-fA-F]{6}$/.test(h)) return null
+    return `#${h.toLowerCase()}`
+}
+
+/** Warna aksen hex jadi rgba dengan alpha tertentu. */
+function accentRgba(hex: string, alpha: number): string {
+    const n = parseInt(hex.replace("#", ""), 16)
+    return `rgba(${(n >> 16) & 255}, ${(n >> 8) & 255}, ${n & 255}, ${alpha})`
+}
+
+/** Teks kontras untuk dipakai di atas warna aksen (putih/abu pekat). */
+function accentTextColor(hex: string): string {
+    const n = parseInt(hex.replace("#", ""), 16)
+    const r = (n >> 16) & 255
+    const g = (n >> 8) & 255
+    const b = n & 255
+    const lum = 0.2126 * r + 0.7152 * g + 0.0722 * b
+    return lum > 160 ? "#1F2937" : "#FFFFFF"
+}
+
 interface LocationState {
     current?: number
     answers?: Answer
@@ -106,6 +131,10 @@ function FormPage() {
     const prevTimeRef = useRef<number | null>(null)
 
     const isStandard = isStandardMode(layoutMode)
+
+    // Aksen tema form (header_color) — dipakai untuk bg lembut halaman, pil
+    // opsi terpilih, dsb. Null kalau form tanpa warna kustom.
+    const accent = normalizeHex(formMeta?.header_color)
 
     // Flag ragu aktif: ada soal yang ditandai ragu-ragu. Selagi ada tanda ragu,
     // kirim manual diblokir; jawaban baru dikirim otomatis saat timer habis
@@ -696,21 +725,25 @@ function FormPage() {
                         const selected = isMulti
                             ? Array.isArray(answers[q.id]) && (answers[q.id] as string[]).includes(option.id)
                             : answers[q.id] === option.id
+                        const optBg = selected && accent ? accent : null
+                        const optText = selected && accent ? accentTextColor(accent) : null
                         return (
                             <button
                                 key={option.id}
                                 onClick={() => selectOption(q, option.id)}
+                                style={optBg ? ({ "--opt-bg": optBg, "--opt-color": optText! } as React.CSSProperties) : undefined}
                                 className={`w-full text-left px-3.5 py-3 rounded-lg border text-sm transition-colors ${selected
-                                    ? "bg-darks border-darks text-white dark:text-second font-medium"
-                                    : "bg-white dark:bg-base-300 border-second text-darks hover:border-darks/50"
+                                    ? "sv-option-selected font-medium"
+                                    : "bg-white dark:bg-base-300 border-second hover:border-darks/50"
                                     }`}
                             >
                                 <span className="flex items-center gap-3">
                                     <span
+                                        style={optBg ? { background: optBg, borderColor: optBg } : undefined}
                                         className={`shrink-0 w-5 h-5 rounded-full border-2 flex items-center justify-center ${isMulti ? "rounded-md" : "rounded-full"
-                                            } ${selected ? "border-darks bg-darks" : "border-tinted"}`}
+                                            } ${selected && !accent ? "border-darks bg-darks" : "border-tinted"}`}
                                     >
-                                        {selected && <Check className="h-3 w-3 text-white dark:text-second" strokeWidth={3} />}
+                                        {selected && <Check className="h-3 w-3 text-white dark:text-second" style={optText ? { color: optText } : undefined} strokeWidth={3} />}
                                     </span>
                                     {option.media_url && (
                                         <span className="shrink-0">
@@ -745,9 +778,12 @@ function FormPage() {
                         </button>
                     </div>
                 ) : isStandard ? (
-                    <div className="flex min-h-screen flex-col items-center px-3 pt-4 pb-24 sm:px-3.5 sm:pt-6 md:pb-6">
+                    <div
+                        className="flex min-h-screen flex-col items-center px-3 pt-4 pb-24 sm:px-3.5 sm:pt-6 md:pb-6"
+                        style={accent ? { background: `linear-gradient(180deg, ${accentRgba(accent, 0.09)}, transparent 42vh)` } : undefined}
+                    >
                         <div className="w-full max-w-3xl xl:mt-3" style={{ zoom: pageZoom }}>
-                            {isStandard && currentSection && <div className="sticky top-0 z-30 -mx-3 lg:-mx-3 mb-3 bg-base-300/95 px-3 py-2 backdrop-blur sm:mx-0 sm:px-2">
+                            {isStandard && currentSection && <div style={accent ? { borderTop: `3px solid ${accent}` } : undefined} className="sticky top-0 z-30 -mx-3 lg:-mx-3 mb-3 bg-base-300/95 px-3 py-2 backdrop-blur sm:mx-0 sm:px-2">
                                 <div className="flex items-center justify-between gap-2 px-3 py-2">
                                     <div className="min-w-0 flex items-center gap-2">
                                         <h2 className="truncate text-base font-semibold text-darks sm:text-lg">{currentSection?.title || `Bagian ${current + 1}`}</h2>
@@ -841,7 +877,10 @@ function FormPage() {
                         </button>
                     </div>
                 ) : (
-                    <div className="flex min-h-screen flex-col items-center px-3 pt-4 pb-24 sm:px-3.5 sm:pt-6 md:pb-6">
+                    <div
+                        className="flex min-h-screen flex-col items-center px-3 pt-4 pb-24 sm:px-3.5 sm:pt-6 md:pb-6"
+                        style={accent ? { background: `linear-gradient(180deg, ${accentRgba(accent, 0.09)}, transparent 42vh)` } : undefined}
+                    >
                         <div className="w-full max-w-3xl xl:mt-3" style={{ zoom: pageZoom }}>
                             <div className="px-1 pb-3 sm:p-2 sm:mb-3 hidden sm:block" style={formMeta?.header_color ? { borderTop: `4px solid ${formMeta.header_color}` } : undefined}>
                                 <div className="flex items-center justify-between gap-2">

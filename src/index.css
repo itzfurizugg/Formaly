@@ -399,6 +399,25 @@ body::-webkit-scrollbar {
   color: inherit;
 }
 
+/* Opsi terpilih (tombol bg-darks): teks rich harus ikut putih, bukan
+   --color-base-content dari tema yang menimpa class text-white induk. */
+.rich-content.text-light {
+  color: #fff;
+}
+
+/* Opsi terpilih bertema — background/teks mengikuti warna aksen form
+   (--opt-bg / --opt-color di-set inline dari header_color). Tanpa aksen
+   jatuh ke var default darks + putih. */
+.sv-option-selected {
+  background: var(--opt-bg, var(--color-darks));
+  border-color: var(--opt-bg, var(--color-darks));
+  color: var(--opt-color, #fff);
+}
+
+.sv-option-selected .rich-content {
+  color: var(--opt-color, #fff);
+}
+
 .rich-content p {
   margin: 0 0 0.5em;
 }

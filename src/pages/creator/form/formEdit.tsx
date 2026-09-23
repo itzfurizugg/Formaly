@@ -691,10 +691,10 @@ function FormEdit() {
                                 <div className="order-3 lg:order-none bg-white dark:bg-second border border-second p-3 shadow-sm rounded-xl">
                                     <div>
                                         <div className="flex items-center gap-2 mb-1 mt-2 ml-2">
-                                            <h2 className="font-semibold text-darks text-lg">Tampilan Banner</h2>
+                                            <h2 className="font-semibold text-darks text-lg">Tampilan Form</h2>
                                         </div>
                                         <p className="text-sm text-tinted mb-4 ml-2">
-                                            Sesuaikan warna tema banner atau gunakan gambar kustom.
+                                            Sesuaikan warna form anda sesuai dengan tema!.
                                         </p>
 
                                         <div className="px-3.5 sm:px-1 mb-4">
