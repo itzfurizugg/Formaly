@@ -8,15 +8,16 @@ import char from "../assets/ash.png"
 interface Member {
     name: string
     role: string
+    picture: string
 }
 
 const TEAM: Member[] = [
-    { name: "Rizki Syahrul", role: "Project Manager" },
-    { name: "Muhammad Dzaki Rafif", role: "Web Developer" },
-    { name: "Ladya Shafa", role: "Illustrator" },
-    { name: "Chintia Claudia", role: "UI/UX Designer" },
-    { name: "Aurellia Tri", role: "UI/UX Designer" },
-    { name: "Hmmmmmmm", role: "Developer" },
+    { name: "rizuki", role: "Project Manager", picture: "https://scontent-cgk1-2.cdninstagram.com/v/t51.82787-19/712844450_18320123443276603_541539777025189551_n.jpg?stp=dst-jpg_s150x150_tt6&efg=eyJ2ZW5jb2RlX3RhZyI6InByb2ZpbGVfcGljLmRqYW5nby4xMDgwLmMyIn0&_nc_ht=scontent-cgk1-2.cdninstagram.com&_nc_cat=107&_nc_oc=Q6cZ2gEXH8ZpE91KmAX28hcVQDYHAIIVduQ3vl76-_p2f4xuFM2JEVSzx-odB4ZGXQgdbm0&_nc_ohc=UunM3Pmh14wQ7kNvwFnXRu8&_nc_gid=DRLDmB55IpazR66tqNsmGg&edm=AP4sbd4BAAAA&ccb=7-5&oh=00_AQLwrP8FyD_M79sVjSyo1b1a7ejPk4CBqzRZze21kKBdEg&oe=6ABA6802&_nc_sid=7a9f4b" },
+    { name: "wecrashcha", role: "Web Developer", picture: "" },
+    { name: "ladyashf", role: "Illustrator", picture: "" },
+    { name: "chaaaichaaa", role: "UI/UX Designer", picture: "" },
+    { name: "azharaaurellie", role: "UI/UX Designer", picture: "" },
+    { name: "Hmmmmmmm", role: "Developer", picture: "" },
 ]
 
 const AVATAR_STYLE = ["bg-done", "bg-pass", "bg-darks", "bg-wrong"]
@@ -57,22 +58,22 @@ function CreditPage() {
                     initial={{ opacity: 0, y: 16 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.45, ease: easeOutExpo }}
-                    className="flex flex-row justify-between bg-white dark:bg-second border border-second rounded-2xl lg:rounded-xl mb-3 px-3.5 py-10 flex flex-col items-start px-10 text-start"
+                    className="flex flex-col gap-6 bg-white dark:bg-second border border-second rounded-2xl lg:rounded-xl mb-3 px-3.5 py-10 text-start sm:flex-row sm:items-center sm:justify-between sm:px-10"
                 >
-                    <div className="flex-col">
+                    <div className="flex flex-col items-start">
                         <img src={logo} alt="Formaly" className="h-10 w-auto mb-5" />
                         <h1 className="text-3xl md:text-4xl font-display font-bold uppercase text-darks">
                             Tentang Formaly
                         </h1>
-                        <p className="text-sm md:text-darks text-tinted mt-3 max-w-lg leading-relaxed">
+                        <p className="text-sm md:text-base text-tinted mt-3 max-w-lg leading-relaxed">
                             Platform formulir dan kuesioner yang membantu kamu membuat,
                             membagikan, dan menganalisis formulir dengan mudah —
                             dari kuis singkat sampai survei besar.
                         </p>
                     </div>
 
-                    <div className="flex items-end">
-                        <img src={char} className="h-60 w-auto" />
+                    <div className="flex items-end justify-center">
+                        <img src={char} alt="Maskot Formaly" className="h-60 w-auto" />
                     </div>
                 </motion.div>
 
@@ -89,21 +90,29 @@ function CreditPage() {
                             <p className="text-xs text-tinted">Kenalan dengan orang-orang di baliknya.</p>
                         </div>
                     </div>
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
                         {TEAM.map((member, i) => (
                             <motion.div
                                 key={member.name + i}
                                 variants={item}
-                                className="flex flex-col items-center gap-2 bg-base border border-second rounded-2xl lg:rounded-xl p-4 text-center"
+                                className="flex flex-row items-center gap-2 bg-base border border-second rounded-2xl lg:rounded-xl p-4 text-center"
                             >
                                 <div
-                                    className={`w-14 h-14 shrink-0 rounded-full ${AVATAR_STYLE[i % AVATAR_STYLE.length]} flex items-center justify-center`}
+                                    className={`w-8 h-8 shrink-0 rounded-full overflow-hidden ${AVATAR_STYLE[i % AVATAR_STYLE.length]} flex items-center justify-center`}
                                 >
-                                    <span className="text-xl font-bold text-white dark:text-second">
-                                        {member.name.charAt(0).toUpperCase()}
-                                    </span>
+                                    {member.picture ? (
+                                        <img
+                                            src={member.picture}
+                                            alt={member.name}
+                                            className="w-full h-full object-cover"
+                                        />
+                                    ) : (
+                                        <span className="text-xs font-bold uppercase text-white dark:text-white">
+                                            {member.name.charAt(0)}
+                                        </span>
+                                    )}
                                 </div>
-                                <p className="text-sm font-bold text-darks truncate w-full">{member.name}</p>
+                                <p className="text-sm font-bold text-darks truncate w-full">@{member.name}</p>
                                 <span className="text-xs text-tinted">{member.role}</span>
                             </motion.div>
                         ))}
@@ -144,14 +153,6 @@ function CreditPage() {
                 >
                     Dibuat dengan <Heart className="h-3 w-3 text-wrong fill-wrong" /> oleh Tim Formaly ©{" "}
                     {new Date().getFullYear()}
-                </motion.p>
-                <motion.p
-                    initial={{ opacity: 0, y: 8 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.35, ease: easeOutExpo, delay: 0.3 }}
-                    className="text-center text-xs text-tinted mt-1 flex items-center justify-center gap-1"
-                >
-                    Formaly mendukung dan terafiliasi dengan Israel Defense Force 🇮🇱
                 </motion.p>
             </div>
         </div>

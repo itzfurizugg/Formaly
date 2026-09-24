@@ -7,12 +7,14 @@ import { ThemeProvider } from "./lib/theme"
 import { useAuth } from "./lib/auth-context"
 import { supabase } from "./lib/supabase"
 import Navbar from "./components/navbar"
+import GuestOnly, { RequireOtpFlow, RequireResetFlow } from "./components/guestGuard"
 import Dock from "./components/dock"
 import CreatorSidebar from "./components/creator/sidebar"
 import LoadingPage from "./components/loadingPage"
 import AppSplash from "./components/AppSplash"
 import { AlertToaster } from "./lib/alerts"
 import { initTimeSync } from "./lib/networkTime"
+import { setResetFlow } from "./lib/redirect"
 import ErrorBoundary from "./components/ErrorBoundary"
 
 initTimeSync()
@@ -93,8 +95,11 @@ function AppShell() {
   // selalu diarahkan ke /reset-password dari halaman mana pun.
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
-      if (event === "PASSWORD_RECOVERY" && location.pathname !== "/reset-password") {
-        navigate("/reset-password", { replace: true })
+      if (event === "PASSWORD_RECOVERY") {
+        setResetFlow()
+        if (location.pathname !== "/reset-password") {
+          navigate("/reset-password", { replace: true })
+        }
       }
     })
     return () => subscription.unsubscribe()
@@ -285,11 +290,46 @@ function AppShell() {
                 }
               />
             </Route>
-            <Route path="/login" element={<Login />} />
-            <Route path="/register" element={<Register />} />
-            <Route path="/auth" element={<Otp />} />
-            <Route path="/forgot-password" element={<ForgotPassword />} />
-            <Route path="/reset-password" element={<ResetPassword />} />
+            <Route
+              path="/login"
+              element={
+                <GuestOnly>
+                  <Login />
+                </GuestOnly>
+              }
+            />
+            <Route
+              path="/register"
+              element={
+                <GuestOnly>
+                  <Register />
+                </GuestOnly>
+              }
+            />
+            <Route
+              path="/auth"
+              element={
+                <RequireOtpFlow>
+                  <Otp />
+                </RequireOtpFlow>
+              }
+            />
+            <Route
+              path="/forgot-password"
+              element={
+                <GuestOnly>
+                  <ForgotPassword />
+                </GuestOnly>
+              }
+            />
+            <Route
+              path="/reset-password"
+              element={
+                <RequireResetFlow>
+                  <ResetPassword />
+                </RequireResetFlow>
+              }
+            />
             <Route path="*" element={<ErrorHandling />} />
           </Routes>
           </motion.div>

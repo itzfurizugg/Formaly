@@ -92,20 +92,21 @@ function CreatorSidebar() {
             <Link
                 key={to}
                 to={to}
-                className={`relative flex items-center gap-3 h-12 px-4 rounded-lg text-sm font-medium transition-colors ${active ? "text-base" : "text-darks hover:bg-base-200"
+                className={`relative flex items-center gap-3 h-12 px-4 rounded-lg text-sm font-medium transition-colors ${active ? "text-[#222831]" : "text-white/70 hover:text-white hover:bg-white/10"
                     }`}
             >
                 {active && (
                     <motion.span
                         layoutId="creator-sidebar-active"
-                        className="absolute inset-0 rounded-lg bg-darks"
+                        className="absolute inset-0 rounded-lg bg-white shadow-sm"
                         transition={{ type: "spring", stiffness: 400, damping: 30 }}
                     />
                 )}
                 <Icon className="relative z-10 h-4 w-4 shrink-0" fill={active && filled ? "currentColor" : "none"} />
                 <span className="relative z-10 truncate text-[15px] flex-1">{label}</span>
                 {badge && (
-                    <span className={`relative z-10 shrink-0 rounded-full px-1.5 py-0.5 text-[10px] font-semibold transition-colors ${active ? "bg-white dark:bg-second text-darks" : "bg-darks text-white dark:text-second"}`}>
+                    <span className={`relative z-10 shrink-0 rounded-full px-1.5 py-0.5 text-[10px] font-semibold transition-colors ${active ? "bg-[#222831] text-white" : "bg-white/10 text-white/80"
+                        }`}>
                         {badge}
                     </span>
                 )}
@@ -120,12 +121,12 @@ function CreatorSidebar() {
             initial={{ x: "-100%" }}
             animate={{ x: hidden ? "-100%" : "0%" }}
             transition={{ duration: 0.45, ease: easeOutExpo }}
-            className="flex fixed inset-y-0 left-0 z-40 w-[19.5vw] flex-col bg-base-200 dark:bg-[#1A2028] border-r border-second"
+            className="flex fixed inset-y-0 left-0 z-40 w-[19.5vw] flex-col bg-darks dark:bg-[#1A2028] border-r border-second"
         >
             <div className="flex flex-row items-center h-28 px-6 shrink-0">
                 <Link to="/" className="flex items-center gap-2 overflow-hidden">
-                    <img src={logo} alt="Formaly" className="h-6 w-auto" />
-                    <p className="font-semibold text-tinted whitespace-nowrap">C R E A T O R</p>
+                    <img src={logo} alt="Formaly" className="h-6 w-auto invertm" />
+                    <p className="font-semibold text-white/70 whitespace-nowrap">C R E A T O R</p>
                 </Link>
             </div>
 
@@ -142,16 +143,16 @@ function CreatorSidebar() {
                 ))}
             </motion.nav>
 
-            <Link to="/creator/profile" className="block p-3 border-t border-second shrink-0 pb-5 hover:bg-base-300 transition-colors">
+            <Link to="/creator/profile" className="block p-3 border-t border-white/10 shrink-0 pb-5 hover:bg-white/10 transition-colors">
                 <div className="flex items-center gap-3 rounded-lg px-2 py-2 min-w-0">
                     <div className="w-9 h-9 rounded-full bg-done overflow-hidden flex items-center justify-center shrink-0 ring-2 ring-white dark:ring-second">
-                        <span className="text-sm font-bold text-white dark:text-second">
+                        <span className="text-sm font-bold text-white">
                             {(profile?.name || "U").charAt(0).toUpperCase()}
                         </span>
                     </div>
                     <div className="min-w-0">
-                        <p className="text-sm font-semibold text-darks truncate">{profile?.name || "User"}</p>
-                        <p className="text-xs text-tinted truncate">{profile?.email || "user@email.com"}</p>
+                        <p className="text-sm font-semibold text-white truncate">{profile?.name || "User"}</p>
+                        <p className="text-xs text-white/60 truncate">{profile?.email || "user@email.com"}</p>
                     </div>
                 </div>
             </Link>

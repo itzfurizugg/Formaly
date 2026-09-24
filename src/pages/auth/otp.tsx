@@ -4,7 +4,7 @@ import { AnimatePresence, motion } from "motion/react"
 import { ShieldCheck, RotateCcw, CheckCircle2 } from "lucide-react"
 import logo from "../../assets/logo.svg"
 import { useAuth } from "../../lib/auth-context"
-import { safeNext } from "../../lib/redirect"
+import { safeNext, getPendingOtp, clearPendingOtp } from "../../lib/redirect"
 import type { EmailOtpType } from "@supabase/supabase-js"
 import { alertPop, easeOutExpo, fadeSlide } from "../../lib/motion"
 import BackButton from "../../components/backButton"
@@ -35,7 +35,7 @@ function Otp() {
     const stateData = location.state as { email?: string; type?: EmailOtpType; next?: string } | null
     const nextPath = safeNext(stateData?.next)
     const nextQuery = nextPath !== "/" ? `?next=${encodeURIComponent(nextPath)}` : ""
-    const [email, setEmail] = useState(stateData?.email || "")
+    const [email, setEmail] = useState(stateData?.email || getPendingOtp() || "")
     const otpType = stateData?.type || "signup"
 
     const [otp, setOtp] = useState<string[]>(Array(OTP_LENGTH).fill(""))
@@ -101,6 +101,7 @@ function Otp() {
         setLoading(true)
         try {
             await verifyOtp(email, code, otpType)
+            clearPendingOtp()
             if (otpType === "email") {
                 // Login via OTP: session sudah aktif, arahkan langsung ke tujuan.
                 navigate(nextPath, { replace: true })
@@ -143,13 +144,9 @@ function Otp() {
 
     return (
         <div className="min-h-screen flex flex-col lg:flex-row bg-base overflow-x-hidden">
-            <div className="hidden lg:flex flex-1 flex-col relative overflow-hidden bg-darks dark:bg-second text-white">
-                {/* Dekorasi lembut: blob gradasi di pojok panel */}
-                {/* <span className="pointer-events-none absolute -top-32 -right-24 h-96 w-96 rounded-full bg-white dark:bg-second blur-2xl" />
-                <span className="pointer-events-none absolute -bottom-40 -left-24 h-96 w-96 rounded-full bg-done/10 blur-2xl" /> */}
-
-                <div className="flex flex-col h-full px-3.5 relative z-10 py-16">
-                    <div className="max-w-lg ml-10">
+            <div className="hidden lg:flex flex-1 flex-col justify-end overflow-hidden bg-darks dark:bg-second text-white">
+                <div className="flex items-end gap-6 px-10 pt-20 pb-10">
+                    <div className="min-w-0 max-w-lg">
                         <div className="flex items-start gap-3 mb-10">
                             <img src={logo} alt="Formaly" className="h-9 w-auto brightness-0 invert" />
                         </div>
@@ -164,13 +161,13 @@ function Otp() {
                             Platform all-in-one untuk kebutuhan form kamu.
                         </p>
                     </div>
-                </div>
 
-                <img
-                    src={authy}
-                    alt="Ilustrasi"
-                    className="pointer-events-none absolute right-0 bottom-0 z-0 w-1/2 lg:w-3/5 xl:w-3/4 max-w-none object-contain object-right-bottom"
-                />
+                    <img
+                        src={authy}
+                        alt="Ilustrasi"
+                        className="pointer-events-none shrink-0 w-auto max-w-[45%] h-[min(52%,22rem)] lg:h-[min(58%,26rem)] xl:h-[min(64%,30rem)] object-contain object-right-bottom"
+                    />
+                </div>
             </div>
 
             <div className="lg:hidden w-full rounded-none bg-darks px-5 sm:px-10 py-4 flex flex-col justify-center text-white dark:text-second">

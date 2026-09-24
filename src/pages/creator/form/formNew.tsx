@@ -1,7 +1,7 @@
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { useNavigate } from "react-router-dom"
 import { motion } from "motion/react"
-import { Pipette } from "lucide-react"
+import { Folder, Pipette } from "lucide-react"
 import { supabase } from "../../../lib/supabase"
 import { useAuth } from "../../../lib/auth-context"
 import BackButton from "../../../components/backButton"
@@ -28,6 +28,20 @@ function FormNew() {
     const [headerMedia, setHeaderMedia] = useState<string | null>("")
     const [uploadingBanner, setUploadingBanner] = useState(false)
     const [loading, setLoading] = useState(false)
+    const [folders, setFolders] = useState<{ id: string; name: string }[]>([])
+    const [folderId, setFolderId] = useState<string>("")
+
+    useEffect(() => {
+        if (!user) return
+        supabase
+            .from("folders")
+            .select("id, name")
+            .eq("creator_id", user.id)
+            .order("created_at", { ascending: true })
+            .then(({ data, error }) => {
+                if (!error && data) setFolders(data as { id: string; name: string }[])
+            })
+    }, [user])
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault()
@@ -46,6 +60,7 @@ function FormNew() {
                 layout_mode: layoutMode,
                 header_color: headerColor || null,
                 media_url: headerMedia?.trim() || null,
+                folder_id: folderId || null,
             })
             .select("id")
             .single()
@@ -107,6 +122,22 @@ function FormNew() {
                                     <label className="block text-sm font-medium text-darks mb-1.5">Passing Score</label>
                                     <input type="number" min={0} max={100} step={1} className={inputCls} value={passingScore} onFocus={(e) => e.target.select()} onChange={(e) => setPassingScore(e.target.value === "" ? "" : Number(e.target.value))} placeholder="0" />
                                 </div>
+                            </div>
+                            <div className="pt-1">
+                                <label className="flex items-center gap-1.5 text-sm font-medium text-darks mb-1.5">
+                                    <Folder className="h-3.5 w-3.5" /> Folder
+                                </label>
+                                <select
+                                    className={inputCls + " cursor-pointer"}
+                                    value={folderId}
+                                    onChange={(e) => setFolderId(e.target.value)}
+                                >
+                                    <option value="">Tanpa Folder</option>
+                                    {folders.map((f) => (
+                                        <option key={f.id} value={f.id}>{f.name}</option>
+                                    ))}
+                                </select>
+                                <p className="text-xs text-tinted mt-1">Folder bisa dibuat/diubah di halaman Kelola Form.</p>
                             </div>
                         </div>
 

@@ -707,7 +707,7 @@ function FormEdit() {
                                             />
                                         </div>
 
-                                        <div className="px-3.5 sm:px-1 pb-1">
+                                        <div className="px-3.5 sm:px-3 pb-1">
                                             <div className="flex flex-wrap items-center gap-2">
                                                 {PRESET_HEADER_COLORS.map((color) => (
                                                     <button
@@ -717,7 +717,7 @@ function FormEdit() {
                                                         onClick={() => setHeaderColor(color)}
                                                         style={{ backgroundColor: color }}
                                                         className={`h-8 w-8 rounded-full transition-all duration-150 hover:scale-110 ${headerColor.toLowerCase() === color.toLowerCase()
-                                                            ? "ring-2 ring-darks ring-offset-2 ring-offset-white dark:ring-offset-second"
+                                                            ? "ring-2 ring-{color} ring-offset-2 ring-offset-white dark:ring-offset-second"
                                                             : ""
                                                             }`}
                                                     />

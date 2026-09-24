@@ -5,6 +5,7 @@ import { KeyRound, CheckCircle2 } from "lucide-react"
 import logo from "../../assets/logo.svg"
 import { supabase } from "../../lib/supabase"
 import { useAuth } from "../../lib/auth-context"
+import { clearResetFlow } from "../../lib/redirect"
 import PasswordInput from "../../components/passwordInput"
 import { alertPop, easeOutExpo } from "../../lib/motion"
 import { showAlert } from "../../lib/alerts"
@@ -86,6 +87,7 @@ function ResetPassword() {
         setLoading(true)
         try {
             await updatePassword(password)
+            clearResetFlow()
             setSuccess(true)
             setTimeout(() => navigate("/login"), 3000)
         } catch (err) {

@@ -1,10 +1,23 @@
-import { useEffect, useState, useCallback, type MouseEvent } from "react"
+import { useEffect, useState, useCallback, useMemo, type MouseEvent } from "react"
 import { useNavigate } from "react-router-dom"
 import { AnimatePresence, motion } from "motion/react"
-import { FileText, Pencil, Trash2, ClipboardList, KeyRound, Share2, MoreVertical } from "lucide-react"
+import {
+    Check,
+    ClipboardList,
+    FileText,
+    Folder,
+    FolderOpen,
+    FolderPlus,
+    KeyRound,
+    LayoutGrid,
+    MoreVertical,
+    Pencil,
+    Share2,
+    Trash2,
+} from "lucide-react"
 import { supabase } from "../../lib/supabase"
 import { useAuth } from "../../lib/auth-context"
-import { confirmDelete, showAlert } from "../../lib/alerts"
+import { confirmDelete, promptText, showAlert } from "../../lib/alerts"
 import { RichText } from "../richText"
 import FormHeader from "./formHeader"
 import { pageGet, pageSet } from "../../lib/pageCache"
@@ -13,6 +26,12 @@ import { collectFormMediaUrls } from "../../lib/mediaCleanup"
 import { easeOutExpo } from "../../lib/motion"
 import { Spinner } from "../loading"
 
+interface FolderRow {
+    id: string
+    name: string
+    created_at: string
+}
+
 interface FormActionsMenuProps {
     formId: string
     deleting: boolean
@@ -20,9 +39,19 @@ interface FormActionsMenuProps {
     onOpenChange: (open: boolean) => void
     onNavigate: (to: string) => void
     onDelete: () => void
+    folders: FolderRow[]
+    currentFolderId: string | null
+    onMove: (folderId: string | null) => void
 }
 
-function FormActionsMenu({ formId, deleting, open, onOpenChange, onNavigate, onDelete }: FormActionsMenuProps) {
+function FormActionsMenu({ formId, deleting, open, onOpenChange, onNavigate, onDelete, folders, currentFolderId, onMove }: FormActionsMenuProps) {
+    const [moveOpen, setMoveOpen] = useState(false)
+
+    // Reset sub-menu saat menu utama ditutup.
+    useEffect(() => {
+        if (!open) setMoveOpen(false)
+    }, [open])
+
     const item = (to: string) => (e: MouseEvent) => {
         e.preventDefault()
         e.stopPropagation()
@@ -38,6 +67,19 @@ function FormActionsMenu({ formId, deleting, open, onOpenChange, onNavigate, onD
     }
 
     const toggle = () => onOpenChange(!open)
+
+    const toggleMove = (e: MouseEvent) => {
+        e.preventDefault()
+        e.stopPropagation()
+        setMoveOpen((v) => !v)
+    }
+
+    const pickFolder = (folderId: string | null) => (e: MouseEvent) => {
+        e.preventDefault()
+        e.stopPropagation()
+        onOpenChange(false)
+        onMove(folderId)
+    }
 
     return (
         <div
@@ -59,7 +101,7 @@ function FormActionsMenu({ formId, deleting, open, onOpenChange, onNavigate, onD
             <AnimatePresence>
                 {open && (
                     <motion.div
-                        className="absolute right-0 bottom-full mb-2 z-50 min-w-[12rem] rounded-2xl bg-white dark:bg-second border border-second shadow-xl overflow-hidden origin-bottom-right"
+                        className="absolute right-0 bottom-full mb-2 z-50 min-w-[13rem] rounded-2xl bg-white dark:bg-second border border-second shadow-xl overflow-hidden origin-bottom-right"
                         initial={{ opacity: 0, y: 8, scale: 0.95 }}
                         animate={{ opacity: 1, y: 0, scale: 1 }}
                         exit={{ opacity: 0, scale: 0.95 }}
@@ -77,6 +119,46 @@ function FormActionsMenu({ formId, deleting, open, onOpenChange, onNavigate, onD
                         >
                             <KeyRound className="h-4 w-4 text-tinted" /> Token
                         </button>
+
+                        <div className="border-t border-base">
+                            <button
+                                onClick={toggleMove}
+                                className="w-full flex items-center justify-between gap-3 px-4 py-2.5 text-sm text-darks hover:bg-base transition-colors text-left"
+                            >
+                                <span className="flex items-center gap-3">
+                                    <Folder className="h-4 w-4 text-tinted" /> Pindahkan ke Folder
+                                </span>
+                                <span className={`text-tinted transition-transform ${moveOpen ? "rotate-180" : ""}`}>
+                                    <svg className="h-3 w-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                                        <path d="m6 9 6 6 6-6" />
+                                    </svg>
+                                </span>
+                            </button>
+                            {moveOpen && (
+                                <div className="max-h-48 overflow-y-auto py-1 border-t border-base">
+                                    <button
+                                        onClick={pickFolder(null)}
+                                        className="w-full flex items-center gap-3 px-5 py-2 text-sm text-darks hover:bg-base transition-colors text-left"
+                                    >
+                                        <FolderOpen className="h-4 w-4 text-tinted" />
+                                        <span className="flex-1">Tanpa Folder</span>
+                                        {currentFolderId === null && <Check className="h-4 w-4 text-done" />}
+                                    </button>
+                                    {folders.map((f) => (
+                                        <button
+                                            key={f.id}
+                                            onClick={pickFolder(f.id)}
+                                            className="w-full flex items-center gap-3 px-5 py-2 text-sm text-darks hover:bg-base transition-colors text-left"
+                                        >
+                                            <Folder className="h-4 w-4 text-tinted" />
+                                            <span className="flex-1 truncate">{f.name}</span>
+                                            {currentFolderId === f.id && <Check className="h-4 w-4 text-done shrink-0" />}
+                                        </button>
+                                    ))}
+                                </div>
+                            )}
+                        </div>
+
                         <button
                             onClick={deleteItem}
                             disabled={deleting}
@@ -102,7 +184,10 @@ interface FormRow {
     header_image?: string | null
     header_color?: string | null
     media_url?: string | null
+    folder_id?: string | null
 }
+
+type FolderFilter = "all" | "unfiled" | string
 
 function FormList() {
     const navigate = useNavigate()
@@ -113,6 +198,8 @@ function FormList() {
         user ? pageGet<FormRow[]>(`formList:${user.id}`) : undefined
     )
     const [forms, setForms] = useState<FormRow[]>(cached ?? [])
+    const [folders, setFolders] = useState<FolderRow[]>([])
+    const [activeFolder, setActiveFolder] = useState<FolderFilter>("all")
     const [loading, setLoading] = useState(!cached)
     const [deleting, setDeleting] = useState<string | null>(null)
     const [error, setError] = useState<string | null>(null)
@@ -121,29 +208,112 @@ function FormList() {
     const loadForms = useCallback(async () => {
         if (!user) return
         if (!cached) setLoading(true)
-        const { data, error: err } = await supabase
-            .from("forms")
-            .select(`
-                id, title, description, status, duration, passing_score, created_at, header_image, header_color, media_url
-            `)
-            .eq("creator_id", user.id)
-            .order("created_at", { ascending: false })
+        const [formsRes, foldersRes] = await Promise.all([
+            supabase
+                .from("forms")
+                .select(`
+                    id, title, description, status, duration, passing_score, created_at, header_image, header_color, media_url, folder_id
+                `)
+                .eq("creator_id", user.id)
+                .order("created_at", { ascending: false }),
+            supabase
+                .from("folders")
+                .select("id, name, created_at")
+                .eq("creator_id", user.id)
+                .order("created_at", { ascending: true }),
+        ])
 
-        if (err) {
+        if (formsRes.error) {
             showAlert("Gagal memuat data.", "error")
-            setError(err.message)
+            setError(formsRes.error.message)
         } else {
-            const rows = (data as FormRow[]) || []
+            const rows = (formsRes.data as FormRow[]) || []
             setForms(rows)
             if (user) pageSet(`formList:${user.id}`, rows)
         }
+        if (!foldersRes.error) {
+            setFolders((foldersRes.data as FolderRow[]) || [])
+        }
         setLoading(false)
-    }, [user])
+    }, [user, cached])
 
     useEffect(() => {
         if (!user) return
         loadForms()
     }, [user, loadForms])
+
+    async function handleCreateFolder() {
+        if (!user) return
+        const name = await promptText({
+            title: "Buat Folder Baru",
+            description: "Folder dipakai untuk mengelompokkan form yang kamu buat.",
+            placeholder: "Nama folder",
+            confirmLabel: "Buat",
+        })
+        if (!name?.trim()) return
+        const { error } = await supabase
+            .from("folders")
+            .insert({ creator_id: user.id, name: name.trim() })
+            .select("id")
+            .single()
+        if (error) {
+            showAlert(error.message, "error")
+            return
+        }
+        showAlert("Folder berhasil dibuat.", "success")
+        loadForms()
+    }
+
+    async function handleRenameFolder(id: string, currentName: string) {
+        const name = await promptText({
+            title: "Ubah Nama Folder",
+            defaultValue: currentName,
+            placeholder: "Nama folder",
+            confirmLabel: "Simpan",
+        })
+        if (name === null || !name.trim() || name.trim() === currentName) return
+        const { error } = await supabase
+            .from("folders")
+            .update({ name: name.trim(), updated_at: new Date().toISOString() })
+            .eq("id", id)
+            .select("id")
+            .maybeSingle()
+        if (error) {
+            showAlert(error.message, "error")
+            return
+        }
+        showAlert("Nama folder berhasil diubah.", "success")
+        loadForms()
+    }
+
+    async function handleDeleteFolder(id: string, name: string) {
+        confirmDelete({
+            title: `Hapus folder "${name}"?`,
+            description: "Form di dalamnya tidak ikut terhapus, hanya keluar dari folder (menjadi Tanpa Folder).",
+            onConfirm: async () => {
+                const { error } = await supabase.from("folders").delete().eq("id", id)
+                if (error) throw new Error(error.message)
+                // Relasi folder_id di forms otomatis diset NULL oleh FK on delete set null.
+                if (activeFolder === id) setActiveFolder("all")
+                await loadForms()
+            },
+        })
+    }
+
+    async function handleMoveToFolder(formId: string, folderId: string | null) {
+        const { error } = await supabase
+            .from("forms")
+            .update({ folder_id: folderId })
+            .eq("id", formId)
+            .select("id")
+            .maybeSingle()
+        if (error) {
+            showAlert(error.message, "error")
+            return
+        }
+        showAlert("Form berhasil dipindahkan.", "success")
+        loadForms()
+    }
 
     async function handleDelete(id: string) {
         confirmDelete({
@@ -182,94 +352,204 @@ function FormList() {
         )
     }
 
+    const folderNameById = useMemo(() => {
+        const map = new Map<string, string>()
+        for (const f of folders) map.set(f.id, f.name)
+        return map
+    }, [folders])
+
+    const folderCount = useMemo(() => {
+        const map = new Map<string, number>()
+        for (const f of forms) {
+            if (!f.folder_id) continue
+            map.set(f.folder_id, (map.get(f.folder_id) ?? 0) + 1)
+        }
+        return map
+    }, [forms])
+
+    const unfiledCount = useMemo(() => forms.filter((f) => !f.folder_id).length, [forms])
+
+    const visibleForms = useMemo(() => {
+        if (activeFolder === "all") return forms
+        if (activeFolder === "unfiled") return forms.filter((f) => !f.folder_id)
+        return forms.filter((f) => f.folder_id === activeFolder)
+    }, [forms, activeFolder])
+
+    const chipCls = (active: boolean) =>
+        `btn btn-sm h-8 min-h-0 rounded-full gap-1.5 px-3 border-none ${active
+            ? "bg-darks text-base"
+            : "bg-white dark:bg-second border border-second text-darks hover:bg-base"
+        }`
+
+    const countBadge = (active: boolean, count: number) => (
+        <span className={`rounded-full px-1.5 py-0.5 text-[10px] font-semibold ${active ? "bg-base/25 text-base" : "bg-base text-tinted"}`}>
+            {count}
+        </span>
+    )
+
     return (
         <>
             {!loading && (
                 error ? (
-                    <p className="text-sm text-tinted">{error}</p>
-                ) : forms.length === 0 ? (
-                    <div className="text-center py-20">
-                        <FileText className="h-12 w-12 text-tinted/40 mx-auto mb-3" />
-                        <p className="text-tinted mb-4">Belum ada form. Buat form pertamamu!</p>
+                    <div className="flex flex-col gap-4">
+                        <p className="text-sm text-tinted">{error}</p>
                     </div>
                 ) : (
-                    <div className="grid sm:grid-cols-2 gap-3 items-stretch">
-                        {forms.map((form, index) => (
-                            <motion.div
-                                key={form.id}
-                                className="h-full"
-                                initial={{ opacity: 0, y: 12 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                transition={{ duration: 0.35, ease: easeOutExpo, delay: Math.min(index * 0.06, 0.4) }}
+                    <>
+                        {/* ========== Filter folder ========== */}
+                        <div className="flex flex-wrap items-center gap-2 mb-3">
+                            <button
+                                onClick={() => setActiveFolder("all")}
+                                className={chipCls(activeFolder === "all")}
                             >
-                                {/* h-full agar kartu melar mengikuti tinggi baris grid — semua kartu
-                    satu baris jadi sama tinggi seperti tampilan di halaman Responden */}
-                                <div className="relative h-full">
-                                    <div className="card bg-white dark:bg-second border border-second rounded-xl transition-all duration-300 hover:shadow-lg hover:shadow-darks/5 overflow-hidden h-full">
-                                        <FormHeader formId={form.id} title={form.title} headerImage={form.header_image} headerColor={form.header_color} headerMedia={form.media_url} play={false} />
-                                        <div className="card-body gap-3 p-4">
-                                            <div className="flex items-start justify-between gap-3">
-                                                <div className="min-w-0">
-                                                    <span className="inline-flex items-center gap-1.5 text-tinted">
-                                                        Dibuat pada: {new Date(form.created_at).toLocaleDateString("id-ID", { day: "numeric", month: "long", year: "numeric" })}
-                                                    </span>
-                                                    <h2 className="card-title text-xl sm:text-2xl text-darks break-words leading-snug text-base">{form.title}</h2>
-                                                    <div className="text-sm text-tinted line-clamp-2">
-                                                        {form.description ? <RichText html={form.description} className="line-clamp-1" enhanceMedia={false} /> : "Tidak ada deskripsi"}
-                                                    </div>
-                                                </div>
-                                                <div className="shrink-0">
-                                                    {statusBadge(form.status)}
-                                                </div>
-                                            </div>
+                                <LayoutGrid className="h-3.5 w-3.5" /> Semua {countBadge(activeFolder === "all", forms.length)}
+                            </button>
+                            <button
+                                onClick={() => setActiveFolder("unfiled")}
+                                className={chipCls(activeFolder === "unfiled")}
+                            >
+                                <FolderOpen className="h-3.5 w-3.5" /> Tanpa Folder {countBadge(activeFolder === "unfiled", unfiledCount)}
+                            </button>
+                            {folders.map((f) => {
+                                const active = activeFolder === f.id
+                                const count = folderCount.get(f.id) ?? 0
+                                return (
+                                    <div key={f.id} className="relative inline-flex items-center group">
+                                        <button
+                                            onClick={() => setActiveFolder(f.id)}
+                                            className={chipCls(active)}
+                                        >
+                                            <Folder className="h-3.5 w-3.5" />
+                                            <span className="max-w-[9rem] truncate">{f.name}</span>
+                                            {countBadge(active, count)}
+                                        </button>
+                                        <div className="ml-0.5 hidden group-hover:flex items-center gap-0.5">
+                                            <button
+                                                onClick={() => handleRenameFolder(f.id, f.name)}
+                                                aria-label={`Ubah nama folder ${f.name}`}
+                                                className="btn btn-xs btn-ghost btn-circle h-7 min-h-0 w-7 text-tinted hover:bg-base"
+                                            >
+                                                <Pencil className="h-3 w-3" />
+                                            </button>
+                                            <button
+                                                onClick={() => handleDeleteFolder(f.id, f.name)}
+                                                aria-label={`Hapus folder ${f.name}`}
+                                                className="btn btn-xs btn-ghost btn-circle h-7 min-h-0 w-7 text-wrong hover:bg-wrong/10"
+                                            >
+                                                <Trash2 className="h-3 w-3" />
+                                            </button>
+                                        </div>
+                                    </div>
+                                )
+                            })}
+                            <button
+                                onClick={handleCreateFolder}
+                                className="btn btn-sm h-8 min-h-0 rounded-full gap-1.5 px-3 bg-base text-darks border border-dashed border-second hover:bg-white dark:hover:bg-second"
+                            >
+                                <FolderPlus className="h-3.5 w-3.5" /> Folder Baru
+                            </button>
+                        </div>
 
-                                            {/* <div className="flex flex-wrap items-center gap-x-4 text-xs text-tinted/80 mt-1 mb-2">
+                        {visibleForms.length === 0 ? (
+                            <div className="text-center py-20">
+                                <FileText className="h-12 w-12 text-tinted/40 mx-auto mb-3" />
+                                <p className="text-tinted mb-4">
+                                    {activeFolder === "all"
+                                        ? "Belum ada form. Buat form pertamamu!"
+                                        : "Tidak ada form di sini. Pindahkan form lewat menu aksi, atau buat form baru."}
+                                </p>
+                            </div>
+                        ) : (
+                            <div className="grid sm:grid-cols-2 gap-3 items-stretch">
+                                {visibleForms.map((form, index) => {
+                                    const folderName = form.folder_id ? folderNameById.get(form.folder_id) : undefined
+                                    return (
+                                        <motion.div
+                                            key={form.id}
+                                            className="h-full"
+                                            initial={{ opacity: 0, y: 12 }}
+                                            animate={{ opacity: 1, y: 0 }}
+                                            transition={{ duration: 0.35, ease: easeOutExpo, delay: Math.min(index * 0.06, 0.4) }}
+                                        >
+                                            {/* h-full agar kartu melar mengikuti tinggi baris grid — semua kartu
+                                    satu baris jadi sama tinggi seperti tampilan di halaman Responden */}
+                                            <div className="relative h-full">
+                                                <div className="card bg-white dark:bg-second border border-second rounded-xl transition-all duration-300 hover:shadow-lg hover:shadow-darks/5 overflow-hidden h-full">
+                                                    <FormHeader formId={form.id} title={form.title} headerImage={form.header_image} headerColor={form.header_color} headerMedia={form.media_url} play={false} />
+                                                    <div className="card-body gap-3 p-4">
+                                                        <div className="flex items-start justify-between gap-3">
+                                                            <div className="min-w-0">
+                                                                <span className="inline-flex items-center gap-1.5 text-tinted">
+                                                                    Dibuat pada: {new Date(form.created_at).toLocaleDateString("id-ID", { day: "numeric", month: "long", year: "numeric" })}
+                                                                </span>
+                                                                <h2 className="card-title text-xl sm:text-2xl text-darks break-words leading-snug text-base">{form.title}</h2>
+                                                                <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
+                                                                    <span className="inline-flex items-center gap-1.5 text-xs text-tinted/80">
+                                                                        <Folder className="h-3.5 w-3.5" /> {folderName ?? "Tanpa Folder"}
+                                                                    </span>
+                                                                </div>
+                                                                <div className="text-sm text-tinted line-clamp-2">
+                                                                    {form.description ? <RichText html={form.description} className="line-clamp-1" enhanceMedia={false} /> : "Tidak ada deskripsi"}
+                                                                </div>
+                                                            </div>
+                                                            <div className="shrink-0">
+                                                                {statusBadge(form.status)}
+                                                            </div>
+                                                        </div>
+
+                                                        {/* <div className="flex flex-wrap items-center gap-x-4 text-xs text-tinted/80 mt-1 mb-2">
                                                 <span className="inline-flex items-center gap-1.5">
                                                     <ListChecks className="h-3.5 w-3.5" /> {form.questions?.length || 0} soal
                                                 </span> */}
-                                                {/* <span className="inline-flex items-center gap-1.5">
-                                                        <Users className="h-3.5 w-3.5" /> {form.submissions?.length || 0} submission
-                                                </span> */}
-                                                {/* <span className="inline-flex items-center gap-1.5">
-                                                    <Timer className="h-3.5 w-3.5" /> {form.duration ? `${form.duration} menit` : "Tanpa Waktu"}
-                                                </span>
-                                                {form.passing_score != null && (
-                                                    <span className="hidden sm:inline-flex items-center gap-1.5">
-                                                        <Target className="h-3.5 w-3.5" /> Nilai Minimum: {form.passing_score}
-                                                    </span>
-                                                )}
-                                            </div> */}
-                                            
-                                            <div className="card-actions justify-end flex-wrap gap-2 items-center mt-auto pt-1">
-                                                <button
-                                                    onClick={() => navigate(`/creator/forms/${form.id}/shared`)}
-                                                    className="btn btn-sm rounded-full bg-base text-darks border border-second dark:border-darks/15 hover:bg-white hover:border-second dark:hover:bg-second dark:hover:border-darks/25"
-                                                >
-                                                    <Share2 className="h-3.5 w-3.5" /> Bagikan
-                                                </button>
-                                                <button
-                                                    onClick={() => navigate(`/creator/forms/${form.id}`)}
-                                                    className="btn btn-sm rounded-full bg-base text-darks border border-second dark:border-darks/15 hover:bg-white hover:border-second dark:hover:bg-second dark:hover:border-darks/25"
-                                                >
-                                                    <Pencil className="h-3.5 w-3.5" /> Edit
-                                                </button>
-                                                <FormActionsMenu
-                                                    formId={form.id}
-                                                    deleting={deleting === form.id}
-                                                    open={openMenuId === form.id}
-                                                    onOpenChange={(open) => setOpenMenuId(open ? form.id : null)}
-                                                    onNavigate={(to) => navigate(to)}
-                                                    onDelete={() => handleDelete(form.id)}
-                                                />
+                                                        {/* <span className="inline-flex items-center gap-1.5">
+                                                                <Users className="h-3.5 w-3.5" /> {form.submissions?.length || 0} submission
+                                                        </span> */}
+                                                        {/* <span className="inline-flex items-center gap-1.5">
+                                                            <Timer className="h-3.5 w-3.5" /> {form.duration ? `${form.duration} menit` : "Tanpa Waktu"}
+                                                        </span>
+                                                        {form.passing_score != null && (
+                                                            <span className="hidden sm:inline-flex items-center gap-1.5">
+                                                                <Target className="h-3.5 w-3.5" /> Nilai Minimum: {form.passing_score}
+                                                            </span>
+                                                        )}
+                                                    </div> */}
+
+                                                        <div className="card-actions justify-end flex-wrap gap-2 items-center mt-auto pt-1">
+                                                            <button
+                                                                onClick={() => navigate(`/creator/forms/${form.id}/shared`)}
+                                                                className="btn btn-sm rounded-full bg-base text-darks border border-second dark:border-darks/15 hover:bg-white hover:border-second dark:hover:bg-second dark:hover:border-darks/25"
+                                                            >
+                                                                <Share2 className="h-3.5 w-3.5" /> Bagikan
+                                                            </button>
+                                                            <button
+                                                                onClick={() => navigate(`/creator/forms/${form.id}`)}
+                                                                className="btn btn-sm rounded-full bg-base text-darks border border-second dark:border-darks/15 hover:bg-white hover:border-second dark:hover:bg-second dark:hover:border-darks/25"
+                                                            >
+                                                                <Pencil className="h-3.5 w-3.5" /> Edit
+                                                            </button>
+                                                            <FormActionsMenu
+                                                                formId={form.id}
+                                                                deleting={deleting === form.id}
+                                                                open={openMenuId === form.id}
+                                                                onOpenChange={(open) => setOpenMenuId(open ? form.id : null)}
+                                                                onNavigate={(to) => navigate(to)}
+                                                                onDelete={() => handleDelete(form.id)}
+                                                                folders={folders}
+                                                                currentFolderId={form.folder_id ?? null}
+                                                                onMove={(folderId) => handleMoveToFolder(form.id, folderId)}
+                                                            />
+                                                        </div>
+                                                    </div>
+                                                </div>
+
+
                                             </div>
-                                        </div>
-                                    </div>
-
-
-                                </div>
-                            </motion.div>
-                        ))}
-                    </div>
+                                        </motion.div>
+                                    )
+                                })}
+                            </div>
+                        )}
+                    </>
                 )
             )}
         </>

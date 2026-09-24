@@ -58,6 +58,9 @@ function ResultPage() {
     const [loading, setLoading] = useState(true)
     const [error, setError] = useState<string | null>(null)
     const [filter, setFilter] = useState("")
+    // Apakah form punya minimal satu soal dengan kunci jawaban. Kalau tidak
+    // ada kunci (tidak ada benar/salah), filter hasil disembunyikan.
+    const [hasAnswerKey, setHasAnswerKey] = useState(false)
 
     // Header gambar & warna form diambil diam-diam; error diabaikan agar halaman tetap jalan.
     const [headerImage, setHeaderImage] = useState<string | null>(null)
@@ -90,7 +93,7 @@ function ResultPage() {
 
         const { data: sub } = await supabase
             .from("submissions")
-            .select("id, total_score, status, started_at, submitted_at, form:form_id ( id, title, duration, passing_score, show_score_to_respondent, show_answers_to_respondent, show_correct_filter_to_respondent ), user:user_id ( name )")
+            .select("id, total_score, status, started_at, submitted_at, form_id, form:form_id ( id, title, duration, passing_score, show_score_to_respondent, show_answers_to_respondent, show_correct_filter_to_respondent ), user:user_id ( name )")
             .eq("id", submissionId)
             .eq("user_id", user.id)
             .single()
@@ -103,6 +106,20 @@ function ResultPage() {
         }
 
         setInfo(sub as unknown as SubmissionInfo)
+
+        // Kalau tidak ada soal yang punya kunci jawaban (is_correct true),
+        // filter benar/salah tidak relevan sehingga disembunyikan.
+        const fid = (sub as unknown as { form_id?: string }).form_id
+        if (fid) {
+            const { count } = await supabase
+                .from("questions")
+                .select("question_options!inner(id)", { count: "exact", head: true })
+                .eq("form_id", fid)
+                .eq("question_options.is_correct", true)
+            setHasAnswerKey((count ?? 0) > 0)
+        } else {
+            setHasAnswerKey(false)
+        }
 
         const { data: ans } = await supabase
             .from("answers")
@@ -190,7 +207,7 @@ function ResultPage() {
     // supaya perilaku lama tidak berubah sebelum migrasi diterapkan.
     const showScore = info?.form?.show_score_to_respondent !== false
     const showAnswers = info?.form?.show_answers_to_respondent !== false
-    const showFilter = info?.form?.show_correct_filter_to_respondent !== false
+    const showFilter = info?.form?.show_correct_filter_to_respondent !== false && hasAnswerKey
     const failed = showScore && info?.form?.passing_score != null && (info?.total_score ?? 0) < info.form.passing_score
 
     const filterOptions = [

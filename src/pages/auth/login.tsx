@@ -46,7 +46,7 @@ function Login() {
                 {/* <span className="pointer-events-none absolute -top-32 -right-24 h-96 w-96 rounded-full bg-white dark:bg-second blur-2xl" />
                 <span className="pointer-events-none absolute -bottom-40 -left-24 h-96 w-96 rounded-full bg-done/10 blur-2xl" /> */}
 
-                <div className="flex flex-col h-full px-3.5 relative z-10 py-16">
+                <div className="flex flex-col h-full px-3.5 relative z-10 pt-16 pb-[min(52%,22rem)] lg:pb-[min(58%,26rem)] xl:pb-[min(64%,30rem)]">
                     <div className="max-w-lg ml-10">
                         <div className="flex items-start gap-3 mb-10">
                             <img src={logo} alt="Formaly" className="h-9 w-auto brightness-0 invert" />
@@ -67,7 +67,7 @@ function Login() {
                 <img
                     src={vye}
                     alt="Ilustrasi"
-                    className="pointer-events-none absolute right-0 bottom-0 z-0 w-1/2 lg:w-3/5 xl:w-3/4 max-w-none object-contain object-right-bottom"
+                    className="pointer-events-none absolute -right-6 -bottom-6 xl:-right-10 xl:-bottom-8 z-0 h-[min(52%,22rem)] lg:h-[min(58%,26rem)] xl:h-[min(64%,30rem)] w-auto max-w-none object-contain object-right-bottom"
                 />
             </div>
 
