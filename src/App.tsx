@@ -16,6 +16,7 @@ import { AlertToaster } from "./lib/alerts"
 import { initTimeSync } from "./lib/networkTime"
 import { setResetFlow } from "./lib/redirect"
 import ErrorBoundary from "./components/ErrorBoundary"
+import type { ReactNode } from "react"
 
 initTimeSync()
 
@@ -39,6 +40,7 @@ const SettingsPage = lazy(() => import("./pages/settings"))
 const CreditPage = lazy(() => import("./pages/credit"))
 const UpgradeToCreator = lazy(() => import("./pages/upgradeToCreator"))
 const AdminForms = lazy(() => import("./pages/admin/forms"))
+const AdminUsers = lazy(() => import("./pages/admin/users"))
 const FormDescription = lazy(() => import("./pages/form/description"))
 const FormResolver = lazy(() => import("./pages/form/resolver"))
 const FormList = lazy(() => import("./pages/form/formlist"))
@@ -84,10 +86,28 @@ function App() {
 // Isi app yang sesungguhnya. Selama auth masih dicek di first load / refresh,
 // yang dirender hanya AppSplash — Router & semua halaman belum di-mount sama
 // sekali, sehingga tidak ada flash UI-lalu-loading-lalu-UI.
+function RequireAdmin({ children }: { children: ReactNode }) {
+  const { user, profile, loading } = useAuth()
+  const navigate = useNavigate()
+
+  useEffect(() => {
+    if (!loading && (!user || profile?.role !== "admin")) navigate("/", { replace: true })
+  }, [loading, user, profile, navigate])
+
+  if (loading || !user || profile?.role !== "admin") return null
+  return <>{children}</>
+}
+
 function AppShell() {
-  const { loading: authLoading } = useAuth()
+  const { profile, loading: authLoading } = useAuth()
   const location = useLocation()
   const navigate = useNavigate()
+
+  useEffect(() => {
+    if (!authLoading && profile?.role === "admin" && !location.pathname.startsWith("/admin")) {
+      navigate("/admin/users", { replace: true })
+    }
+  }, [authLoading, profile, location.pathname, navigate])
 
   // Kalau user tiba lewat link reset (mungkin jatuh ke home/route lain karena
   // Site URL default), sesi recovery tetap diproses oleh supabase-js dan
@@ -108,7 +128,7 @@ function AppShell() {
 
   // Path yang punya halaman nyata. Selain ini jatuh ke ErrorHandling (route "*"),
   // jadi Navbar umum & Dock disembunyikan biar halaman error tampil minim.
-  const knownRoutes = ["/", "/history", "/profile", "/settings", "/credit", "/upgrade-to-creator", "/admin/forms"]
+  const knownRoutes = ["/", "/history", "/profile", "/settings", "/credit", "/upgrade-to-creator", "/admin/forms", "/admin/users"]
   const isResultPage = location.pathname.startsWith("/form/result")
   const isDonePage = location.pathname.startsWith("/form/done")
   const isKnownRoute =
@@ -181,7 +201,8 @@ function AppShell() {
             <Route path="/settings" element={<SettingsPage />} />
             <Route path="/credit" element={<CreditPage />} />
             <Route path="/upgrade-to-creator" element={<UpgradeToCreator />} />
-            <Route path="/admin/forms" element={<AdminForms />} />
+            <Route path="/admin/forms" element={<RequireAdmin><AdminForms /></RequireAdmin>} />
+            <Route path="/admin/users" element={<RequireAdmin><AdminUsers /></RequireAdmin>} />
             <Route path="/form/description" element={<FormDescription />} />
             <Route path="/form/:formId" element={<FormResolver />} />
             <Route path="/form/list" element={<FormList />} />
