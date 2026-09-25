@@ -40,7 +40,10 @@ function AdminUsers() {
         setSaving(account.id)
         setError(null)
         setMessage(null)
-        const { error: err } = await supabase.from("users").update({ role }).eq("id", account.id)
+        const { error: err } = await supabase.rpc("admin_update_user_role", {
+            p_user_id: account.id,
+            p_role: role,
+        })
         if (err) setError(err.message)
         else {
             setAccounts(current => current.map(item => item.id === account.id ? { ...item, role } : item))
