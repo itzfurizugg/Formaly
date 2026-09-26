@@ -16,7 +16,7 @@ import {
 } from "lucide-react"
 import { supabase } from "../../lib/supabase"
 import { useAuth } from "../../lib/auth-context"
-import { confirmDelete, promptText, showAlert } from "../../lib/alerts"
+import { confirmDelete, showAlert } from "../../lib/alerts"
 import { RichText } from "../richText"
 import FormHeader from "./formHeader"
 import { pageGet, pageSet } from "../../lib/pageCache"
@@ -253,64 +253,6 @@ function FormList() {
         loadForms()
     }, [user, loadForms])
 
-    async function handleCreateFolder() {
-        if (!user) return
-        const name = await promptText({
-            title: "Buat Folder Baru",
-            description: "Folder dipakai untuk mengelompokkan form yang kamu buat.",
-            placeholder: "Nama folder",
-            confirmLabel: "Buat",
-        })
-        if (!name?.trim()) return
-        const { error } = await supabase
-            .from("folders")
-            .insert({ creator_id: user.id, name: name.trim() })
-            .select("id")
-            .single()
-        if (error) {
-            showAlert(error.message, "error")
-            return
-        }
-        showAlert("Folder berhasil dibuat.", "success")
-        loadForms()
-    }
-
-    async function handleRenameFolder(id: string, currentName: string) {
-        const name = await promptText({
-            title: "Ubah Nama Folder",
-            defaultValue: currentName,
-            placeholder: "Nama folder",
-            confirmLabel: "Simpan",
-        })
-        if (name === null || !name.trim() || name.trim() === currentName) return
-        const { error } = await supabase
-            .from("folders")
-            .update({ name: name.trim(), updated_at: new Date().toISOString() })
-            .eq("id", id)
-            .select("id")
-            .maybeSingle()
-        if (error) {
-            showAlert(error.message, "error")
-            return
-        }
-        showAlert("Nama folder berhasil diubah.", "success")
-        loadForms()
-    }
-
-    async function handleDeleteFolder(id: string, name: string) {
-        confirmDelete({
-            title: `Hapus folder "${name}"?`,
-            description: "Form di dalamnya tidak ikut terhapus, hanya keluar dari folder (menjadi Tanpa Folder).",
-            onConfirm: async () => {
-                const { error } = await supabase.from("folders").delete().eq("id", id)
-                if (error) throw new Error(error.message)
-                // Relasi folder_id di forms otomatis diset NULL oleh FK on delete set null.
-                if (activeFolder === id) setActiveFolder("all")
-                await loadForms()
-            },
-        })
-    }
-
     async function handleMoveToFolder(formId: string, folderId: string | null) {
         setMovingId(formId)
         const { error } = await supabase
@@ -384,8 +326,6 @@ function FormList() {
         }
         return map
     }, [forms])
-
-    const unfiledCount = useMemo(() => forms.filter((f) => !f.folder_id).length, [forms])
 
     const visibleForms = useMemo(() => {
         if (activeFolder === "all") return forms
