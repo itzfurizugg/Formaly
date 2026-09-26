@@ -52,8 +52,11 @@ function Register() {
 
     return (
         <div className="min-h-screen flex flex-col lg:flex-row bg-base">
-            <div className="hidden lg:flex flex-1 flex-col justify-end overflow-hidden bg-darks dark:bg-second text-white">
-                <div className="flex items-end gap-6 px-10 pt-20 pb-10">
+            {/* Panel kiri: `relative` + `overflow-hidden` jadi tempat untuk
+            ilustrasi yang_absolute_ dan sengaja meluber ke kanan & bawah; sisi
+            yang keluar panel terpotong mengikuti ukuran div ini. */}
+            <div className="hidden lg:flex flex-1 flex-col justify-start relative overflow-hidden bg-darks dark:bg-second text-white">
+                <div className="flex items-start gap-6 px-10 pt-20 pb-10">
                     <div className="min-w-0 max-w-lg">
                         <div className="flex items-start gap-3 mb-10">
                             <img src={logo} alt="Formaly" className="h-9 w-auto brightness-0 invert" />
@@ -69,13 +72,16 @@ function Register() {
                             Platform all-in-one untuk kebutuhan form kamu.
                         </p>
                     </div>
-
-                    <img
-                        src={ash}
-                        alt="Ilustrasi"
-                        className="pointer-events-none shrink-0 w-auto max-w-[45%] h-[min(52%,22rem)] lg:h-[min(58%,26rem)] xl:h-[min(64%,30rem)] object-contain object-right-bottom"
-                    />
                 </div>
+
+                {/* Absolute + offset negatif: gambarnya meluber melewati tepi
+                kanan & bawah panel, lalu dipotong `overflow-hidden` Wrapper
+                panel — jadi potongan gambar ikut mengikuti ukuran panel. */}
+                <img
+                    src={ash}
+                    alt="Ilustrasi"
+                    className="pointer-events-none absolute z-0 -right-35 -bottom-35 w-auto max-w-none h-[min(62%,26rem)] lg:h-[min(68%,30rem)] xl:h-[min(74%,34rem)] object-contain object-right-bottom select-none"
+                />
             </div>
 
             <div className="lg:hidden w-full flex-1 rounded-none bg-darks dark:bg-second px-5 sm:px-10 py-8 flex flex-col justify-end text-white dark:text-white">

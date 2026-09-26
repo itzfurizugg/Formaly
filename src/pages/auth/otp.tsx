@@ -144,8 +144,11 @@ function Otp() {
 
     return (
         <div className="min-h-screen flex flex-col lg:flex-row bg-base overflow-x-hidden">
-            <div className="hidden lg:flex flex-1 flex-col justify-end overflow-hidden bg-darks dark:bg-second text-white">
-                <div className="flex items-end gap-6 px-10 pt-20 pb-10">
+            {/* Panel kiri: `relative` + `overflow-hidden` jadi tempat dla
+            ilustrasi yang_absolute_ dan sengaja dibuat meluber ke kanan & bawah.
+            Sisi yang keluar panel terpotong mengikuti ukuran div ini. */}
+            <div className="hidden lg:flex flex-1 flex-col justify-start relative overflow-hidden bg-darks dark:bg-second text-white">
+                <div className="flex items-start gap-6 px-10 pt-20 pb-10">
                     <div className="min-w-0 max-w-lg">
                         <div className="flex items-start gap-3 mb-10">
                             <img src={logo} alt="Formaly" className="h-9 w-auto brightness-0 invert" />
@@ -161,13 +164,16 @@ function Otp() {
                             Platform all-in-one untuk kebutuhan form kamu.
                         </p>
                     </div>
-
-                    <img
-                        src={authy}
-                        alt="Ilustrasi"
-                        className="pointer-events-none shrink-0 w-auto max-w-[45%] h-[min(52%,22rem)] lg:h-[min(58%,26rem)] xl:h-[min(64%,30rem)] object-contain object-right-bottom"
-                    />
                 </div>
+
+                {/* Absolute + offset negatif: gambarnya meluber melewati tepi
+                kanan & bawah panel, lalu dipotong `overflow-hidden` Wrapper
+                panel — jadi potongan gambar ikut mengikuti ukuran panel. */}
+                <img
+                    src={authy}
+                    alt="Ilustrasi"
+                    className="pointer-events-none absolute z-0 -right-23 -bottom-40 w-auto max-w-none h-[min(62%,26rem)] lg:h-[min(68%,30rem)] xl:h-[min(74%,34rem)] object-contain object-right-bottom select-none"
+                />
             </div>
 
             <div className="lg:hidden w-full rounded-none bg-darks dark:bg-second px-5 sm:px-10 py-4 flex flex-col justify-center text-white dark:text-second">
@@ -182,7 +188,7 @@ function Otp() {
                         animate="show"
                         className="bg-base lg:bg-white dark:bg-transparent lg:dark:bg-second rounded-2xl border border-transparent lg:border-second p-1 lg:p-8 shadow-none lg:shadow-sm w-full"
                     >
-                        <BackButton to={`/login${nextQuery}`} className="-ml-2"/>
+                        <BackButton to={`/login${nextQuery}`} className="-ml-2" />
                         <div className="flex items-center gap-2 mb-1">
                             <h2 className="text-2xl font-bold text-darks">Verifikasi OTP</h2>
                         </div>

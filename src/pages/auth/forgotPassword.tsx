@@ -34,8 +34,11 @@ function ForgotPassword() {
 
     return (
         <div className="min-h-screen flex flex-col lg:flex-row bg-base">
-            <div className="hidden lg:flex flex-1 flex-col justify-end overflow-hidden bg-darks dark:bg-second text-white">
-                <div className="flex items-end gap-6 px-10 pt-20 pb-10">
+            {/* Panel kiri: `relative` + `overflow-hidden` jadi tempat untuk
+            ilustrasi yang_absolute_ dan sengaja meluber ke kanan & bawah; sisi
+            yang keluar panel terpotong mengikuti ukuran div ini. */}
+            <div className="hidden lg:flex flex-1 flex-col justify-start relative overflow-hidden bg-darks dark:bg-second text-white">
+                <div className="flex items-start gap-6 px-10 pt-20 pb-10">
                     <div className="min-w-0 max-w-lg">
                         <div className="flex items-start gap-3 mb-10">
                             <img src={logo} alt="Formaly" className="h-9 w-auto brightness-0 invert" />
@@ -51,13 +54,16 @@ function ForgotPassword() {
                             Platform all-in-one untuk kebutuhan form kamu.
                         </p>
                     </div>
-
-                    <img
-                        src={passy}
-                        alt="Ilustrasi"
-                        className="pointer-events-none shrink-0 w-auto max-w-[45%] h-[min(52%,22rem)] lg:h-[min(58%,26rem)] xl:h-[min(64%,30rem)] object-contain object-right-bottom"
-                    />
                 </div>
+
+                {/* Absolute + offset negatif: gambarnya meluber melewati tepi
+                kanan & bawah panel, lalu dipotong `overflow-hidden` Wrapper
+                panel — jadi potongan gambar ikut mengikuti ukuran panel. */}
+                <img
+                    src={passy}
+                    alt="Ilustrasi"
+                    className="pointer-events-none absolute z-0 right-0 bottom-0 w-auto max-w-none h-[min(50%,32rem)] lg:h-[min(35%,36rem)] xl:h-[min(41%,40rem)] object-contain object-right-bottom select-none"
+                />
             </div>
 
             <div className="lg:hidden w-full rounded-none bg-darks dark:bg-second px-5 sm:px-10 py-4 flex flex-col justify-center text-white dark:text-second">
@@ -72,7 +78,7 @@ function ForgotPassword() {
                         animate="show"
                         className="bg-base lg:bg-white transparent:bg-second lg:dark:bg-second rounded-2xl border border-transparent lg:border-second p-1 lg:p-8 shadow-none lg:shadow-sm w-full"
                     >
-                        <BackButton to="/login" className="-ml-2"/>
+                        <BackButton to="/login" className="-ml-2" />
 
                         <div className="flex items-center gap-2 mb-1">
                             <h2 className="text-3xl font-bold text-darks">Lupa Password</h2>
