@@ -170,17 +170,17 @@ function Otp() {
                 </div>
             </div>
 
-            <div className="lg:hidden w-full rounded-none bg-darks px-5 sm:px-10 py-4 flex flex-col justify-center text-white dark:text-second">
+            <div className="lg:hidden w-full rounded-none bg-darks dark:bg-second px-5 sm:px-10 py-4 flex flex-col justify-center text-white dark:text-second">
                 <img src={logo} alt="Formaly" className="h-6 w-auto brightness-0 invert self-start" />
             </div>
 
-            <div className="flex-1 flex flex-col items-center justify-start px-4 py-2 sm:px-6 lg:px-0 lg:py-0 lg:min-h-screen lg:justify-center lg:flex-row">
+            <div className="flex-1 flex flex-col items-center justify-start sm:justify-center px-4 py-2 sm:px-6 lg:px-0 lg:py-0 lg:min-h-screen lg:justify-center lg:flex-row">
                 <div className="w-full max-w-xl lg:px-3.5">
                     <motion.div
                         variants={fadeSlide}
                         initial="hidden"
                         animate="show"
-                        className="bg-base lg:bg-white dark:bg-second rounded-2xl border border-transparent lg:border-second p-1 lg:p-8 shadow-none lg:shadow-sm w-full"
+                        className="bg-base lg:bg-white dark:bg-transparent lg:dark:bg-second rounded-2xl border border-transparent lg:border-second p-1 lg:p-8 shadow-none lg:shadow-sm w-full"
                     >
                         <BackButton to={`/login${nextQuery}`} className="-ml-2"/>
                         <div className="flex items-center gap-2 mb-1">
@@ -251,7 +251,7 @@ function Otp() {
                                         inputMode="numeric"
                                         maxLength={1}
                                         required
-                                        className="input flex-1 min-w-0 h-12 w-full text-center text-lg font-semibold bg-second border-darks/10 dark:bg-base dark:border-darks/30 focus:border-done focus:outline-none transition-colors"
+                                        className="input flex-1 min-w-0 h-12 w-full text-center text-lg font-semibold bg-second border-darks/10 dark:bg-second lg:dark:bg-base dark:border-darks/10 focus:border-done focus:outline-none transition-colors"
                                         value={digit}
                                         onChange={(e) => handleChange(i, e.target.value)}
                                         onKeyDown={(e) => handleKeyDown(i, e)}

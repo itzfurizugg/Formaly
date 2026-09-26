@@ -69,28 +69,32 @@ function AdminUsers() {
 
                 <motion.div variants={listContainer} initial="hidden" animate="show" className="w-full mt-6">
                     <div className="stats stats-vertical lg:stats-horizontal w-full grid grid-cols-2 gap-2 overflow-visible p-0 shadow-none sm:gap-3 lg:grid-cols-4">
-                        <motion.div variants={listItem} className="stat min-w-0 rounded-xl border-none bg-done p-3 text-white shadow-sm ring-1 ring-done/30 sm:p-4">
+                        {/* Kartu statistik pakai hex brand tetap, bukan token accent:
+                            di dark mode token done/pass/darks jadi TERANG (mis. #3B9EFF,
+                            #34D399, #F1F2F4) sehingga text-white di atasnya tidak
+                            terbaca. Hex literal menjaga kontras kartu-wputih di dua tema. */}
+                        <motion.div variants={listItem} className="stat min-w-0 rounded-xl border-none bg-[#007DCC] p-3 text-white shadow-sm ring-1 ring-done/30 sm:p-4">
                             <div className="stat-title whitespace-normal text-[11px] font-semibold leading-tight text-white/80 sm:text-xs">Akun Pengguna</div>
                             <div className="stat-value mt-1 text-4xl font-extrabold leading-none text-white sm:text-6xl">{loading ? "..." : accountCounts.user}</div>
                             <div className="stat-desc mt-1 line-clamp-1 whitespace-normal text-[10px] leading-tight text-white/70 sm:text-sm hidden sm:block">Role pengguna</div>
                         </motion.div>
 
-                        <motion.div variants={listItem} className="stat min-w-0 rounded-xl border-none bg-pass p-3 text-white shadow-sm ring-1 ring-pass/30 sm:p-4">
+                        <motion.div variants={listItem} className="stat min-w-0 rounded-xl border-none bg-[#2FA084] p-3 text-white shadow-sm ring-1 ring-pass/30 sm:p-4">
                             <div className="stat-title whitespace-normal text-[11px] font-semibold leading-tight text-white/80 sm:text-xs">Akun Kreator</div>
                             <div className="stat-value mt-1 text-4xl font-extrabold leading-none text-white sm:text-6xl">{loading ? "..." : accountCounts.creator}</div>
                             <div className="stat-desc mt-1 line-clamp-1 whitespace-normal text-[10px] leading-tight text-white/70 sm:text-sm hidden sm:block">Role kreator</div>
                         </motion.div>
 
-                        <motion.div variants={listItem} className="stat min-w-0 rounded-xl border-none bg-darks p-3 text-white shadow-sm ring-1 ring-darks/20 sm:p-4">
+                        <motion.div variants={listItem} className="stat min-w-0 rounded-xl border-none bg-[#393E46] p-3 text-white shadow-sm ring-1 ring-darks/20 sm:p-4">
                             <div className="stat-title whitespace-normal text-[11px] font-semibold leading-tight text-white/80 sm:text-xs">Akun Administrator</div>
                             <div className="stat-value mt-1 text-4xl font-extrabold leading-none text-white sm:text-6xl">{loading ? "..." : accountCounts.admin}</div>
                             <div className="stat-desc mt-1 line-clamp-1 whitespace-normal text-[10px] leading-tight text-white/70 sm:text-sm hidden sm:block">Role administrator</div>
                         </motion.div>
 
-                        <motion.div variants={listItem} className="stat min-w-0 rounded-xl border-none bg-white p-3 text-darks shadow-sm ring-1 ring-second dark:bg-base dark:text-white sm:p-4">
-                            <div className="stat-title whitespace-normal text-[11px] font-semibold leading-tight text-darks/70 dark:text-white/80 sm:text-xs">Total Pengguna</div>
-                            <div className="stat-value mt-1 text-4xl font-extrabold leading-none text-darks dark:text-white sm:text-6xl">{loading ? "..." : accounts.length}</div>
-                            <div className="stat-desc mt-1 line-clamp-1 whitespace-normal text-[10px] leading-tight text-darks/60 dark:text-white/70 sm:text-sm hidden sm:block">Seluruh akun terdaftar</div>
+                        <motion.div variants={listItem} className="stat min-w-0 rounded-xl border-none bg-white p-3 text-darks shadow-sm ring-1 ring-second dark:bg-second sm:p-4">
+                            <div className="stat-title whitespace-normal text-[11px] font-semibold leading-tight text-darks/70 sm:text-xs">Total Pengguna</div>
+                            <div className="stat-value mt-1 text-4xl font-extrabold leading-none text-darks sm:text-6xl">{loading ? "..." : accounts.length}</div>
+                            <div className="stat-desc mt-1 line-clamp-1 whitespace-normal text-[10px] leading-tight text-darks/60 sm:text-sm hidden sm:block">Seluruh akun terdaftar</div>
                         </motion.div>
                     </div>
                 </motion.div>
@@ -100,7 +104,7 @@ function AdminUsers() {
                 <motion.div variants={fadeSlide} className="w-full mt-6">
                     <Link
                         to="/admin/userManagement"
-                        className="group relative mb-5 flex w-full items-center justify-between gap-3 overflow-hidden rounded-xl bg-white p-3 shadow-sm transition-all active:scale-[0.98] dark:border-darks/15 dark:bg-second"
+                        className="group relative mb-5 flex w-full items-center justify-between gap-3 overflow-hidden rounded-xl bg-white p-3 shadow-sm transition-all active:scale-[0.98] dark:border-darks/15 dark:bg-second dark:shadow-none"
                     >
                         <div className="relative z-10 ml-1 min-w-0 flex-1 pr-14">
                             <div className="flex items-center gap-1.5">
@@ -119,16 +123,16 @@ function AdminUsers() {
         {/* ADMIN PROFILE — di luar motion.div supaya position:fixed benar-benar
             menempel ke viewport. Kalau di dalam, transform dari animasi y
             bikin elemen ini jadi containing block dan bar-nya ikut bergerak. */}
-        <div className="fixed bg-transparent bottom-0 left-1/2 -translate-x-1/2 w-full max-w-4xl z-40 bg-base border-t border-second px-6 sm:px-3 py-8 flex items-center justify-between gap-3">
+        <div className="fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-4xl z-40 bg-base px-6 sm:px-3 py-8 flex items-center justify-between gap-3">
             <div className="flex items-center gap-3 min-w-0">
-                <div className="w-9 h-9 rounded-full bg-done overflow-hidden flex items-center justify-center shrink-0 ring-2 ring-white dark:ring-second">
+                <div className="w-9 h-9 rounded-full bg-[#007DCC] overflow-hidden flex items-center justify-center shrink-0 ring-2 ring-white dark:ring-darks/25">
                     <span className="text-sm font-bold text-white">
                         {(profile?.name || "U").charAt(0).toUpperCase()}
                     </span>
                 </div>
                 <div className="min-w-0">
-                    <p className="text-sm font-semibold text-darks dark:text-white truncate">{profile?.name || "User"}</p>
-                    <p className="text-xs text-darks/60 dark:text-white/60 truncate">{profile?.email || "user@email.com"}</p>
+                    <p className="text-sm font-semibold text-darks truncate">{profile?.name || "User"}</p>
+                    <p className="text-xs text-tinted truncate">{profile?.email || "user@email.com"}</p>
                 </div>
             </div>
 

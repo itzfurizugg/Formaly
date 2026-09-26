@@ -392,32 +392,10 @@ function FormList() {
                                                 <span className="max-w-[9rem] truncate">{f.name}</span>
                                                 {countBadge(active, count)}
                                             </button>
-                                        {/* <div className="ml-0.5 hidden group-hover:flex items-center gap-0.5">
-                                            <button
-                                                onClick={() => handleRenameFolder(f.id, f.name)}
-                                                aria-label={`Ubah nama folder ${f.name}`}
-                                                className="btn btn-xs btn-ghost btn-circle h-7 min-h-0 w-7 text-tinted hover:bg-base"
-                                            >
-                                                <Pencil className="h-3 w-3" />
-                                            </button>
-                                            <button
-                                                onClick={() => handleDeleteFolder(f.id, f.name)}
-                                                aria-label={`Hapus folder ${f.name}`}
-                                                className="btn btn-xs btn-ghost btn-circle h-7 min-h-0 w-7 text-wrong hover:bg-wrong/10"
-                                            >
-                                                <Trash2 className="h-3 w-3" />
-                                            </button>
-                                        </div> */}
                                     </motion.div>
                                 )
                             })}
                             </AnimatePresence>
-                            {/* <button
-                                onClick={handleCreateFolder}
-                                className="btn btn-sm h-8 min-h-0 rounded-full gap-1.5 px-3 bg-base text-darks border border-dashed border-second hover:bg-white dark:hover:bg-second"
-                            >
-                                <FolderPlus className="h-3.5 w-3.5" /> Folder Baru
-                            </button> */}
                         </motion.div>
 
                         {visibleForms.length === 0 ? (

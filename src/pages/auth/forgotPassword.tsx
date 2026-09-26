@@ -60,7 +60,7 @@ function ForgotPassword() {
                 </div>
             </div>
 
-            <div className="lg:hidden w-full rounded-none bg-darks px-5 sm:px-10 py-4 flex flex-col justify-center text-white dark:text-second">
+            <div className="lg:hidden w-full rounded-none bg-darks dark:bg-second px-5 sm:px-10 py-4 flex flex-col justify-center text-white dark:text-second">
                 <img src={logo} alt="Formaly" className="h-6 w-auto brightness-0 invert self-start" />
             </div>
 
@@ -70,7 +70,7 @@ function ForgotPassword() {
                         variants={fadeSlide}
                         initial="hidden"
                         animate="show"
-                        className="bg-base lg:bg-white dark:bg-second rounded-2xl border border-transparent lg:border-second p-1 lg:p-8 shadow-none lg:shadow-sm w-full"
+                        className="bg-base lg:bg-white transparent:bg-second lg:dark:bg-second rounded-2xl border border-transparent lg:border-second p-1 lg:p-8 shadow-none lg:shadow-sm w-full"
                     >
                         <BackButton to="/login" className="-ml-2"/>
 
@@ -138,7 +138,7 @@ function ForgotPassword() {
                                                 type="email"
                                                 required
                                                 autoComplete="email"
-                                                className="input w-full bg-second border-darks/10 dark:bg-base dark:border-darks/30 focus:border-done focus:outline-none transition-colors"
+                                                className="input w-full bg-second border-darks/10 dark:bg-second lg:dark:bg-base dark:border-darks/10 focus:border-done focus:outline-none transition-colors"
                                                 placeholder="nama@email.com"
                                                 value={email}
                                                 onChange={(e) => setEmail(e.target.value)}

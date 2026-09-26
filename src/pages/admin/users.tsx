@@ -112,7 +112,7 @@ function AdminUsers() {
     // Satu markup untuk dua penempatan: inline di flow (desktop) dan fixed di
     // bawah layar (mobile), jadi behave-nya sama persis di kedua breakpoint.
     const searchField = (
-        <label className="input w-full rounded-xl bg-base border border-second focus-within:border-darks/20 flex items-center gap-2">
+        <label className="input w-full rounded-xl bg-white dark:bg-second border border-second focus-within:border-darks/30 flex items-center gap-2">
             <Search className="h-4 w-4 text-tinted shrink-0" />
             <input
                 type="search"
@@ -208,7 +208,7 @@ function AdminUsers() {
                                         setDeleteStep("idle")
                                         setDeletedAccountInfo(null)
                                     }}
-                                    className="card bg-base border border-second rounded-xl hover:border-darks/20 hover:shadow-sm transition-colors cursor-pointer"
+                                    className="card bg-white dark:bg-second border border-second rounded-xl hover:border-darks/20 hover:shadow-sm transition-colors cursor-pointer"
                                 >
                                     <div className="card-body p-4 flex-row items-center justify-between gap-2">
                                         <Link
@@ -254,7 +254,7 @@ function AdminUsers() {
                                     />
                                     <motion.div
                                         layoutId={`account-card-${selectedAccount.id}`}
-                                        className="relative w-full max-w-lg bg-base border border-second rounded-lg shadow-2xl z-10 overflow-hidden"
+                                        className="relative w-full max-w-lg bg-white dark:bg-second border border-second rounded-lg shadow-2xl z-10 overflow-hidden"
                                         transition={{ type: "spring", damping: 28, stiffness: 320 }}
                                         role="dialog"
                                         aria-modal="true"
@@ -287,7 +287,7 @@ function AdminUsers() {
                                                             transition={{ duration: 0.2, delay: 0.05 }}
                                                             className="mt-6 space-y-4"
                                                         >
-                                                            <div className="bg-second/50 rounded-xl p-3.5 space-y-2 text-sm">
+                                                            <div className="bg-second/50 dark:bg-darks/10 rounded-xl p-3.5 space-y-2 text-sm">
                                                                 <div className="flex items-center justify-between text-xs text-tinted">
                                                                     <span>ID Akun</span>
                                                                     <span className="font-mono text-darks select-all text-[11px] sm:text-xs">
@@ -311,17 +311,21 @@ function AdminUsers() {
                                                                     <span className="text-sm font-semibold text-darks leading-none">Role Pengguna</span>
                                                                     <span className="text-xs text-tinted leading-none mt-1.5">Ubah hak akses akun</span>
                                                                 </div>
-                                                                <div className="grid grid-cols-3 gap-1.5 bg-second/50 rounded-lg p-1">
-                                                                    {(["user", "creator", "admin"] as Role[]).map((roleOption) => {
-                                                                        const isActive = selectedAccount.role === roleOption
-                                                                        const isSavingThis = saving === selectedAccount.id
-                                                                        const label = roleOption === "user" ? "User" : roleOption === "creator" ? "Creator" : "Admin"
-                                                                        const activeColor =
-                                                                            roleOption === "user"
-                                                                                ? "bg-done text-white"
-                                                                                : roleOption === "creator"
-                                                                                    ? "bg-success text-white"
-                                                                                    : "bg-darks text-white"
+                                                            {/* Track pakai dark:bg-darks/10, bukan bg-second/50: di dark mode
+                                                                modal ini bg-second sehingga track second/50 tidak kelihatan.
+                                                                Warna aktif pakai hex brand tetap supaya text-white selalu terbaca
+                                                                (token done/pass/darks jadi terang di dark mode). */}
+                                                            <div className="grid grid-cols-3 gap-1.5 bg-second/50 dark:bg-darks/10 rounded-lg p-1">
+                                                                {(["user", "creator", "admin"] as Role[]).map((roleOption) => {
+                                                                    const isActive = selectedAccount.role === roleOption
+                                                                    const isSavingThis = saving === selectedAccount.id
+                                                                    const label = roleOption === "user" ? "User" : roleOption === "creator" ? "Creator" : "Admin"
+                                                                    const activeColor =
+                                                                        roleOption === "user"
+                                                                            ? "bg-[#007DCC] text-white"
+                                                                            : roleOption === "creator"
+                                                                                ? "bg-[#2FA084] text-white"
+                                                                                : "bg-[#393E46] text-white"
                                                                         return (
                                                                             <button
                                                                                 key={roleOption}
@@ -359,7 +363,7 @@ function AdminUsers() {
                                                             <button
                                                                 type="button"
                                                                 onClick={closeModal}
-                                                                className="btn btn-sm rounded-sm bg-second hover:bg-second/80 text-darks border-none px-4"
+                                                                className="btn btn-sm rounded-sm bg-second hover:bg-second/80 dark:bg-darks/15 dark:hover:bg-darks/25 text-darks border-none px-4"
                                                             >
                                                                 Tutup
                                                             </button>
@@ -388,7 +392,7 @@ function AdminUsers() {
                                                                 type="button"
                                                                 disabled={saving === selectedAccount.id}
                                                                 onClick={() => setDeleteStep("idle")}
-                                                                className="btn btn-sm rounded-sm bg-second hover:bg-second/80 text-darks border-none px-4"
+                                                                className="btn btn-sm rounded-sm bg-second hover:bg-second/80 dark:bg-darks/15 dark:hover:bg-darks/25 text-darks border-none px-4"
                                                             >
                                                                 Batal
                                                             </button>
@@ -396,7 +400,7 @@ function AdminUsers() {
                                                                 type="button"
                                                                 disabled={saving === selectedAccount.id}
                                                                 onClick={() => deleteAccount(selectedAccount)}
-                                                                className="btn btn-sm rounded-sm bg-wrong/10 hover:bg-wrong/90 text-wrong hover:text-white border-none px-4"
+                                                                className="btn btn-sm rounded-sm bg-wrong/10 dark:bg-wrong/20 text-wrong hover:bg-[#D90000] hover:text-white border-none px-4"
                                                             >
                                                                 {saving === selectedAccount.id ? "Menghapus..." : "Ya, Hapus Akun"}
                                                             </button>
@@ -420,15 +424,15 @@ function AdminUsers() {
                                                         <p className="text-sm text-tinted max-w-sm">
                                                             Akun <span className="font-semibold text-darks">{deletedAccountInfo?.name || selectedAccount.name}</span> telah berhasil dihapus dari Formaly.
                                                         </p>
-                                                        <div className="mt-6 flex justify-center w-full">
-                                                            <button
-                                                                type="button"
-                                                                onClick={closeModal}
-                                                                className="btn btn-sm rounded-full bg-darks text-white hover:bg-darks/90 border-none px-3.5"
-                                                            >
-                                                                Tutup
-                                                            </button>
-                                                        </div>
+                                                            <div className="mt-6 flex justify-center w-full">
+                                                                <button
+                                                                    type="button"
+                                                                    onClick={closeModal}
+                                                                    className="btn btn-sm rounded-full bg-[#393E46] dark:bg-darks text-white hover:opacity-90 border-none px-3.5"
+                                                                >
+                                                                    Tutup
+                                                                </button>
+                                                            </div>
                                                     </motion.div>
                                                 )}
                                             </AnimatePresence>
@@ -450,7 +454,10 @@ function AdminUsers() {
             dulu lalu "kedip" saat data akun selesai fetched. */}
             <div className="fixed bottom-0 left-0 right-0 z-40 pointer-events-none sm:hidden">
                 <div className="absolute inset-x-0 bottom-0 h-30 pointer-events-none">
-                    <div className="absolute inset-0 bg-gradient-to-t from-darks/25 from-20% to-darks/0" />
+                    {/* dari-darks/25 hanya benar di light mode (darks = teks gelap).
+                        Di dark mode darks jadi #F1F2F4 sehingga gradiennya jadi
+                        glow putih; pakai warna kanvas gelap sebagai gantinya. */}
+                    <div className="absolute inset-0 bg-gradient-to-t from-darks/25 from-20% to-transparent dark:from-[#222831] dark:to-transparent" />
                     <div
                         className="absolute inset-0 backdrop-blur-[1px]"
                         style={{ maskImage: "linear-gradient(to top, black 0%, black 40%, transparent 70%)" }}

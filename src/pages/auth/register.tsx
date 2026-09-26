@@ -78,13 +78,13 @@ function Register() {
                 </div>
             </div>
 
-            <div className="lg:hidden w-full flex-1 rounded-none bg-darks px-5 sm:px-10 py-8 flex flex-col justify-end text-white dark:text-second">
+            <div className="lg:hidden w-full flex-1 rounded-none bg-darks dark:bg-second px-5 sm:px-10 py-8 flex flex-col justify-end text-white dark:text-white">
                 <img src={logo} alt="Formaly" className="h-6 w-auto brightness-0 invert mb-6 self-start" />
                 <h1 className="text-xl font-bold leading-tight">
                     Buat lebih mudah.
                     <span className="block mt-1">Kerjakan dengan gampang.</span>
                 </h1>
-                <p className="text-xs text-white/75 dark:text-second/75 mt-3 max-w-md leading-relaxed">
+                <p className="text-xs text-white/75 dark:text-white/75 mt-3 max-w-md leading-relaxed">
                     Kelola formulir dan data dengan cepat, mudah, dan efisien.
                     Platform all-in-one untuk kebutuhan form kamu.
                 </p>
@@ -98,7 +98,7 @@ function Register() {
                         variants={fadeSlide}
                         initial="hidden"
                         animate="show"
-                        className="bg-base lg:bg-white dark:bg-second rounded-2xl border border-transparent lg:border-second p-1 lg:p-8 shadow-none lg:shadow-sm w-full"
+                        className="bg-base lg:bg-white dark:bg-transparent lg:dark:bg-second rounded-2xl border border-transparent lg:border-second p-1 lg:p-8 shadow-none lg:shadow-sm w-full"
                     >
                         <h2 className="text-2xl font-bold text-darks">Daftar</h2>
                         <p className="text-sm text-tinted mt-1 mb-6">
@@ -131,8 +131,8 @@ function Register() {
                                     type="text"
                                     required
                                     autoComplete="name"
-                                    className="input w-full bg-second border-darks/10 dark:bg-base dark:border-darks/30 focus:border-done focus:outline-none transition-colors"
-                                    placeholder="John Smith"
+                                    className="input w-full bg-second border-darks/10 dark:bg-second lg:dark:bg-base dark:border-darks/10 focus:border-done focus:outline-none transition-colors"
+                                    placeholder="John Doe"
                                     value={name}
                                     onChange={(e) => setName(e.target.value)}
                                 />
@@ -146,7 +146,7 @@ function Register() {
                                     type="email"
                                     required
                                     autoComplete="email"
-                                    className="input w-full bg-second border-darks/10 dark:bg-base dark:border-darks/30 focus:border-done focus:outline-none transition-colors"
+                                    className="input w-full bg-second border-darks/10 dark:bg-second lg:dark:bg-base dark:border-darks/10 focus:border-done focus:outline-none transition-colors"
                                     placeholder="nama@email.com"
                                     value={email}
                                     onChange={(e) => setEmail(e.target.value)}
