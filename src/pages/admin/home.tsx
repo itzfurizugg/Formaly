@@ -1,9 +1,11 @@
 import { useCallback, useEffect, useState } from "react"
-import { ChevronRight } from "lucide-react"
-import { Link } from "react-router-dom"
+import { ChevronRight, LogOut } from "lucide-react"
+import { Link, useNavigate } from "react-router-dom"
 import { motion } from "motion/react"
 import { fadeSlide, listContainer, listItem } from "../../lib/motion"
 import { supabase } from "../../lib/supabase"
+import { useAuth } from "../../lib/auth-context"
+import { showAlert } from "../../lib/alerts"
 
 type Role = "user" | "creator" | "admin"
 
@@ -16,12 +18,27 @@ type Account = {
 }
 
 function AdminUsers() {
+    const navigate = useNavigate()
+    const { logout, profile } = useAuth()
     const [accounts, setAccounts] = useState<Account[]>([])
     const [loading, setLoading] = useState(true)
+    const [loggingOut, setLoggingOut] = useState(false)
     const [error, setError] = useState<string | null>(null)
 
     const accountCounts = { user: 0, creator: 0, admin: 0 }
     for (const account of accounts) accountCounts[account.role] += 1
+
+    const handleLogout = async () => {
+        setLoggingOut(true)
+        try {
+            await logout()
+            showAlert("Berhasil keluar.", "success")
+            navigate("/login")
+        } catch (err) {
+            showAlert(err instanceof Error ? err.message : "Gagal keluar.", "error")
+            setLoggingOut(false)
+        }
+    }
 
     const fetchAccounts = useCallback(async () => {
         setLoading(true)
@@ -35,8 +52,9 @@ function AdminUsers() {
     useEffect(() => { fetchAccounts() }, [fetchAccounts])
 
     return (
+        <>
         <motion.div
-            className="flex flex-col items-center px-3.5 py-10"
+            className="flex flex-col items-center px-3.5 py-10 pb-24"
             initial="hidden"
             animate="show"
             variants={fadeSlide}
@@ -95,7 +113,36 @@ function AdminUsers() {
                     </Link>
                 </motion.div>
             </div>
+
         </motion.div>
+
+        {/* ADMIN PROFILE — di luar motion.div supaya position:fixed benar-benar
+            menempel ke viewport. Kalau di dalam, transform dari animasi y
+            bikin elemen ini jadi containing block dan bar-nya ikut bergerak. */}
+        <div className="fixed bg-transparent bottom-0 left-1/2 -translate-x-1/2 w-full max-w-4xl z-40 bg-base border-t border-second px-6 sm:px-3 py-8 flex items-center justify-between gap-3">
+            <div className="flex items-center gap-3 min-w-0">
+                <div className="w-9 h-9 rounded-full bg-done overflow-hidden flex items-center justify-center shrink-0 ring-2 ring-white dark:ring-second">
+                    <span className="text-sm font-bold text-white">
+                        {(profile?.name || "U").charAt(0).toUpperCase()}
+                    </span>
+                </div>
+                <div className="min-w-0">
+                    <p className="text-sm font-semibold text-darks dark:text-white truncate">{profile?.name || "User"}</p>
+                    <p className="text-xs text-darks/60 dark:text-white/60 truncate">{profile?.email || "user@email.com"}</p>
+                </div>
+            </div>
+
+            <button
+                type="button"
+                onClick={handleLogout}
+                disabled={loggingOut}
+                className="btn btn-sm rounded-full bg-wrong/10 hover:bg-wrong/20 text-wrong border-none flex items-center gap-1.5 shrink-0"
+            >
+                <LogOut className="h-4 w-4" />
+                <span className="hidden sm:block">{loggingOut ? "Keluar..." : "Keluar"}</span>
+            </button>
+        </div>
+        </>
     )
 }
 

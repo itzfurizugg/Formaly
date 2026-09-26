@@ -6,8 +6,6 @@ import {
     ClipboardList,
     FileText,
     Folder,
-    FolderOpen,
-    FolderPlus,
     Home,
     KeyRound,
     LayoutGrid,
