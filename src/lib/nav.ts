@@ -15,6 +15,8 @@ const HIDE_NAV_PATHS = [
     "/credit",
     "/settings",
     "/upgrade-to-creator",
+    "/admin",
+    "/admin/userManagement",
 ]
 
 /** Apakah Navbar umum dirender untuk path ini. */

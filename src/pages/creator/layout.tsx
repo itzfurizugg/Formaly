@@ -1,5 +1,8 @@
 import { useEffect, useState } from "react"
 import { Outlet, useLocation } from "react-router-dom"
+import { motion } from "motion/react"
+import { easeOutExpo } from "../../lib/motion"
+import { CREATOR_SIDEBAR_WIDTH } from "../../lib/creatorLayout"
 
 // Sidebar desktop hanya tampil di >= lg. Padding kompensasi mengikuti breakpoint itu
 // agar konten di layar kecil tidak ikut diberi ruang kosong.
@@ -19,17 +22,22 @@ function CreatorLayout() {
     const isDesktop = useIsDesktop()
     const { pathname } = useLocation()
     // Di halaman generate Galileo, sidebar disembunyikan (menggelincir ke kiri),
-    // jadi ruang kompensasi 20vw juga dihilangkan supaya loader jadi full-width.
+    // jadi ruang kompensasi juga dihilangkan supaya loader jadi full-width.
     const sidebarHidden = pathname.startsWith("/creator/galileo/generate")
-    // 20vw = seperlima lebar layar, sinkron dengan lebar sidebar desktop
-    // (w-[20vw] di CreatorSidebar). Padding kompensasi statis (tanpa animasi):
-    // sidebar tampil langsung sebagai bagian halaman, bukan digeser masuk.
-    const targetPad = isDesktop && !sidebarHidden ? "20vw" : "0rem"
+    // Ruang kompensasi = lebar sidebar persis (CREATOR_SIDEBAR_WIDTH), lalu
+    // digeser pakai Motion dengan durasi/easing yang SAMA dengan slide sidebar
+    // supaya konten dan sidebar bergeraksinkron, tidak saling tertinggal.
+    const targetPad = isDesktop && !sidebarHidden ? CREATOR_SIDEBAR_WIDTH : "0rem"
 
     return (
-        <div className="bg-second dark:bg-base min-h-screen transition-[padding-left] duration-500 ease-in-out" style={{ paddingLeft: targetPad }}>
+        <motion.div
+            className="bg-second dark:bg-base min-h-screen"
+            initial={false}
+            animate={{ paddingLeft: targetPad }}
+            transition={{ duration: 0.45, ease: easeOutExpo }}
+        >
             <Outlet />
-        </div>
+        </motion.div>
     )
 }
 

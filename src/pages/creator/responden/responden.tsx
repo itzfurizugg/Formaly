@@ -56,8 +56,8 @@ function CreatorResponden() {
             <div className="w-full xl:max-w-7xl lg:max-w-5xl">
                 <BackButton to="/creator" />
 
-                <div className="ml-2">
-                    <h1 className="text-3xl lg:text-5xl font-bold font-display text-darks mb-1">Responden</h1>
+                <div className="ml-1">
+                    <h1 className="text-3xl lg:text-5xl font-bold font-display text-darks mb-0.5">Responden</h1>
                     <p className="text-sm text-tinted mb-6">Pilih form untuk melihat submission-nya.</p>
                 </div>
 

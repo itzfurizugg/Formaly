@@ -3,6 +3,20 @@ import type { Variants } from "motion/react"
 // Kurva easing konsisten dengan Navbar/CreatorSidebar/Home (Framer Motion).
 export const easeOutExpo: [number, number, number, number] = [0.22, 1, 0.36, 1]
 
+// Transisi perpindahan route (dipakai App.tsx).
+//
+// Container halaman TIDAK boleh fade-in lagi: setiap halaman sudah punya
+// animasi masuk sendiri (fadeSlide / stagger listContainer), jadi fade di
+// container bikin kontenatherapy dua kali (page redup -> offset -> offset
+// lagi) dan itu terbaca seperti "kedip / lagi fetch data".
+// `initial={false}` di pemanggil => halaman baru langsung tampil di opacity 1,
+// animasi masuknya tetap milik animasi dalam halaman. Container hanya
+// fade-out saat pindah route. `mode: "wait"` => exit selesai dulu baru enter.
+export const pageTransition: Variants = {
+    enter: { opacity: 1 },
+    exit: { opacity: 0, transition: { duration: 0.12, ease: "easeIn" } },
+}
+
 // Entri halaman/konten: fade + slide atas (pola Home.tsx).
 export const fadeSlide: Variants = {
     hidden: { opacity: 0, y: 16 },

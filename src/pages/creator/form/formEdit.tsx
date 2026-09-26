@@ -396,8 +396,8 @@ function FormEdit() {
                 .from("forms")
                 .update({
                     show_score_to_respondent: settings.show_score_to_respondent,
-                     show_answers_to_respondent: settings.show_answers_to_respondent,
-                     show_correct_filter_to_respondent: settings.show_answers_to_respondent,
+                    show_answers_to_respondent: settings.show_answers_to_respondent,
+                    show_correct_filter_to_respondent: settings.show_answers_to_respondent,
                     randomize_questions: settings.randomize_questions,
                     allow_multiple_submissions: settings.allow_multiple_submissions,
                     header_color: headerColor || null,
@@ -452,8 +452,8 @@ function FormEdit() {
                 .from("forms")
                 .update({
                     show_score_to_respondent: settings.show_score_to_respondent,
-                     show_answers_to_respondent: settings.show_answers_to_respondent,
-                     show_correct_filter_to_respondent: settings.show_answers_to_respondent,
+                    show_answers_to_respondent: settings.show_answers_to_respondent,
+                    show_correct_filter_to_respondent: settings.show_answers_to_respondent,
                     randomize_questions: settings.randomize_questions,
                     allow_multiple_submissions: settings.allow_multiple_submissions,
                     header_color: headerColor || null,
@@ -524,13 +524,13 @@ function FormEdit() {
                     className="flex flex-col items-center px-3.5 sm:px-6 pt-5 pb-28 sm:pb-10 sm:py-10"
                 >
                     <div className="w-full xl:max-w-7xl lg:max-w-5xl">
-                        <BackButton to="/creator" />
 
                         {/* Tabs sticky di atas; yang ikut scroll cuma kolom kiri.
                         Border transparan bawah dipakai untuk mencegah margin-bottom FormTabs
                         collapse keluar dari box sticky, sehingga strip 24px di bawah pill ikut
                         dilapisi bg-white dark:bg-second dan shadow card tidak bocor saat lewat di bawahnya. */}
-                        <div className="sticky top-0 z-30 w-full bg-base-300 dark:bg-base lg:pt-1">
+                        <div className="sticky top-0  z-30 w-full bg-base-300 dark:bg-base lg:pt-1">
+                            <BackButton to="/creator" />
                             <FormTabs id={id} active="detail" />
                         </div>
 
@@ -611,10 +611,10 @@ function FormEdit() {
                                                             aria-checked={selected}
                                                             onClick={() => setStatus(opt.value)}
                                                             className={`flex items-center justify-center gap-2 rounded-sm border-2 px-3 py-2.5 text-sm font-medium transition-all duration-200 active:scale-[0.98] ${selected
-                                                             ? opt.value === "draft"
-                                                                 ? "border-darks bg-darks text-base"
-                                                                 : "border-done bg-done text-base"
-                                                             : "border-second bg-white dark:bg-second text-darks hover:shadow-sm"
+                                                                ? opt.value === "draft"
+                                                                    ? "border-darks bg-darks text-base"
+                                                                    : "border-done bg-done text-base"
+                                                                : "border-second bg-white dark:bg-second text-darks hover:shadow-sm"
                                                                 }`}
                                                         >
                                                             {opt.label}

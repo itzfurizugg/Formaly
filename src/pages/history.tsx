@@ -5,7 +5,7 @@ import { FileText } from "lucide-react"
 import HistoryCard from "../components/historyCard"
 import { supabase } from "../lib/supabase"
 import { useAuth } from "../lib/auth-context"
-import { easeOutExpo } from "../lib/motion"
+import { fadeSlide, listContainer, listItem } from "../lib/motion"
 
 interface HistoryItem {
     id: string
@@ -98,56 +98,65 @@ function History() {
     if (authLoading || !user) return null
 
     return (
-        <>
-            {!authLoading && user && !loading && (
-                <div className="flex flex-col items-center px-3.5 sm:px-6 py-5">
-                    <div className="max-w-5xl grid w-full lg:mt-3">
-                        <div className="ml-2 sm:ml-3 lg:ml-0">
-                            <div className="flex items-center gap-2 mb-1">
-                                <h1 className="text-2xl lg:text-6xl text-darks font-bold font-display">Riwayat</h1>
-                            </div>
-                            <p className="text-sm text-tinted mb-6">
-                                Formulir yang pernah kamu kerjakan.
-                            </p>
-                        </div>
-
-                        {filtered.length === 0 ? (
-                            <div className="text-center py-20">
-                                <FileText className="h-12 w-12 text-tinted/40 mx-auto mb-3" />
-                                <p className="text-tinted">Belum ada histori formulir.</p>
-                            </div>
-                        ) : (
-                            <div className="grid sm:grid-cols-2 gap-3 items-stretch">
-                                {filtered.map((item, index) => (
-                                    <motion.div
-                                        key={item.id}
-                                        initial={{ opacity: 0, y: 12 }}
-                                        animate={{ opacity: 1, y: 0 }}
-                                        transition={{ duration: 0.35, ease: easeOutExpo, delay: Math.min(index * 0.06, 0.4) }}
-                                        className="h-full"
-                                    >
-                                        <HistoryCard
-                                            formId={item.form_id}
-                                            title={item.forms?.title || "Form"}
-                                            author={item.forms?.author_name || "-"}
-                                            duration={item.forms?.duration ? `${item.forms.duration} menit` : "Tanpa Waktu"}
-                                            questions={item.forms?.question_count || 0}
-                                            score={item.total_score || 0}
-                                            passingScore={item.forms?.passing_score ?? null}
-                                            hideScore={!item.forms?.show_score}
-                                            headerImage={item.forms?.header_image || null}
-                                            headerColor={item.forms?.header_color}
-                                            headerMedia={item.forms?.media_url || null}
-                                            to={`/form/result/${item.id}`}
-                                        />
-                                    </motion.div>
-                                ))}
-                            </div>
-                        )}
+        <div className="flex flex-col items-center px-3.5 sm:px-6 py-5">
+            <div className="max-w-5xl grid w-full lg:mt-3">
+                <motion.div
+                    variants={fadeSlide}
+                    initial="hidden"
+                    animate="show"
+                    className="ml-2 sm:ml-3 lg:ml-0"
+                >
+                    <div className="flex items-center gap-2 mb-1">
+                        <h1 className="text-2xl lg:text-6xl text-darks font-bold font-display">Riwayat</h1>
                     </div>
-                </div>
-            )}
-        </>
+                    <p className="text-sm text-tinted mb-6">
+                        Formulir yang pernah kamu kerjakan.
+                    </p>
+                </motion.div>
+
+                {/* Chrome halaman (judul) dirender di luar gerbang `loading`
+                    supaya halaman langsung terlihat begitu dibuka. Gate hanya
+                    area daftar; kalau judul ikut di dalam, seluruh halaman baru
+                    mount setelah data datang dan animasi stagger-nya
+                    kedengaran "page kedip kayak lagi fetch". */}
+                {!loading && filtered.length === 0 ? (
+                    <div className="text-center py-20">
+                        <FileText className="h-12 w-12 text-tinted/40 mx-auto mb-3" />
+                        <p className="text-tinted">Belum ada histori formulir.</p>
+                    </div>
+                ) : !loading && (
+                    <motion.div
+                        variants={listContainer}
+                        initial="hidden"
+                        animate="show"
+                        className="grid sm:grid-cols-2 gap-3 items-stretch"
+                    >
+                        {filtered.map((item) => (
+                            <motion.div
+                                key={item.id}
+                                variants={listItem}
+                                className="h-full"
+                            >
+                                <HistoryCard
+                                    formId={item.form_id}
+                                    title={item.forms?.title || "Form"}
+                                    author={item.forms?.author_name || "-"}
+                                    duration={item.forms?.duration ? `${item.forms.duration} menit` : "Tanpa Waktu"}
+                                    questions={item.forms?.question_count || 0}
+                                    score={item.total_score || 0}
+                                    passingScore={item.forms?.passing_score ?? null}
+                                    hideScore={!item.forms?.show_score}
+                                    headerImage={item.forms?.header_image || null}
+                                    headerColor={item.forms?.header_color}
+                                    headerMedia={item.forms?.media_url || null}
+                                    to={`/form/result/${item.id}`}
+                                />
+                            </motion.div>
+                        ))}
+                    </motion.div>
+                )}
+            </div>
+        </div>
     )
 }
 

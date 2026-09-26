@@ -7,8 +7,8 @@ import { useAuth } from "../../lib/auth-context"
 import { DistributionChart, MiniDistributionChart, type BarDatum } from "../../components/charts"
 import { useThemeColors } from "../../lib/theme-context"
 import { pageGet, pageSet } from "../../lib/pageCache"
-import { easeOutExpo, listContainer, listItem } from "../../lib/motion"
-import Loading from "../../components/loading"
+import { fadeSlide, listContainer, listItem } from "../../lib/motion"
+import LinearProgress from "../../components/LinearProgress"
 import BackButton from "../../components/backButton"
 
 interface Stats {
@@ -71,7 +71,7 @@ function CreatorDashboard() {
         if (!cached) setLoading(true)
 
         // Satu round-trip menggabungkan cek role + seluruh data dashboard
-        // sekaligus, sehingga cuma ada SATU loading state (Loading di
+        // sekaligus, sehingga cuma ada SATU loading state (LinearProgress di
         // bawah) — bukan "Memeriksa akses..." terpisah dari guard lagi.
         const [roleRes, formsRes, subCountRes, scoreRes] = await Promise.all([
             supabase.from("users").select("role").eq("id", user.id).single(),
@@ -179,30 +179,39 @@ function CreatorDashboard() {
 
     return (
         <div className="flex flex-col items-center px-3.5 sm:px-6 py-5 sm:py-10 lg:py-23">
-            <div className="xl:max-w-7xl lg:max-w-5xl w-full">
-                <BackButton to="/" />
+            <div className="xl:max-w-5xl lg:max-w-4xl w-full">
+                {/* Header ikut animasi masuk bareng konten (fade + slide),
+                    tapi selalu dirender walau loading supaya chrome tidak kedip. */}
+                <motion.div variants={fadeSlide} initial="hidden" animate="show">
+                    <BackButton to="/" />
 
-                <div className="ml-2">
-                    <div className="flex items-center justify-between mb-1">
-                        <h1 className="text-3xl sm:text-5xl lg:text-6xl font-bold font-display text-darks">Dashboard Creator</h1>
+                    <div className="ml-1">
+                        <div className="flex items-center justify-between mb-1">
+                            <h1 className="text-3xl sm:text-5xl lg:text-6xl font-bold font-display text-darks">Dashboard Creator</h1>
+                        </div>
+                        <p className="text-xs sm:text-lg text-tinted mb-4 sm:mb-6">Ringkasan formulir milik kamu.</p>
                     </div>
-                    <p className="text-xs sm:text-lg text-tinted mb-4 sm:mb-6">Ringkasan formulir milik kamu.</p>
-                </div>
+                </motion.div>
 
-                {loading ? (
+                {/* Isi daftar pakai stagger list, persis pola responden. */}
+                {loading && (
                     // Satu bar tipis di atas, bukan card/halaman loading terpisah —
                     // biar enggak numpuk sama splash/loading lain yang lebih di luar.
-                    <Loading inline />
-                ) : (
-                    <motion.div
-                        className="flex flex-col"
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        transition={{ duration: 0.45, ease: easeOutExpo }}
-                    >
+                    <div className="w-full">
+                        <LinearProgress trackClassName="w-full" />
+                    </div>
+                )}
+                {!loading && (
+                    <div className="flex flex-col">
                         {/* ========== MOBILE: chart → stats → nav ========== */}
                         <div className="lg:hidden flex flex-col gap-3">
-                            <div className="min-w-0">
+                            <motion.div
+                                variants={listContainer}
+                                initial="hidden"
+                                animate="show"
+                                className="min-w-0"
+                            >
+                                <motion.div variants={listItem}>
                                 {barData.length > 0 ? (
                                     <MiniDistributionChart
                                         data={barData}
@@ -214,7 +223,8 @@ function CreatorDashboard() {
                                         <p className="text-sm text-tinted">Belum ada submission untuk ditampilkan.</p>
                                     </div>
                                 )}
-                            </div>
+                                </motion.div>
+                            </motion.div>
 
                             <motion.div variants={listContainer} initial="hidden" animate="show" className="grid grid-cols-2 gap-3 w-full">
                                 {statCards.slice(0, 2).map((card) => (
@@ -235,19 +245,19 @@ function CreatorDashboard() {
                                 ))}
                             </motion.div>
 
-                            <div className="flex flex-col gap-2.5 sm:gap-3 border-t border-dashed border-second pt-4">
+                            <motion.div
+                                variants={listContainer}
+                                initial="hidden"
+                                animate="show"
+                                className="flex flex-col gap-2.5 sm:gap-3 border-t border-dashed border-second pt-4"
+                            >
                                 <p className="text-xs font-semibold uppercase tracking-wider text-tinted ml-1">Akses Cepat</p>
                                 {[
                                     { to: "/creator/forms", label: "Kelola Form", desc: "Buat dan atur form kamu", icon: FileText },
                                     { to: "/creator/responden", label: "Responden", desc: "Lihat hasil pengisian form", icon: ChartNoAxesColumn },
                                     // { to: "/creator/galileo", label: "Galileo AI", desc: "Coba buat form hanya dengan mengetikan ide!" }
-                                ].map((item, index) => (
-                                    <motion.div
-                                        key={item.to}
-                                        initial={{ opacity: 0, y: 8 }}
-                                        animate={{ opacity: 1, y: 0 }}
-                                        transition={{ duration: 0.35, ease: easeOutExpo, delay: Math.min(index * 0.08, 0.3) }}
-                                    >
+                                ].map((item) => (
+                                    <motion.div key={item.to} variants={listItem}>
                                         <Link
                                             to={item.to}
                                             className="flex items-center gap-3 bg-white dark:bg-second border border-second rounded-xl shadow-sm p-3 transition-all active:scale-[0.98]"
@@ -263,6 +273,7 @@ function CreatorDashboard() {
                                         </Link>
                                     </motion.div>
                                 ))}
+                                <motion.div variants={listItem}>
                                 <Link
                                     to="/creator/galileo"
                                     className="relative mb-5 overflow-hidden flex items-center justify-between gap-3 bg-white dark:bg-second border border-second dark:border-darks/15 rounded-xl shadow-sm p-3 transition-all active:scale-[0.98]"
@@ -288,7 +299,8 @@ function CreatorDashboard() {
 
                                     {/* <ChevronRight className="relative z-10 h-4 w-4 text-tinted shrink-0" /> */}
                                 </Link>
-                            </div>
+                                </motion.div>
+                            </motion.div>
                         </div>
 
                         {/* ========== DESKTOP ========== */}
@@ -313,13 +325,13 @@ function CreatorDashboard() {
                                 ))}
                             </motion.div>
 
-                            <div className="grid grid-cols-2 gap-4 items-start">
-                                <motion.div
-                                    className="min-w-0"
-                                    initial={{ opacity: 0, y: 10 }}
-                                    animate={{ opacity: 1, y: 0 }}
-                                    transition={{ duration: 0.4, ease: easeOutExpo, delay: 0.1 }}
-                                >
+                            <motion.div
+                                variants={listContainer}
+                                initial="hidden"
+                                animate="show"
+                                className="grid grid-cols-2 gap-4 items-start"
+                            >
+                                <motion.div variants={listItem} className="min-w-0">
                                     {barData.length > 0 ? (
                                         isLg ? (
                                             <DistributionChart
@@ -344,10 +356,8 @@ function CreatorDashboard() {
                                 </motion.div>
 
                                 <motion.div
+                                    variants={listItem}
                                     className="min-w-0 bg-white dark:bg-second border border-second rounded-xl shadow-sm p-6"
-                                    initial={{ opacity: 0, y: 10 }}
-                                    animate={{ opacity: 1, y: 0 }}
-                                    transition={{ duration: 0.4, ease: easeOutExpo, delay: 0.15 }}
                                 >
                                     <div className="flex items-center justify-between mb-4">
                                         <div>
@@ -356,16 +366,16 @@ function CreatorDashboard() {
                                         </div>
                                     </div>
                                     {forms.length > 0 ? (
-                                        <div className="flex flex-col gap-2.5">
-                                            {forms.slice(0, 3).map((f, index) => {
+                                        <motion.div
+                                            variants={listContainer}
+                                            initial="hidden"
+                                            animate="show"
+                                            className="flex flex-col gap-2.5"
+                                        >
+                                            {forms.slice(0, 3).map((f) => {
                                                 const isPublished = String(f.status).toLowerCase() === "published"
                                                 return (
-                                                    <motion.div
-                                                        key={f.id}
-                                                        initial={{ opacity: 0, y: 8 }}
-                                                        animate={{ opacity: 1, y: 0 }}
-                                                        transition={{ duration: 0.35, ease: easeOutExpo, delay: Math.min(index * 0.05, 0.3) }}
-                                                    >
+                                                    <motion.div key={f.id} variants={listItem}>
                                                         <button
                                                             onClick={() => goToForm(f.id)}
                                                             className="w-full flex items-center gap-3 bg-base-200 border border-second rounded-xl p-3 transition-all active:scale-[0.96] text-left"
@@ -384,16 +394,16 @@ function CreatorDashboard() {
                                                     </motion.div>
                                                 )
                                             })}
-                                        </div>
+                                        </motion.div>
                                     ) : (
                                         <div className="border border-dashed border-second rounded-xl flex flex-col items-center justify-center text-center gap-2 h-40">
                                             <p className="text-sm text-tinted">Belum ada form.</p>
                                         </div>
                                     )}
                                 </motion.div>
-                            </div>
+                            </motion.div>
                         </div>
-                    </motion.div>
+                    </div>
                 )}
             </div>
         </div>

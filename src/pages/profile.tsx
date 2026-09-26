@@ -18,7 +18,7 @@ import { showAlert } from "../lib/alerts"
 import ModalPortal from "../components/modalPortal"
 import { AnimatePresence, motion } from "motion/react"
 import { Spinner } from "../components/loading"
-import { modalBackdrop, modalPanel } from "../lib/motion"
+import { fadeSlide, listContainer, listItem, modalBackdrop, modalPanel } from "../lib/motion"
 
 const ROLE_LABEL: Record<string, string> = {
     admin: "Admin",
@@ -213,9 +213,17 @@ function Profile() {
 
     return (
         <div className="flex flex-col items-center px-3.5 py-2">
-            <div className="max-w-2xl w-full">
+            <motion.div
+                className="max-w-2xl w-full"
+                variants={listContainer}
+                initial="hidden"
+                animate="show"
+            >
                 {/* Header */}
-                <div className="bg-white dark:bg-second border border-second p-5 rounded-2xl lg:rounded-xl mb-3">
+                <motion.div
+                    variants={fadeSlide}
+                    className="bg-white dark:bg-second border border-second p-5 rounded-2xl lg:rounded-xl mb-3"
+                >
                     <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-5">
                         <div className="w-20 h-20 shrink-0 rounded-full bg-done flex items-center justify-center">
                             <span className="text-4xl font-bold text-white">
@@ -243,10 +251,13 @@ function Profile() {
                             </span>
                         </div>
                     </div>
-                </div>
+                </motion.div>
 
                 {/* Menu: buka modal */}
-                <div className="bg-white dark:bg-second border border-second mb-3 divide-y divide-second rounded-2xl lg:rounded-xl overflow-hidden">
+                <motion.div
+                    variants={listItem}
+                    className="bg-white dark:bg-second border border-second mb-3 divide-y divide-second rounded-2xl lg:rounded-xl overflow-hidden"
+                >
                     <button
                         onClick={() => setShowAccountModal(true)}
                         className="w-full flex items-center gap-3 p-4 hover:bg-base transition-colors text-left"
@@ -288,9 +299,12 @@ function Profile() {
                         </div>
                         <ChevronRight className="h-4 w-4 text-tinted shrink-0" />
                     </button> */}
-                </div>
+                </motion.div>
 
-                <div className="bg-white dark:bg-second border border-second mb-3 divide-y divide-second rounded-2xl lg:rounded-xl overflow-hidden">
+                <motion.div
+                    variants={listItem}
+                    className="bg-white dark:bg-second border border-second mb-3 divide-y divide-second rounded-2xl lg:rounded-xl overflow-hidden"
+                >
                     {role === "user" && (
                         <button
                             onClick={() => navigate("/upgrade-to-creator")}
@@ -321,7 +335,7 @@ function Profile() {
                         <ChevronRight className="h-4 w-4 text-tinted shrink-0" />
                     </button>
 
-                </div>
+                </motion.div>
 
                 {/* <div className="bg-white dark:bg-second border border-second mb-3 divide-y divide-second rounded-2xl lg:rounded-xl overflow-hidden">
                     {role === "user" && (
@@ -353,7 +367,7 @@ function Profile() {
                     )}
                     {loggingOut ? "Keluar..." : "Keluar"}
                 </button> */}
-            </div>
+            </motion.div>
 
             {/* Modal: Informasi Akun */}
             <Modal

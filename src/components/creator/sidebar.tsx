@@ -1,7 +1,8 @@
 import { motion, type Variants } from "motion/react"
 import { useEffect, useState } from "react"
 import { useLocation } from "react-router-dom"
-import { easeOutExpo, listItem } from "../../lib/motion"
+import { listItem } from "../../lib/motion"
+import { CREATOR_SIDEBAR_MOTION, CREATOR_SIDEBAR_WIDTH } from "../../lib/creatorLayout"
 import {
     LayoutDashboard,
     ChartNoAxesColumn,
@@ -92,20 +93,20 @@ function CreatorSidebar() {
             <Link
                 key={to}
                 to={to}
-                className={`relative flex items-center gap-3 h-12 px-4 rounded-lg text-sm font-medium transition-colors ${active ? "text-[#222831]" : "text-white/70 hover:text-white hover:bg-white/10"
+                className={`relative flex items-center gap-3 h-12 px-4 rounded-lg text-sm font-medium transition-colors ${active ? "text-darks" : "text-darks/70 hover:text-darks hover:bg-darks/5 dark:hover:bg-white/10"
                     }`}
             >
                 {active && (
                     <motion.span
                         layoutId="creator-sidebar-active"
-                        className="absolute inset-0 rounded-lg bg-white shadow-sm"
+                        className="absolute inset-0 rounded-lg bg-darks/10 ring-1 ring-darks/20"
                         transition={{ type: "spring", stiffness: 400, damping: 30 }}
                     />
                 )}
                 <Icon className="relative z-10 h-4 w-4 shrink-0" fill={active && filled ? "currentColor" : "none"} />
                 <span className="relative z-10 truncate text-[15px] flex-1">{label}</span>
                 {badge && (
-                    <span className={`relative z-10 shrink-0 rounded-full px-1.5 py-0.5 text-[10px] font-semibold transition-colors ${active ? "bg-[#222831] text-white" : "bg-white/10 text-white/80"
+                    <span className={`relative z-10 shrink-0 rounded-full px-1.5 py-0.5 text-[10px] font-semibold transition-colors ${active ? "bg-darks text-white" : "bg-darks/5 text-darks/70 dark:bg-white/10 dark:text-white/70"
                         }`}>
                         {badge}
                     </span>
@@ -120,13 +121,14 @@ function CreatorSidebar() {
         <motion.aside
             initial={{ x: "-100%" }}
             animate={{ x: hidden ? "-100%" : "0%" }}
-            transition={{ duration: 0.45, ease: easeOutExpo }}
-            className="flex fixed inset-y-0 left-0 z-40 w-[19.5vw] flex-col bg-darks dark:bg-[#1A2028] border-r border-second"
+            transition={CREATOR_SIDEBAR_MOTION}
+            className="flex fixed inset-y-0 left-0 z-40 flex-col bg-white dark:bg-second border-r border-second"
+            style={{ width: CREATOR_SIDEBAR_WIDTH }}
         >
             <div className="flex flex-row items-center h-28 px-6 shrink-0">
                 <Link to="/" className="flex items-center gap-2 overflow-hidden">
-                    <img src={logo} alt="Formaly" className="h-6 w-auto invertm" />
-                    <p className="font-semibold text-white/70 whitespace-nowrap">C R E A T O R</p>
+                    <img src={logo} alt="Formaly" className="h-6 w-auto" />
+                    <p className="font-semibold text-darks/60 dark:text-white/60 whitespace-nowrap">C R E A T O R</p>
                 </Link>
             </div>
 
@@ -143,7 +145,7 @@ function CreatorSidebar() {
                 ))}
             </motion.nav>
 
-            <Link to="/creator/profile" className="block p-3 border-t border-white/10 shrink-0 pb-5 hover:bg-white/10 transition-colors">
+            <Link to="/creator/profile" className="block p-3 border-t border-black/5 dark:border-white/10 shrink-0 pb-5 hover:bg-black/5 dark:hover:bg-white/10 transition-colors">
                 <div className="flex items-center gap-3 rounded-lg px-2 py-2 min-w-0">
                     <div className="w-9 h-9 rounded-full bg-done overflow-hidden flex items-center justify-center shrink-0 ring-2 ring-white dark:ring-second">
                         <span className="text-sm font-bold text-white">
@@ -151,8 +153,8 @@ function CreatorSidebar() {
                         </span>
                     </div>
                     <div className="min-w-0">
-                        <p className="text-sm font-semibold text-white truncate">{profile?.name || "User"}</p>
-                        <p className="text-xs text-white/60 truncate">{profile?.email || "user@email.com"}</p>
+                        <p className="text-sm font-semibold text-darks dark:text-white truncate">{profile?.name || "User"}</p>
+                        <p className="text-xs text-darks/60 dark:text-white/60 truncate">{profile?.email || "user@email.com"}</p>
                     </div>
                 </div>
             </Link>

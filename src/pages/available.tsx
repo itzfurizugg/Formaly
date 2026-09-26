@@ -74,8 +74,6 @@ function Available() {
     if (authLoading || !user) return null
 
     return (
-        <>
-            {!authLoading && user && !loading && (
         <div className="flex flex-col items-center px-3.5 py-10">
             <div className="max-w-4xl w-full">
                 <div className="flex items-center gap-2 mb-1">
@@ -99,14 +97,16 @@ function Available() {
                     </div>
                 </div>
 
-                {filtered.length === 0 ? (
+                {/* Chrome (judul + pencarian) di luar gerbang `loading` supaya
+                    halaman langsung tampil; gate hanya daftar formulir. */}
+                {!loading && filtered.length === 0 ? (
                     <div className="text-center py-20">
                         <FileText className="h-12 w-12 text-tinted/40 mx-auto mb-3" />
                         <p className="text-tinted">
                             {search ? "Formulir tidak ditemukan." : "Belum ada formulir tersedia."}
                         </p>
                     </div>
-                ) : (
+                ) : !loading && (
                     <div className="space-y-3">
                         {filtered.map((f, index) => (
                             <motion.div
@@ -130,8 +130,6 @@ function Available() {
                 )}
             </div>
         </div>
-            )}
-        </>
     )
 }
 

@@ -8,6 +8,7 @@ import {
     Folder,
     FolderOpen,
     FolderPlus,
+    Home,
     KeyRound,
     LayoutGrid,
     MoreVertical,
@@ -23,7 +24,7 @@ import FormHeader from "./formHeader"
 import { pageGet, pageSet } from "../../lib/pageCache"
 import { deleteStoredMedia } from "../../lib/mediaStorage"
 import { collectFormMediaUrls } from "../../lib/mediaCleanup"
-import { easeOutExpo } from "../../lib/motion"
+import { easeOutExpo, listContainer, listItem } from "../../lib/motion"
 import { Spinner } from "../loading"
 
 interface FolderRow {
@@ -134,29 +135,40 @@ function FormActionsMenu({ formId, deleting, open, onOpenChange, onNavigate, onD
                                     </svg>
                                 </span>
                             </button>
-                            {moveOpen && (
-                                <div className="max-h-48 overflow-y-auto py-1 border-t border-base">
-                                    <button
-                                        onClick={pickFolder(null)}
-                                        className="w-full flex items-center gap-3 px-5 py-2 text-sm text-darks hover:bg-base transition-colors text-left"
+                            <AnimatePresence initial={false}>
+                                {moveOpen && (
+                                    <motion.div
+                                        key="move-folder-list"
+                                        initial={{ height: 0, opacity: 0 }}
+                                        animate={{ height: "auto", opacity: 1 }}
+                                        exit={{ height: 0, opacity: 0 }}
+                                        transition={{ duration: 0.25, ease: easeOutExpo }}
+                                        className="overflow-hidden border-t border-base bg-darks/10"
                                     >
-                                        <FolderOpen className="h-4 w-4 text-tinted" />
-                                        <span className="flex-1">Tanpa Folder</span>
-                                        {currentFolderId === null && <Check className="h-4 w-4 text-done" />}
-                                    </button>
-                                    {folders.map((f) => (
-                                        <button
-                                            key={f.id}
-                                            onClick={pickFolder(f.id)}
-                                            className="w-full flex items-center gap-3 px-5 py-2 text-sm text-darks hover:bg-base transition-colors text-left"
-                                        >
-                                            <Folder className="h-4 w-4 text-tinted" />
-                                            <span className="flex-1 truncate">{f.name}</span>
-                                            {currentFolderId === f.id && <Check className="h-4 w-4 text-done shrink-0" />}
-                                        </button>
-                                    ))}
-                                </div>
-                            )}
+                                        <div className="max-h-48 overflow-y-auto py-2 px-1">
+                                            <button
+                                                onClick={pickFolder(null)}
+                                                className="w-full flex items-center rounded-sm gap-3 px-5 py-2 text-sm text-darks hover:bg-base transition-colors text-left"
+                                            >
+                                                <Home className="h-4 w-4 text-tinted" />
+                                                <span className="flex-1 text-darks/20">/</span>
+                                                {currentFolderId === null && <Check className="h-4 w-4 text-done" />}
+                                            </button>
+                                            {folders.map((f) => (
+                                                <button
+                                                    key={f.id}
+                                                    onClick={pickFolder(f.id)}
+                                                    className="w-full flex items-center rounded-sm gap-3 px-5 py-2 text-sm text-darks hover:bg-base transition-colors text-left"
+                                                >
+                                                    <Folder className="h-4 w-4 text-tinted" />
+                                                    <span className="flex-1 truncate">{f.name}</span>
+                                                    {currentFolderId === f.id && <Check className="h-4 w-4 text-done shrink-0" />}
+                                                </button>
+                                            ))}
+                                        </div>
+                                    </motion.div>
+                                )}
+                            </AnimatePresence>
                         </div>
 
                         <button
@@ -204,6 +216,7 @@ function FormList() {
     const [deleting, setDeleting] = useState<string | null>(null)
     const [error, setError] = useState<string | null>(null)
     const [openMenuId, setOpenMenuId] = useState<string | null>(null)
+    const [movingId, setMovingId] = useState<string | null>(null)
 
     const loadForms = useCallback(async () => {
         if (!user) return
@@ -301,6 +314,7 @@ function FormList() {
     }
 
     async function handleMoveToFolder(formId: string, folderId: string | null) {
+        setMovingId(formId)
         const { error } = await supabase
             .from("forms")
             .update({ folder_id: folderId })
@@ -309,10 +323,16 @@ function FormList() {
             .maybeSingle()
         if (error) {
             showAlert(error.message, "error")
+            setMovingId(null)
             return
         }
         showAlert("Form berhasil dipindahkan.", "success")
-        loadForms()
+        // Tahan highlight kartu sebentar supaya perpindahan folder terbaca,
+        // lalu refresh daftar (kartu ikut exit/enter + layout shift halus).
+        window.setTimeout(() => {
+            setMovingId(null)
+            loadForms()
+        }, 450)
     }
 
     async function handleDelete(id: string) {
@@ -397,33 +417,44 @@ function FormList() {
                 ) : (
                     <>
                         {/* ========== Filter folder ========== */}
-                        <div className="flex flex-wrap items-center gap-2 mb-3">
-                            <button
-                                onClick={() => setActiveFolder("all")}
-                                className={chipCls(activeFolder === "all")}
-                            >
-                                <LayoutGrid className="h-3.5 w-3.5" /> Semua {countBadge(activeFolder === "all", forms.length)}
-                            </button>
-                            <button
-                                onClick={() => setActiveFolder("unfiled")}
-                                className={chipCls(activeFolder === "unfiled")}
-                            >
-                                <FolderOpen className="h-3.5 w-3.5" /> Tanpa Folder {countBadge(activeFolder === "unfiled", unfiledCount)}
-                            </button>
-                            {folders.map((f) => {
-                                const active = activeFolder === f.id
-                                const count = folderCount.get(f.id) ?? 0
-                                return (
-                                    <div key={f.id} className="relative inline-flex items-center group">
-                                        <button
-                                            onClick={() => setActiveFolder(f.id)}
-                                            className={chipCls(active)}
+                        <motion.div
+                            variants={listContainer}
+                            initial="hidden"
+                            animate="show"
+                            className="flex flex-wrap items-center gap-2 mb-6"
+                        >
+                            <motion.div variants={listItem} whileTap={{ scale: 0.94 }}>
+                                <button
+                                    onClick={() => setActiveFolder("all")}
+                                    className={chipCls(activeFolder === "all")}
+                                >
+                                    <LayoutGrid className="h-3.5 w-3.5" /> Semua {countBadge(activeFolder === "all", forms.length)}
+                                </button>
+                            </motion.div>
+                            <AnimatePresence initial={false} mode="popLayout">
+                                {folders.map((f) => {
+                                    const active = activeFolder === f.id
+                                    const count = folderCount.get(f.id) ?? 0
+                                    return (
+                                        <motion.div
+                                            key={f.id}
+                                            variants={listItem}
+                                            initial={{ opacity: 0, scale: 0.85 }}
+                                            animate={{ opacity: 1, scale: 1 }}
+                                            exit={{ opacity: 0, scale: 0.85, transition: { duration: 0.18 } }}
+                                            layout
+                                            whileTap={{ scale: 0.94 }}
+                                            className="relative inline-flex items-center group"
                                         >
-                                            <Folder className="h-3.5 w-3.5" />
-                                            <span className="max-w-[9rem] truncate">{f.name}</span>
-                                            {countBadge(active, count)}
-                                        </button>
-                                        <div className="ml-0.5 hidden group-hover:flex items-center gap-0.5">
+                                            <button
+                                                onClick={() => setActiveFolder(f.id)}
+                                                className={chipCls(active)}
+                                            >
+                                                <Folder className="h-3.5 w-3.5" />
+                                                <span className="max-w-[9rem] truncate">{f.name}</span>
+                                                {countBadge(active, count)}
+                                            </button>
+                                        {/* <div className="ml-0.5 hidden group-hover:flex items-center gap-0.5">
                                             <button
                                                 onClick={() => handleRenameFolder(f.id, f.name)}
                                                 aria-label={`Ubah nama folder ${f.name}`}
@@ -438,17 +469,18 @@ function FormList() {
                                             >
                                                 <Trash2 className="h-3 w-3" />
                                             </button>
-                                        </div>
-                                    </div>
+                                        </div> */}
+                                    </motion.div>
                                 )
                             })}
-                            <button
+                            </AnimatePresence>
+                            {/* <button
                                 onClick={handleCreateFolder}
                                 className="btn btn-sm h-8 min-h-0 rounded-full gap-1.5 px-3 bg-base text-darks border border-dashed border-second hover:bg-white dark:hover:bg-second"
                             >
                                 <FolderPlus className="h-3.5 w-3.5" /> Folder Baru
-                            </button>
-                        </div>
+                            </button> */}
+                        </motion.div>
 
                         {visibleForms.length === 0 ? (
                             <div className="text-center py-20">
@@ -460,51 +492,81 @@ function FormList() {
                                 </p>
                             </div>
                         ) : (
-                            <div className="grid sm:grid-cols-2 gap-3 items-stretch">
-                                {visibleForms.map((form, index) => {
-                                    const folderName = form.folder_id ? folderNameById.get(form.folder_id) : undefined
-                                    return (
-                                        <motion.div
-                                            key={form.id}
-                                            className="h-full"
-                                            initial={{ opacity: 0, y: 12 }}
-                                            animate={{ opacity: 1, y: 0 }}
-                                            transition={{ duration: 0.35, ease: easeOutExpo, delay: Math.min(index * 0.06, 0.4) }}
-                                        >
-                                            {/* h-full agar kartu melar mengikuti tinggi baris grid — semua kartu
-                                    satu baris jadi sama tinggi seperti tampilan di halaman Responden */}
-                                            <div className="relative h-full">
-                                                <div className="card bg-white dark:bg-second border border-second rounded-xl transition-all duration-300 hover:shadow-lg hover:shadow-darks/5 overflow-hidden h-full">
-                                                    <FormHeader formId={form.id} title={form.title} headerImage={form.header_image} headerColor={form.header_color} headerMedia={form.media_url} play={false} />
-                                                    <div className="card-body gap-3 p-4">
-                                                        <div className="flex items-start justify-between gap-3">
-                                                            <div className="min-w-0">
-                                                                <span className="inline-flex items-center gap-1.5 text-tinted">
-                                                                    Dibuat pada: {new Date(form.created_at).toLocaleDateString("id-ID", { day: "numeric", month: "long", year: "numeric" })}
-                                                                </span>
-                                                                <h2 className="card-title text-xl sm:text-2xl text-darks break-words leading-snug text-base">{form.title}</h2>
-                                                                <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
-                                                                    <span className="inline-flex items-center gap-1.5 text-xs text-tinted/80">
-                                                                        <Folder className="h-3.5 w-3.5" /> {folderName ?? "Tanpa Folder"}
-                                                                    </span>
+                            <motion.div layout className="grid sm:grid-cols-2 gap-3 items-stretch">
+                                <AnimatePresence initial={false} mode="popLayout">
+                                    {visibleForms.map((form, index) => {
+                                        const folderName = form.folder_id ? folderNameById.get(form.folder_id) : undefined
+                                        const moving = movingId === form.id
+                                        return (
+                                            <motion.div
+                                                key={form.id}
+                                                layout
+                                                className="h-full"
+                                                initial={{ opacity: 0, y: 12, scale: 0.98 }}
+                                                animate={{
+                                                    opacity: 1,
+                                                    y: 0,
+                                                    scale: moving ? [1, 1.03, 1] : 1,
+                                                    transition: { duration: 0.35, ease: easeOutExpo, delay: Math.min(index * 0.06, 0.4) },
+                                                }}
+                                                exit={{ opacity: 0, scale: 0.95, transition: { duration: 0.2, ease: "easeIn" } }}
+                                            >
+                                                {/* h-full agar kartu melar mengikuti tinggi baris grid — semua kartu
+                                                satu baris jadi sama tinggi seperti tampilan di halaman Responden */}
+                                                <div className="relative h-full">
+                                                    <div className={`card bg-white dark:bg-second border rounded-xl transition-all duration-300 hover:shadow-lg hover:shadow-darks/5 overflow-hidden h-full ${moving ? "border-done shadow-lg shadow-done/20" : "border-second"}`}>
+                                                        <div className="relative">
+                                                            <FormHeader formId={form.id} title={form.title} headerImage={form.header_image} headerColor={form.header_color} headerMedia={form.media_url} play={false} />
+                                                            <AnimatePresence initial={false} mode="popLayout">
+                                                                {folderName && (
+                                                                    <motion.span
+                                                                        key={folderName}
+                                                                        initial={{ opacity: 0, scale: 0.8, y: -4 }}
+                                                                        animate={{ opacity: 1, scale: 1, y: 0 }}
+                                                                        exit={{ opacity: 0, scale: 0.8, y: -4 }}
+                                                                        transition={{ duration: 0.25, ease: easeOutExpo }}
+                                                                        className="absolute left-3 top-3 inline-flex items-center gap-1 rounded-full bg-black/45 px-2 py-1 text-[10px] font-semibold text-white backdrop-blur-sm"
+                                                                    >
+                                                                        <Folder className="h-3 w-3" /> {folderName}
+                                                                    </motion.span>
+                                                                )}
+                                                            </AnimatePresence>
+                                                            {moving && (
+                                                                <div className="absolute inset-x-0 top-3 z-10 flex justify-center pointer-events-none">
+                                                                    <motion.span
+                                                                        initial={{ opacity: 0, y: -6 }}
+                                                                        animate={{ opacity: 1, y: 0 }}
+                                                                        className="inline-flex items-center gap-1.5 rounded-full bg-darks px-2.5 py-1 text-[10px] font-semibold text-white shadow"
+                                                                    >
+                                                                        Memindahkan...
+                                                                    </motion.span>
                                                                 </div>
-                                                                <div className="text-sm text-tinted line-clamp-2">
-                                                                    {form.description ? <RichText html={form.description} className="line-clamp-1" enhanceMedia={false} /> : "Tidak ada deskripsi"}
-                                                                </div>
-                                                            </div>
-                                                            <div className="shrink-0">
-                                                                {statusBadge(form.status)}
-                                                            </div>
+                                                            )}
                                                         </div>
+                                                        <div className="card-body gap-3 p-4">
+                                                            <div className="flex items-start justify-between gap-3">
+                                                                <div className="min-w-0">
+                                                                    <span className="inline-flex items-center gap-1.5 text-tinted">
+                                                                        Dibuat pada: {new Date(form.created_at).toLocaleDateString("id-ID", { day: "numeric", month: "long", year: "numeric" })}
+                                                                    </span>
+                                                                    <h2 className="card-title text-xl sm:text-2xl text-darks break-words leading-snug text-base">{form.title}</h2>
+                                                                    <div className="text-sm text-tinted line-clamp-2">
+                                                                        {form.description ? <RichText html={form.description} className="line-clamp-1" enhanceMedia={false} /> : "Tidak ada deskripsi"}
+                                                                    </div>
+                                                                </div>
+                                                                <div className="shrink-0">
+                                                                    {statusBadge(form.status)}
+                                                                </div>
+                                                            </div>
 
-                                                        {/* <div className="flex flex-wrap items-center gap-x-4 text-xs text-tinted/80 mt-1 mb-2">
+                                                            {/* <div className="flex flex-wrap items-center gap-x-4 text-xs text-tinted/80 mt-1 mb-2">
                                                 <span className="inline-flex items-center gap-1.5">
                                                     <ListChecks className="h-3.5 w-3.5" /> {form.questions?.length || 0} soal
                                                 </span> */}
-                                                        {/* <span className="inline-flex items-center gap-1.5">
+                                                            {/* <span className="inline-flex items-center gap-1.5">
                                                                 <Users className="h-3.5 w-3.5" /> {form.submissions?.length || 0} submission
                                                         </span> */}
-                                                        {/* <span className="inline-flex items-center gap-1.5">
+                                                            {/* <span className="inline-flex items-center gap-1.5">
                                                             <Timer className="h-3.5 w-3.5" /> {form.duration ? `${form.duration} menit` : "Tanpa Waktu"}
                                                         </span>
                                                         {form.passing_score != null && (
@@ -514,40 +576,41 @@ function FormList() {
                                                         )}
                                                     </div> */}
 
-                                                        <div className="card-actions justify-end flex-wrap gap-2 items-center mt-auto pt-1">
-                                                            <button
-                                                                onClick={() => navigate(`/creator/forms/${form.id}/shared`)}
-                                                                className="btn btn-sm rounded-full bg-base text-darks border border-second dark:border-darks/15 hover:bg-white hover:border-second dark:hover:bg-second dark:hover:border-darks/25"
-                                                            >
-                                                                <Share2 className="h-3.5 w-3.5" /> Bagikan
-                                                            </button>
-                                                            <button
-                                                                onClick={() => navigate(`/creator/forms/${form.id}`)}
-                                                                className="btn btn-sm rounded-full bg-base text-darks border border-second dark:border-darks/15 hover:bg-white hover:border-second dark:hover:bg-second dark:hover:border-darks/25"
-                                                            >
-                                                                <Pencil className="h-3.5 w-3.5" /> Edit
-                                                            </button>
-                                                            <FormActionsMenu
-                                                                formId={form.id}
-                                                                deleting={deleting === form.id}
-                                                                open={openMenuId === form.id}
-                                                                onOpenChange={(open) => setOpenMenuId(open ? form.id : null)}
-                                                                onNavigate={(to) => navigate(to)}
-                                                                onDelete={() => handleDelete(form.id)}
-                                                                folders={folders}
-                                                                currentFolderId={form.folder_id ?? null}
-                                                                onMove={(folderId) => handleMoveToFolder(form.id, folderId)}
-                                                            />
+                                                            <div className="card-actions justify-end flex-wrap gap-2 items-center mt-auto pt-1">
+                                                                <button
+                                                                    onClick={() => navigate(`/creator/forms/${form.id}/shared`)}
+                                                                    className="btn btn-sm rounded-full bg-base text-darks border border-second dark:border-darks/15 hover:bg-white hover:border-second dark:hover:bg-second dark:hover:border-darks/25"
+                                                                >
+                                                                    <Share2 className="h-3.5 w-3.5" /> Bagikan
+                                                                </button>
+                                                                <button
+                                                                    onClick={() => navigate(`/creator/forms/${form.id}`)}
+                                                                    className="btn btn-sm rounded-full bg-base text-darks border border-second dark:border-darks/15 hover:bg-white hover:border-second dark:hover:bg-second dark:hover:border-darks/25"
+                                                                >
+                                                                    <Pencil className="h-3.5 w-3.5" /> Edit
+                                                                </button>
+                                                                <FormActionsMenu
+                                                                    formId={form.id}
+                                                                    deleting={deleting === form.id}
+                                                                    open={openMenuId === form.id}
+                                                                    onOpenChange={(open) => setOpenMenuId(open ? form.id : null)}
+                                                                    onNavigate={(to) => navigate(to)}
+                                                                    onDelete={() => handleDelete(form.id)}
+                                                                    folders={folders}
+                                                                    currentFolderId={form.folder_id ?? null}
+                                                                    onMove={(folderId) => handleMoveToFolder(form.id, folderId)}
+                                                                />
+                                                            </div>
                                                         </div>
                                                     </div>
+
+
                                                 </div>
-
-
-                                            </div>
-                                        </motion.div>
-                                    )
-                                })}
-                            </div>
+                                            </motion.div>
+                                        )
+                                    })}
+                                </AnimatePresence>
+                            </motion.div>
                         )}
                     </>
                 )

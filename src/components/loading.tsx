@@ -9,6 +9,12 @@ interface LoadingProps {
 
 // Loading hanya muncul bila benar-benar memuat (delay kecil utk load cepat),
 // lalu bertahan minimal ~1 detik supaya tidak berkedip, dan fade-out halus.
+//
+// MIN_DURATION hanya untuk `inline` (toggle kecil: simpan/hapus/upload).
+// Untuk overlay full-screen halaman, durasi minimum itu justru penyebab
+// "kedip": data tiba dalam 200ms tapi overlay ditahan sampai 1 detik + 500ms
+// fade, jadi tiap buka halaman selalu terlihat seperti sedang fetch lalu
+// isinya animasi muncul belakangan.
 const SHOW_DELAY = 250
 const MIN_DURATION = 1000
 const FADE_MS = 500
@@ -59,6 +65,10 @@ function Loading({ show = true, label = "Memuat...", inline = false }: LoadingPr
     const [mounted, setMounted] = useState(false)
     const [opaque, setOpaque] = useState(false)
     const shownAtRef = useRef<number | null>(null)
+    const minDuration = inline ? MIN_DURATION : 0
+    // Overlay full-screen menutupi seluruh halaman, jadi fade-out-nya dibuat
+    // singkat supaya konten di bawahnya tidak "muncul pelan" (terasa berkedip).
+    const fadeMs = inline ? FADE_MS : 220
 
     useEffect(() => {
         const timeoutIds: number[] = []
@@ -73,12 +83,12 @@ function Loading({ show = true, label = "Memuat...", inline = false }: LoadingPr
             }, SHOW_DELAY)
             timeoutIds.push(t)
         } else {
-            // Pertahankan minimal MIN_DURATION, lalu fade-out halus.
+            // Pertahankan minimal minDuration, lalu fade-out halus.
             const elapsed = shownAtRef.current ? Date.now() - shownAtRef.current : 0
-            const wait = Math.max(0, MIN_DURATION - elapsed)
+            const wait = Math.max(0, minDuration - elapsed)
             const t = window.setTimeout(() => {
                 setOpaque(false)
-                timeoutIds.push(window.setTimeout(() => setMounted(false), FADE_MS))
+                timeoutIds.push(window.setTimeout(() => setMounted(false), fadeMs))
             }, wait)
             timeoutIds.push(t)
         }
@@ -87,7 +97,7 @@ function Loading({ show = true, label = "Memuat...", inline = false }: LoadingPr
             timeoutIds.forEach((id) => window.clearTimeout(id))
             if (rafId) cancelAnimationFrame(rafId)
         }
-    }, [show])
+    }, [show, minDuration, fadeMs])
 
     if (!mounted) return null
 
@@ -99,7 +109,7 @@ function Loading({ show = true, label = "Memuat...", inline = false }: LoadingPr
             } ${inline ? "py-14" : "fixed inset-0 z-50 bg-base-300"}`}
             initial={false}
             animate={{ opacity: opaque ? 1 : 0 }}
-            transition={{ duration: FADE_MS / 1000, ease: "easeOut" }}
+            transition={{ duration: fadeMs / 1000, ease: "easeOut" }}
         >
             <Spinner size={inline ? 26 : 30} />
             <p className="text-xs text-tinted">{label}</p>

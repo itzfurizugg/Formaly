@@ -39,8 +39,13 @@ const Profile = lazy(() => import("./pages/profile"))
 const SettingsPage = lazy(() => import("./pages/settings"))
 const CreditPage = lazy(() => import("./pages/credit"))
 const UpgradeToCreator = lazy(() => import("./pages/upgradeToCreator"))
-const AdminForms = lazy(() => import("./pages/admin/forms"))
-const AdminUsers = lazy(() => import("./pages/admin/users"))
+// SATU titik lazy() untuk area /admin (pola creator/index): home +
+// userManagement eager dalam satu modul -> SATU chunk. Navigasi
+// /admin <-> /admin/userManagement tidak download chunk kedua + tidak
+// melempar Suspense fallback (halaman kosong) di tengah jalan.
+const adminEntry = () => import("./pages/admin/index")
+const AdminUsers = lazy(() => adminEntry().then((m) => ({ default: m.AdminHome })))
+const AdminUserManagement = lazy(() => adminEntry().then((m) => ({ default: m.AdminUserManagement })))
 const FormDescription = lazy(() => import("./pages/form/description"))
 const FormResolver = lazy(() => import("./pages/form/resolver"))
 const FormList = lazy(() => import("./pages/form/formlist"))
@@ -68,7 +73,7 @@ const CreatorGalileo = lazy(() => import("./pages/creator/galileo/chat"))
 const CreatorGalileoGenerate = lazy(() => import("./pages/creator/galileo/generate"))
 const ErrorHandling = lazy(() => import("./pages/errorHandling"))
 
-const hideNavPaths = ["/login", "/register", "/auth", "/forgot-password", "/reset-password", "/form/description", "/form", "/form/list", "/form/result", "/credit", "/pages/errorHandling", "/settings", "/upgrade-to-creator"]
+const hideNavPaths = ["/login", "/register", "/auth", "/forgot-password", "/reset-password", "/form/description", "/form", "/form/list", "/form/result", "/credit", "/pages/errorHandling", "/settings", "/upgrade-to-creator", "/admin", "/admin/userManagement"]
 
 // App hanya menyediakan provider. Konten asli (gated auth) ada di AppShell,
 // biar useAuth() bisa dipanggil di dalam cakupan AuthProvider.
@@ -105,7 +110,7 @@ function AppShell() {
 
   useEffect(() => {
     if (!authLoading && profile?.role === "admin" && !location.pathname.startsWith("/admin")) {
-      navigate("/admin/users", { replace: true })
+      navigate("/admin", { replace: true })
     }
   }, [authLoading, profile, location.pathname, navigate])
 
@@ -128,7 +133,7 @@ function AppShell() {
 
   // Path yang punya halaman nyata. Selain ini jatuh ke ErrorHandling (route "*"),
   // jadi Navbar umum & Dock disembunyikan biar halaman error tampil minim.
-  const knownRoutes = ["/", "/history", "/profile", "/settings", "/credit", "/upgrade-to-creator", "/admin/forms", "/admin/users"]
+  const knownRoutes = ["/", "/history", "/profile", "/settings", "/credit", "/upgrade-to-creator", "/admin", "/admin/userManagement"]
   const isResultPage = location.pathname.startsWith("/form/result")
   const isDonePage = location.pathname.startsWith("/form/done")
   const isKnownRoute =
@@ -184,16 +189,17 @@ function AppShell() {
           )}
         </AnimatePresence>
         <ErrorBoundary>
-        <Suspense fallback={<LoadingPage />}>
-          {/* Key = pathname agar tiap pindah halaman me-replay animasi pembukaan halaman */}
-          <motion.div
-            key={location.pathname}
-            layout="position"
+          {/* TIDAK ada lagi AnimatePresence/motion di level route.
+              mode="wait" + fade-out bikin jeda halaman kosong tiap pindah route
+              (probe: opacity wrapper 1 -> 0, ~8 frame textLen < 30, luma
+              loncat) -> terbaca sebagai "kedip kayak fetching". Tiap halaman
+              sudah punya animasi masuk sendiri (fadeSlide/stagger), jadi swap
+              instan di sini justru mulus. Suspense di dalam supaya chunk lazy
+              yang belum turun tidak ikut me-unmount Navbar/sidebar/Dock. */}
+          <div
             className={`flex-1 ${showDock ? "pb-24 md:pb-0" : ""}`}
-            initial={{ opacity: 0, y: 12 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.45, ease: easeOutExpo }}
           >
+            <Suspense fallback={<LoadingPage />}>
             <Routes>
             <Route path="/" element={<Home />} />
             <Route path="/history" element={<History />} />
@@ -201,8 +207,8 @@ function AppShell() {
             <Route path="/settings" element={<SettingsPage />} />
             <Route path="/credit" element={<CreditPage />} />
             <Route path="/upgrade-to-creator" element={<UpgradeToCreator />} />
-            <Route path="/admin/forms" element={<RequireAdmin><AdminForms /></RequireAdmin>} />
-            <Route path="/admin/users" element={<RequireAdmin><AdminUsers /></RequireAdmin>} />
+            <Route path="/admin" element={<RequireAdmin><AdminUsers /></RequireAdmin>} />
+            <Route path="/admin/userManagement" element={<RequireAdmin><AdminUserManagement /></RequireAdmin>} />
             <Route path="/form/description" element={<FormDescription />} />
             <Route path="/form/:formId" element={<FormResolver />} />
             <Route path="/form/list" element={<FormList />} />
@@ -352,9 +358,9 @@ function AppShell() {
               }
             />
             <Route path="*" element={<ErrorHandling />} />
-          </Routes>
-          </motion.div>
-        </Suspense>
+            </Routes>
+            </Suspense>
+          </div>
         </ErrorBoundary>
         {showDock && <Dock />}
       </div>
