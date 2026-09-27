@@ -113,31 +113,59 @@ function Home() {
 
     return (
         <div className="fixed inset-0 overflow-hidden flex flex-col items-center justify-center bg-base-300 px-4 pb-10">
+            {/* Kanvas halaman (#1A2028) sengaja hex tetap, bukan token `darks`
+                (di dark mode token itu jadi terang) dan bukan `base-300` (di
+                dark mode nilainya = `base`, jadi panel kanan akan menyatu dengan
+                latar). Dengan begini panel kiri `second` dan panel kanan
+                `base-300` keduanya terpisah jelas dari halaman. */}
             <motion.div
-                className="w-full max-w-xl"
+                className="w-full max-w-2xl grid grid-cols-1 lg:grid-cols-1 gap-3 lg:gap-4 items-stretch"
                 variants={fadeSlide}
                 initial="hidden"
                 animate="show"
             >
-                <div className="text-center mb-6">
-                    <h1 className="text-3xl sm:text-4xl font-black tracking-tight text-darks mb-2 leading-[1.1]">
-                        Mulai Mengerjakan!
+                {/* Kolom kiri: heading. Permukaan `second`. */}
+                <div className="text-left bg-darks/10 rounded-2xl px-6 py-10 sm:px-10 sm:py-14 flex flex-col justify-center border border-white/10">
+                    <span className="inline-flex items-center gap-2 font-condensed font-stretch-[75%] text-xs font-semibold tracking-[0.3em] uppercase text-white/45 mb-5 lg:justify-start">
+                        <span className="font-mono font-stretch-normal text-blue-400">01</span>
+                        <span className="h-px w-6 bg-white/20" />
+                        Formaly
+                    </span>
+
+                    <h1 className="font-condensed uppercase font-stretch-[75%] text-4xl sm:text-6xl font-black tracking-tight text-darks leading-[1.05] mb-1">
+                        Mulai
+                        <span className="block text-darks/90">Mengerjakan!</span>
                     </h1>
-                    <p className="text-sm text-darks mx-auto mb-6 font-normal">
+
+                    <p className="text-sm sm:text-darks text-darks/45 font-normal max-w-sm mx-auto lg:mx-0 leading-relaxed mb-5">
                         Masukkan tag formulir untuk mulai mengerjakan.
                     </p>
+
+                    <Search onSearch={handleTagSearch} loading={searching} autoFocus />
+
+                    {error && (
+                        <motion.div
+                            variants={alertPop}
+                            className="mt-4 p-3 rounded-xl bg-wrong/10 border border-wrong/20 text-wrong text-xs sm:text-sm text-center font-medium"
+                        >
+                            {error}
+                        </motion.div>
+                    )}
                 </div>
 
-                <Search onSearch={handleTagSearch} loading={searching} autoFocus />
+                {/* Kolom kanan: search + error. Permukaan `base-300`. */}
+                {/* <div className="w-full bg-base-300 rounded-2xl px-6 py-10 sm:px-10 sm:py-14 flex flex-col justify-center border border-white/10">
+                    <Search onSearch={handleTagSearch} loading={searching} autoFocus />
 
-                {error && (
-                    <motion.div
-                        variants={alertPop}
-                        className="mt-4 p-3 rounded-xl bg-wrong/10 border border-wrong/20 text-wrong text-xs sm:text-sm text-center font-medium"
-                    >
-                        {error}
-                    </motion.div>
-                )}
+                    {error && (
+                        <motion.div
+                            variants={alertPop}
+                            className="mt-4 p-3 rounded-xl bg-wrong/10 border border-wrong/20 text-wrong text-xs sm:text-sm text-center font-medium"
+                        >
+                            {error}
+                        </motion.div>
+                    )}
+                </div> */}
             </motion.div>
         </div>
     )

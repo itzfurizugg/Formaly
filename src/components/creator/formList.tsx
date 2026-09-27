@@ -430,8 +430,12 @@ function FormList() {
                                                 {/* h-full agar kartu melar mengikuti tinggi baris grid — semua kartu
                                                 satu baris jadi sama tinggi seperti tampilan di halaman Responden */}
                                                 <div className="relative h-full">
-                                                    <div className={`card bg-white dark:bg-second border rounded-xl transition-all duration-300 hover:shadow-lg hover:shadow-darks/5 overflow-hidden h-full ${moving ? "border-done shadow-lg shadow-done/20" : "border-second"}`}>
-                                                        <div className="relative">
+                                                    {/* overflow-hidden TIDAK dipakai di kartu: dropdown "Aksi form"
+                                                    (dropup) ada di dalam card-body dan akan ikut terpotong.
+                                                    Clipping dipindah ke wrapper banner di bawah — satu-satunya
+                                                    bagian yang butuh terpotong mengikuti rounded-xl. */}
+                                                    <div className={`card bg-white dark:bg-second border rounded-xl transition-all duration-300 hover:shadow-lg hover:shadow-darks/5 h-full ${moving ? "border-done shadow-lg shadow-done/20" : "border-second"}`}>
+                                                        <div className="relative overflow-hidden rounded-t-xl">
                                                             <FormHeader formId={form.id} title={form.title} headerImage={form.header_image} headerColor={form.header_color} headerMedia={form.media_url} play={false} />
                                                             <AnimatePresence initial={false} mode="popLayout">
                                                                 {folderName && (

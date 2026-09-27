@@ -6,6 +6,11 @@
 @theme {
   --font-sans: "Funnel Display", "DM Sans", ui-sans-serif, system-ui, sans-serif;
   --font-display: "Funnel Display", ui-sans-serif, system-ui, sans-serif;
+  /* Gothic condensed untuk heading besar (label kecil + "Mulai Mengerjakan!" di
+     Home). Google Sans Flex di-pin di wdth 75% (condensed) — jadi harus dipakai
+     bareng `font-stretch-[75%]` supaya ketemu face-nya, bukan di-synthesize.
+     Jangan dipakai untuk body/paragraf. */
+  --font-condensed: "Google Sans Flex", "Archivo Narrow", ui-sans-serif, system-ui, sans-serif;
   --color-base: var(--fml-base, #F7F7F7);
   --color-second: var(--fml-second, #EEEEEE);
   --color-tinted: var(--fml-tinted, #929AAB);
